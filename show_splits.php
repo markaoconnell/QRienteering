@@ -32,14 +32,17 @@ $controls_done = array_diff($controls_done, array(".", "..", "course", "name", "
 $number_controls_found = count($controls_done);
 
 $split_times = array();
+$cumulative_time = array();
 $prior_control_time = $start_time;
 for ($i = 0; $i < $number_controls_found; $i++){
   $time_at_control[$i] = file_get_contents("{$competitor_path}/{$i}");
   $split_times[$i] = $time_at_control[$i] - $prior_control_time;
+  $cumulative_time[$i] = $time_at_control[$i] - $start_time;
   $prior_control_time = $time_at_control[$i];
 }
 $time_at_control[$i] = file_get_contents("{$competitor_path}/finish");
 $split_times[$i] = $time_at_control[$i] - $prior_control_time;
+$cumulative_time[$i] = $time_at_control[$i] - $start_time;
 
 $extra_controls_string="";
 if (file_exists("{$competitor_path}/extra")) {
@@ -48,20 +51,21 @@ if (file_exists("{$competitor_path}/extra")) {
   foreach ($extra_controls as $extra_one) {
     if ($extra_one != "") {
       $extra_control_info = explode(",", $extra_one);
-      $extra_controls_string .= "<tr><td></td><td>{$extra_control_info[0]}</td><td></td><td>" . strftime("%T", $extra_control_info[1]) . "</td>\n";
+      $extra_controls_string .= "<tr><td></td><td>{$extra_control_info[0]}</td><td></td><td></td><td>" . strftime("%T", $extra_control_info[1]) . "</td>\n";
     }
   }
 }
 
 $table_string = "";
 $table_string .= "<p class=\"title\">Splits for ${competitor_name} on " . ltrim($course, "0..9-") . "\n";
-$table_string .= "<table border=1><tr><th>Control Num</th><th>Control Id</th><th>Split</th><th>Time of Day</th></tr>\n";
-$table_string .= "<tr><td>Start</td><td></td><td></td><td>" . strftime("%T (%a - %d)", $start_time) . "</td></tr>\n";
+$table_string .= "<table border=1><tr><th>Control Num</th><th>Control Id</th><th>Split</th><th>Cumulative</th><th>Time of Day</th></tr>\n";
+$table_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . strftime("%T (%a - %d)", $start_time) . "</td></tr>\n";
 for ($i = 0; $i < $number_controls_found; $i++){
   $table_string .= "<tr><td>" . ($i + 1) . "</td><td>" . $control_list[$i] . "</td><td>" . formatted_time($split_times[$i]) . "</td>" .
-                                              "<td>" . strftime("%T", $time_at_control[$i]) . "</td></tr>\n";
+                                           "<td>" . formatted_time($cumulative_time[$i]) . "</td><td>" . strftime("%T", $time_at_control[$i]) . "</td></tr>\n";
 }
 $table_string .= "<tr><td>Finish</td><td></td><td>" . formatted_time($split_times[$i]) . "</td>" .
+                                         "<td>" . formatted_time($cumulative_time[$i]) . "</td>" .
                                          "<td>" . strftime("%T (%a - %d)", $time_at_control[$i]) . "</td></tr>\n{$extra_controls_string}\n</table>\n";
 ?>
 
