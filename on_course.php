@@ -3,6 +3,8 @@ require 'common_routines.php';
 
 // Get the submitted info
 // echo "<p>\n";
+$ONE_DAY = 86400;  // One day in seconds
+
 $event = $_GET["event"];
 
 $results_string = "";
@@ -13,6 +15,8 @@ $competitor_list = array_diff($competitor_list, array(".", ".."));
 $courses_array = scandir('./' . $_GET["event"] . '/Courses');
 $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
 
+$current_time = time();
+
 $not_started = array();
 $on_course = array();
 foreach ($courses_array as $course) {
@@ -22,11 +26,19 @@ foreach ($courses_array as $course) {
 foreach ($competitor_list as $competitor) {
   if (!file_exists("${competitor_directory}/${competitor}/finish")) {
     if (!file_exists("${competitor_directory}/${competitor}/start")) {
-      $not_started[] = $competitor;
+      $file_info = stat("{$competitor_directory}/{$competitor}");
+      // Weed out people who's registration time is too old (one day in seconds)
+      if (($current_time - $file_info["mtime"]) < $ONE_DAY) {
+        $not_started[] = $competitor;
+      }
     }
     else {
       $course = file_get_contents("${competitor_directory}/${competitor}/course");
-      $on_course[$course][] = $competitor;
+      $start_time = file_get_contents("{$competitor_directory}/${competitor}/start");
+      // Weed out people who started more than one day ago
+      if (($current_time - $start_time) < $ONE_DAY) {
+        $on_course[$course][] = $competitor;
+      }
     }
   }
 }
