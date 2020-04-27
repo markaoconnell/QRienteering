@@ -2,28 +2,33 @@
 
 use strict;
 
+my($get_ref, $cookie_ref, $test_info_ref, $test_filename);
+
+sub set_test_info {
+  ($get_ref, $cookie_ref, $test_info_ref, $test_filename) = @_;
+}
+
 sub error_and_exit {
-  my($error_string, $test_info_ref) = @_;
+  my($error_string) = @_;
   print "ERROR: $error_string\n";
   my($entry);
   foreach $entry (sort(keys(%{$test_info_ref}))) {
     print "\tTESTINFO: $entry $test_info_ref->{$entry}\n";
   }
+  print "\tFILENAME: $test_filename\n";
   exit(1);
 }
 
 sub success {
-  my($test_info_ref) = @_;
   if (defined($test_info_ref->{"Testname"})) {
     print "Test " . $test_info_ref->{"Testname"} . ": successful.\n";
   }
   else {
-    print "Unknown test successful.\n";
+    print "Unknown test successful from $test_filename.\n";
   }
 }
 
 sub hashes_to_artificial_file {
-  my($get_ref, $cookie_ref) = @_;
   open(ARTIFICIAL_FILE, ">./artificial_input");
   my($entry);
   foreach $entry (keys(%{$get_ref})) {
