@@ -1,6 +1,8 @@
 <?php
 require 'common_routines.php';
 
+ck_testing();
+
 // Get the submitted info
 // echo "<p>\n";
 $course = $_GET["course"];
@@ -13,8 +15,7 @@ if ($event == "") {
 }
 
 if ($event == "") {
-  echo "<h1>ERROR: Event not specified, no results can be shown.\n";
-  exit(1);
+  error_and_exit("<p>ERROR: Event not specified, no results can be shown.\n");
 }
 
 $results_string = "";
@@ -56,30 +57,9 @@ $results_string .= "<a href=\"./view_results?event=${event}\">All</a> \n";
 
 
 
-?>
+echo get_web_page_header(true, true, false);
 
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html; charset=ISO-8859-1"
- http-equiv="content-type">
-  <title>Orienteering Event Management</title>
-  <meta content="Mark O'Connell" name="author">
-<?php
-echo get_paragraph_style_header();
-?>
-<?php
-echo get_table_style_header();
-?>
-</head>
-<body>
-<br>
-
-
-<?php
 echo $results_string;
-?>
 
-</body>
-</html>
+echo get_web_page_footer();
+?>

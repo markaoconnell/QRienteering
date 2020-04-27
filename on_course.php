@@ -1,6 +1,8 @@
 <?php
 require 'common_routines.php';
 
+ck_testing();
+
 // Get the submitted info
 // echo "<p>\n";
 $ONE_DAY = 86400;  // One day in seconds
@@ -109,35 +111,14 @@ foreach (array_keys($on_course) as $course) {
   }
 }
 
-?>
+echo get_web_page_header(true, true, false);
 
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html; charset=ISO-8859-1"
- http-equiv="content-type">
-  <title>Orienteering Event Management</title>
-  <meta content="Mark O'Connell" name="author">
-<?php
-echo get_table_style_header();
-?>
-<?php
-echo get_paragraph_style_header();
-?>
-</head>
-<body>
-<br>
-
-
-<?php
 if (outstanding_entrants) {
   echo $results_string;
 }
 else {
   echo "<p>No outstanding entrants at this point.\n";
 }
-?>
 
-</body>
-</html>
+echo get_web_page_footer();
+?>

@@ -1,19 +1,10 @@
 <?php
 require 'common_routines.php';
-?>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html; charset=ISO-8859-1"
- http-equiv="content-type">
-  <title>Orienteering Event Management</title>
-  <meta content="Mark O'Connell" name="author">
-</head>
-<body>
-<br>
+ck_testing();
 
-<?php
+echo get_web_page_header(true, false, false);
+
 // Get some phpinformation, just in case
 // Verify that php is running properly
 // echo 'Current PHP version: ' . phpversion();
@@ -47,8 +38,5 @@ else {
   }
 }
 
+echo get_web_page_footer();
 ?>
-
-
-</body>
-</html>

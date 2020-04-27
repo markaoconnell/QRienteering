@@ -1,23 +1,11 @@
 <?php
 require 'common_routines.php';
-?>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html; charset=ISO-8859-1"
- http-equiv="content-type">
-  <title>Orienteering Event Management</title>
-  <meta content="Mark O'Connell" name="author">
-<?php
-echo get_paragraph_style_header();
-echo get_input_form_style_header();
-?>
-</head>
-<body>
-<br>
+ck_testing();
 
-<?php
+echo get_web_page_header(true, false, true);
+
+
 // Get some phpinformation, just in case
 // Verify that php is running properly
 // echo 'Current PHP version: ' . phpversion();
@@ -81,8 +69,5 @@ echo "<p><a href=\"./view_results?event=${event}\">View results</a>";
 echo "<p><a href=\"./on_course?event=${event}\">Out on course</a><p>";
 
 
+echo get_web_page_footer();
 ?>
-
-
-</body>
-</html>
