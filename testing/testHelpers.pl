@@ -56,6 +56,8 @@ sub check_directory_contents {
 
   map { chomp($_); $found_directory_contents{$_} = 1; } qx(ls -1 $directory_path);
 
+#print "Contents of $directory_path are: " . join(",", keys(%found_directory_contents)) . "\n";
+
   my($required_entry);
   foreach $required_entry (@required_entries) {
     if (!defined($found_directory_contents{$required_entry})) {

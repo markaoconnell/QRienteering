@@ -19,6 +19,9 @@ $competitor_path = "./{$event}/Competitors/{$competitor_id}";
 if (file_exists("{$competitor_path}/name")) {
   $competitor_name = file_get_contents("{$competitor_path}/name");
 }
+else {
+  error_and_exit("<p>ERROR: Bad registration for event \"{$event}\" and competitor \"{$competitor_id}\", please reregister and try again?");
+}
 
 if (file_exists("${competitor_path}/start")) {
   $error_string = "Course " . ltrim($course, "0..9-") . " already started for {$competitor_name}.";

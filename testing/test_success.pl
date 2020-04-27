@@ -9,10 +9,45 @@ my($cmd, $output, $output2, $competitor_id, $path, $time_now);
 my(@file_contents_array);
 my(@directory_contents);
 
-my($COMPETITOR_NAME) = "Mark_OConnell_DNF_Testing";
+my($COMPETITOR_NAME) = "Mark_OConnell_Success_Testing";
 
 initialize_event();
 set_test_info(\%GET, \%COOKIE, \%TEST_INFO, $0);
+
+###########
+sub reach_control {
+  my($competitor_id, $control) = @_;
+
+  %GET = ();
+  $GET{"control"} = $control;
+  hashes_to_artificial_file();
+  $cmd = "php ../reach_control.php";
+  $output = qx($cmd);
+  
+  if ($output !~ /Correct!  Reached $control, control #\d on White/) {
+    error_and_exit("Web page output wrong, correct control string not found.\n$output");
+  }
+  
+  #print $output;
+  
+  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  if (! -f "$path/0") {
+    error_and_exit("$path/0 (found first control) does not exist.");
+  }
+  
+  @directory_contents = check_directory_contents($path, qw(name course start));
+  if (grep(/NOTFOUND:finish/, @directory_contents) ||
+      grep(/NOTFOUND:extra/, @directory_contents) || grep(/NOTFOUND:dnf/, @directory_contents)) {
+    error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+  }
+  
+  @file_contents_array = file_get_contents("$path/0");
+  $time_now = time();
+  if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
+    error_and_exit("File contents wrong, $path/0: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
+  }
+}
+
 
 ###########
 # Test 1 - register a new entrant successfully
@@ -65,6 +100,7 @@ success();
 # Test 2 - start the course
 # validate that the start entry is created
 %TEST_INFO = qw(Testname TestSuccessStart);
+$TEST_INFO{"filename"} = $0;
 %COOKIE = qw(event UnitTestingEvent course 01-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
@@ -99,38 +135,17 @@ success();
 
 
 ###########
-# Test 3 - find a control
+# Test 3 - find all correct controls
 # Validate that the correct entry is created
-%TEST_INFO = qw(Testname TestFind201);
+%TEST_INFO = qw(Testname FindAllValidControls);
 %COOKIE = qw(event UnitTestingEvent course 01-White);
 $COOKIE{"competitor_id"} = $competitor_id;
-%GET = qw(control 201);
-hashes_to_artificial_file();
-$cmd = "php ../reach_control.php";
-$output = qx($cmd);
 
-if ($output !~ /Correct!  Reached 201, control #1 on White/) {
-  error_and_exit("Web page output wrong, course start string not found.\n$output");
-}
-
-#print $output;
-
-$path = "./UnitTestingEvent/Competitors/$competitor_id";
-if (! -f "$path/0") {
-  error_and_exit("$path/0 (found first control) does not exist.");
-}
-
-@directory_contents = check_directory_contents($path, qw(name course start 0));
-if ($#directory_contents != -1) {
-  error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
-}
-
-
-@file_contents_array = file_get_contents("$path/0");
-$time_now = time();
-if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
-  error_and_exit("File contents wrong, $path/0: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
-}
+reach_control($competitor_id, "201");
+reach_control($competitor_id, "202");
+reach_control($competitor_id, "203");
+reach_control($competitor_id, "204");
+reach_control($competitor_id, "205");
 
 success();
 
@@ -138,7 +153,7 @@ success();
 ###########
 # Test 4 - finish the course
 # Validate that the correct entry is created
-%TEST_INFO = qw(Testname TestFinishEarlyDNF);
+%TEST_INFO = qw(Testname TestFinishSuccessWhite);
 %COOKIE = qw(event UnitTestingEvent course 01-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = (); # empty hash
@@ -146,7 +161,8 @@ hashes_to_artificial_file();
 $cmd = "php ../finish_course.php";
 $output = qx($cmd);
 
-if ($output !~ /Not all controls found/) {
+if (($output !~ /Course complete, time taken/) || ($output !~ /Results on White/) ||
+    ($output !~ /$COMPETITOR_NAME/)) {
   error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
 }
 
@@ -157,7 +173,7 @@ if (! -f "$path/finish") {
   error_and_exit("$path/finish does not exist.");
 }
 
-@directory_contents = check_directory_contents($path, qw(name course start 0 finish dnf));
+@directory_contents = check_directory_contents($path, qw(name course start 0 1 2 3 4 finish));
 if ($#directory_contents != -1) {
   error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
 }
@@ -169,8 +185,13 @@ if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5))
   error_and_exit("File contents wrong, $path/finish: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
 }
 
-if (! -f "$path/dnf") {
-  error_and_exit("Early finish but the DNF file does not exist.");
+my(@start_time_array) = file_get_contents("$path/start");
+my($results_file) = sprintf("%06d,%s", (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
+
+
+my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/01-White", $results_file);
+if (grep(/NOTFOUND:$results_file/, @results_array)) {
+  error_and_exit("No results file ($results_file) found, contents are: " . join(",", @results_array));
 }
 
 success();

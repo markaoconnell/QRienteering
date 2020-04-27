@@ -9,15 +9,57 @@ my($cmd, $output, $output2, $competitor_id, $path, $time_now);
 my(@file_contents_array);
 my(@directory_contents);
 
-my($COMPETITOR_NAME) = "Mark_OConnell_DNF_Testing";
+my($COMPETITOR_NAME) = "Mark_OConnell_Bad_Start";
 
 initialize_event();
 set_test_info(\%GET, \%COOKIE, \%TEST_INFO, $0);
 
+
 ###########
-# Test 1 - register a new entrant successfully
-# Test registration of a new entrant
-%TEST_INFO = qw(Testname TestSuccessRegistration);
+# Test 1 - start the course without registering
+# Should return an error message
+%TEST_INFO = qw(Testname TestStartNoRegistration);
+%COOKIE = ();
+%GET = ();  # empty hash
+hashes_to_artificial_file();
+$cmd = "php ../start_course.php";
+$output = qx($cmd);
+
+if ($output !~ /probably not registered for a course/) {
+  error_and_exit("Web page output wrong, should receive not registered output.\n$output");
+}
+
+#print $output;
+
+success();
+
+
+
+###########
+# Test 2 - start with an unknown event
+# Should return an error message
+%TEST_INFO = qw(Testname TestStartOldEvent);
+%COOKIE = qw(event OldEvent course 01-White);
+$COOKIE{"competitor_id"} = "moc";
+%GET = ();  # empty hash
+hashes_to_artificial_file();
+$cmd = "php ../start_course.php";
+$output = qx($cmd);
+
+if ($output !~ /ERROR: Bad registration for event "OldEvent"/) {
+  error_and_exit("Web page output wrong, bad registration error not found.\n$output");
+}
+
+#print $output;
+
+success();
+
+
+
+###########
+# Test 3 - start multiple times
+# First register, then start
+%TEST_INFO = qw(Testname MultipleStart);
 %GET = qw(event UnitTestingEvent course 01-White);
 $GET{"competitor_name"} = $COMPETITOR_NAME;
 %COOKIE = ();  # empty hash
@@ -56,15 +98,7 @@ if (($#name_file != 0) || ($#course_file != 0) || ($name_file[0] ne $COMPETITOR_
   error_and_exit("File contents wrong, name_file: " . join(",", @name_file) . "\n\tcourse_file: " . join("," , @course_file));
 }
 
-success();
-
-
-
-
-###########
-# Test 2 - start the course
-# validate that the start entry is created
-%TEST_INFO = qw(Testname TestSuccessStart);
+# Now start the course
 %COOKIE = qw(event UnitTestingEvent course 01-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
@@ -95,85 +129,39 @@ if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5))
   error_and_exit("File contents wrong, start_time_file: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
 }
 
-success();
-
-
-###########
-# Test 3 - find a control
-# Validate that the correct entry is created
-%TEST_INFO = qw(Testname TestFind201);
+# Now start the course again - this is the real part of the test
 %COOKIE = qw(event UnitTestingEvent course 01-White);
 $COOKIE{"competitor_id"} = $competitor_id;
-%GET = qw(control 201);
+%GET = ();  # empty hash
 hashes_to_artificial_file();
-$cmd = "php ../reach_control.php";
+$cmd = "php ../start_course.php";
 $output = qx($cmd);
 
-if ($output !~ /Correct!  Reached 201, control #1 on White/) {
+if ($output !~ /already started for $COMPETITOR_NAME/) {
   error_and_exit("Web page output wrong, course start string not found.\n$output");
 }
 
 #print $output;
 
 $path = "./UnitTestingEvent/Competitors/$competitor_id";
-if (! -f "$path/0") {
-  error_and_exit("$path/0 (found first control) does not exist.");
+if (! -f "$path/start") {
+  error_and_exit("$path/start does not exist.");
 }
 
-@directory_contents = check_directory_contents($path, qw(name course start 0));
+@directory_contents = check_directory_contents($path, qw(name course start));
 if ($#directory_contents != -1) {
   error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
 }
 
 
-@file_contents_array = file_get_contents("$path/0");
+@file_contents_array = file_get_contents("$path/start");
 $time_now = time();
 if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
-  error_and_exit("File contents wrong, $path/0: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
+  error_and_exit("File contents wrong, start_time_file: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
 }
 
 success();
 
-
-###########
-# Test 4 - finish the course
-# Validate that the correct entry is created
-%TEST_INFO = qw(Testname TestFinishEarlyDNF);
-%COOKIE = qw(event UnitTestingEvent course 01-White);
-$COOKIE{"competitor_id"} = $competitor_id;
-%GET = (); # empty hash
-hashes_to_artificial_file();
-$cmd = "php ../finish_course.php";
-$output = qx($cmd);
-
-if ($output !~ /Not all controls found/) {
-  error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
-}
-
-#print $output;
-
-$path = "./UnitTestingEvent/Competitors/$competitor_id";
-if (! -f "$path/finish") {
-  error_and_exit("$path/finish does not exist.");
-}
-
-@directory_contents = check_directory_contents($path, qw(name course start 0 finish dnf));
-if ($#directory_contents != -1) {
-  error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
-}
-
-
-@file_contents_array = file_get_contents("$path/finish");
-$time_now = time();
-if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
-  error_and_exit("File contents wrong, $path/finish: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
-}
-
-if (! -f "$path/dnf") {
-  error_and_exit("Early finish but the DNF file does not exist.");
-}
-
-success();
 
 
 
