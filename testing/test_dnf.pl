@@ -2,12 +2,13 @@
 
 use strict;
 
-require "test_helper_functions.pl";
+require "testHelpers.pl";
 
 my(%GET, %TEST_INFO, %COOKIE);
 my($cmd, $output, $output2, $competitor_id, $path, $time_now);
 my(@file_contents_array);
 my(@directory_contents);
+
 
 initialize_event();
 
@@ -15,6 +16,7 @@ initialize_event();
 # Test 1 - register a new entrant successfully
 # Test registration of a new entrant
 %TEST_INFO = qw(Testname TestSuccessRegistration);
+$TEST_INFO{"filename"} = $0;
 %GET = qw(competitor_name Mark_OConnell_Testing event UnitTestingEvent course 01-White);
 %COOKIE = ();  # empty hash
 hashes_to_artificial_file(\%GET, \%COOKIE);
@@ -61,6 +63,7 @@ success(\%TEST_INFO);
 # Test 2 - start the course
 # validate that the start entry is created
 %TEST_INFO = qw(Testname TestSuccessStart);
+$TEST_INFO{"filename"} = $0;
 %COOKIE = qw(event UnitTestingEvent course 01-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
@@ -98,6 +101,7 @@ success(\%TEST_INFO);
 # Test 3 - find a control
 # Validate that the correct entry is created
 %TEST_INFO = qw(Testname TestFind201);
+$TEST_INFO{"filename"} = $0;
 %COOKIE = qw(event UnitTestingEvent course 01-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = qw(control 201);
@@ -135,6 +139,7 @@ success(\%TEST_INFO);
 # Test 4 - finish the course
 # Validate that the correct entry is created
 %TEST_INFO = qw(Testname TestFinishEarlyDNF);
+$TEST_INFO{"filename"} = $0;
 %COOKIE = qw(event UnitTestingEvent course 01-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = (); # empty hash
