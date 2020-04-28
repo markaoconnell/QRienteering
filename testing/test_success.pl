@@ -161,7 +161,7 @@ hashes_to_artificial_file();
 $cmd = "php ../finish_course.php";
 $output = qx($cmd);
 
-if (($output !~ /Course complete, time taken/) || ($output !~ /Results on White/) ||
+if (($output =~ /DNF/) || ($output !~ /Course complete, time taken/) || ($output !~ /Results on White/) ||
     ($output !~ /$COMPETITOR_NAME/)) {
   error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
 }
