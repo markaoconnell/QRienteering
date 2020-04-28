@@ -223,7 +223,7 @@ $output = qx($cmd);
 
 if (($output !~ /Course complete, time taken/) || ($output !~ /Results on White/) ||
     ($output !~ /$COMPETITOR_NAME/) || ($output !~ /DNF/) || ($output !~ /Second scan of finish/)) {
-  error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
+  error_and_exit("Web page output wrong, no second finish scan message found.\n$output");
 }
 
 #print $output;

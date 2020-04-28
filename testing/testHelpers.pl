@@ -6,6 +6,7 @@ my($get_ref, $cookie_ref, $test_info_ref, $test_filename);
 
 sub set_test_info {
   ($get_ref, $cookie_ref, $test_info_ref, $test_filename) = @_;
+  print "\nRunning tests from $test_filename\n";
 }
 
 sub error_and_exit {
