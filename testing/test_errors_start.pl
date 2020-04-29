@@ -55,9 +55,29 @@ if ($output !~ /ERROR: Bad registration for event "OldEvent"/) {
 success();
 
 
+###########
+# Test 3 - start with the right event but bad course
+# Should return an error message
+%TEST_INFO = qw(Testname TestStartGoodEventBadCourse);
+%COOKIE = qw(event UnitTestingEvent course 03-Orange);
+$COOKIE{"competitor_id"} = "moc";
+%GET = ();  # empty hash
+hashes_to_artificial_file();
+$cmd = "php ../start_course.php";
+$output = qx($cmd);
+
+if ($output !~ /ERROR: Bad registration for event "UnitTestingEvent"/) {
+  error_and_exit("Web page output wrong, bad registration error not found.\n$output");
+}
+
+#print $output;
+
+success();
+
+
 
 ###########
-# Test 3 - start multiple times
+# Test 4 - start multiple times
 # First register, then start
 %TEST_INFO = qw(Testname MultipleStart);
 %GET = qw(event UnitTestingEvent course 01-White);

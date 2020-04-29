@@ -55,9 +55,29 @@ if ($output !~ /appears to be no longer appears valid/){
 success();
 
 
+###########
+# Test 3 - finish with a bad course
+# Should return an error message
+%TEST_INFO = qw(Testname TestFinishGoodEventBadCourse);
+%COOKIE = qw(event UnitTestingEvent course 03-Orange);
+$COOKIE{"competitor_id"} = "moc";
+%GET = ();  # empty hash
+hashes_to_artificial_file();
+$cmd = "php ../finish_course.php";
+$output = qx($cmd);
+
+if ($output !~ /appears to be no longer appears valid/){
+  error_and_exit("Web page output wrong, bad event error not found.\n$output");
+}
+
+#print $output;
+
+success();
+
+
 
 ###########
-# Test 3 - finish after registering but not starting
+# Test 4 - finish after registering but not starting
 # First register, then call finish without calling start
 %TEST_INFO = qw(Testname FinishWithoutStart);
 %GET = qw(event UnitTestingEvent course 01-White);
