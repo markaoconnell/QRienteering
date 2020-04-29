@@ -3,6 +3,7 @@
 use strict;
 
 require "testHelpers.pl";
+require "success_call_helpers.pl";
 
 my(%GET, %TEST_INFO, %COOKIE);
 my($cmd, $output, $output2, $competitor_id, $path, $time_now);
