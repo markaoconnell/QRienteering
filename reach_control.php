@@ -45,7 +45,9 @@ if ($_GET["mumble"] != "") {
 // echo "<p>\n";
 $course = $_COOKIE["course"];
 
-
+if (!file_exists("./{$event}/Competitors/{$competitor_id}") || !file_exists("./{$event}/Courses/{$course}/controls.txt")) {
+  error_and_exit("Cannot find event {$event}, competitor {$competitor_id}, or course {$course}, please re-register and retry.\n");
+}
 
 
 $competitor_path = "./${event}/Competitors/${competitor_id}";

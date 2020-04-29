@@ -56,7 +56,7 @@ if ($output =~ m#\./reach_control\.php\?mumble=([a-zA-Z0-9+/=]+)#) {
   $output = qx($cmd);
 }
 
-if ($output !~ /appears to be no longer appears valid/){
+if (($output !~ /Cannot find event/) || ($output !~ /please re-register and retry/)) {
   error_and_exit("Web page output wrong, bad event error not found.\n$output");
 }
 
@@ -133,10 +133,20 @@ if (($#name_file != 0) || ($#course_file != 0) || ($name_file[0] ne $COMPETITOR_
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = qw(control 201);
 hashes_to_artificial_file();
-$cmd = "php ../finish_course.php";
+$cmd = "php ../reach_control.php";
 $output = qx($cmd);
 
-if ($output !~ /appears to be no longer appears valid/){
+if ($output =~ m#\./reach_control\.php\?mumble=([a-zA-Z0-9+/=]+)#) {
+  print "Processing redirect during " . $TEST_INFO{"Testname"} . ".\n";
+  %GET = ();
+  $GET{"mumble"} = $1;
+  hashes_to_artificial_file();
+  $cmd = "php ../reach_control.php";
+  $output = qx($cmd);
+}
+
+
+if (($output !~ /Cannot find event/) || ($output !~ /please re-register and retry/)) {
   error_and_exit("Web page output wrong, bad event error not found.\n$output");
 }
 
