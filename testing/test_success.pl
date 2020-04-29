@@ -53,16 +53,16 @@ $GET{"control"} = "201";
 reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 $GET{"control"} = "202";
-reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
+reach_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
 
 $GET{"control"} = "203";
-reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
+reach_control_successfully(2, \%GET, \%COOKIE, \%TEST_INFO);
 
 $GET{"control"} = "204";
-reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
+reach_control_successfully(3, \%GET, \%COOKIE, \%TEST_INFO);
 
 $GET{"control"} = "205";
-reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
+reach_control_successfully(4, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
 
