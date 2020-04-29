@@ -155,6 +155,36 @@ if (($output !~ /Cannot find event/) || ($output !~ /please re-register and retr
 success();
 
 
+##################
+# Test: Corrupt competitor id on the course
+# Now reach a control but with a bad competitor id
+%TEST_INFO = qw(Testname TestBadCompetitorOnCourse);
+%COOKIE = qw(event UnitTestingEvent course 01-White);
+$COOKIE{"competitor_id"} = "moc-who-is-not-there";
+%GET = qw(control 201);
+hashes_to_artificial_file();
+$cmd = "php ../reach_control.php";
+$output = qx($cmd);
+
+if ($output =~ m#\./reach_control\.php\?mumble=([a-zA-Z0-9+/=]+)#) {
+  print "Processing redirect during " . $TEST_INFO{"Testname"} . ".\n";
+  %GET = ();
+  $GET{"mumble"} = $1;
+  hashes_to_artificial_file();
+  $cmd = "php ../reach_control.php";
+  $output = qx($cmd);
+}
+
+
+if (($output !~ /Cannot find event/) || ($output !~ /please re-register and retry/)) {
+  error_and_exit("Web page output wrong, bad event error not found.\n$output");
+}
+
+#print $output;
+
+success();
+
+
 
 
 
