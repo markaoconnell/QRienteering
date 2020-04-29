@@ -20,8 +20,15 @@ sub reach_control_successfully {
   $output = qx($cmd);
 
   my($control) = $get_ref->{"control"};
+  if ($control eq "") {
+    # When testing with passing the control via mumble, also pass the control
+    # via the test info rather than base64 decoding the mumble and getting it
+    # from there.
+    $control = $test_info_ref->{"control"};
+  }
+  my($control_num_for_print_string) = $control_num_on_course + 1;
   
-  if ($output !~ /Correct!  Reached $control, control #\d/) {
+  if ($output !~ /Correct!  Reached $control, control #$control_num_for_print_string/) {
     error_and_exit("Web page output wrong, correct control string not found.\n$output");
   }
   

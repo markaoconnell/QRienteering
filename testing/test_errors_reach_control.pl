@@ -2,6 +2,7 @@
 
 use strict;
 
+use MIME::Base64;
 require "testHelpers.pl";
 require "success_call_helpers.pl";
 
@@ -194,6 +195,35 @@ reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 success();
 
 
+##################
+# Test: Reach the same control again, after starting
+# this time with the encoded mumble
+%TEST_INFO = qw(Testname TestReachControlAgainWithMumble);
+%COOKIE = qw(event UnitTestingEvent course 01-White);
+$COOKIE{"competitor_id"} = $competitor_id;
+%GET = ();
+$GET{"mumble"} = encode_base64("201,$competitor_id," . time());
+$TEST_INFO{"control"} = "201";
+
+reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
+
+success();
+
+##################
+# Test: Reach the correct control with a mumble
+# 
+%TEST_INFO = qw(Testname TestReachControlCorrectlyWithMumble);
+%COOKIE = qw(event UnitTestingEvent course 01-White);
+$COOKIE{"competitor_id"} = $competitor_id;
+%GET = ();
+$GET{"mumble"} = encode_base64("202,$competitor_id," . time());
+$TEST_INFO{"control"} = "202";
+
+reach_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
+
+success();
+
+
 ################
 # Test: Reach the wrong control
 %TEST_INFO = qw(Testname TestReachWrongControl);
@@ -212,14 +242,80 @@ if ($output !~ /Found wrong control: 345/) {
 #print $output;
 
 $path = "./UnitTestingEvent/Competitors/$competitor_id";
-if (-f "$path/1") {
-  error_and_exit("$path/1 exists, should be not as control was wrong.");
+if (-f "$path/2") {
+  error_and_exit("$path/2 exists, should be not as control was wrong.");
 }
 
-@directory_contents = check_directory_contents($path, qw(name course start 0 extra));
+@directory_contents = check_directory_contents($path, qw(name course start 0 1 extra));
 if (grep(/NOTFOUND/, @directory_contents) || grep(/finish/, @directory_contents) || grep(/dnf/, @directory_contents)) {
   error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
 }
+
+success();
+
+##################
+# Test: Reach the same control again, after starting
+# this time with the encoded mumble
+# but with an old time (replay of old result)
+%TEST_INFO = qw(Testname TestReachControlAgainWithMumbleTooLate);
+%COOKIE = qw(event UnitTestingEvent course 01-White);
+$COOKIE{"competitor_id"} = $competitor_id;
+%GET = ();
+$GET{"mumble"} = encode_base64("202,$competitor_id," . (time() - 300));
+
+hashes_to_artificial_file();
+$cmd = "php ../reach_control.php";
+$output = qx($cmd);
+
+if ($output !~ /ERROR: Time lag of > 30 seconds since scan of control 202 - incorrect page reload/) {
+  error_and_exit("Web page output wrong, time lag error string not found.\n$output");
+}
+
+#print $output;
+
+$path = "./UnitTestingEvent/Competitors/$competitor_id";
+if (-f "$path/2") {
+  error_and_exit("$path/2 exists, should be not as control rescan was too long ago.");
+}
+
+@directory_contents = check_directory_contents($path, qw(name course start 0 1 extra));
+if (grep(/NOTFOUND/, @directory_contents) || grep(/finish/, @directory_contents) || grep(/dnf/, @directory_contents)) {
+  error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+}
+
+
+success();
+
+
+##################
+# Test: Reach a control with an old mumble
+# (not sure how this would happen, but let's confirm that it doesn't work)
+%TEST_INFO = qw(Testname TestReachCorrectControlWithMumbleTooLate);
+%COOKIE = qw(event UnitTestingEvent course 01-White);
+$COOKIE{"competitor_id"} = $competitor_id;
+%GET = ();
+$GET{"mumble"} = encode_base64("203,$competitor_id," . (time() - 300));
+
+hashes_to_artificial_file();
+$cmd = "php ../reach_control.php";
+$output = qx($cmd);
+
+if ($output !~ /ERROR: Time lag of > 30 seconds since scan of control 203 - incorrect page reload/) {
+  error_and_exit("Web page output wrong, time lag error string not found.\n$output");
+}
+
+#print $output;
+
+$path = "./UnitTestingEvent/Competitors/$competitor_id";
+if (-f "$path/2") {
+  error_and_exit("$path/2 exists, should be not as control rescan was too long ago.");
+}
+
+@directory_contents = check_directory_contents($path, qw(name course start 0 1 extra));
+if (grep(/NOTFOUND/, @directory_contents) || grep(/finish/, @directory_contents) || grep(/dnf/, @directory_contents)) {
+  error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+}
+
 
 success();
 

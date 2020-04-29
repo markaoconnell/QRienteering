@@ -102,6 +102,7 @@ if ($control_id != $control_list[$number_controls_found]) {
     else {
       $next_control = $control_list[$number_controls_found];
     }
+  $control_number_for_printing = $number_controls_found;
   }
 }
 else {
@@ -113,13 +114,14 @@ else {
   else {
     $next_control = $control_list[$number_controls_found + 1];
   }
+  $control_number_for_printing = $number_controls_found + 1;
   // echo "<p>Saved to the file ${competitor_path}/${number_controls_found}.\n";
 }
 
 echo get_web_page_header(true, false, false);
 
 if ($error_string == "") {
-  echo "<p>Correct!  Reached {$control_id}, control #" . ($number_controls_found + 1) . " on " . ltrim($course, "0..9-") . "\n";
+  echo "<p>Correct!  Reached {$control_id}, control #{$control_number_for_printing} on " . ltrim($course, "0..9-") . "\n";
   echo "<p>{$remaining_controls} more to find, next is {$next_control}.\n";
 }
 else {
