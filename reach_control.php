@@ -1,17 +1,14 @@
 <?php
 require 'common_routines.php';
 
+ck_testing();
+
 $event = $_COOKIE["event"];
 $control_id = $_GET["control"];
 $competitor_id = $_COOKIE["competitor_id"];
 
 if (($event == "") || ($competitor_id == "")) {
-  echo "<h1>ERROR: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?";
-  echo "<br><h1>This is a BYOM (Bring Your Own Map) Orienteering control.  For more information on orienteering, \n";
-  echo "type \"orienteering new england\" into Google to learn about the sport and to find events in your area.\n";
-  echo "If this is hanging in the woods, please leave it alone so as not to ruin an existing orienteering course that\n";
-  echo "others may be currently enjoying.";
-  exit(1);
+  error_and_exit("<p>ERROR: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?" . get_error_info_string());
 }
 
 $error_string = "";
@@ -43,30 +40,14 @@ if ($_GET["mumble"] != "") {
   }
 }
 
-?>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html; charset=ISO-8859-1"
- http-equiv="content-type">
-  <title>Orienteering Event Management</title>
-  <meta content="Mark O'Connell" name="author">
-<?php
-echo get_paragraph_style_header();
-?>
-</head>
-<body>
-<br>
-
-<?php
 // Get the submitted info
 // echo "<p>\n";
-$competitor_name = $_COOKIE["competitor_name"];
 $course = $_COOKIE["course"];
-$next_control = $_COOKIE["next_control"];
 
-
+if (!file_exists("./{$event}/Competitors/{$competitor_id}") || !file_exists("./{$event}/Courses/{$course}/controls.txt")) {
+  error_and_exit("Cannot find event {$event}, competitor {$competitor_id}, or course {$course}, please re-register and retry.\n");
+}
 
 
 $competitor_path = "./${event}/Competitors/${competitor_id}";
@@ -77,7 +58,8 @@ $control_list = array_map('trim', $control_list);
 
 
 if (!file_exists("${competitor_path}/start")) {
-  $error_string .= "<p>Course not started\n";
+  $competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
+  error_and_exit("<p>Course " . ltrim($course, "0..9-") . " not started for {$competitor_name}, please return and scan Start QR code.\n");
 }
 
 // See how many controls have been completed
@@ -120,6 +102,7 @@ if ($control_id != $control_list[$number_controls_found]) {
     else {
       $next_control = $control_list[$number_controls_found];
     }
+  $control_number_for_printing = $number_controls_found;
   }
 }
 else {
@@ -131,22 +114,20 @@ else {
   else {
     $next_control = $control_list[$number_controls_found + 1];
   }
+  $control_number_for_printing = $number_controls_found + 1;
   // echo "<p>Saved to the file ${competitor_path}/${number_controls_found}.\n";
 }
-?>
 
+echo get_web_page_header(true, false, false);
 
-
-<?php
 if ($error_string == "") {
-  echo "<p>Correct!  Reached {$control_id}, control #" . ($number_controls_found + 1) . " on " . ltrim($course, "0..9-") . "\n";
+  echo "<p>Correct!  Reached {$control_id}, control #{$control_number_for_printing} on " . ltrim($course, "0..9-") . "\n";
   echo "<p>{$remaining_controls} more to find, next is {$next_control}.\n";
 }
 else {
   echo "<p>ERROR: {$error_string}\n";
 }
 echo "<br><p>Time on course is: " . formatted_time($time_on_course) . "\n";
-?>
 
-</body>
-</html>
+echo get_web_page_footer();
+?>

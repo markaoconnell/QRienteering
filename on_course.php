@@ -1,11 +1,19 @@
 <?php
 require 'common_routines.php';
 
+ck_testing();
+
 // Get the submitted info
 // echo "<p>\n";
-$ONE_DAY = 86400;  // One day in seconds
+if ($_GET["TIME_LIMIT"] == "") {
+  $TIME_LIMIT = 86400;  // One day in seconds
+}
+else {
+  $TIME_LIMIT = intval($_GET["TIME_LIMIT"]);
+}
 
 $event = $_GET["event"];
+$include_competitor_id = ($_GET["include_competitor_id"] != "");
 
 $results_string = "";
 $competitor_directory = "./${event}/Competitors";
@@ -28,7 +36,7 @@ foreach ($competitor_list as $competitor) {
     if (!file_exists("${competitor_directory}/${competitor}/start")) {
       $file_info = stat("{$competitor_directory}/{$competitor}");
       // Weed out people who's registration time is too old (one day in seconds)
-      if (($current_time - $file_info["mtime"]) < $ONE_DAY) {
+      if (($current_time - $file_info["mtime"]) < $TIME_LIMIT) {
         $not_started[] = $competitor;
       }
     }
@@ -36,7 +44,7 @@ foreach ($competitor_list as $competitor) {
       $course = file_get_contents("${competitor_directory}/${competitor}/course");
       $start_time = file_get_contents("{$competitor_directory}/${competitor}/start");
       // Weed out people who started more than one day ago
-      if (($current_time - $start_time) < $ONE_DAY) {
+      if (($current_time - $start_time) < $TIME_LIMIT) {
         $on_course[$course][] = $competitor;
       }
     }
@@ -51,6 +59,9 @@ if (count($not_started) > 0) {
   $results_string .= "<table><tr><th>Name</th></tr>\n";
   foreach ($not_started as $competitor) {
     $competitor_name = file_get_contents("${competitor_directory}/${competitor}/name");
+    if ($include_competitor_id) {
+      $competitor_name .= " ({$competitor})";
+    }
     $results_string .= "<tr><td>${competitor_name}</td></tr>";
   }
   $results_string .= "</table>\n<p><p><p>\n";
@@ -66,6 +77,9 @@ foreach (array_keys($on_course) as $course) {
     foreach ($on_course[$course] as $competitor) {
       $competitor_path = "${competitor_directory}/${competitor}";
       $competitor_name = file_get_contents("${competitor_path}/name");
+      if ($include_competitor_id) {
+        $competitor_name .= " ({$competitor})";
+      }
       $start_time = file_get_contents("${competitor_path}/start");
       $controls_done = scandir("${competitor_path}");
       $controls_done = array_diff($controls_done, array(".", "..", "course", "name", "next", "start", "finish", "extra", "dnf"));
@@ -109,35 +123,14 @@ foreach (array_keys($on_course) as $course) {
   }
 }
 
-?>
+echo get_web_page_header(true, true, false);
 
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html; charset=ISO-8859-1"
- http-equiv="content-type">
-  <title>Orienteering Event Management</title>
-  <meta content="Mark O'Connell" name="author">
-<?php
-echo get_table_style_header();
-?>
-<?php
-echo get_paragraph_style_header();
-?>
-</head>
-<body>
-<br>
-
-
-<?php
 if (outstanding_entrants) {
   echo $results_string;
 }
 else {
   echo "<p>No outstanding entrants at this point.\n";
 }
-?>
 
-</body>
-</html>
+echo get_web_page_footer();
+?>

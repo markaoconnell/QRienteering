@@ -1,4 +1,12 @@
 <?php
+
+function ck_testing() {
+  if (file_exists("./testing_mode.php")) {
+    require "./testing_mode.php";
+    artificial_input_file_parse();
+  }
+}
+
 // Return a string with the elapsed time in seconds pretty printed
 function formatted_time($time_in_seconds) {
   $hours = floor($time_in_seconds / 3600);
@@ -30,6 +38,57 @@ function csv_formatted_time($time_in_seconds) {
 // Am I running on a mobile device?
 function is_mobile () {
   return is_numeric(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), "mobile"));
+}
+
+
+// Print out the default headers
+function get_web_page_header($paragraph_style, $table_style, $form_style) {
+  $headers_to_show = <<<END_OF_HEADERS
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+  <title>Orienteering Event Management</title>
+  <meta content="Mark O'Connell" name="author">
+END_OF_HEADERS;
+
+  if ($paragraph_style) {
+    $headers_to_show .= get_paragraph_style_header();
+  }
+
+  if ($table_style) {
+    $headers_to_show .= get_table_style_header();
+  }
+
+  if ($form_style) {
+    $headers_to_show .= get_input_form_style_header();
+  }
+
+  $headers_to_show .= "\n</head>\n<body>\n<br>\n";
+  return ($headers_to_show);
+}
+
+function get_web_page_footer() {
+  $footers_to_show = "\n</body>\n</html>\n";
+  return ($footers_to_show);
+}
+
+function error_and_exit($error_string) {
+  echo get_web_page_header(true, false, false);
+  echo $error_string;
+  echo get_web_page_footer();
+  exit(1);
+}
+
+function get_error_info_string() {
+  $extra_error_info = <<<END_OF_ERROR_INFO
+<br><p>This is a BYOM (Bring Your Own Map) Orienteering control.  For more information on orienteering, 
+type "orienteering new england" into Google to learn about the sport and to find events in your area.
+If this is hanging in the woods, please leave it alone so as not to ruin an existing orienteering course that
+others may be currently enjoying.
+END_OF_ERROR_INFO;
+  return ($extra_error_info);
 }
 
 // get table style elements

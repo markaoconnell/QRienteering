@@ -1,6 +1,8 @@
 <?php
 require 'common_routines.php';
 
+ck_testing();
+
 // Get the submitted info
 // echo "<p>\n";
 $competitor_name = $_COOKIE["competitor_name"];
@@ -8,23 +10,9 @@ $course = $_COOKIE["course"];
 $competitor_id = $_COOKIE["competitor_id"];
 $next_control = $_COOKIE["next_control"];
 $event = $_COOKIE["event"];
-?>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html; charset=ISO-8859-1"
- http-equiv="content-type">
-  <title>Orienteering Event Management</title>
-  <meta content="Mark O'Connell" name="author">
-<?php
-echo get_paragraph_style_header();
-?>
-</head>
-<body>
-<br>
+echo get_web_page_header(true, false, false);
 
-<?php
 // Validate that all looks good
 $error = false;
 if ($event == "") {
@@ -104,7 +92,5 @@ if (file_exists("./${competitor_path}/start")) {
 if (!$error) {
   echo "<p>All good ${competitor_name}, you are ready to start on " . ltrim($course, "0..9-") . "!\n";
 }
-?>
 
-</body>
-</html>
+echo get_web_page_footer();
