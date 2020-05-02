@@ -85,7 +85,7 @@ sub initialize_event {
   print WHITE "201\n202\n203\n204\n205";
   close (WHITE);
   open(YELLOW, ">./UnitTestingEvent/Courses/02-Yellow/controls.txt");
-  print YELLOW "202\n204\206\n208\n210";
+  print YELLOW "202\n204\n206\n208\n210";
   close(YELLOW);
 }
 

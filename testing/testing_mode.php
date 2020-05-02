@@ -25,6 +25,15 @@ function artificial_input_file_parse() {
 //echo "Set COOKIE {$this_line_elements[1]} to {$this_line_elements[2]}\n";
           $_COOKIE[$this_line_elements[1]] = $this_line_elements[2];
         }
+        else if ($this_line_elements[0] == "POST") {
+// POSTs are more likely to have embedded newlines, which don't play nicely with the
+// preg_split on whitespace earlier.  So use a sentinel which will be replaced by
+// real newlines here
+//echo "Set POST {$this_line_elements[1]} to {$this_line_elements[2]}\n";
+          $post_processed_value = str_replace("--newline--", "\n", $this_line_elements[2]);
+//echo "Set POST {$this_line_elements[1]} to $post_processed_value.\n";
+          $_POST[$this_line_elements[1]] = $post_processed_value;
+        }
       }
     }
   }
