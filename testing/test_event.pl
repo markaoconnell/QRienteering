@@ -69,6 +69,24 @@ sub check_on_course {
   return ($output);
 }
 
+sub check_competitor_on_course {
+  my($competitor_name, $competitor_id) = @_;
+
+  %GET = qw(event UnitTestingEvent include_competitor_id 1);
+  %COOKIE = ();
+  hashes_to_artificial_file();
+
+  my($cmd) = "php ../on_course.php";
+  my($output);
+  $output = qx($cmd);
+
+  if ($output !~ /$competitor_name \($competitor_id\)/) {
+    error_and_exit("Name and id - $competitor_name and $competitor_id - not found in on_course output.\n$output");
+  }
+  
+  return ($output);
+}
+
 sub check_splits {
   my($result_file, $expected_splits_ref) = @_;
   $TEST_INFO{"subroutine"} = "check_splits for $result_file";
@@ -121,6 +139,7 @@ $competitor_4_id = register_one_entrant($COMPETITOR_4, "01-White");
 
 check_results(0);
 check_on_course(4);
+check_competitor_on_course($COMPETITOR_1, $competitor_1_id);
 
 success();
 
@@ -164,6 +183,8 @@ if (($no_newline_output !~ m#$COMPETITOR_2</td><td>[0-9:]+</td><td>start</td>#) 
   error_and_exit("On course output showing wrong controls.\n$output");
 }
 
+
+check_competitor_on_course($COMPETITOR_2, $competitor_2_id);
 
 success();
 
@@ -263,6 +284,7 @@ if (($no_newline_output !~ m#$COMPETITOR_2</td><td>[0-9:]+</td><td>3</td>#) || (
   error_and_exit("On course output showing wrong controls.\n$output");
 }
 
+check_competitor_on_course($COMPETITOR_3, $competitor_3_id);
 
 success();
 
