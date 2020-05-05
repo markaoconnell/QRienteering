@@ -6,7 +6,7 @@ require "testHelpers.pl";
 require "success_call_helpers.pl";
 
 my(%GET, %TEST_INFO, %COOKIE);
-my($cmd, $output, $output2, $competitor_id, $path, $time_now);
+my($cmd, $output, $output2, $competitor_id, $path, $time_now, $controls_found_path);
 my(@file_contents_array);
 my(@directory_contents);
 
@@ -81,43 +81,14 @@ success();
 # Test 4 - finish after registering but not starting
 # First register, then call finish without calling start
 %TEST_INFO = qw(Testname FinishWithoutStart);
+
 %GET = qw(event UnitTestingEvent course 01-White);
 $GET{"competitor_name"} = $COMPETITOR_NAME;
 %COOKIE = ();  # empty hash
-hashes_to_artificial_file();
-$cmd = "php ../register_competitor.php";
-$output = qx($cmd);
 
-if ($output !~ /Registration complete: $COMPETITOR_NAME on White/) {
-  error_and_exit("Web page output wrong, registration complete string not found.\n$output");
-}
+register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
+$competitor_id = $TEST_INFO{"competitor_id"};
 
-#print $output;
-
-my($competitor_id);
-$competitor_id = qx(ls -1t ./UnitTestingEvent/Competitors | head -n 1);
-chomp($competitor_id);
-print "My competitor_id is $competitor_id\n";
-if (! -d "./UnitTestingEvent/Competitors/$competitor_id") {
-  error_and_exit("Directory ./UnitTestingEvent/Competitors/$competitor_id not found.");
-}
-
-$path = "./UnitTestingEvent/Competitors/$competitor_id";
-if ((! -f "$path/name") || (! -f "$path/course")) {
-  error_and_exit("One of $path/name or $path/course does not exist.");
-}
-
-@directory_contents = check_directory_contents($path, qw(name course));
-if ($#directory_contents != -1) {
-  error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
-}
-
-my(@name_file) = file_get_contents("$path/name");
-my(@course_file) = file_get_contents("$path/course");
-
-if (($#name_file != 0) || ($#course_file != 0) || ($name_file[0] ne $COMPETITOR_NAME) || ($course_file[0] ne "01-White")) {
-  error_and_exit("File contents wrong, name_file: " . join(",", @name_file) . "\n\tcourse_file: " . join("," , @course_file));
-}
 
 # Now finish the course (should not work, as we haven't started)
 %COOKIE = qw(event UnitTestingEvent course 01-White);
@@ -134,13 +105,19 @@ if (($output !~ /Course White not yet started/) || ($output !~ /Please scan the 
 #print $output;
 
 $path = "./UnitTestingEvent/Competitors/$competitor_id";
-if (-f "$path/finish") {
-  error_and_exit("$path/finish does exist.");
+my($controls_found_path) = "$path/controls_found";
+if (-f "$controls_found_path/finish") {
+  error_and_exit("$controls_found_path/finish does exist.");
 }
 
-@directory_contents = check_directory_contents($path, qw(name course));
+@directory_contents = check_directory_contents($path, qw(name course controls_found));
 if ($#directory_contents != -1) {
   error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+}
+
+@directory_contents = check_directory_contents($controls_found_path, qw());
+if ($#directory_contents != -1) {
+  error_and_exit("More files exist in $controls_found_path than expected: " . join(",", @directory_contents));
 }
 
 
@@ -160,77 +137,20 @@ if (-d "./UnitTestingEvent/Results/01-White") {
 # Call start (already registered in prior test), then finish twice
 # This will be a dnf, but I just want to make sure the second finish is handled
 %TEST_INFO = qw(Testname FinishTwice);
+
 %COOKIE = qw(event UnitTestingEvent course 01-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
-hashes_to_artificial_file();
-$cmd = "php ../start_course.php";
-$output = qx($cmd);
 
-if ($output !~ /White course started for $COMPETITOR_NAME./) {
-  error_and_exit("Web page output wrong, course start string not found.\n$output");
-}
-
-#print $output;
-
-$path = "./UnitTestingEvent/Competitors/$competitor_id";
-if (! -f "$path/start") {
-  error_and_exit("$path/start does not exist.");
-}
-
-@directory_contents = check_directory_contents($path, qw(name course start));
-if ($#directory_contents != -1) {
-  error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
-}
-
-
-@file_contents_array = file_get_contents("$path/start");
-$time_now = time();
-if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
-  error_and_exit("File contents wrong, start_time_file: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
-}
+start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Now finish the course
 %COOKIE = qw(event UnitTestingEvent course 01-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
-hashes_to_artificial_file();
-$cmd = "php ../finish_course.php";
-$output = qx($cmd);
 
-if (($output !~ /Course complete, time taken/) || ($output !~ /Results on White/) ||
-    ($output !~ /$COMPETITOR_NAME/) || ($output !~ /DNF/) || ($output =~ /Second scan of finish/)) {
-  error_and_exit("Web page output wrong, DNF entry not found.\n$output");
-}
-
-#print $output;
-
-$path = "./UnitTestingEvent/Competitors/$competitor_id";
-if (! -f "$path/finish") {
-  error_and_exit("$path/finish does not exist.");
-}
-
-@directory_contents = check_directory_contents($path, qw(name course start finish dnf));
-if ($#directory_contents != -1) {
-  error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
-}
-
-
-@file_contents_array = file_get_contents("$path/finish");
-$time_now = time();
-if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
-  error_and_exit("File contents wrong, $path/finish: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
-}
-
-my(@start_time_array) = file_get_contents("$path/start");
-my($results_file) = sprintf("%06d,%s", (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
-
-
-my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/01-White", $results_file);
-if (grep(/NOTFOUND:$results_file/, @results_array)) {
-  error_and_exit("No results file ($results_file) found, contents are: " . join(",", @results_array));
-}
+finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 
@@ -238,41 +158,13 @@ if (grep(/NOTFOUND:$results_file/, @results_array)) {
 %COOKIE = qw(event UnitTestingEvent course 01-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
-hashes_to_artificial_file();
-$cmd = "php ../finish_course.php";
-$output = qx($cmd);
+
+$output = finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
+
 
 if (($output !~ /Course complete, time taken/) || ($output !~ /Results on White/) ||
     ($output !~ /$COMPETITOR_NAME/) || ($output !~ /DNF/) || ($output !~ /Second scan of finish/)) {
   error_and_exit("Web page output wrong, no second finish scan message found.\n$output");
-}
-
-#print $output;
-
-$path = "./UnitTestingEvent/Competitors/$competitor_id";
-if (! -f "$path/finish") {
-  error_and_exit("$path/finish does not exist.");
-}
-
-@directory_contents = check_directory_contents($path, qw(name course start finish dnf));
-if ($#directory_contents != -1) {
-  error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
-}
-
-
-@file_contents_array = file_get_contents("$path/finish");
-$time_now = time();
-if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
-  error_and_exit("File contents wrong, $path/finish: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
-}
-
-my(@start_time_array) = file_get_contents("$path/start");
-my($results_file) = sprintf("%06d,%s", (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
-
-
-my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/01-White", $results_file);
-if (grep(/NOTFOUND:$results_file/, @results_array)) {
-  error_and_exit("No results file ($results_file) found, contents are: " . join(",", @results_array));
 }
 
 success();

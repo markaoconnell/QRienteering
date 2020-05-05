@@ -112,9 +112,14 @@ if ($output !~ /already started for $COMPETITOR_NAME/) {
 #print $output;
 
 my($path) = "./UnitTestingEvent/Competitors/$competitor_id";
-@directory_contents = check_directory_contents($path, qw(name course start));
+@directory_contents = check_directory_contents($path, qw(name course controls_found));
 if ($#directory_contents != -1) {
   error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+}
+
+@directory_contents = check_directory_contents("${path}/controls_found", qw(start));
+if ($#directory_contents != -1) {
+  error_and_exit("More files exist in ${path}/controls_found than expected: " . join(",", @directory_contents));
 }
 
 

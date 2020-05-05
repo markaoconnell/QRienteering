@@ -49,12 +49,7 @@ if ($download_csv) {
   $results_string .= "</pre>\n";
 }
 
-$results_string .= "<p>Show results for ";
-foreach ($course_list as $one_course) {
-  $results_string .= "<a href=\"./view_results?event=${event}&course=$one_course\">" . ltrim($one_course, "0..9-") . "</a> \n";
-}
-$results_string .= "<a href=\"./view_results?event=${event}\">All</a> \n";
-
+$results_string .= get_all_course_result_links($event);
 
 
 echo get_web_page_header(true, true, false);

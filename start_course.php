@@ -14,6 +14,7 @@ if (($event == "") || ($competitor_id == "")) {
 }
 
 $competitor_path = "./{$event}/Competitors/{$competitor_id}";
+$controls_found_path = "{$competitor_path}/controls_found";
 // $control_list = file("./${event}/Courses/${course}");
 
 if (file_exists("{$competitor_path}/name")) {
@@ -23,11 +24,11 @@ else {
   error_and_exit("<p>ERROR: Bad registration for event \"{$event}\" and competitor \"{$competitor_id}\", please reregister and try again?");
 }
 
-if (file_exists("${competitor_path}/start")) {
+if (file_exists("${controls_found_path}/start")) {
   $error_string = "Course " . ltrim($course, "0..9-") . " already started for {$competitor_name}.";
 }
 else {
-  file_put_contents("${competitor_path}/start", strval(time()));
+  file_put_contents("${controls_found_path}/start", strval(time()));
 }
 
 echo get_web_page_header(true, false, false);

@@ -15,6 +15,7 @@ $competitor_id = $result_pieces[1];
 
 $competitor_path = "./" . $event . "/Competitors/" . $competitor_id;
 $competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
+$controls_found_path = "{$competitor_path}/controls_found";
 
 $control_list = file("./{$event}/Courses/{$course}/controls.txt");
 $control_list = array_map('trim', $control_list);
@@ -22,27 +23,28 @@ $control_list = array_map('trim', $control_list);
 // print_r($control_list);
 $error_string = "";
 
-if (!file_exists("{$competitor_path}/start")) {
+if (!file_exists("{$controls_found_path}/start")) {
   $error_string = "<p>Course not started\n";
 }
 
-$start_time = file_get_contents("{$competitor_path}/start");
+$start_time = file_get_contents("{$controls_found_path}/start");
 
 // See how many controls have been completed
-$controls_done = scandir("./{$competitor_path}");
-$controls_done = array_diff($controls_done, array(".", "..", "course", "name", "next", "start", "finish", "extra", "dnf")); // Remove the annoying . and .. entries
+$controls_done = scandir("./{$controls_found_path}");
+$controls_done = array_diff($controls_done, array(".", "..", "start", "finish")); // Remove the annoying . and .. entries
 $number_controls_found = count($controls_done);
 
 $split_times = array();
 $cumulative_time = array();
 $prior_control_time = $start_time;
-for ($i = 0; $i < $number_controls_found; $i++){
-  $time_at_control[$i] = file_get_contents("{$competitor_path}/{$i}");
+foreach ($controls_done as $control_entry) {
+  $control_info_array = explode(",", $control_entry);  // format is <time>,<control_id>
+  $time_at_control[$i] = $control_info_array[0];
   $split_times[$i] = $time_at_control[$i] - $prior_control_time;
   $cumulative_time[$i] = $time_at_control[$i] - $start_time;
   $prior_control_time = $time_at_control[$i];
 }
-$time_at_control[$i] = file_get_contents("{$competitor_path}/finish");
+$time_at_control[$i] = file_get_contents("{$controls_found_path}/finish");
 $split_times[$i] = $time_at_control[$i] - $prior_control_time;
 $cumulative_time[$i] = $time_at_control[$i] - $start_time;
 
@@ -52,15 +54,15 @@ if (file_exists("{$competitor_path}/extra")) {
   $extra_controls_string = "<tr></tr><tr><td colspan=4>Wrong controls punched (not on course)</td></tr>\n";
   foreach ($extra_controls as $extra_one) {
     if ($extra_one != "") {
-      $extra_control_info = explode(",", $extra_one);
-      $extra_controls_string .= "<tr><td></td><td>{$extra_control_info[0]}</td><td></td><td></td><td>" . strftime("%T", $extra_control_info[1]) . "</td>\n";
+      $extra_control_info = explode(",", $extra_one);  // Format of each entry is <time>,<control_id>
+      $extra_controls_string .= "<tr><td></td><td>{$extra_control_info[1]}</td><td></td><td></td><td>" . strftime("%T", $extra_control_info[0]) . "</td>\n";
     }
   }
 }
 
 $table_string = "";
 $table_string .= "<p class=\"title\">Splits for ${competitor_name} on " . ltrim($course, "0..9-") . "\n";
-$table_string .= "<table border=1><tr><th>Control Num</th><th>Control Id</th><th>Split</th><th>Cumulative</th><th>Time of Day</th></tr>\n";
+$table_string .= "<table border=1><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of Day</th></tr>\n";
 $table_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . strftime("%T (%a - %d)", $start_time) . "</td></tr>\n";
 for ($i = 0; $i < $number_controls_found; $i++){
   $table_string .= "<tr><td>" . ($i + 1) . "</td><td>" . $control_list[$i] . "</td><td>" . formatted_time($split_times[$i]) . "</td>" .

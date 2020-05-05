@@ -53,6 +53,7 @@ if (!$error) {
     fwrite($competitor_file, $competitor_name);
     fclose($competitor_file);
     file_put_contents($competitor_path . "/course", $course);
+    mkdir("./{$competitor_path}/controls_found");
     
     // Set the cookies with the name, course, next control
     $timeout_value = time() + 3600 * 6;  // 6 hour timeout, should be fine for most any course

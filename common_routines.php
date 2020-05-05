@@ -175,6 +175,19 @@ function get_csv_results($event, $course) {
   return($result_string);
 }
 
+function get_all_course_result_links($event) {
+  $course_list = scandir("./${event}/Courses");
+  $course_list = array_diff($course_list, array(".", ".."));
+
+  $links_string = "<p>Show results for ";
+  foreach ($course_list as $one_course) {
+    $links_string .= "<a href=\"./view_results?event=${event}&course=$one_course\">" . ltrim($one_course, "0..9-") . "</a> \n";
+  }
+  $links_string .= "<a href=\"./view_results?event=${event}\">All</a> \n";
+
+  return($links_string);
+}
+
 // Explode a comma separated string into an array
 function explode_lines(&$item1, $key)
 {

@@ -3,6 +3,10 @@ require 'common_routines.php';
 
 ck_testing();
 
+function non_empty($string_value) {
+  return(strlen(trim($string_value)) > 0);
+}
+
 // Get the submitted info
 // echo "<p>\n";
 if ($_GET["TIME_LIMIT"] == "") {
@@ -32,8 +36,8 @@ foreach ($courses_array as $course) {
 }
 
 foreach ($competitor_list as $competitor) {
-  if (!file_exists("${competitor_directory}/${competitor}/finish")) {
-    if (!file_exists("${competitor_directory}/${competitor}/start")) {
+  if (!file_exists("${competitor_directory}/${competitor}/controls_found/finish")) {
+    if (!file_exists("${competitor_directory}/${competitor}/controls_found/start")) {
       $file_info = stat("{$competitor_directory}/{$competitor}");
       // Weed out people who's registration time is too old (one day in seconds)
       if (($current_time - $file_info["mtime"]) < $TIME_LIMIT) {
@@ -42,7 +46,7 @@ foreach ($competitor_list as $competitor) {
     }
     else {
       $course = file_get_contents("${competitor_directory}/${competitor}/course");
-      $start_time = file_get_contents("{$competitor_directory}/${competitor}/start");
+      $start_time = file_get_contents("{$competitor_directory}/${competitor}/controls_found/start");
       // Weed out people who started more than one day ago
       if (($current_time - $start_time) < $TIME_LIMIT) {
         $on_course[$course][] = $competitor;
@@ -80,13 +84,16 @@ foreach (array_keys($on_course) as $course) {
       if ($include_competitor_id) {
         $competitor_name .= " ({$competitor})";
       }
-      $start_time = file_get_contents("${competitor_path}/start");
-      $controls_done = scandir("${competitor_path}");
-      $controls_done = array_diff($controls_done, array(".", "..", "course", "name", "next", "start", "finish", "extra", "dnf"));
+      $start_time = file_get_contents("${competitor_path}/controls_found/start");
+      $controls_done = scandir("${competitor_path}/controls_found");
+      $controls_done = array_diff($controls_done, array(".", "..", "start", "finish"));
       $num_controls_done = count($controls_done);
       if ($num_controls_done > 0) {
-        $last_control_file = $num_controls_done - 1;
-        $last_control_time = file_get_contents("${competitor_path}/${last_control_file}");
+        // The format of the filename is <time>,<control_id>
+        $last_control_entry = $controls_done[$num_controls_done - 1];
+        $last_control_info_array = explode(",", $last_control_entry);
+        
+        $last_control_time = $last_control_info_array[0];
 
         // For the split times, controls are 0 based, but for printing, make them 1 based
         $last_control = $num_controls_done;
@@ -100,19 +107,14 @@ foreach (array_keys($on_course) as $course) {
       // report this
       if (file_exists("{$competitor_path}/extra")) {
         $extra_controls = explode("\n", file_get_contents("{$competitor_path}/extra"));
+        $extra_controls = array_values(array_filter($extra_controls, non_empty));
         $num_extra_controls = count($extra_controls);
         $last_extra_control_info = $extra_controls[$num_extra_controls - 1];
-        if (trim($last_extra_control_info) == "") {
-          // The last line is often blank - what a hack on my part
-          // Should have a better way of finding the last control actually found, but this will do
-          // for the moment
-          $last_extra_control_info = $extra_controls[$num_extra_controls - 2];
-        }
-        $last_extra_control_pieces = explode(",", $last_extra_control_info);   // Format is control-id,time
+        $last_extra_control_pieces = explode(",", $last_extra_control_info);   // Format is time,control-id
 
-        if (intval($last_extra_control_pieces[1]) > intval($last_control_time)) {
-           $last_control_time = $last_extra_control_pieces[1];
-           $last_control = "{$last_extra_control_pieces[0]} (not on course)";
+        if (intval($last_extra_control_pieces[0]) > intval($last_control_time)) {
+           $last_control_time = $last_extra_control_pieces[0];
+           $last_control = "{$last_extra_control_pieces[1]} (not on course)";
         }
       }
 

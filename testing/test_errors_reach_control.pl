@@ -7,7 +7,7 @@ require "testHelpers.pl";
 require "success_call_helpers.pl";
 
 my(%GET, %TEST_INFO, %COOKIE);
-my($cmd, $output, $output2, $competitor_id, $path, $time_now);
+my($cmd, $output, $output2, $competitor_id, $path, $time_now, $controls_found_path);
 my(@file_contents_array);
 my(@directory_contents);
 
@@ -241,13 +241,13 @@ if ($output !~ /Found wrong control: 345/) {
 
 #print $output;
 
-$path = "./UnitTestingEvent/Competitors/$competitor_id";
-if (-f "$path/2") {
-  error_and_exit("$path/2 exists, should be not as control was wrong.");
+$controls_found_path = "./UnitTestingEvent/Competitors/${competitor_id}/controls_found";
+if (-f "$controls_found_path/345") {
+  error_and_exit("$controls_found_path/345 exists, should be not as control was wrong.");
 }
 
-@directory_contents = check_directory_contents($path, qw(name course start 0 1 extra));
-if (grep(/NOTFOUND/, @directory_contents) || grep(/finish/, @directory_contents) || grep(/dnf/, @directory_contents)) {
+@directory_contents = check_directory_contents($controls_found_path, qw(start));
+if (grep(/NOTFOUND/, @directory_contents) || grep(/finish/, @directory_contents)) {
   error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
 }
 
@@ -273,14 +273,14 @@ if ($output !~ /ERROR: Time lag of > 30 seconds since scan of control 202 - inco
 
 #print $output;
 
-$path = "./UnitTestingEvent/Competitors/$competitor_id";
-if (-f "$path/2") {
-  error_and_exit("$path/2 exists, should be not as control rescan was too long ago.");
+$controls_found_path = "./UnitTestingEvent/Competitors/${competitor_id}/controls_found";
+if (-f "$controls_found_path/202") {
+  error_and_exit("$controls_found_path/202 exists, should be not as control rescan was too long ago.");
 }
 
-@directory_contents = check_directory_contents($path, qw(name course start 0 1 extra));
-if (grep(/NOTFOUND/, @directory_contents) || grep(/finish/, @directory_contents) || grep(/dnf/, @directory_contents)) {
-  error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+@directory_contents = check_directory_contents($controls_found_path, qw(start));
+if (grep(!/^[0-9]+,[0-9a-f]+$/, @directory_contents)) {
+  error_and_exit("More files exist in $controls_found_path than expected: " . join(",", @directory_contents));
 }
 
 
@@ -306,14 +306,14 @@ if ($output !~ /ERROR: Time lag of > 30 seconds since scan of control 203 - inco
 
 #print $output;
 
-$path = "./UnitTestingEvent/Competitors/$competitor_id";
-if (-f "$path/2") {
-  error_and_exit("$path/2 exists, should be not as control rescan was too long ago.");
+$controls_found_path = "./UnitTestingEvent/Competitors/${competitor_id}/controls_found";
+if (-f "$controls_found_path/203") {
+  error_and_exit("$controls_found_path/203 exists, should be not as control rescan was too long ago.");
 }
 
-@directory_contents = check_directory_contents($path, qw(name course start 0 1 extra));
-if (grep(/NOTFOUND/, @directory_contents) || grep(/finish/, @directory_contents) || grep(/dnf/, @directory_contents)) {
-  error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+@directory_contents = check_directory_contents($controls_found_path, qw(start));
+if (grep(!/^[0-9]+,[0-9a-f]+$/, @directory_contents)) {
+  error_and_exit("More files exist in $controls_found_path than expected: " . join(",", @directory_contents));
 }
 
 

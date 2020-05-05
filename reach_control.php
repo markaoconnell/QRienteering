@@ -51,20 +51,26 @@ if (!file_exists("./{$event}/Competitors/{$competitor_id}") || !file_exists("./{
 
 
 $competitor_path = "./${event}/Competitors/${competitor_id}";
+$controls_found_path = "{$competitor_path}/controls_found";
 $control_list = file("./${event}/Courses/${course}/controls.txt");
 $control_list = array_map('trim', $control_list);
 //echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
 
 
-if (!file_exists("${competitor_path}/start")) {
+if (!file_exists("${controls_found_path}/start")) {
   $competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
   error_and_exit("<p>Course " . ltrim($course, "0..9-") . " not started for {$competitor_name}, please return and scan Start QR code.\n");
 }
 
+if (file_exists("${controls_found_path}/finish")) {
+  $competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
+  error_and_exit("<p>Course " . ltrim($course, "0..9-") . " already finished for {$competitor_name}, please return and re-register to restart the course.\n");
+}
+
 // See how many controls have been completed
-$controls_done = scandir("./${competitor_path}");
-$controls_done = array_diff($controls_done, array(".", "..", "course", "name", "next", "start", "finish", "extra", "dnf")); // Remove the annoying . and .. entries
+$controls_done = scandir("./${controls_found_path}");
+$controls_done = array_diff($controls_done, array(".", "..", "start", "finish")); // Remove the annoying . and .. entries
 $start_time = file_get_contents("./{$competitor_path}/start");
 $time_on_course = time() - $start_time;
 // echo "<br>Controls done on the ${course} course.<br>\n";
@@ -88,7 +94,7 @@ if ($control_id != $control_list[$number_controls_found]) {
     if ($control_id != "ERROR") {
       $error_string .= "<p>Found wrong control: {$control_id}, course " . ltrim($course, "0..9-") . ", control #" . ($number_controls_found + 1) .
                             ", expected control " . $control_list[$number_controls_found] . "\n";
-      $extra_control_string = "{$control_id}," . strval(time()) . "\n";
+      $extra_control_string = strval(time()) . ",{$control_id}\n";
       file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
       // echo "<p>This looks like it also wasn't the prior control\n";
     }
@@ -106,7 +112,8 @@ if ($control_id != $control_list[$number_controls_found]) {
   }
 }
 else {
-  file_put_contents($competitor_path . "/" . $number_controls_found, strval(time()));
+  $control_found_filename = "{$controls_found_path}/" . strval(time()) . ",{$control_id}";
+  file_put_contents($control_found_filename, "");
   $remaining_controls = count($control_list) - $number_controls_found - 1;
   if ($remaining_controls <= 0) {
     $next_control = "Finish";
