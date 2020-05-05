@@ -52,9 +52,8 @@ if (!file_exists("./{$event}/Competitors/{$competitor_id}") || !file_exists("./{
 
 $competitor_path = "./${event}/Competitors/${competitor_id}";
 $controls_found_path = "{$competitor_path}/controls_found";
-$control_list = file("./${event}/Courses/${course}/controls.txt");
-$control_list = array_map('trim', $control_list);
-//echo "Controls on the ${course} course.<br>\n";
+$control_list = read_controls("./{$event}/Courses/{$course}/controls.txt");
+// echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
 
 
@@ -71,7 +70,7 @@ if (file_exists("${controls_found_path}/finish")) {
 // See how many controls have been completed
 $controls_done = scandir("./${controls_found_path}");
 $controls_done = array_diff($controls_done, array(".", "..", "start", "finish")); // Remove the annoying . and .. entries
-$start_time = file_get_contents("./{$competitor_path}/start");
+$start_time = file_get_contents("./{$controls_found_path}/start");
 $time_on_course = time() - $start_time;
 // echo "<br>Controls done on the ${course} course.<br>\n";
 // print_r($controls_done);
@@ -79,21 +78,21 @@ $time_on_course = time() - $start_time;
 // Are we at the right control?
 $number_controls_found = count($controls_done);
 $prior_control_repeat = false;
-// echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found] . "--\n";
-if ($control_id != $control_list[$number_controls_found]) {
+// echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found][0] . "--\n";
+if ($control_id != $control_list[$number_controls_found][0]) {
   // echo "<p>This looks like the wrong control\n";
   // Not the right control, but if we're still at the prior control, the person probably just scanned the control twice - that's ok
   if ($number_controls_found == 0) {
     $prior_control = "NoPriorControl";
   }
   else {
-    $prior_control = $control_list[$number_controls_found - 1];
+    $prior_control = $control_list[$number_controls_found - 1][0];
   }
 
   if ($control_id != $prior_control) {
     if ($control_id != "ERROR") {
       $error_string .= "<p>Found wrong control: {$control_id}, course " . ltrim($course, "0..9-") . ", control #" . ($number_controls_found + 1) .
-                            ", expected control " . $control_list[$number_controls_found] . "\n";
+                            ", expected control " . $control_list[$number_controls_found][0] . "\n";
       $extra_control_string = strval(time()) . ",{$control_id}\n";
       file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
       // echo "<p>This looks like it also wasn't the prior control\n";
@@ -106,7 +105,7 @@ if ($control_id != $control_list[$number_controls_found]) {
       $next_control = "Finish";
     }
     else {
-      $next_control = $control_list[$number_controls_found];
+      $next_control = $control_list[$number_controls_found][0];
     }
   $control_number_for_printing = $number_controls_found;
   }
@@ -119,7 +118,7 @@ else {
     $next_control = "Finish";
   }
   else {
-    $next_control = $control_list[$number_controls_found + 1];
+    $next_control = $control_list[$number_controls_found + 1][0];
   }
   $control_number_for_printing = $number_controls_found + 1;
   // echo "<p>Saved to the file ${competitor_path}/${number_controls_found}.\n";

@@ -10,6 +10,10 @@ $MAX_CONTROL_CODE_LEN = 40;
 $MAX_COURSES = 20;
 $MAX_CONTROLS = 50;
 
+function ck_valid_chars($string_to_check) {
+  return (preg_match("/^[a-zA-Z0-9_-]+$/", $string_to_check));
+}
+
 function ck_control_name_alnum($string_to_check) {
   return(ctype_alnum($string_to_check) ? 1 : 0);
 }
@@ -23,20 +27,20 @@ if (isset($_POST["submit"])) {
   $found_error = false;
   echo "Name of event: " . $_POST["event_name"] . "\n<p>";
   $event_name = $_POST["event_name"];
-  if (!ctype_alnum($event_name) || (substr($event_name, -5) == ".done")) {
+  if (!ck_valid_chars($event_name) || (substr($event_name, -5) == ".done")) {
     echo "<p>Event \"{$event_name}\" can only contain letters and numbers and cannot end in \".done\".\n";
     $found_error = true;
   }
   $event_name .= "Event";
   $course_array = array();
-  echo "<p>Here is the FILES array.\n";
-  print_r($_FILES);
-  echo "Here are the elements: " . $_FILES["upload_file"] . "\n";
-  echo "<p>and here's files of upload_file.\n<p>";
-  print_r($_FILES["upload_file"]);
-  echo "<p>Here is the course description textbox.\n";
-  echo "<p>" . $_POST["course_description"];
-  echo "<p>And that's all she wrote\n";
+  //echo "<p>Here is the FILES array.\n";
+  //print_r($_FILES);
+  //echo "Here are the elements: " . $_FILES["upload_file"] . "\n";
+  //echo "<p>and here's files of upload_file.\n<p>";
+  //print_r($_FILES["upload_file"]);
+  //echo "<p>Here is the course description textbox.\n";
+  //echo "<p>" . $_POST["course_description"];
+  //echo "<p>And that's all she wrote\n";
 
   if ($_FILES["upload_file"]["size"] > 0) {
     $file_contents = file_get_contents($_FILES["upload_file"]["tmp_name"]);
@@ -56,11 +60,11 @@ if (isset($_POST["submit"])) {
         continue;
       }
 
-      // Course name must begin with a letter and may only contain [a-zA-Z0-9-]
+      // Course name must begin with a letter and may only contain [a-zA-Z0-9-_]
       // controls may only contain [a-zA-Z0-9]
       $course_name_and_controls = explode(",", $this_course);
       $course_name = trim($course_name_and_controls[0]);
-      if ((ctype_alpha(substr($course_name, 0, 1))) && (ctype_alnum(str_replace("-", "", $course_name))) &&
+      if ((ctype_alpha(substr($course_name, 0, 1))) && (ck_valid_chars($course_name)) && 
             (strlen($course_name) < $MAX_COURSE_NAME_LEN)) {
         echo "<p>Course name {$course_name} passes the checks.\n";
       }
@@ -89,6 +93,9 @@ if (isset($_POST["submit"])) {
       }
 
       if (count($course_name_and_controls) > 1) {
+        // For a linear course, the controls are all worth one point. TBD if this is the right
+        // place to do this.
+        $control_list = array_map(function ($control) { return("{$control},1"); }, $control_list);
         echo "<p>Found controls for course {$course_name}: " . implode("--", $control_list) . "\n";
         $course_array[] = array($course_name, $control_list);
       }
@@ -104,14 +111,15 @@ if (isset($_POST["submit"])) {
       mkdir("./{$event_name}/Competitors");
       mkdir("./{$event_name}/Courses");
       mkdir("./{$event_name}/Results");
-      echo "<p>Created event successfully {$event_name}\n";
   
       for ($i = 0; $i < count($course_array); $i++) {
         $prefix = sprintf("%02d", $i);
         mkdir("./{$event_name}/Courses/{$prefix}-{$course_array[$i][0]}");
         mkdir("./{$event_name}/Results/{$prefix}-{$course_array[$i][0]}");
+        // Linear course is 1 point per control (unlike a scoreO)
         file_put_contents("./${event_name}/Courses/{$prefix}-{$course_array[$i][0]}/controls.txt", implode("\n", $course_array[$i][1]));
       }
+      echo "<p>Created event successfully {$event_name}\n";
     }
   }
   else {

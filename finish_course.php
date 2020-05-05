@@ -20,8 +20,7 @@ if (!file_exists($competitor_path) || !file_exists("./{$event}/Courses/{$course}
   error_and_exit("<p>ERROR: Event \"{$event}\" or competitor \"{$competitor}\" appears to be no longer appears valid, please re-register and try again.\n");
 }
 
-$control_list = file("./${event}/Courses/${course}/controls.txt");
-$control_list = array_map('trim', $control_list);
+$control_list = read_controls("./${event}/Courses/${course}/controls.txt");
 //echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
 $error_string = "";
@@ -40,7 +39,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
   // Are we at the right control?
   $number_controls_found = count($controls_done);
   $number_controls_on_course = count($control_list);
-  // echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found] . "--\n";
+  // echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found][0] . "--\n";
   if ($number_controls_found != $number_controls_on_course) {
       $error_string .= "<p>Not all controls found, found ${number_controls_found} controls, expected ${number_controls_on_course} controls.\n";
       file_put_contents("{$competitor_path}/dnf", $error_string, FILE_APPEND);

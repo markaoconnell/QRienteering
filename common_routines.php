@@ -188,6 +188,14 @@ function get_all_course_result_links($event) {
   return($links_string);
 }
 
+
+function read_controls($filename) {
+  $control_list = file($filename);
+  $control_list = array_values(array_filter($control_list, function ($string) { return (strlen(trim($string)) > 0); }));
+  return (array_map(function ($string) { return(explode(",", trim($string))); },  $control_list));
+}
+
+
 // Explode a comma separated string into an array
 function explode_lines(&$item1, $key)
 {

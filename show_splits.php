@@ -17,8 +17,7 @@ $competitor_path = "./" . $event . "/Competitors/" . $competitor_id;
 $competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
 $controls_found_path = "{$competitor_path}/controls_found";
 
-$control_list = file("./{$event}/Courses/{$course}/controls.txt");
-$control_list = array_map('trim', $control_list);
+$control_list = read_controls("./{$event}/Courses/{$course}/controls.txt");
 //echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
 $error_string = "";
@@ -65,7 +64,7 @@ $table_string .= "<p class=\"title\">Splits for ${competitor_name} on " . ltrim(
 $table_string .= "<table border=1><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of Day</th></tr>\n";
 $table_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . strftime("%T (%a - %d)", $start_time) . "</td></tr>\n";
 for ($i = 0; $i < $number_controls_found; $i++){
-  $table_string .= "<tr><td>" . ($i + 1) . "</td><td>" . $control_list[$i] . "</td><td>" . formatted_time($split_times[$i]) . "</td>" .
+  $table_string .= "<tr><td>" . ($i + 1) . "</td><td>" . $control_list[$i][0] . "</td><td>" . formatted_time($split_times[$i]) . "</td>" .
                                            "<td>" . formatted_time($cumulative_time[$i]) . "</td><td>" . strftime("%T", $time_at_control[$i]) . "</td></tr>\n";
 }
 $table_string .= "<tr><td>Finish</td><td></td><td>" . formatted_time($split_times[$i]) . "</td>" .
