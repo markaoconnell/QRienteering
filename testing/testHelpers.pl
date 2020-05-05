@@ -2,10 +2,10 @@
 
 use strict;
 
-my($get_ref, $cookie_ref, $test_info_ref, $test_filename);
+my($get_ref, $cookie_ref, $post_ref, $test_info_ref, $test_filename);
 
 sub set_test_info {
-  ($get_ref, $cookie_ref, $test_info_ref, $test_filename) = @_;
+  ($get_ref, $cookie_ref, $post_ref, $test_info_ref, $test_filename) = @_;
   print "\nRunning tests from $test_filename\n";
 }
 
@@ -37,6 +37,9 @@ sub hashes_to_artificial_file {
   }
   foreach $entry (keys(%{$cookie_ref})) {
     print ARTIFICIAL_FILE "COOKIE $entry $cookie_ref->{$entry}\n";
+  }
+  foreach $entry (keys(%{$post_ref})) {
+    print ARTIFICIAL_FILE "POST $entry $post_ref->{$entry}\n";
   }
   close(ARTIFICIAL_FILE);
 }
@@ -74,19 +77,26 @@ sub check_directory_contents {
 
 sub initialize_event {
   # Make the event for testing purposes
-  mkdir("UnitTestingEvent");
-  mkdir("UnitTestingEvent/Competitors");
-  mkdir("UnitTestingEvent/Results");
-  mkdir("UnitTestingEvent/Courses");
-  open(NO_REDIRECTS, ">./UnitTestingEvent/no_redirects"); close(NO_REDIRECTS);
-  mkdir("UnitTestingEvent/Courses/01-White");
-  mkdir("UnitTestingEvent/Courses/02-Yellow");
-  open(WHITE, ">./UnitTestingEvent/Courses/01-White/controls.txt");
-  print WHITE "201\n202\n203\n204\n205";
-  close (WHITE);
-  open(YELLOW, ">./UnitTestingEvent/Courses/02-Yellow/controls.txt");
-  print YELLOW "202\n204\n206\n208\n210";
-  close(YELLOW);
+  %{$post_ref} = qw(submit true event_name UnitTesting course_description White,201,202,203,204,205--newline--Yellow,202,204,206,208,210);
+#  mkdir("UnitTestingEvent");
+#  mkdir("UnitTestingEvent/Competitors");
+#  mkdir("UnitTestingEvent/Results");
+#  mkdir("UnitTestingEvent/Courses");
+#  open(NO_REDIRECTS, ">./UnitTestingEvent/no_redirects"); close(NO_REDIRECTS);
+#  mkdir("UnitTestingEvent/Courses/01-White");
+#  mkdir("UnitTestingEvent/Courses/02-Yellow");
+#  open(WHITE, ">./UnitTestingEvent/Courses/01-White/controls.txt");
+#  print WHITE "201\n202\n203\n204\n205";
+#  close (WHITE);
+#  open(YELLOW, ">./UnitTestingEvent/Courses/02-Yellow/controls.txt");
+#  print YELLOW "202\n204\n206\n208\n210";
+#  close(YELLOW);
+}
+
+sub set_no_redirects_for_event {
+  my($event) = @_;
+
+  open(NO_REDIRECTS, ">./${event}/no_redirects"); close(NO_REDIRECTS);
 }
 
 1;

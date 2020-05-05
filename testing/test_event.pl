@@ -5,15 +5,17 @@ use strict;
 require "testHelpers.pl";
 require "success_call_helpers.pl";
 
-my(%GET, %TEST_INFO, %COOKIE);
+my(%GET, %TEST_INFO, %COOKIE, %POST);
 my($COMPETITOR_1) = "Mark_OConnell";
 my($COMPETITOR_2) = "Karen_Yeowell";
 my($COMPETITOR_3) = "LydBid";
 my($COMPETITOR_4) = "JohnnyJohnCon";
 my($competitor_1_id, $competitor_2_id, $competitor_3_id, $competitor_4_id);
 
+set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 initialize_event();
-set_test_info(\%GET, \%COOKIE, \%TEST_INFO, $0);
+create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
+set_no_redirects_for_event("UnitTestingEvent");
 
 sub register_one_entrant {
   %GET = qw(event UnitTestingEvent);
@@ -132,10 +134,10 @@ sub check_splits {
 # Test registration of a new entrant
 %TEST_INFO = qw(Testname Register4AndCheckOnCourse);
 
-$competitor_1_id = register_one_entrant($COMPETITOR_1, "02-Yellow");
-$competitor_2_id = register_one_entrant($COMPETITOR_2, "02-Yellow");
-$competitor_3_id = register_one_entrant($COMPETITOR_3, "01-White");
-$competitor_4_id = register_one_entrant($COMPETITOR_4, "01-White");
+$competitor_1_id = register_one_entrant($COMPETITOR_1, "01-Yellow");
+$competitor_2_id = register_one_entrant($COMPETITOR_2, "01-Yellow");
+$competitor_3_id = register_one_entrant($COMPETITOR_3, "00-White");
+$competitor_4_id = register_one_entrant($COMPETITOR_4, "00-White");
 
 check_results(0);
 check_on_course(4);
@@ -153,7 +155,7 @@ success();
 
 # Competitor 1 starts and gets two controls
 %TEST_INFO = qw(Testname TestTwoStartersAtEvent);
-%COOKIE = qw(event UnitTestingEvent course 02-Yellow);
+%COOKIE = qw(event UnitTestingEvent course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_1_id;
 %GET = ();  # empty hash
 
@@ -168,7 +170,7 @@ reach_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 2 starts
-%COOKIE = qw(event UnitTestingEvent course 02-Yellow);
+%COOKIE = qw(event UnitTestingEvent course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_2_id;
 %GET = ();  # empty hash
 
@@ -199,7 +201,7 @@ success();
 %TEST_INFO = qw(Testname OneFinisherTwoMoreStarters);
 
 # Competitor 1 finds two more controls
-%COOKIE = qw(event UnitTestingEvent course 02-Yellow);
+%COOKIE = qw(event UnitTestingEvent course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_1_id;
 %GET = ();  # empty hash
 
@@ -212,7 +214,7 @@ reach_control_successfully(3, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 3 starts
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_3_id;
 %GET = ();  # empty hash
 
@@ -221,7 +223,7 @@ start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 2 finds 2 controls
-%COOKIE = qw(event UnitTestingEvent course 02-Yellow);
+%COOKIE = qw(event UnitTestingEvent course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_2_id;
 %GET = ();  # empty hash
 
@@ -233,7 +235,7 @@ reach_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 3 finds a control
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_3_id;
 %GET = ();  # empty hash
 
@@ -243,7 +245,7 @@ reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 2 finds the next control
-%COOKIE = qw(event UnitTestingEvent course 02-Yellow);
+%COOKIE = qw(event UnitTestingEvent course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_2_id;
 %GET = ();  # empty hash
 
@@ -252,14 +254,14 @@ reach_control_successfully(2, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 4 starts
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_4_id;
 %GET = ();  # empty hash
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 # Competitor 1 finds the final control and finishes
-%COOKIE = qw(event UnitTestingEvent course 02-Yellow);
+%COOKIE = qw(event UnitTestingEvent course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_1_id;
 %GET = ();  # empty hash
 
@@ -298,7 +300,7 @@ success();
 %TEST_INFO = qw(Testname AllFinishWithTwoDNFs);
 
 # Competitor 3 finds more controls
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_3_id;
 %GET = ();  # empty hash
 
@@ -313,7 +315,7 @@ reach_control_successfully(2, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 2 DNFs
-%COOKIE = qw(event UnitTestingEvent course 02-Yellow);
+%COOKIE = qw(event UnitTestingEvent course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_2_id;
 %GET = ();  # empty hash
 
@@ -322,7 +324,7 @@ finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 3 finds all remaining controls
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_3_id;
 %GET = ();  # empty hash
 
@@ -335,7 +337,7 @@ reach_control_successfully(4, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 4 finds some controls then DNFs
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_4_id;
 %GET = ();  # empty hash
 
@@ -349,7 +351,7 @@ finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 3 finishes
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_3_id;
 %GET = ();  # empty hash
 

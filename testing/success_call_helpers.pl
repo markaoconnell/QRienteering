@@ -294,4 +294,55 @@ sub finish_with_dnf {
   return ($output);
 }
 
+###########
+# Use the web interface to create an event
+sub create_event_successfully {
+  my($get_ref, $cookie_ref, $post_ref, $test_info_ref) = @_;
+
+  $test_info_ref->{"subroutine"} = "create_event_successfully";
+  hashes_to_artificial_file();
+  $cmd = "php ../create_event.php";
+  $output = qx($cmd);
+  
+  if ($output !~ /Created event successfully/) {
+    error_and_exit("Web page output wrong, no message about successful event creation.\n$output");
+  }
+
+  my($event) = "./" . $post_ref->{"event_name"} . "Event";
+
+  # Validate proper directories exist
+  if (! -d $event) {
+    error_and_exit("Proper directory for $event not found.\n");
+  }
+
+  my($number_courses);
+  $number_courses = () = $post_ref->{"course_description"} =~ m/--newline--/g;
+  $number_courses++;   # There is normally one fewer newline than the number of courses
+  
+  @directory_contents = check_directory_contents($event, qw(Competitors Results Courses));
+  if (scalar(@directory_contents) != 0) {
+    error_and_exit("More files exist in $event than expected: " . join(",", @directory_contents));
+  }
+  
+  @directory_contents = check_directory_contents("${event}/Competitors", qw());
+  if (scalar(@directory_contents) != 0) {
+    error_and_exit("More files exist in ${event}/Competitors than expected: " . join(",", @directory_contents));
+  }
+  
+  @directory_contents = check_directory_contents("${event}/Results", qw());
+  if (scalar(@directory_contents) != $number_courses) {
+    error_and_exit("Different number of files exist in ${event}/Results than expected: " . join(",", @directory_contents));
+  }
+  
+  @directory_contents = check_directory_contents("${event}/Courses", qw());
+  if (scalar(@directory_contents) != $number_courses) {
+    error_and_exit("Different number of files exist in ${event}/Courses than expected: " . join(",", @directory_contents));
+  }
+  
+  
+  delete($test_info_ref->{"subroutine"});
+
+  return ($output);
+}
+
 1;

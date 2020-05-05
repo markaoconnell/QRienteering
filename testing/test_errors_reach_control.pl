@@ -6,15 +6,17 @@ use MIME::Base64;
 require "testHelpers.pl";
 require "success_call_helpers.pl";
 
-my(%GET, %TEST_INFO, %COOKIE);
+my(%GET, %TEST_INFO, %COOKIE, %POST);
 my($cmd, $output, $output2, $competitor_id, $path, $time_now, $controls_found_path);
 my(@file_contents_array);
 my(@directory_contents);
 
 my($COMPETITOR_NAME) = "Mark_OConnell_ReachControl_Bad";
 
+set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 initialize_event();
-set_test_info(\%GET, \%COOKIE, \%TEST_INFO, $0);
+create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
+set_no_redirects_for_event("UnitTestingEvent");
 
 
 ###########
@@ -41,7 +43,7 @@ success();
 # Test 2 - reach a control with a bad event
 # Should return an error message
 %TEST_INFO = qw(Testname TestReachControlBadEvent);
-%COOKIE = qw(event OldEvent course 01-White);
+%COOKIE = qw(event OldEvent course 00-White);
 $COOKIE{"competitor_id"} = "moc";
 %GET = qw(control 201);
 hashes_to_artificial_file();
@@ -92,7 +94,7 @@ success();
 # Test 4 - After registering, try bad reach_control calls again
 # First register, then call reach_control incorrectly a few different ways
 %TEST_INFO = qw(Testname TestReachControlAfterRegisteringBadCourse);
-%GET = qw(event UnitTestingEvent course 01-White);
+%GET = qw(event UnitTestingEvent course 00-White);
 $GET{"competitor_name"} = $COMPETITOR_NAME;
 %COOKIE = ();  # empty hash
 
@@ -131,7 +133,7 @@ success();
 # Test: Corrupt competitor id on the course
 # Now reach a control but with a bad competitor id
 %TEST_INFO = qw(Testname TestBadCompetitorOnCourse);
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = "moc-who-is-not-there";
 %GET = qw(control 201);
 hashes_to_artificial_file();
@@ -160,7 +162,7 @@ success();
 # Test: Reach a control before starting the course
 # 
 %TEST_INFO = qw(Testname TestReachControlNoStart);
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = qw(control 201);
 
@@ -181,7 +183,7 @@ success();
 # Test: Reach the same control twice, after starting
 # Should be fine
 %TEST_INFO = qw(Testname TestReachControlTwice);
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -199,7 +201,7 @@ success();
 # Test: Reach the same control again, after starting
 # this time with the encoded mumble
 %TEST_INFO = qw(Testname TestReachControlAgainWithMumble);
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();
 $GET{"mumble"} = encode_base64("201,$competitor_id," . time());
@@ -213,7 +215,7 @@ success();
 # Test: Reach the correct control with a mumble
 # 
 %TEST_INFO = qw(Testname TestReachControlCorrectlyWithMumble);
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();
 $GET{"mumble"} = encode_base64("202,$competitor_id," . time());
@@ -227,7 +229,7 @@ success();
 ################
 # Test: Reach the wrong control
 %TEST_INFO = qw(Testname TestReachWrongControl);
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = qw(control 345);
 
@@ -258,7 +260,7 @@ success();
 # this time with the encoded mumble
 # but with an old time (replay of old result)
 %TEST_INFO = qw(Testname TestReachControlAgainWithMumbleTooLate);
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();
 $GET{"mumble"} = encode_base64("202,$competitor_id," . (time() - 300));
@@ -291,7 +293,7 @@ success();
 # Test: Reach a control with an old mumble
 # (not sure how this would happen, but let's confirm that it doesn't work)
 %TEST_INFO = qw(Testname TestReachCorrectControlWithMumbleTooLate);
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();
 $GET{"mumble"} = encode_base64("203,$competitor_id," . (time() - 300));

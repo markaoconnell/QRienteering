@@ -5,15 +5,17 @@ use strict;
 require "testHelpers.pl";
 require "success_call_helpers.pl";
 
-my(%GET, %TEST_INFO, %COOKIE);
+my(%GET, %TEST_INFO, %COOKIE, %POST);
 my($cmd, $output, $output2, $competitor_id, $path, $time_now, $controls_found_path);
 my(@file_contents_array);
 my(@directory_contents);
 
 my($COMPETITOR_NAME) = "Mark_OConnell_Bad_Finish";
 
+set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 initialize_event();
-set_test_info(\%GET, \%COOKIE, \%TEST_INFO, $0);
+create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
+set_no_redirects_for_event("UnitTestingEvent");
 
 
 ###########
@@ -40,7 +42,7 @@ success();
 # Test 2 - finish with an unknown event
 # Should return an error message
 %TEST_INFO = qw(Testname TestFinishOldEvent);
-%COOKIE = qw(event OldEvent course 01-White);
+%COOKIE = qw(event OldEvent course 00-White);
 $COOKIE{"competitor_id"} = "moc";
 %GET = ();  # empty hash
 hashes_to_artificial_file();
@@ -82,7 +84,7 @@ success();
 # First register, then call finish without calling start
 %TEST_INFO = qw(Testname FinishWithoutStart);
 
-%GET = qw(event UnitTestingEvent course 01-White);
+%GET = qw(event UnitTestingEvent course 00-White);
 $GET{"competitor_name"} = $COMPETITOR_NAME;
 %COOKIE = ();  # empty hash
 
@@ -91,7 +93,7 @@ $competitor_id = $TEST_INFO{"competitor_id"};
 
 
 # Now finish the course (should not work, as we haven't started)
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
 hashes_to_artificial_file();
@@ -122,8 +124,8 @@ if ($#directory_contents != -1) {
 
 
 # if this is the first time this is called, the directory may not exist
-if (-d "./UnitTestingEvent/Results/01-White") {
-  my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/01-White", ());
+if (-d "./UnitTestingEvent/Results/00-White") {
+  my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/00-White", ());
   if (grep(/$competitor_id/, @results_array)) {
     error_and_exit("Results file found for $competitor_id, directory contents are: " . join(",", @results_array));
   }
@@ -138,7 +140,7 @@ if (-d "./UnitTestingEvent/Results/01-White") {
 # This will be a dnf, but I just want to make sure the second finish is handled
 %TEST_INFO = qw(Testname FinishTwice);
 
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
 
@@ -146,7 +148,7 @@ start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Now finish the course
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
 
@@ -155,7 +157,7 @@ finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Now finish the course a second time
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
 

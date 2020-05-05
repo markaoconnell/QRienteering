@@ -5,15 +5,17 @@ use strict;
 require "testHelpers.pl";
 require "success_call_helpers.pl";
 
-my(%GET, %TEST_INFO, %COOKIE);
+my(%GET, %TEST_INFO, %COOKIE, %POST);
 my($cmd, $output, $competitor_id);
 my(@file_contents_array);
 my(@directory_contents);
 
 my($COMPETITOR_NAME) = "Mark_OConnell_Bad_Start";
 
+set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 initialize_event();
-set_test_info(\%GET, \%COOKIE, \%TEST_INFO, $0);
+create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
+set_no_redirects_for_event("UnitTestingEvent");
 
 
 ###########
@@ -40,7 +42,7 @@ success();
 # Test 2 - start with an unknown event
 # Should return an error message
 %TEST_INFO = qw(Testname TestStartOldEvent);
-%COOKIE = qw(event OldEvent course 01-White);
+%COOKIE = qw(event OldEvent course 00-White);
 $COOKIE{"competitor_id"} = "moc";
 %GET = ();  # empty hash
 hashes_to_artificial_file();
@@ -81,7 +83,7 @@ success();
 # Test 4 - start multiple times
 # First register, then start
 %TEST_INFO = qw(Testname MultipleStart);
-%GET = qw(event UnitTestingEvent course 01-White);
+%GET = qw(event UnitTestingEvent course 00-White);
 $GET{"competitor_name"} = $COMPETITOR_NAME;
 %COOKIE = ();  # empty hash
 
@@ -90,7 +92,7 @@ $competitor_id = $TEST_INFO{"competitor_id"};
 
 
 # Now start the course
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
 
@@ -98,7 +100,7 @@ start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Now start the course again - this is the real part of the test
-%COOKIE = qw(event UnitTestingEvent course 01-White);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
 hashes_to_artificial_file();
