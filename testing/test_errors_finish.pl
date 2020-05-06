@@ -114,12 +114,12 @@ if (-f "$controls_found_path/finish") {
 
 @directory_contents = check_directory_contents($path, qw(name course controls_found));
 if ($#directory_contents != -1) {
-  error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+  error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
 }
 
 @directory_contents = check_directory_contents($controls_found_path, qw());
 if ($#directory_contents != -1) {
-  error_and_exit("More files exist in $controls_found_path than expected: " . join(",", @directory_contents));
+  error_and_exit("More files exist in $controls_found_path than expected: " . join("--", @directory_contents));
 }
 
 
@@ -127,7 +127,7 @@ if ($#directory_contents != -1) {
 if (-d "./UnitTestingEvent/Results/00-White") {
   my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/00-White", ());
   if (grep(/$competitor_id/, @results_array)) {
-    error_and_exit("Results file found for $competitor_id, directory contents are: " . join(",", @results_array));
+    error_and_exit("Results file found for $competitor_id, directory contents are: " . join("--", @results_array));
   }
 }
 

@@ -250,7 +250,7 @@ if (-f "$controls_found_path/345") {
 
 @directory_contents = check_directory_contents($controls_found_path, qw(start));
 if (grep(/NOTFOUND/, @directory_contents) || grep(/finish/, @directory_contents)) {
-  error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+  error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
 }
 
 success();
@@ -282,7 +282,7 @@ if (-f "$controls_found_path/202") {
 
 @directory_contents = check_directory_contents($controls_found_path, qw(start));
 if (grep(!/^[0-9]+,[0-9a-f]+$/, @directory_contents)) {
-  error_and_exit("More files exist in $controls_found_path than expected: " . join(",", @directory_contents));
+  error_and_exit("More files exist in $controls_found_path than expected: " . join("--", @directory_contents));
 }
 
 
@@ -315,7 +315,7 @@ if (-f "$controls_found_path/203") {
 
 @directory_contents = check_directory_contents($controls_found_path, qw(start));
 if (grep(!/^[0-9]+,[0-9a-f]+$/, @directory_contents)) {
-  error_and_exit("More files exist in $controls_found_path than expected: " . join(",", @directory_contents));
+  error_and_exit("More files exist in $controls_found_path than expected: " . join("--", @directory_contents));
 }
 
 

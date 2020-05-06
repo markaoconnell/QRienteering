@@ -21,6 +21,8 @@ if (!file_exists($competitor_path) || !file_exists("./{$event}/Courses/{$course}
 }
 
 $control_list = read_controls("./${event}/Courses/${course}/controls.txt");
+$controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
+                                      array_map(function ($element) { return $element[1]; }, $control_list));
 //echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
 $error_string = "";
@@ -52,7 +54,14 @@ if (!file_exists("{$controls_found_path}/finish")) {
   if (!file_exists("./${event}/Results/${course}")) {
     mkdir("./${event}/Results/${course}");
   }
-  $result_filename = sprintf("%06d,%s", $time_taken, $competitor_id);
+
+  // Just pluck off the controls found (ignore the timestamp for now
+  $controls_found = array_map(function ($item) { return (explode(",", $item)[1]); }, $controls_done);
+
+  // For each control, look up its point value in the associative array and sum the total points
+  $total_score = array_reduce($controls_found, function ($carry, $element) use ($controls_points_hash) { return($carry + $controls_points_hash[$element]); }, 0);
+
+  $result_filename = sprintf("%04d,%06d,%s", $total_score, $time_taken, $competitor_id);
   file_put_contents("./${event}/Results/${course}/${result_filename}", "");
 }
 else {

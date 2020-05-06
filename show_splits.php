@@ -10,7 +10,7 @@ $time_and_competitor = $_GET["entry"];
 $event = $_GET["event"];
 
 $result_pieces = explode(",", $time_and_competitor);
-$competitor_id = $result_pieces[1];
+$competitor_id = $result_pieces[2];
 
 
 $competitor_path = "./" . $event . "/Competitors/" . $competitor_id;
@@ -78,7 +78,7 @@ if ($error_string != "") {
 }
 
 echo $table_string;
-echo "<p>Total Time: " . formatted_time($result_pieces[0]) . "\n";
+echo "<p>Total Time: " . formatted_time($result_pieces[1]) . "\n";
 if (file_exists("${competitor_path}/dnf")) {
   echo "<p>DNF\n";
 }

@@ -39,12 +39,12 @@ sub reach_control_successfully {
 
   if (grep (/NOTFOUND/, @controls_found) || grep (!/^[0-9]+,[0-9a-f]+$/)) {
     error_and_exit("$path/controls_found holds incorrect items, " .
-                   "\n\tFound: " . join(",", @controls_found));
+                   "\n\tFound: " . join("--", @controls_found));
   }
 
   if ($#controls_found != $control_num_on_course) {
     error_and_exit("$path/controls_found hold wrong number of controls, found $#controls_found, expected $control_num_on_course, " .
-                   "\n\tFound: " . join(",", @controls_found));
+                   "\n\tFound: " . join("--", @controls_found));
   }
 
   my(@sorted_controls_found) = sort { $a cmp $b } @controls_found;
@@ -57,7 +57,7 @@ sub reach_control_successfully {
   @directory_contents = check_directory_contents($path, qw(name course controls_found));
   if (grep(/NOTFOUND/, @directory_contents) || grep(/finish/, @directory_contents) ||
       grep(/extra/, @directory_contents) || grep(/dnf/, @directory_contents)) {
-    error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+    error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
   }
   
   $time_now = time();
@@ -105,19 +105,19 @@ sub register_successfully {
   
   @directory_contents = check_directory_contents($path, qw(name course controls_found));
   if ($#directory_contents != -1) {
-    error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+    error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
   }
   
   @directory_contents = check_directory_contents("$path/controls_found", qw());
   if ($#directory_contents != -1) {
-    error_and_exit("More files exist in $path/controls_found than expected: " . join(",", @directory_contents));
+    error_and_exit("More files exist in $path/controls_found than expected: " . join("--", @directory_contents));
   }
   
   my(@name_file) = file_get_contents("$path/name");
   my(@course_file) = file_get_contents("$path/course");
   
   if (($#name_file != 0) || ($#course_file != 0) || ($name_file[0] ne $competitor_name) || ($course_file[0] ne $course)) {
-    error_and_exit("File contents wrong, name_file: " . join(",", @name_file) . "\n\tcourse_file: " . join("," , @course_file));
+    error_and_exit("File contents wrong, name_file: " . join("--", @name_file) . "\n\tcourse_file: " . join("--" , @course_file));
   }
 
   delete($test_info_ref->{"subroutine"});
@@ -156,19 +156,19 @@ sub start_successfully {
   
   @directory_contents = check_directory_contents($path, qw(name course controls_found));
   if (grep(/NOTFOUND/, @directory_contents)) {
-    error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+    error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
   }
   
   @directory_contents = check_directory_contents("$path/controls_found", qw(start));
   if ($#directory_contents != -1) {
-    error_and_exit("More files exist in $path/controls_found than expected: " . join(",", @directory_contents));
+    error_and_exit("More files exist in $path/controls_found than expected: " . join("--", @directory_contents));
   }
   
   
   @file_contents_array = file_get_contents("$path/controls_found/start");
   $time_now = time();
   if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
-    error_and_exit("File contents wrong, start_time_file: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
+    error_and_exit("File contents wrong, start_time_file: " . join("--", @file_contents_array) . " vs time_now of $time_now.");
   }
 
   delete($test_info_ref->{"subroutine"});
@@ -206,29 +206,32 @@ sub finish_successfully {
   
   @directory_contents = check_directory_contents($path, qw(name course controls_found));
   if (grep(/NOTFOUND/, @directory_contents)) {
-    error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+    error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
   }
   
-  # The only other files i the directory should be the numeric files for the controls found
+  # The only other files in the directory should be the numeric files for the controls found
   @directory_contents = check_directory_contents($controls_found_path, qw(start finish));
   if (grep(!/^[0-9]+,[0-9a-f]+$/, @directory_contents)) {
-    error_and_exit("More files exist in $controls_found_path than expected: " . join(",", @directory_contents));
+    error_and_exit("More files exist in $controls_found_path than expected: " . join("--", @directory_contents));
   }
+  
+  # The points for the course based should be equal to the number of controls for a linear course
+  my($number_controls_on_course) = scalar(@directory_contents);
   
   
   @file_contents_array = file_get_contents("$controls_found_path/finish");
   $time_now = time();
   if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
-    error_and_exit("File contents wrong, $controls_found_path/finish: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
+    error_and_exit("File contents wrong, $controls_found_path/finish: " . join("--", @file_contents_array) . " vs time_now of $time_now.");
   }
   
   my(@start_time_array) = file_get_contents("$controls_found_path/start");
-  my($results_file) = sprintf("%06d,%s", (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
+  my($results_file) = sprintf("%04d,%06d,%s", $number_controls_on_course, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
   
   
   my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/${course}", $results_file);
   if (grep(/NOTFOUND:$results_file/, @results_array)) {
-    error_and_exit("No results file ($results_file) found, contents are: " . join(",", @results_array));
+    error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
   }
   
   delete($test_info_ref->{"subroutine"});
@@ -265,28 +268,29 @@ sub finish_with_dnf {
   
   @directory_contents = check_directory_contents($path, qw(name course controls_found dnf));
   if (grep(/NOTFOUND/, @directory_contents)) {
-    error_and_exit("More files exist in $path than expected: " . join(",", @directory_contents));
+    error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
   }
   
   @directory_contents = check_directory_contents($controls_found_path, qw(start finish));
   if (grep(!/^[0-9]+,[0-9a-f]+$/, @directory_contents)) {
-    error_and_exit("More files exist in $controls_found_path than expected: " . join(",", @directory_contents));
+    error_and_exit("More files exist in $controls_found_path than expected: " . join("--", @directory_contents));
   }
   
+  my($number_controls_found_on_course) = scalar(@directory_contents);
   
   @file_contents_array = file_get_contents("$controls_found_path/finish");
   $time_now = time();
   if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
-    error_and_exit("File contents wrong, $controls_found_path/finish: " . join(",", @file_contents_array) . " vs time_now of $time_now.");
+    error_and_exit("File contents wrong, $controls_found_path/finish: " . join("--", @file_contents_array) . " vs time_now of $time_now.");
   }
   
   my(@start_time_array) = file_get_contents("$controls_found_path/start");
-  my($results_file) = sprintf("%06d,%s", (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
+  my($results_file) = sprintf("%04d,%06d,%s", $number_controls_found_on_course, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
   
   
   my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/${course}", $results_file);
   if (grep(/NOTFOUND:$results_file/, @results_array)) {
-    error_and_exit("No results file ($results_file) found, contents are: " . join(",", @results_array));
+    error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
   }
   
   delete($test_info_ref->{"subroutine"});
@@ -321,22 +325,22 @@ sub create_event_successfully {
   
   @directory_contents = check_directory_contents($event, qw(Competitors Results Courses));
   if (scalar(@directory_contents) != 0) {
-    error_and_exit("More files exist in $event than expected: " . join(",", @directory_contents));
+    error_and_exit("More files exist in $event than expected: " . join("--", @directory_contents));
   }
   
   @directory_contents = check_directory_contents("${event}/Competitors", qw());
   if (scalar(@directory_contents) != 0) {
-    error_and_exit("More files exist in ${event}/Competitors than expected: " . join(",", @directory_contents));
+    error_and_exit("More files exist in ${event}/Competitors than expected: " . join("--", @directory_contents));
   }
   
   @directory_contents = check_directory_contents("${event}/Results", qw());
   if (scalar(@directory_contents) != $number_courses) {
-    error_and_exit("Different number of files exist in ${event}/Results than expected: " . join(",", @directory_contents));
+    error_and_exit("Different number of files exist in ${event}/Results than expected: " . join("--", @directory_contents));
   }
   
   @directory_contents = check_directory_contents("${event}/Courses", qw());
   if (scalar(@directory_contents) != $number_courses) {
-    error_and_exit("Different number of files exist in ${event}/Courses than expected: " . join(",", @directory_contents));
+    error_and_exit("Different number of files exist in ${event}/Courses than expected: " . join("--", @directory_contents));
   }
   
   

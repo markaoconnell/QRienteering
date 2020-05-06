@@ -95,7 +95,7 @@ sub check_splits {
 
   my($result_competitor);
 
-  if ($result_file =~ /^[0-9]+,([0-9a-f]+)$/) {
+  if ($result_file =~ /^[0-9]+,[0-9]+,([0-9a-f]+)$/) {
     $result_competitor = $1;
   }
   else {
@@ -393,7 +393,7 @@ chomp(@results_files);
 
 @results_files = grep(!/UnitTestingEvent/, @results_files);
 
-#print "Found files " . join(",", @results_files);
+#print "Found files " . join("--", @results_files);
 my($result_file);
 for $result_file (@results_files) {
   next if ($result_file eq "");

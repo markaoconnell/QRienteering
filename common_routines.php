@@ -137,9 +137,9 @@ function show_results($event, $course) {
   $dnfs = "";
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);
-    $competitor_name = file_get_contents("./${event}/Competitors/" . $result_pieces[1] . "/name");
-    if (!file_exists("./${event}/Competitors/" . $result_pieces[1] . "/dnf")) {
-      $result_string .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&entry=${this_result}\">${competitor_name}</a></td><td>" . formatted_time($result_pieces[0]) . "</td></tr>\n";
+    $competitor_name = file_get_contents("./${event}/Competitors/" . $result_pieces[2] . "/name");
+    if (!file_exists("./${event}/Competitors/" . $result_pieces[2] . "/dnf")) {
+      $result_string .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&entry=${this_result}\">${competitor_name}</a></td><td>" . formatted_time($result_pieces[1]) . "</td></tr>\n";
     }
     else {
       $dnfs .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&entry=${this_result}\">${competitor_name}</a></td><td>DNF</td></tr>\n";
@@ -164,9 +164,9 @@ function get_csv_results($event, $course) {
   $dnfs = "";
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);
-    $competitor_name = file_get_contents("./${event}/Competitors/" . $result_pieces[1] . "/name");
+    $competitor_name = file_get_contents("./${event}/Competitors/" . $result_pieces[2] . "/name");
     if (!file_exists("./${event}/Competitors/" . $result_pieces[1] . "/dnf")) {
-      $result_string .= "${readable_course_name};${competitor_name};" . csv_formatted_time($result_pieces[0]) . ";\n";
+      $result_string .= "${readable_course_name};${competitor_name};" . csv_formatted_time($result_pieces[1]) . ";\n";
     }
     else {
       $result_string .= "${readable_course_name};${competitor_name};DNF;\n";
