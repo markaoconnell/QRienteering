@@ -60,8 +60,9 @@ if (!file_exists("{$controls_found_path}/finish")) {
 
   // For each control, look up its point value in the associative array and sum the total points
   $total_score = array_reduce($controls_found, function ($carry, $element) use ($controls_points_hash) { return($carry + $controls_points_hash[$element]); }, 0);
+  $max_score = array_reduce($control_list, function ($carry, $element) use ($controls_points_hash) { return($carry + $controls_points_hash[$element[0]]); }, 0);
 
-  $result_filename = sprintf("%04d,%06d,%s", $total_score, $time_taken, $competitor_id);
+  $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $competitor_id);
   file_put_contents("./${event}/Results/${course}/${result_filename}", "");
 }
 else {

@@ -226,7 +226,7 @@ sub finish_successfully {
   }
   
   my(@start_time_array) = file_get_contents("$controls_found_path/start");
-  my($results_file) = sprintf("%04d,%06d,%s", $number_controls_on_course, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
+  my($results_file) = sprintf("%04d,%06d,%s", 0, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
   
   
   my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/${course}", $results_file);
@@ -277,6 +277,9 @@ sub finish_with_dnf {
   }
   
   my($number_controls_found_on_course) = scalar(@directory_contents);
+
+  @file_contents_array = file_get_contents("./UnitTestingEvent/Courses/${course}/controls.txt");
+  my($number_controls_on_course) = scalar(@file_contents_array);
   
   @file_contents_array = file_get_contents("$controls_found_path/finish");
   $time_now = time();
@@ -285,7 +288,7 @@ sub finish_with_dnf {
   }
   
   my(@start_time_array) = file_get_contents("$controls_found_path/start");
-  my($results_file) = sprintf("%04d,%06d,%s", $number_controls_found_on_course, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
+  my($results_file) = sprintf("%04d,%06d,%s", $number_controls_on_course - $number_controls_found_on_course, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
   
   
   my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/${course}", $results_file);
