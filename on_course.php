@@ -86,7 +86,7 @@ foreach (array_keys($on_course) as $course) {
       }
       $start_time = file_get_contents("${competitor_path}/controls_found/start");
       $controls_done = scandir("${competitor_path}/controls_found");
-      $controls_done = array_diff($controls_done, array(".", "..", "start", "finish"));
+      $controls_done = array_values(array_diff($controls_done, array(".", "..", "start", "finish")));
       $num_controls_done = count($controls_done);
       if ($num_controls_done > 0) {
         // The format of the filename is <time>,<control_id>

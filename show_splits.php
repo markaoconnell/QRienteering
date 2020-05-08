@@ -33,15 +33,20 @@ $controls_done = scandir("./{$controls_found_path}");
 $controls_done = array_diff($controls_done, array(".", "..", "start", "finish")); // Remove the annoying . and .. entries
 $number_controls_found = count($controls_done);
 
+//echo "Controls done is: <p>";
+//print_r($controls_done);
+
 $split_times = array();
 $cumulative_time = array();
 $prior_control_time = $start_time;
-foreach ($controls_done as $control_entry) {
-  $control_info_array = explode(",", $control_entry);  // format is <time>,<control_id>
+$i = 0;
+foreach ($controls_done as $entry) {
+  $control_info_array = explode(",", $entry);  // format is <time>,<control_id>
   $time_at_control[$i] = $control_info_array[0];
   $split_times[$i] = $time_at_control[$i] - $prior_control_time;
   $cumulative_time[$i] = $time_at_control[$i] - $start_time;
   $prior_control_time = $time_at_control[$i];
+  $i++;
 }
 $time_at_control[$i] = file_get_contents("{$controls_found_path}/finish");
 $split_times[$i] = $time_at_control[$i] - $prior_control_time;
