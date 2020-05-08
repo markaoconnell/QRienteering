@@ -323,7 +323,11 @@ sub create_event_successfully {
   }
 
   my($number_courses);
-  $number_courses = () = $post_ref->{"course_description"} =~ m/--newline--/g;
+  $number_courses = () = $post_ref->{"course_description"} =~ m/--newline--[^-]/g;
+  if ($post_ref->{"course_description"} =~ m/^--/) {
+    # The regexp will miss the case of the first line being a comment and not a course
+    $number_courses--;
+  }
   $number_courses++;   # There is normally one fewer newline than the number of courses
   
   @directory_contents = check_directory_contents($event, qw(Competitors Results Courses));
@@ -346,6 +350,38 @@ sub create_event_successfully {
     error_and_exit("Different number of files exist in ${event}/Courses than expected: " . join("--", @directory_contents));
   }
   
+  
+  delete($test_info_ref->{"subroutine"});
+
+  return ($output);
+}
+
+
+###########
+# Use the web interface to create an event
+sub create_event_fail {
+  my($expected_error_msg, $get_ref, $cookie_ref, $post_ref, $test_info_ref) = @_;
+
+  $test_info_ref->{"subroutine"} = "create_event_fail";
+  hashes_to_artificial_file();
+  $cmd = "php ../create_event.php";
+  $output = qx($cmd);
+  
+  if ($output =~ /Created event successfully/) {
+    error_and_exit("Web page output wrong, found a message about successful event creation unexpectedly.\n$output");
+  }
+
+  if ($output !~ /$expected_error_msg/) {
+    error_and_exit("Web page output wrong, expected error message not found.\n$output");
+  }
+
+  my($event) = "./" . $post_ref->{"event_name"} . "Event";
+
+  # Validate proper directories exist
+  if ( -d $event) {
+    error_and_exit("Proper directory for $event was created unexpectedly.\n");
+  }
+
   
   delete($test_info_ref->{"subroutine"});
 

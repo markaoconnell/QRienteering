@@ -7,20 +7,86 @@ echo get_web_page_header(true, false, false);
 
 $MAX_COURSE_NAME_LEN = 40;
 $MAX_CONTROL_CODE_LEN = 40;
+$MAX_CONTROL_VALUE = 100;
 $MAX_COURSES = 20;
 $MAX_CONTROLS = 50;
 
+// Information for parsing the course name
+$LINEAR_COURSE = 1;
+$SCORE_O_COURSE = 2;
+
+$NAME_FIELD = "name";
+$TYPE_FIELD = "type";
+$PENALTY_FIELD = "penalty";
+$LIMIT_FIELD = "limit";
+$ERROR_FIELD = "error";
+
+$LINEAR_COURSE_ID = "l";
+$SCORE_COURSE_ID = "s";
+
+// Utility functions
 function ck_valid_chars($string_to_check) {
   return (preg_match("/^[a-zA-Z0-9_-]+$/", $string_to_check));
 }
 
-function ck_control_name_alnum($string_to_check) {
-  return(ctype_alnum($string_to_check) ? 1 : 0);
+function ck_linear_control_entry($string_to_check) {
+  global $MAX_CONTROL_CODE_LEN;
+  return((ctype_alnum($string_to_check) && (strlen($string_to_check) < $MAX_CONTROL_CODE_LEN)) ? 1 : 0);
 }
 
-function ck_control_str_length($string_to_check) {
-  global $MAX_CONTROL_CODE_LEN;
-  return((strlen($string_to_check) < $MAX_CONTROL_CODE_LEN) ? 1 : 0);
+function ck_score_control_entry($string_to_check) {
+  global $MAX_CONTROL_CODE_LEN, $MAX_CONTROL_VALUE;
+  if (!preg_match("/^[a-zA-Z0-9]+:[0-9]+$/", $string_to_check)) {
+    return(0);
+  }
+
+  $pieces = explode(":", $string_to_check);
+  if ((strlen($pieces[0]) > $MAX_CONTROL_CODE_LEN) || ($pieces[1] > $MAX_CONTROL_VALUE)) {
+    return(0);
+  }
+
+  return(1);
+}
+
+
+function parse_course_name($course_name) {
+  global $NAME_FIELD, $TYPE_FIELD, $LIMIT_FIELD, $PENALTY_FIELD, $SCORE_O_COURSE, $LINEAR_COURSE, $ERROR_FIELD;
+  global $SCORE_COURSE_ID, $LINEAR_COURSE_ID;
+
+  $info = explode(":", $course_name);
+  $return_info = array();
+  if (strlen($info[0]) == 1) {
+    if ($info[0] == $SCORE_COURSE_ID) {
+      $return_info[$NAME_FIELD] = $info[1];
+      $return_info[$TYPE_FIELD] = $SCORE_O_COURSE;
+      $return_info[$LIMIT_FIELD] = $info[2];
+      $return_info[$PENALTY_FIELD] = $info[3];
+      $expected_fields = 4; 
+    }
+    else if ($info[0] == $LINEAR_COURSE_ID) {
+      $return_info[$NAME_FIELD] = $info[1];
+      $return_info[$TYPE_FIELD] = $LINEAR_COURSE;
+      $expected_fields = 2;
+    }
+    else {
+      // This case really shouldn't happen, but to be safe
+      $return_info[$NAME_FIELD] = $info[0];
+      $return_info[$TYPE_FIELD] = $LINEAR_COURSE;
+      $expected_fields = 1;
+    }
+  }
+  else {
+    // This case really shouldn't happen, but to be safe
+    $return_info[$NAME_FIELD] = $info[0];
+    $return_info[$TYPE_FIELD] = $LINEAR_COURSE;
+    $expected_fields = 1;
+  }
+
+  if (count($info) != $expected_fields) {
+    $return_info[$ERROR_FIELD] = "Unexpected number entries: {$course_name}, {$expected_fields} expected, found " . count($info) . "\n";
+  }
+
+  return($return_info);
 }
 
 if (isset($_POST["submit"])) {
@@ -60,10 +126,23 @@ if (isset($_POST["submit"])) {
         continue;
       }
 
+      if (strpos($this_course, "--") === 0) {
+        continue;  // Lines beginning with -- are ignored as comments
+      }
+
       // Course name must begin with a letter and may only contain [a-zA-Z0-9-_]
       // controls may only contain [a-zA-Z0-9]
+      // The Course name may have extra, : separated information, especially for a scoreO
       $course_name_and_controls = explode(",", $this_course);
-      $course_name = trim($course_name_and_controls[0]);
+      $course_name_entry = trim($course_name_and_controls[0]);
+      $course_info = parse_course_name($course_name_entry);
+      $course_name = $course_info[$NAME_FIELD];
+
+      if ($course_info[$ERROR_FIELD] != "") {
+        echo "<p>Course entry {$this_course} looks wrong: {$course_info[$ERROR_FIELD]}\n";
+        $found_error = true;
+      }
+
       if ((ctype_alpha(substr($course_name, 0, 1))) && (ck_valid_chars($course_name)) && 
             (strlen($course_name) < $MAX_COURSE_NAME_LEN)) {
         echo "<p>Course name {$course_name} passes the checks.\n";
@@ -75,15 +154,24 @@ if (isset($_POST["submit"])) {
 
       $control_list = array_map(trim, array_slice($course_name_and_controls, 1));
 
-      $check_controls = array_map(ck_control_name_alnum, $control_list);
-      $check_controls_length = array_map(ck_control_str_length, $control_list);
-      if ((array_search(0, $check_controls) === false) && (array_search(0, $check_controls_length) === false)) {
-        echo "<p>Control list all seems to be alphanumeric and not too long.\n";
+      if ($course_info[$TYPE_FIELD] == $LINEAR_COURSE) {
+        $check_controls = array_map(ck_linear_control_entry, $control_list);
+      }
+      else if ($course_info[$TYPE_FIELD] == $SCORE_O_COURSE) {
+        $check_controls = array_map(ck_score_control_entry, $control_list);
+      }
+      else {
+        echo "<p>ERROR: Unknown course type {$course_info[$TYPE_FIELD]}.\n";
+        $found_error = true;
+        $check_controls = array();
+      }
+
+      if (array_search(0, $check_controls) === false) {
+        echo "<p>Control list all seems to be correctly formatted and not too long.\n";
       }
       else {
         echo "<p>Control list contains either non-alphanumeric characters or too long.\n";
-        echo "<p>Alphanumeric check: " . join(",", $check_controls) . "\n";
-        echo "<p>Length check: " . join(",", $check_controls_length) . "\n";
+        echo "<p>Checking results: " . join(",", $check_controls) . "\n";
         $found_error = true;
       }
 
@@ -93,11 +181,13 @@ if (isset($_POST["submit"])) {
       }
 
       if (count($course_name_and_controls) > 1) {
-        // For a linear course, the controls are all worth one point. TBD if this is the right
-        // place to do this.
-        $control_list = array_map(function ($control) { return("{$control},1"); }, $control_list);
+         if ($course_info[$TYPE_FIELD] == $LINEAR_COURSE) {
+            // For a linear course, the controls are all worth one point. TBD if this is the right
+            // place to do this.
+            $control_list = array_map(function ($control) { return("{$control}:1"); }, $control_list);
+         }
         echo "<p>Found controls for course {$course_name}: " . implode("--", $control_list) . "\n";
-        $course_array[] = array($course_name, $control_list);
+        $course_array[] = array($course_name, $control_list, $course_info);
       }
       else {
         echo "<p>ERROR: No controls for course {$course_name}.\n";
@@ -116,9 +206,18 @@ if (isset($_POST["submit"])) {
         $prefix = sprintf("%02d", $i);
         mkdir("./{$event_name}/Courses/{$prefix}-{$course_array[$i][0]}");
         mkdir("./{$event_name}/Results/{$prefix}-{$course_array[$i][0]}");
-        // Linear course is 1 point per control (unlike a scoreO)
         file_put_contents("./${event_name}/Courses/{$prefix}-{$course_array[$i][0]}/controls.txt", implode("\n", $course_array[$i][1]));
+
+        if ($course_array[$i][2][$TYPE_FIELD] == $SCORE_O_COURSE) {
+          $course_info = $course_array[$i][2];
+          $properties_string = "";
+          foreach ($course_info as $key => $value) {
+            $properties_string .= $key . ":" . $value . "\n";
+          }
+          file_put_contents("./{$event_name}/Courses/{$prefix}-{$course_array[$i][0]}/properties.txt", $properties_string);
+        }
       }
+
       echo "<p>Created event successfully {$event_name}\n";
     }
   }

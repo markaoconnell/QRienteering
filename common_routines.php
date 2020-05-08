@@ -192,7 +192,7 @@ function get_all_course_result_links($event) {
 function read_controls($filename) {
   $control_list = file($filename);
   $control_list = array_values(array_filter($control_list, function ($string) { return (strlen(trim($string)) > 0); }));
-  return (array_map(function ($string) { return(explode(",", trim($string))); },  $control_list));
+  return (array_map(function ($string) { return(explode(":", trim($string))); },  $control_list));
 }
 
 
