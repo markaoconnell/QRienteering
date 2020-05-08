@@ -192,7 +192,7 @@ start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 # The second one should appear like the first
-reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
+reach_control_again(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
 
@@ -207,7 +207,7 @@ $COOKIE{"competitor_id"} = $competitor_id;
 $GET{"mumble"} = encode_base64("201,$competitor_id," . time());
 $TEST_INFO{"control"} = "201";
 
-reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
+reach_control_again(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
 

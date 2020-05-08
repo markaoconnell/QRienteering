@@ -25,4 +25,11 @@ print_r($controls_found);
   $total_score = array_reduce($controls_found, function ($carry, $element) use ($controls_points_hash) { echo "carry is $carry, element is $element, points is {$controls_points_hash[$element]}.\n"; return($carry + $controls_points_hash[$element]); }, 0);
 
 echo "Got a total score of {$total_score}.\n";
+
+// Turn $controls_done into a hash table
+$hash_table = array();
+array_map(function ($elt) use (&$hash_table) { $pieces = explode(",", $elt); $hash_table[$pieces[1]] = $pieces[0]; echo "{$pieces[1]} -> {$pieces[0]}\n"; }, $controls_done);
+
+echo "Should print an associative array of control->time.\n";
+print_r($hash_table);
 ?>

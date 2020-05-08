@@ -1,7 +1,21 @@
 <?php
 require 'common_routines.php';
+require 'course_properties.php';
 
 ck_testing();
+
+function calculate_score($controls_found, $controls_points_hash) {
+  $total_score = 0;
+  $controls_found_list = array();
+
+  foreach ($controls_done as $entry) {
+    // If someone scans a control multiple times, only count it once
+    if (!isset($controls_found_list[$entry])) {
+      $controls_found_list[$entry] = 1;
+      $total_score += $controls_points_hash[$entry];
+    }
+  }
+}
 
 // Get the submitted info
 // echo "<p>\n";
@@ -23,6 +37,17 @@ if (!file_exists($competitor_path) || !file_exists("./{$event}/Courses/{$course}
 $control_list = read_controls("./${event}/Courses/${course}/controls.txt");
 $controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
                                       array_map(function ($element) { return $element[1]; }, $control_list));
+
+$course_properties = get_course_properties("./{$event}/Courses/{$course}");
+$score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+if ($score_course) {
+  $max_score = $course_properties[$MAX_SCORE_FIELD];
+}
+else {
+  // For a non-ScoreO, each control is 1 point
+  $max_score = count($control_list);
+}
+
 //echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
 $error_string = "";
@@ -38,13 +63,15 @@ if (!file_exists("{$controls_found_path}/finish")) {
   // echo "<br>Controls done on the ${course} course.<br>\n";
   // print_r($controls_done);
   
-  // Are we at the right control?
-  $number_controls_found = count($controls_done);
-  $number_controls_on_course = count($control_list);
-  // echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found][0] . "--\n";
-  if ($number_controls_found != $number_controls_on_course) {
-      $error_string .= "<p>Not all controls found, found ${number_controls_found} controls, expected ${number_controls_on_course} controls.\n";
-      file_put_contents("{$competitor_path}/dnf", $error_string, FILE_APPEND);
+  if (!$score_course) {
+    // Are we at the right control?
+    $number_controls_found = count($controls_done);
+    $number_controls_on_course = count($control_list);
+    // echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found][0] . "--\n";
+    if ($number_controls_found != $number_controls_on_course) {
+        $error_string .= "<p>Not all controls found, found ${number_controls_found} controls, expected ${number_controls_on_course} controls.\n";
+        file_put_contents("{$competitor_path}/dnf", $error_string, FILE_APPEND);
+    }
   }
   
   $now = time();
@@ -59,8 +86,27 @@ if (!file_exists("{$controls_found_path}/finish")) {
   $controls_found = array_map(function ($item) { return (explode(",", $item)[1]); }, $controls_done);
 
   // For each control, look up its point value in the associative array and sum the total points
-  $total_score = array_reduce($controls_found, function ($carry, $element) use ($controls_points_hash) { return($carry + $controls_points_hash[$element]); }, 0);
-  $max_score = array_reduce($control_list, function ($carry, $element) use ($controls_points_hash) { return($carry + $controls_points_hash[$element[0]]); }, 0);
+  // TODO: Must de-dup the controls found - Don't doublecount the points!!
+  //$total_score = array_reduce($controls_found, function ($carry, $element) use (&$control_counted, $controls_points_hash) { return($carry + $controls_points_hash[$element]); }, 0);
+  if ($score_course) {
+    $score_penalty_msg = "";
+    $total_score = calculate_score($controls_found, $controls_points_hash);
+    // Reduce the total_score if over time
+    if ($time_taken > $course_properties[$LIMIT_FIELD]) {
+      $time_over = $time_taken - $course_properties[$LIMIT_FIELD];
+      $minutes_over = floor(($time_over + 59) / 60);
+      $penalty = $minutes_over * $course_properties[$PENALTY_FIELD];
+
+      $score_penalty_msg = "<p>Exceeded time limit of " . formatted_time($course_properties[$LIMIT_FIELD]) . " by " . formatted_time($time_over) . "\n" .
+                           "<p>With a per-minute penalty of {$course_properties[$PENALTY_FIELD]} for a total penalty of $penalty points.\n" .
+                           "<p>Control score was $total_score -> " . ($total_score - $penalty) . " after penalty.\n";
+
+      $total_score -= $penalty;
+    }
+  }
+  else {
+    $total_score = count($controls_found);
+  }
 
   $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $competitor_id);
   file_put_contents("./${event}/Results/${course}/${result_filename}", "");
@@ -79,8 +125,6 @@ setcookie("competitor_id", $competitor_id, $now - 86400);
 setcookie("course", $course, $now - 86400);
 setcookie("next_control", "start", $now - 86400);
 
-$results_list = scandir("./${event}/Results/${course}");
-$results_list = array_diff($results_list, array(".", ".."));
 
 echo get_web_page_header(true, true, false);
 
@@ -93,8 +137,11 @@ if (file_exists("${competitor_path}/dnf")) {
 }
 
 echo "<p class=\"title\">Course complete, time taken " . formatted_time($time_taken) . "<p><p>";
+if ($score_course && ($score_penalty_msg != "")) {
+  echo $score_penalty_msg;
+}
 
-echo show_results($event, $course);
+echo show_results($event, $course, $score_course, $max_score);
 echo get_all_course_result_links($event);
 
 // echo "<p>Course started at ${course_started_at}, course finished at ${now}, difference is ${time_taken}.\n";

@@ -10,8 +10,8 @@ my(@directory_contents);
 
 
 ###########
-sub reach_control_successfully {
-  my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+sub reach_control_ok {
+  my($duplicate, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
 
   $competitor_id = $cookie_ref->{"competitor_id"};
   $test_info_ref->{"subroutine"} = "reach_control";
@@ -28,8 +28,15 @@ sub reach_control_successfully {
   }
   my($control_num_for_print_string) = $control_num_on_course + 1;
   
-  if ($output !~ /Correct!  Reached $control, control #$control_num_for_print_string/) {
-    error_and_exit("Web page output wrong, correct control string not found.\n$output");
+  if ($duplicate) {
+    if ($output !~ /Control $control correct but already scanned.<p>Control #$control_num_for_print_string/) {
+      error_and_exit("Web page output wrong, correct control string not found for duplicate control.\n$output");
+    }
+  }
+  else {
+    if ($output !~ /Correct!  Reached $control, control #$control_num_for_print_string/) {
+      error_and_exit("Web page output wrong, correct control string not found.\n$output");
+    }
   }
   
   #print $output;
@@ -66,6 +73,18 @@ sub reach_control_successfully {
   }
 
   delete($test_info_ref->{"subroutine"});
+}
+
+############
+sub reach_control_successfully {
+  my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  reach_control_ok(0, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref);
+}
+
+############
+sub reach_control_again {
+  my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  reach_control_ok(1, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref);
 }
 
 
@@ -348,6 +367,47 @@ sub create_event_successfully {
   @directory_contents = check_directory_contents("${event}/Courses", qw());
   if (scalar(@directory_contents) != $number_courses) {
     error_and_exit("Different number of files exist in ${event}/Courses than expected: " . join("--", @directory_contents));
+  }
+
+  # Validate that the course properties are set correctly
+  my($course_description) = $post_ref->{"course_description"};
+  $course_description =~ s/--newline--/\n/g;
+  my(@courses) = split("\n", $course_description);
+  my($this_course, $i);
+  $i = 0;
+  foreach $this_course (@courses) {
+    next if (($this_course =~ /^--/) || ($this_course eq ""));
+
+    my($course_name_field) = split(",", $this_course);
+    my(@course_elements) = split(":", $course_name_field);
+    my($course_name);
+    if (($course_elements[0] eq "l") || ($course_elements[0] eq "s")) {
+      $course_name = sprintf("%02d-%s", $i, $course_elements[1]);
+    }
+    else {
+      $course_name = sprintf("%02d-%s", $i, $course_elements[0]);
+    }
+
+    if ($course_name_field !~ /^s:/) {
+      if ( -f "${event}/Courses/${course_name}/properties.txt") {
+        error_and_exit("Found ${event}/Courses/${course_name}/properties.txt unexpectedly.");
+      }
+    }
+    else {
+      if (! -f "${event}/Courses/${course_name}/properties.txt") {
+        error_and_exit("Did not find ${event}/Courses/${course_name}/properties.txt when it should be there.");
+      }
+      my(@file_contents) = file_get_contents("${event}/Courses/${course_name}/properties.txt");
+      chomp(@file_contents);
+      my(%props_hash);
+      map { my($name,$value) = split(":"); $props_hash{$name} = $value; } @file_contents;
+      my($props_to_course_desc) = join(":", "s", $course_elements[1], $props_hash{"limit"}, $props_hash{"penalty"});
+      if ($props_to_course_desc ne $course_name_field) {
+        error_and_exit("Properties mismatch: $props_to_course_desc derived, $course_name_field supplied.\n");
+      }
+    }
+
+    $i++;
   }
   
   

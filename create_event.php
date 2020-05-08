@@ -11,18 +11,7 @@ $MAX_CONTROL_VALUE = 100;
 $MAX_COURSES = 20;
 $MAX_CONTROLS = 50;
 
-// Information for parsing the course name
-$LINEAR_COURSE = 1;
-$SCORE_O_COURSE = 2;
-
-$NAME_FIELD = "name";
-$TYPE_FIELD = "type";
-$PENALTY_FIELD = "penalty";
-$LIMIT_FIELD = "limit";
-$ERROR_FIELD = "error";
-
-$LINEAR_COURSE_ID = "l";
-$SCORE_COURSE_ID = "s";
+require 'course_properties.php';
 
 // Utility functions
 function ck_valid_chars($string_to_check) {
@@ -181,11 +170,18 @@ if (isset($_POST["submit"])) {
       }
 
       if (count($course_name_and_controls) > 1) {
-         if ($course_info[$TYPE_FIELD] == $LINEAR_COURSE) {
-            // For a linear course, the controls are all worth one point. TBD if this is the right
-            // place to do this.
-            $control_list = array_map(function ($control) { return("{$control}:1"); }, $control_list);
-         }
+        if ($course_info[$TYPE_FIELD] == $LINEAR_COURSE) {
+           // For a linear course, the controls are all worth one point. TBD if this is the right
+           // place to do this.
+           $control_list = array_map(function ($control) { return("{$control}:1"); }, $control_list);
+        }
+        else if ($course_info[$TYPE_FIELD] == $SCORE_O_COURSE) {
+          // Get the maximum score for the course
+          $points_array = array_map(function ($control) { $pieces = explode(":", $control); return ($pieces[1]); }, $control_list);
+          $max_score = array_sum($points_array);
+          $course_info[$MAX_SCORE_FIELD] = $max_score;
+        }
+
         echo "<p>Found controls for course {$course_name}: " . implode("--", $control_list) . "\n";
         $course_array[] = array($course_name, $control_list, $course_info);
       }

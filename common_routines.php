@@ -121,8 +121,9 @@ function get_input_form_style_header() {
   }
 }
 
+
 // Show the results for a course
-function show_results($event, $course) {
+function show_results($event, $course, $show_points, $max_points) {
   $result_string = "";
   $result_string .= "<p>Results on " . ltrim($course, "0..9-") . "\n";
 
@@ -133,16 +134,31 @@ function show_results($event, $course) {
   $results_list = scandir("./${event}/Results/${course}");
   $results_list = array_diff($results_list, array(".", ".."));
 
-  $result_string .= "<table border=1><tr><th>Name</th><th>Time</th></tr>\n";
+  if ($show_points) {
+    $points_header = "<th>Points</th>";
+  }
+  else {
+    $points_header = "";
+  }
+
+  $result_string .= "<table border=1><tr><th>Name</th><th>Time</th>{$points_header}</tr>\n";
   $dnfs = "";
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);
     $competitor_name = file_get_contents("./${event}/Competitors/" . $result_pieces[2] . "/name");
-    if (!file_exists("./${event}/Competitors/" . $result_pieces[2] . "/dnf")) {
-      $result_string .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&entry=${this_result}\">${competitor_name}</a></td><td>" . formatted_time($result_pieces[1]) . "</td></tr>\n";
+    if ($show_points) {
+      $points_value = "<td>" . ($max_points - $result_pieces[0]) . "</td>";
     }
     else {
-      $dnfs .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&entry=${this_result}\">${competitor_name}</a></td><td>DNF</td></tr>\n";
+      $points_value = "";
+    }
+
+    if (!file_exists("./${event}/Competitors/" . $result_pieces[2] . "/dnf")) {
+      $result_string .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&entry=${this_result}\">${competitor_name}</a></td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
+    }
+    else {
+      // For a scoreO course, there are no DNFs, so $points_value should always be "", but show it just in case
+      $dnfs .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&entry=${this_result}\">${competitor_name}</a></td><td>DNF</td>{$points_value}</tr>\n";
     }
   }
   $result_string .= "${dnfs}</table>\n<p><p><p>";
@@ -150,7 +166,7 @@ function show_results($event, $course) {
 }
 
 // Show the results for a course as a csv
-function get_csv_results($event, $course) {
+function get_csv_results($event, $course, $show_points, $max_points) {
   $result_string = "";
   $readable_course_name = ltrim($course, "0..9-");
 
@@ -165,11 +181,18 @@ function get_csv_results($event, $course) {
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);
     $competitor_name = file_get_contents("./${event}/Competitors/" . $result_pieces[2] . "/name");
-    if (!file_exists("./${event}/Competitors/" . $result_pieces[1] . "/dnf")) {
-      $result_string .= "${readable_course_name};${competitor_name};" . csv_formatted_time($result_pieces[1]) . ";\n";
+    if ($show_points) {
+      $points_value = $max_points - $result_pieces[0];
     }
     else {
-      $result_string .= "${readable_course_name};${competitor_name};DNF;\n";
+      $points_value = "";
+    }
+
+    if (!file_exists("./${event}/Competitors/" . $result_pieces[1] . "/dnf")) {
+      $result_string .= "${readable_course_name};${competitor_name};" . csv_formatted_time($result_pieces[1]) . ";{$points_value}\n";
+    }
+    else {
+      $result_string .= "${readable_course_name};${competitor_name};DNF;${points_value}\n";
     }
   }
   return($result_string);
