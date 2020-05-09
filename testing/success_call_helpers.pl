@@ -294,7 +294,8 @@ sub finish_score_successfully {
   my($readable_course_name) = $course;
   $readable_course_name =~ s/^[0-9]+-//;
 
-  if (($output =~ /ERROR: DNF status/) || ($output !~ /Course complete, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
+  if (($output =~ /ERROR: DNF status/) || ($output !~ /Course complete, time taken/) || ($output !~ /Results on ${readable_course_name}/) ||
+      ($output !~ m#<td>$expected_points</td>#)) {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
   }
   

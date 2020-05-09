@@ -10,7 +10,9 @@ my($COMPETITOR_1) = "Mark_OConnell";
 my($COMPETITOR_2) = "Karen_Yeowell";
 my($COMPETITOR_3) = "LydBid";
 my($COMPETITOR_4) = "JohnnyJohnCon";
-my($competitor_1_id, $competitor_2_id, $competitor_3_id, $competitor_4_id);
+my($COMPETITOR_5) = "LinaNowak";
+my($COMPETITOR_6) = "RoxyAndTheGemstoneKitties";
+my($competitor_1_id, $competitor_2_id, $competitor_3_id, $competitor_4_id, $competitor_5_id, $competitor_6_id);
 
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 initialize_event();
@@ -132,15 +134,17 @@ sub check_splits {
 ###########
 # Test 1 - register a new entrant successfully
 # Test registration of a new entrant
-%TEST_INFO = qw(Testname Register4AndCheckOnCourse);
+%TEST_INFO = qw(Testname Register6AndCheckOnCourse);
 
 $competitor_1_id = register_one_entrant($COMPETITOR_1, "01-Yellow");
 $competitor_2_id = register_one_entrant($COMPETITOR_2, "01-Yellow");
 $competitor_3_id = register_one_entrant($COMPETITOR_3, "00-White");
 $competitor_4_id = register_one_entrant($COMPETITOR_4, "00-White");
+$competitor_5_id = register_one_entrant($COMPETITOR_5, "02-ScoreO");
+$competitor_6_id = register_one_entrant($COMPETITOR_6, "02-ScoreO");
 
 check_results(0);
-check_on_course(4);
+check_on_course(6);
 check_competitor_on_course($COMPETITOR_1, $competitor_1_id);
 
 success();
@@ -150,11 +154,12 @@ success();
 ###########
 # Test 2 - Competitor 1 starts the course and reaches two controls
 # Competitor 2 starts the course
-# 2 people on course
+# Competitor 5 start the course and finds a control
+# 3 people on course
 # 0 results
 
 # Competitor 1 starts and gets two controls
-%TEST_INFO = qw(Testname TestTwoStartersAtEvent);
+%TEST_INFO = qw(Testname TestThreeStartersAtEvent);
 %COOKIE = qw(event UnitTestingEvent course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_1_id;
 %GET = ();  # empty hash
@@ -176,17 +181,32 @@ $COOKIE{"competitor_id"} = $competitor_2_id;
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
+
+# Competitor 5 starts and gets a control
+%COOKIE = qw(event UnitTestingEvent course 02-ScoreO);
+$COOKIE{"competitor_id"} = $competitor_5_id;
+%GET = ();  # empty hash
+
+start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
+
+$GET{"control"} = "301";
+reach_score_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
+
+$GET{"control"} = "304";
+reach_score_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
+
+
 check_results(0);
-my($output) = check_on_course(4);
+my($output) = check_on_course(6);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;  # Easier to check in a regex without the newlines
 
-if (($no_newline_output !~ m#$COMPETITOR_2</td><td>[0-9:]+</td><td>start</td>#) || ($no_newline_output !~ m#$COMPETITOR_1</td><td>[0-9:]+</td><td>2</td>#)) {
+if (($no_newline_output !~ m#$COMPETITOR_2</td><td>[0-9:]+</td><td>start</td>#) || ($no_newline_output !~ m#$COMPETITOR_1</td><td>[0-9:]+</td><td>2</td>#) ||
+    ($no_newline_output !~ m#$COMPETITOR_5</td><td>[0-9:]+</td><td>304</td>#)) {
   error_and_exit("On course output showing wrong controls.\n$output");
 }
 
-
-check_competitor_on_course($COMPETITOR_2, $competitor_2_id);
+check_competitor_on_course($COMPETITOR_5, $competitor_5_id);
 
 success();
 
@@ -198,7 +218,9 @@ success();
 # Competitor 2 finds 3 controls
 # Competitor 3 finds 1 control
 # Competitor 4 starts
-%TEST_INFO = qw(Testname OneFinisherTwoMoreStarters);
+# Competitor 5 finds another control
+# Competitor 6 starts
+%TEST_INFO = qw(Testname OneFinisherThreeMoreStarters);
 
 # Competitor 1 finds two more controls
 %COOKIE = qw(event UnitTestingEvent course 01-Yellow);
@@ -216,6 +238,14 @@ reach_control_successfully(3, \%GET, \%COOKIE, \%TEST_INFO);
 # Competitor 3 starts
 %COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_3_id;
+%GET = ();  # empty hash
+
+start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
+
+
+# Competitor 6 starts
+%COOKIE = qw(event UnitTestingEvent course 02-ScoreO);
+$COOKIE{"competitor_id"} = $competitor_6_id;
 %GET = ();  # empty hash
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -244,6 +274,16 @@ $GET{"control"} = "201";
 reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 
+# Competitor 5 finds a control
+%COOKIE = qw(event UnitTestingEvent course 02-ScoreO);
+$COOKIE{"competitor_id"} = $competitor_5_id;
+%GET = ();  # empty hash
+
+
+$GET{"control"} = "305";
+reach_score_control_successfully(2, \%GET, \%COOKIE, \%TEST_INFO);
+
+
 # Competitor 2 finds the next control
 %COOKIE = qw(event UnitTestingEvent course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_2_id;
@@ -251,6 +291,15 @@ $COOKIE{"competitor_id"} = $competitor_2_id;
 
 $GET{"control"} = "206";
 reach_control_successfully(2, \%GET, \%COOKIE, \%TEST_INFO);
+
+
+# Competitor 6 finds a control
+%COOKIE = qw(event UnitTestingEvent course 02-ScoreO);
+$COOKIE{"competitor_id"} = $competitor_6_id;
+%GET = ();  # empty hash
+
+$GET{"control"} = "303";
+reach_score_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 4 starts
@@ -277,16 +326,19 @@ if ($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1</a></td><td>[0-9 sm
   error_and_exit("View result output for $COMPETITOR_1 wrong.\n$output");
 }
 
-my($output) = check_on_course(3);
+my($output) = check_on_course(5);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;  # Easier to check in a regex without the newlines
 
 if (($no_newline_output !~ m#$COMPETITOR_2</td><td>[0-9:]+</td><td>3</td>#) || ($no_newline_output !~ m#$COMPETITOR_3</td><td>[0-9:]+</td><td>1</td>#) ||
+    ($no_newline_output !~ m#$COMPETITOR_5</td><td>[0-9:]+</td><td>305</td>#) || ($no_newline_output !~ m#$COMPETITOR_6</td><td>[0-9:]+</td><td>303</td>#) || 
     ($no_newline_output !~ m#$COMPETITOR_4</td><td>[0-9:]+</td><td>start</td>#) || ($no_newline_output =~ m#$COMPETITOR_1#)) {
   error_and_exit("On course output showing wrong controls.\n$output");
 }
 
 check_competitor_on_course($COMPETITOR_3, $competitor_3_id);
+check_competitor_on_course($COMPETITOR_6, $competitor_6_id);
+check_competitor_on_course($COMPETITOR_5, $competitor_5_id);
 
 success();
 
@@ -297,6 +349,8 @@ success();
 # Competitor 2 DNFs
 # Competitor 3 finds all controls and finishes
 # Competitor 4 finds 2 controls and DNFs
+# Competitor 5 finishes
+# Competitor 6 finds another control and finishes
 %TEST_INFO = qw(Testname AllFinishWithTwoDNFs);
 
 # Competitor 3 finds more controls
@@ -310,6 +364,16 @@ reach_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
 
 $GET{"control"} = "203";
 reach_control_successfully(2, \%GET, \%COOKIE, \%TEST_INFO);
+
+
+# Competitor 6 finds a control
+%COOKIE = qw(event UnitTestingEvent course 02-ScoreO);
+$COOKIE{"competitor_id"} = $competitor_6_id;
+%GET = ();  # empty hash
+
+
+$GET{"control"} = "304";
+reach_score_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 
@@ -350,6 +414,14 @@ reach_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
 finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
 
 
+# Competitor 5 finishes
+%COOKIE = qw(event UnitTestingEvent course 02-ScoreO);
+$COOKIE{"competitor_id"} = $competitor_5_id;
+%GET = ();  # empty hash
+
+finish_score_successfully(100, \%GET, \%COOKIE, \%TEST_INFO);
+
+
 # Competitor 3 finishes
 %COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_3_id;
@@ -358,15 +430,25 @@ $COOKIE{"competitor_id"} = $competitor_3_id;
 finish_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
+# Competitor 6 finishes
+%COOKIE = qw(event UnitTestingEvent course 02-ScoreO);
+$COOKIE{"competitor_id"} = $competitor_6_id;
+%GET = ();  # empty hash
+
+finish_score_successfully(70, \%GET, \%COOKIE, \%TEST_INFO);
+
+
 #########
 # Validate results
-my($output) = check_results(4);
+my($output) = check_results(6);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;
 
 if (($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1</a></td><td>[0-9 smh:]+</td>#) ||
     ($no_newline_output !~ m#,$competitor_2_id">$COMPETITOR_2</a></td><td>DNF</td>#) ||
     ($no_newline_output !~ m#,$competitor_3_id">$COMPETITOR_3</a></td><td>[0-9 smh:]+</td>#) ||
+    ($no_newline_output !~ m#,$competitor_5_id">$COMPETITOR_5</a></td><td>[0-9 smh:]+</td><td>100</td>#) ||
+    ($no_newline_output !~ m#,$competitor_6_id">$COMPETITOR_6</a></td><td>[0-9 smh:]+</td><td>70</td>#) ||
     ($no_newline_output !~ m#,$competitor_4_id">$COMPETITOR_4</a></td><td>DNF</td>#)) {
   error_and_exit("View result output wrong for 1 or more competitors.\n$output");
 }
@@ -387,6 +469,8 @@ $expected_number_splits{$competitor_1_id} = 5;
 $expected_number_splits{$competitor_2_id} = 3;
 $expected_number_splits{$competitor_3_id} = 5;
 $expected_number_splits{$competitor_4_id} = 2;
+$expected_number_splits{$competitor_5_id} = 3;
+$expected_number_splits{$competitor_6_id} = 2;
 
 my(@results_files) = qx(ls -1 ./UnitTestingEvent/Results/*);
 chomp(@results_files);

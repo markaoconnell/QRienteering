@@ -1,5 +1,6 @@
 <?php
 require 'common_routines.php';
+require 'course_properties.php';
 
 ck_testing();
 
@@ -76,6 +77,9 @@ foreach (array_keys($on_course) as $course) {
 //  print_r($on_course[$course]);
   if (count($on_course[$course]) > 0) {
     $outstanding_entrants = true;
+    $course_properties = get_course_properties("./${event}/Courses/${course}");
+    $is_score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+
     $results_string .= "<p>Currently on " . ltrim($course, "0..9-") . "\n";
     $results_string .= "<table><tr><th>Name</th><th>Start time</th><th>Last control</th><th>Last control time</th></tr>\n";
     foreach ($on_course[$course] as $competitor) {
@@ -96,7 +100,13 @@ foreach (array_keys($on_course) as $course) {
         $last_control_time = $last_control_info_array[0];
 
         // For the split times, controls are 0 based, but for printing, make them 1 based
-        $last_control = $num_controls_done;
+        // For a scoreO, just report the control id
+        if ($is_score_course) {
+          $last_control = $last_control_info_array[1];
+        }
+        else {
+          $last_control = $num_controls_done;
+        }
       }
       else {
         $last_control = "start";
