@@ -45,6 +45,7 @@ $split_times = array();
 $cumulative_time = array();
 $controls_found = array();
 $prior_control_time = $start_time;
+$total_score = 0;
 $i = 0;
 foreach ($controls_done as $entry) {
   $control_info_array = explode(",", $entry);  // format is <time>,<control_id>
@@ -83,6 +84,7 @@ for ($i = 0; $i < $number_controls_found; $i++){
     if (!isset($controls_found_list[$control_found])) {
       $controls_found_list[$control_found] = 1;
       $control_string_for_table = "{$controls_found[$i]} ({$control_points} pts)";
+      $total_score += $control_points;
     }
     else {
       $control_string_for_table = "{$controls_found[$i]} (<strike>{$control_points} pts</strike>)";
@@ -107,7 +109,7 @@ if ($error_string != "") {
 echo $table_string;
 echo "<p>Total Time: " . formatted_time($result_pieces[1]) . "\n";
 if ($score_course) {
-  echo "<p>Final Score: " ($course_properties[$MAX_SCORE_FIELD] - $result_pieces[0]) . "\n";
+  echo "<p>Final Score: " . ($course_properties[$MAX_SCORE_FIELD] - $result_pieces[0]) . "\n";
   if ($result_pieces[1] > $course_properties[$LIMIT_FIELD]) {
     $time_over = $result_pieces[1] - $course_properties[$LIMIT_FIELD];
     $minutes_over = floor(($time_over + 59) / 60);
