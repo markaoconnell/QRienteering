@@ -75,9 +75,21 @@ sub check_directory_contents {
   return(keys(%found_directory_contents));
 }
 
+sub get_score_course_properties {
+  my($course_path) = @_;
+
+  my(@file_contents) = file_get_contents("${course_path}/properties.txt");
+  chomp(@file_contents);
+  my(%props_hash);
+  map { my($name,$value) = split(":"); $props_hash{$name} = $value; } @file_contents;
+
+  return(%props_hash);
+}
+
 sub initialize_event {
   # Make the event for testing purposes
-  %{$post_ref} = qw(submit true event_name UnitTesting course_description White,201,202,203,204,205--newline--Yellow,202,204,206,208,210);
+  %{$post_ref} = qw(submit true event_name UnitTesting
+                    course_description White,201,202,203,204,205--newline--Yellow,202,204,206,208,210--newline--s:ScoreO:300:1,301:10,302:20,303:30,304:40,305:50);
 #  mkdir("UnitTestingEvent");
 #  mkdir("UnitTestingEvent/Competitors");
 #  mkdir("UnitTestingEvent/Results");

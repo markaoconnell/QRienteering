@@ -8,13 +8,15 @@ function calculate_score($controls_found, $controls_points_hash) {
   $total_score = 0;
   $controls_found_list = array();
 
-  foreach ($controls_done as $entry) {
+  foreach ($controls_found as $entry) {
     // If someone scans a control multiple times, only count it once
     if (!isset($controls_found_list[$entry])) {
       $controls_found_list[$entry] = 1;
       $total_score += $controls_points_hash[$entry];
     }
   }
+
+  return($total_score);
 }
 
 // Get the submitted info

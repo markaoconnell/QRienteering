@@ -11,10 +11,14 @@ my(@directory_contents);
 
 ###########
 sub reach_control_ok {
-  my($duplicate, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  my($duplicate, $score_course, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
 
   $competitor_id = $cookie_ref->{"competitor_id"};
   $test_info_ref->{"subroutine"} = "reach_control";
+
+  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  my($extra_file_present) = ( -f "${path}/extra" );
+
   hashes_to_artificial_file();
   $cmd = "php ../reach_control.php";
   $output = qx($cmd);
@@ -28,7 +32,12 @@ sub reach_control_ok {
   }
   my($control_num_for_print_string) = $control_num_on_course + 1;
   
-  if ($duplicate) {
+  if ($score_course) {
+    if ($output !~ /Reached $control on ScoreO, earned [0-9]+ points/) {
+      error_and_exit("Web page output wrong, correct control string not found for score course (duplicate=$duplicate).\n$output");
+    }
+  }
+  elsif ($duplicate) {
     if ($output !~ /Control $control correct but already scanned.<p>Control #$control_num_for_print_string/) {
       error_and_exit("Web page output wrong, correct control string not found for duplicate control.\n$output");
     }
@@ -41,7 +50,6 @@ sub reach_control_ok {
   
   #print $output;
   
-  $path = "./UnitTestingEvent/Competitors/$competitor_id";
   my(@controls_found) = check_directory_contents("$path/controls_found", qw(start));
 
   if (grep (/NOTFOUND/, @controls_found) || grep (!/^[0-9]+,[0-9a-f]+$/)) {
@@ -61,9 +69,10 @@ sub reach_control_ok {
   }
   $time_at_control = $1;
   
+  # If the extra file was there already, it is ok if it is there now, it just shouldn't be added
   @directory_contents = check_directory_contents($path, qw(name course controls_found));
   if (grep(/NOTFOUND/, @directory_contents) || grep(/finish/, @directory_contents) ||
-      grep(/extra/, @directory_contents) || grep(/dnf/, @directory_contents)) {
+      (grep(/extra/, @directory_contents) && !$extra_file_present) || grep(/dnf/, @directory_contents)) {
     error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
   }
   
@@ -78,13 +87,26 @@ sub reach_control_ok {
 ############
 sub reach_control_successfully {
   my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
-  reach_control_ok(0, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref);
+  reach_control_ok(0, 0, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref);
 }
 
 ############
 sub reach_control_again {
   my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
-  reach_control_ok(1, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref);
+  reach_control_ok(1, 0, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref);
+}
+
+
+############
+sub reach_score_control_successfully {
+  my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  reach_control_ok(0, 1, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref);
+}
+
+############
+sub reach_score_control_again {
+  my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  reach_control_ok(1, 1, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref);
 }
 
 
@@ -257,6 +279,67 @@ sub finish_successfully {
 }
 
 
+###########
+# Finish the course successfully
+sub finish_score_successfully {
+  my($expected_points, $get_ref, $cookie_ref, $test_info_ref) = @_;
+
+  $test_info_ref->{"subroutine"} = "finish_score_successfully";
+  hashes_to_artificial_file();
+  $cmd = "php ../finish_course.php";
+  $output = qx($cmd);
+  
+  my($course) = $cookie_ref->{"course"};
+  my($competitor_id) = $cookie_ref->{"competitor_id"};
+  my($readable_course_name) = $course;
+  $readable_course_name =~ s/^[0-9]+-//;
+
+  if (($output =~ /ERROR: DNF status/) || ($output !~ /Course complete, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
+    error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
+  }
+  
+  #print $output;
+  
+  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  my($controls_found_path) = "$path/controls_found";
+  if (! -f "$controls_found_path/finish") {
+    error_and_exit("$controls_found_path/finish does not exist.");
+  }
+  
+  @directory_contents = check_directory_contents($path, qw(name course controls_found));
+  if (grep(/NOTFOUND/, @directory_contents)) {
+    error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
+  }
+  
+  # The only other files in the directory should be the numeric files for the controls found
+  @directory_contents = check_directory_contents($controls_found_path, qw(start finish));
+  if (grep(!/^[0-9]+,[0-9a-f]+$/, @directory_contents)) {
+    error_and_exit("More files exist in $controls_found_path than expected: " . join("--", @directory_contents));
+  }
+  
+  @file_contents_array = file_get_contents("$controls_found_path/finish");
+  $time_now = time();
+  if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
+    error_and_exit("File contents wrong, $controls_found_path/finish: " . join("--", @file_contents_array) . " vs time_now of $time_now.");
+  }
+
+  my(%props_hash) = get_score_course_properties("./UnitTestingEvent/Courses/${course}");
+  
+  my(@start_time_array) = file_get_contents("$controls_found_path/start");
+  my($results_file) = sprintf("%04d,%06d,%s", $props_hash{"max"} - $expected_points, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
+  
+  
+  my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/${course}", $results_file);
+  if (grep(/NOTFOUND:$results_file/, @results_array)) {
+    error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
+  }
+  
+  delete($test_info_ref->{"subroutine"});
+
+  return($output);
+}
+
+
 
 ###########
 # Finish the course with a DNF
@@ -397,10 +480,7 @@ sub create_event_successfully {
       if (! -f "${event}/Courses/${course_name}/properties.txt") {
         error_and_exit("Did not find ${event}/Courses/${course_name}/properties.txt when it should be there.");
       }
-      my(@file_contents) = file_get_contents("${event}/Courses/${course_name}/properties.txt");
-      chomp(@file_contents);
-      my(%props_hash);
-      map { my($name,$value) = split(":"); $props_hash{$name} = $value; } @file_contents;
+      my(%props_hash) = get_score_course_properties("${event}/Courses/${course_name}");
       my($props_to_course_desc) = join(":", "s", $course_elements[1], $props_hash{"limit"}, $props_hash{"penalty"});
       if ($props_to_course_desc ne $course_name_field) {
         error_and_exit("Properties mismatch: $props_to_course_desc derived, $course_name_field supplied.\n");
