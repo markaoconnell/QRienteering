@@ -137,7 +137,7 @@ foreach (array_keys($on_course) as $course) {
 
 echo get_web_page_header(true, true, false);
 
-if (outstanding_entrants) {
+if ($outstanding_entrants) {
   echo $results_string;
 }
 else {
