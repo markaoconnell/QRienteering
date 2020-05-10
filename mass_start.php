@@ -78,7 +78,7 @@ if ($event != "") {
 if (($event != "") && (count($mass_start_courses) > 0)) {
   $readable_course_names = array_map(function ($name) { return (ltrim($name, "0..9-")); }, $mass_start_courses);
   $output_string .= "<p>\nConfirm mass start for courses:<p><ul><li>" . join("</li><li>", $readable_course_names) . "</li></ul>\n";
-  $output_string .= "<form action=\"mass_start_courses.php\">\n<input type=\"submit\" name=\"Confirm and start\" value=\"go\">\n";
+  $output_string .= "<form action=\"mass_start_courses.php\">\n<input type=\"submit\" name=\"submit\" value=\"Confirm and start\">\n";
   $output_string .= "<input type=\"hidden\" name=\"courses_to_start\" value=\"" . implode(",", $mass_start_courses) . "\">\n";
   $output_string .= "</form>\n";
 }
