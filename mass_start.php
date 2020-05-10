@@ -12,7 +12,7 @@ echo get_web_page_header(true, false, true);
 // phpinfo();
 
 function is_event($filename) {
-  return (is_dir($filename) && (substr($filename, strlen($filename) - 5) == "Event"));
+  return (is_dir($filename) && (substr($filename, -5) == "Event"));
 }
 
 function name_to_link($pathname) {
@@ -80,6 +80,7 @@ if (($event != "") && (count($mass_start_courses) > 0)) {
   $output_string .= "<p>\nConfirm mass start for courses:<p><ul><li>" . join("</li><li>", $readable_course_names) . "</li></ul>\n";
   $output_string .= "<form action=\"mass_start_courses.php\">\n<input type=\"submit\" name=\"submit\" value=\"Confirm and start\">\n";
   $output_string .= "<input type=\"hidden\" name=\"courses_to_start\" value=\"" . implode(",", $mass_start_courses) . "\">\n";
+  $output_string .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
   $output_string .= "</form>\n";
 }
 
