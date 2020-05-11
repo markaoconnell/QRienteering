@@ -53,6 +53,8 @@ if (!file_exists("./{$event}/Competitors/{$competitor_id}") || !file_exists("./{
 $competitor_path = "./${event}/Competitors/${competitor_id}";
 $controls_found_path = "{$competitor_path}/controls_found";
 $control_list = read_controls("./{$event}/Courses/{$course}/controls.txt");
+$controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
+                                      array_map(function ($element) { return $element[1]; }, $control_list));
 // echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
 
@@ -73,7 +75,9 @@ if (file_exists("${controls_found_path}/finish")) {
 $controls_done = scandir("./${controls_found_path}");
 $controls_done = array_diff($controls_done, array(".", "..", "start", "finish")); // Remove the annoying . and .. entries
 $start_time = file_get_contents("./{$controls_found_path}/start");
-$time_on_course = time() - $start_time;
+$time_now = time();
+$time_on_course = $time_now - $start_time;
+$extra_info_msg = "";
 // echo "<br>Controls done on the ${course} course.<br>\n";
 // print_r($controls_done);
 
@@ -99,6 +103,29 @@ if ($score_course) {
     $extra_control_string = strval(time()) . ",{$control_id}\n";
     file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
   }
+
+  if ($time_on_course <= $course_properties[$LIMIT_FIELD]) {
+    $extra_info_msg = "<p>Time remaining on course: " . formatted_time($course_properties[$LIMIT_FIELD] - $time_on_course) . "\n";
+  }
+  else {
+    $extra_info_msg = "<p>Time limit expired by: " . formatted_time($time_on_course - $course_properties[$LIMIT_FIELD]) . "\n";
+  }
+
+  // Don't forget to include the control we just found!
+  $unique_controls_array = $controls_done;
+  if ($found_control) {
+    $unique_controls_array[] = "xxx,{$control_id}";  // The xxx (the timestamp) is about to be stripped off anyway
+  }
+  $unique_controls_array = array_unique(array_map(function ($elt) { return (explode(",", $elt)[1]); }, $unique_controls_array));
+  $num_unique_controls_done = count($unique_controls_array);
+  $extra_info_msg .= "<p>{$num_unique_controls_done} controls done, " . (count($control_list) - $num_unique_controls_done) . " possible controls remaining.\n";
+
+  $remaining_controls_list = array_diff(array_map(function ($element) { return $element[0]; }, $control_list), $unique_controls_array);
+  sort($remaining_controls_list);
+  $extra_info_msg .= "<p>Controls remaining: " . join(",", array_map(function ($elt) use ($controls_points_hash)
+                                                                              { return ("{$elt} => " . $controls_points_hash[$elt] . " pts"); },
+                                                                     $remaining_controls_list));
+  $extra_info_msg .= "<p>Controls done: " . join(",", $unique_controls_array) . "\n";
 }
 else {
   // Handle a linear (non-score) course
@@ -164,6 +191,10 @@ else {
   echo "<p>ERROR: {$error_string}\n";
 }
 echo "<br><p>Time on course is: " . formatted_time($time_on_course) . "\n";
+
+if ($extra_info_msg != "") {
+  echo $extra_info_msg;
+}
 
 echo get_web_page_footer();
 ?>

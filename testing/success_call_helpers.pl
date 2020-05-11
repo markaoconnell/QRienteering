@@ -58,8 +58,15 @@ sub reach_control_ok {
   }
 
   if ($#controls_found != $control_num_on_course) {
-    error_and_exit("$path/controls_found hold wrong number of controls, found $#controls_found, expected $control_num_on_course, " .
-                   "\n\tFound: " . join("--", @controls_found));
+    my(%dedupe_hash);
+    map { $dedupe_hash{$_} = 1 } @controls_found;
+    my(@deduped_controls_found) = keys(%dedupe_hash);
+ 
+    # For a ScoreO course, adding a duplicate control can sometimes show up as an extra entry, so check the de-duped version
+    if (($#deduped_controls_found != $control_num_on_course) || !$score_course) {
+      error_and_exit("$path/controls_found hold wrong number of controls, found $#controls_found, expected $control_num_on_course, " .
+                     "\n\tFound: " . join("--", @controls_found));
+    }
   }
 
   my(@sorted_controls_found) = sort { $a cmp $b } @controls_found;

@@ -4,20 +4,20 @@ require 'course_properties.php';
 
 ck_testing();
 
-function calculate_score($controls_found, $controls_points_hash) {
-  $total_score = 0;
-  $controls_found_list = array();
-
-  foreach ($controls_found as $entry) {
-    // If someone scans a control multiple times, only count it once
-    if (!isset($controls_found_list[$entry])) {
-      $controls_found_list[$entry] = 1;
-      $total_score += $controls_points_hash[$entry];
-    }
-  }
-
-  return($total_score);
-}
+//function calculate_score($controls_found, $controls_points_hash) {
+//  $total_score = 0;
+//  $controls_found_list = array();
+//
+//  foreach ($controls_found as $entry) {
+//    // If someone scans a control multiple times, only count it once
+//    if (!isset($controls_found_list[$entry])) {
+//      $controls_found_list[$entry] = 1;
+//      $total_score += $controls_points_hash[$entry];
+//    }
+//  }
+//
+//  return($total_score);
+//}
 
 // Get the submitted info
 // echo "<p>\n";
@@ -89,10 +89,11 @@ if (!file_exists("{$controls_found_path}/finish")) {
 
   // For each control, look up its point value in the associative array and sum the total points
   // TODO: Must de-dup the controls found - Don't doublecount the points!!
-  //$total_score = array_reduce($controls_found, function ($carry, $element) use (&$control_counted, $controls_points_hash) { return($carry + $controls_points_hash[$element]); }, 0);
   if ($score_course) {
     $score_penalty_msg = "";
-    $total_score = calculate_score($controls_found, $controls_points_hash);
+    $unique_controls = array_unique($controls_found);
+    //$total_score = calculate_score($unique_controls, $controls_points_hash);
+    $total_score = array_reduce($unique_controls, function ($carry, $elt) use ($controls_points_hash) { return($carry + $controls_points_hash[$elt]); }, 0);
     // Reduce the total_score if over time
     if ($time_taken > $course_properties[$LIMIT_FIELD]) {
       $time_over = $time_taken - $course_properties[$LIMIT_FIELD];
@@ -100,7 +101,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
       $penalty = $minutes_over * $course_properties[$PENALTY_FIELD];
 
       $score_penalty_msg = "<p>Exceeded time limit of " . formatted_time($course_properties[$LIMIT_FIELD]) . " by " . formatted_time($time_over) . "\n" .
-                           "<p>With a per-minute penalty of {$course_properties[$PENALTY_FIELD]} for a total penalty of $penalty points.\n" .
+                           "<p>Penalty is {$course_properties[$PENALTY_FIELD]} pts/minute, total penalty of $penalty points.\n" .
                            "<p>Control score was $total_score -> " . ($total_score - $penalty) . " after penalty.\n";
 
       $total_score -= $penalty;

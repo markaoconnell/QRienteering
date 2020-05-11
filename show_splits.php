@@ -116,7 +116,7 @@ if ($score_course) {
     $penalty = $minutes_over * $course_properties[$PENALTY_FIELD];
 
     $score_penalty_msg = "<p>Exceeded time limit of " . formatted_time($course_properties[$LIMIT_FIELD]) . " by " . formatted_time($time_over) . "\n" .
-                         "<p>With a per-minute penalty of {$course_properties[$PENALTY_FIELD]} for a total penalty of {$penalty} points.\n" .
+                         "<p>Penalty is {$course_properties[$PENALTY_FIELD]} pts/minute, total penalty of {$penalty} points.\n" .
                          "<p>Control score was $total_score -> " . ($total_score - $penalty) . " after penalty.\n";
     echo $score_penalty_msg;
   }
