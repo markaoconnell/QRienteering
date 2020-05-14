@@ -34,19 +34,22 @@ $not_started = array();
 $on_course = array();
 foreach ($courses_array as $course) {
   $on_course[$course] = array();
+  $not_started[$course] = array();
 }
 
+$found_registered_not_started = false;
 foreach ($competitor_list as $competitor) {
+  $course = file_get_contents("${competitor_directory}/${competitor}/course");
   if (!file_exists("${competitor_directory}/${competitor}/controls_found/finish")) {
     if (!file_exists("${competitor_directory}/${competitor}/controls_found/start")) {
       $file_info = stat("{$competitor_directory}/{$competitor}");
       // Weed out people who's registration time is too old (one day in seconds)
       if (($current_time - $file_info["mtime"]) < $TIME_LIMIT) {
-        $not_started[] = $competitor;
+        $not_started[$course][] = $competitor;
+        $found_registered_not_started = true;
       }
     }
     else {
-      $course = file_get_contents("${competitor_directory}/${competitor}/course");
       $start_time = file_get_contents("{$competitor_directory}/${competitor}/controls_found/start");
       // Weed out people who started more than one day ago
       if (($current_time - $start_time) < $TIME_LIMIT) {
@@ -58,16 +61,20 @@ foreach ($competitor_list as $competitor) {
 
 $outstanding_entrants = false;
 $results_string = "";
-if (count($not_started) > 0) {
-  $outstanding_entrants = true;
+if ($found_registered_not_started) {
   $results_string .= "<p>Registered but not started\n";
-  $results_string .= "<table><tr><th>Name</th></tr>\n";
-  foreach ($not_started as $competitor) {
-    $competitor_name = file_get_contents("${competitor_directory}/${competitor}/name");
-    if ($include_competitor_id) {
-      $competitor_name .= " ({$competitor})";
+  $results_string .= "<table><tr><th>Name</th><th>Course</th></tr>\n";
+  foreach (array_keys($not_started) as $course) {
+    if (count($not_started[$course]) > 0) {
+      $outstanding_entrants = true;
+      foreach ($not_started[$course] as $competitor) {
+        $competitor_name = file_get_contents("${competitor_directory}/${competitor}/name");
+        if ($include_competitor_id) {
+          $competitor_name .= " ({$competitor})";
+        }
+        $results_string .= "<tr><td>${competitor_name}</td><td>$course</td></tr>";
+      }
     }
-    $results_string .= "<tr><td>${competitor_name}</td></tr>";
   }
   $results_string .= "</table>\n<p><p><p>\n";
 }
