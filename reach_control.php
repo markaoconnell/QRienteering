@@ -94,13 +94,13 @@ if ($score_course) {
   }
 
   if ($found_control) {
-    $control_found_filename = "{$controls_found_path}/" . strval(time()) . ",{$control_id}";
+    $control_found_filename = "{$controls_found_path}/" . strval($time_now) . ",{$control_id}";
     file_put_contents($control_found_filename, "");
     $success_msg = "<p>Reached {$control_id} on " . ltrim($course, "0..9-") . ", earned {$points_for_control} points.\n";
   }
   else {
     $error_string .= "<p>Found wrong control, control {$control_id} not on course " . ltrim($course, "0..9-") . "\n";
-    $extra_control_string = strval(time()) . ",{$control_id}\n";
+    $extra_control_string = strval($time_now) . ",{$control_id}\n";
     file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
   }
 
@@ -146,7 +146,7 @@ else {
     if ($control_id != $prior_control) {
       $error_string .= "<p>Found wrong control: {$control_id}, course " . ltrim($course, "0..9-") . ", control #" . ($number_controls_found + 1) .
                           ", expected control " . $control_list[$number_controls_found][0] . "\n";
-      $extra_control_string = strval(time()) . ",{$control_id}\n";
+      $extra_control_string = strval($time_now) . ",{$control_id}\n";
       file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
       // echo "<p>This looks like it also wasn't the prior control\n";
     }
@@ -166,7 +166,7 @@ else {
     }
   }
   else {
-    $control_found_filename = "{$controls_found_path}/" . strval(time()) . ",{$control_id}";
+    $control_found_filename = "{$controls_found_path}/" . strval($time_now) . ",{$control_id}";
     file_put_contents($control_found_filename, "");
     $remaining_controls = count($control_list) - $number_controls_found - 1;
     if ($remaining_controls <= 0) {
