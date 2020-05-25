@@ -50,6 +50,8 @@ $fake_members_string = <<<END_OF_MEMBERS_FILE
 32;Mark;OConnell;2108369;
 232;Mary;OConnell;141421;
 31;Karen;Yeowell;3959473
+13;Ian;Finlayson;45
+14;Isla;Finlayson;55;
 END_OF_MEMBERS_FILE;
 
 $fake_nicknames_string = <<<END_OF_NICKNAMES_FILE
@@ -88,6 +90,9 @@ file_put_contents("./members.csv", $fake_members_string);
 file_put_contents("./nicknames.csv", $fake_nicknames_string);
 
 $matching_info = read_names_info("./members.csv", "./nicknames.csv");
+
+unlink("./members.csv");
+unlink("./nicknames.csv");
 
 // Check that things seem to have parsed correctly
 if (!isset($matching_info["members_hash"])) {
@@ -162,6 +167,7 @@ check_name_match ($matching_info, "Stephen", "Berrill", array());
 check_name_match ($matching_info, "Ed", "Baldwin", array(422));
 check_name_match ($matching_info, "Xevi", "Fradera", array(262));
 check_name_match ($matching_info, "Thomas", "Baldwin", array(1261));
+check_name_match ($matching_info, "Is", "Finlayson", array(13,14));
 
 echo "Success!\n";
 
