@@ -8,20 +8,86 @@ function error_and_exit($error_string) {
   exit(1);
 }
 
-function check_name_match($matching_info, $first, $last) {
-  $candidate_member_id = find_best_name_match ($matching_info, $first, $last);
-  if ($candidate_member_id == -1) {
-    echo "No member found for {$first} {$last}\n";
+function check_name_match($matching_info, $first, $last, $expected_matches) {
+  $candidate_member_ids = find_best_name_match ($matching_info, $first, $last);
+
+  $intersection = array_intersect($candidate_member_ids, $expected_matches);
+  if ((count($intersection) != count($candidate_member_ids)) ||
+      (count($intersection) != count($expected_matches))) {
+    $members_hash = $matching_info["members_hash"];
+    $found_members = array_map(function ($elt) use ($members_hash) { return ("{$members_hash[$elt]["full_name"]}-({$elt})"); }, $candidate_member_ids);
+    $expected_members = array_map(function ($elt) use ($members_hash) { return ("{$members_hash[$elt]["full name"]}-({$elt})"); }, $expected_matches);
+    error_and_exit("Name matching failed!  Got " . implode(",", $found_members) . " while expected " . implode(",", $expected_members) . "\n");
   }
   else {
-    echo "Member found for {$first} {$last} -> ";
-    print_r($matching_info["members_hash"][$candidate_member_id]);
-    echo "\n";
+    echo "Match on {$first} {$last} succeeded!\n";
   }
 }
 
+$fake_members_string = <<<END_OF_MEMBERS_FILE
+591;Aaron;Aaker;
+1431;Andrew;Anselmo;
+1501;Jim;Arsenault;
+1203;Susan;Axe-Bronk;
+1774;Caroline;Baldwin;
+426;Caroline;Baldwin;
+422;Edward;Baldwin;
+1771;Edward;Baldwin;
+1773;Elizabeth;Baldwin;
+421;Julie;Baldwin;
+1772;Julie;Baldwin;
+424;Katherine;Baldwin;
+425;Lizzy;Baldwin;
+423;Margaret;Baldwin;
+1261;Tom;Baldwin;
+41;Larry;Berrill;
+323;Anna;Campbell;
+322;Jonathan;Campbell;
+324;Peter;Campbell;
+321;Victoria;Campbell;
+262;Xavier;Fradera;
+33;Lydia;OConnell;
+32;Mark;OConnell;2108369;
+232;Mary;OConnell;141421;
+31;Karen;Yeowell;3959473
+END_OF_MEMBERS_FILE;
 
-$matching_info = read_names_info("../run_competition/members.csv", "../run_competition/nicknames.csv");
+$fake_nicknames_string = <<<END_OF_NICKNAMES_FILE
+Victoria;Tori;
+Michael;Mike;
+Donald;Don;
+James;Jim;Jimmy;
+Patrice;Patricia;Patty;Patti;
+Jose Luis;Jose;
+Andrew;Andy;
+Susan;Sue;Suzanne;
+Elizabeth;Beth;Liz;Lizzy;
+Thomas;Tom;
+Catherine;Cathy;
+Theodore;Ted;Ed;Edward;
+Lawrence;Larry;
+Rebecca;Becky;
+Phillip;Phil;
+Jonathan;Jon;
+Robert;Bob;Bobby;Rob;
+Nathaniel;Nat;Natasha;
+Alexander;Alexandra;Alex;
+Matthew;Matt;
+Jennifer;Jenny;
+Xavier;Xevi;
+Samuel;Samantha;Sam;
+Stephen;Steven;Steve;
+Christopher;Chris;Christine;
+Richard;Dick;
+Jeffrey;Jeff;
+Judith;Judy;
+Timothy;Tim;
+END_OF_NICKNAMES_FILE;
+
+file_put_contents("./members.csv", $fake_members_string);
+file_put_contents("./nicknames.csv", $fake_nicknames_string);
+
+$matching_info = read_names_info("./members.csv", "./nicknames.csv");
 
 // Check that things seem to have parsed correctly
 if (!isset($matching_info["members_hash"])) {
@@ -82,15 +148,20 @@ if (isset($full_name_hash["Marcus OConnell"])) {
 }
 
 
-check_name_match ($matching_info, "Mark", "OConnell");
-check_name_match ($matching_info, "Mark", "O'Connell");
-check_name_match ($matching_info, "Marc", "OConnell");
-check_name_match ($matching_info, "Martha", "OConnell");
-check_name_match ($matching_info, "Robert", "OConnell");
-check_name_match ($matching_info, "Lawrence", "Berrill");
-check_name_match ($matching_info, "Larry", "Berrill");
-check_name_match ($matching_info, "Caitlin", "Marks");
-check_name_match ($matching_info, "Stephen", "Berrill");
+check_name_match ($matching_info, "Mark", "OConnell", array(32));
+check_name_match ($matching_info, "Mark", "O'Connell", array(32));
+check_name_match ($matching_info, "Marc", "OConnell", array(232,32));
+check_name_match ($matching_info, "Mary", "OConnell", array(232));
+check_name_match ($matching_info, "Martha", "OConnell", array());
+check_name_match ($matching_info, "Mart", "OConnell", array(32, 232));
+check_name_match ($matching_info, "Robert", "OConnell", array());
+check_name_match ($matching_info, "Lawrence", "Berrill", array(41));
+check_name_match ($matching_info, "Larry", "Berrill", array(41));
+check_name_match ($matching_info, "Caitlin", "Marks", array());
+check_name_match ($matching_info, "Stephen", "Berrill", array());
+check_name_match ($matching_info, "Ed", "Baldwin", array(422));
+check_name_match ($matching_info, "Xevi", "Fradera", array(262));
+check_name_match ($matching_info, "Thomas", "Baldwin", array(1261));
 
 echo "Success!\n";
 

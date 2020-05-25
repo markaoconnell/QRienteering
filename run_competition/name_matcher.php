@@ -1,6 +1,6 @@
 <?php
 
-$MAX_CHECK_DISTANCE = 5;
+$MAX_CHECK_DISTANCE = 3;
 
 // member_id;first;last;si_stick
 // Read in the members together with si_stick, if they have one
@@ -26,12 +26,16 @@ function read_names_info($member_file, $nicknames_file) {
         //echo "Found {$pieces[3]} for entry $elt.\n";
         $si_hash[$pieces[3]] = $pieces[0];
       }
-      $member_hash[$pieces[0]] = array("first" => $pieces[1],
-                                       "last" => $pieces[2],
-                                       "full_name" => "{$pieces[1]} {$pieces[2]}",
-                                       "si_stick"=> $pieces[3]);
-      $last_name_hash[$pieces[2]][] = $pieces[0]; 
-      $full_name_hash["{$pieces[1]} {$pieces[2]}"] = $pieces[0];
+
+      // Weed out duplicate names - assume someone accidentally joined twice
+      if (!isset($full_name_hash["{$pieces[1]} {$pieces[2]}"])) {
+        $member_hash[$pieces[0]] = array("first" => $pieces[1],
+                                         "last" => $pieces[2],
+                                         "full_name" => "{$pieces[1]} {$pieces[2]}",
+                                         "si_stick"=> $pieces[3]);
+        $last_name_hash[$pieces[2]][] = $pieces[0]; 
+        $full_name_hash["{$pieces[1]} {$pieces[2]}"] = $pieces[0];
+      }
     }
   }
 
@@ -39,6 +43,7 @@ function read_names_info($member_file, $nicknames_file) {
     $nickname_list = file($nicknames_file, FILE_IGNORE_NEW_LINES);
     foreach ($nickname_list as $equivalent_names_csv) {
       $pieces = explode(";", $equivalent_names_csv);
+      $pieces = array_filter($pieces, function ($elt) { return (trim($elt) != ""); } );
       foreach ($pieces as $name_in_list) {
         $nicknames_hash[$name_in_list] = $pieces;
       }
@@ -85,7 +90,7 @@ function find_best_name_match ($matching_info, $first_name, $last_name) {
   // Try the easy case - the name simply exists in the list
   $full_name = "{$first_name} {$last_name}";
   if (isset($full_name_hash[$full_name])) {
-    return($full_name_hash[$full_name]);
+    return(array($full_name_hash[$full_name]));
   }
 
 
@@ -101,14 +106,14 @@ function find_best_name_match ($matching_info, $first_name, $last_name) {
 
   // No member with anything that looks like this last name, return no match
   if (count($last_name_matches) == 0) {
-    return -1;
+    return array();
   }
 
   if (count($last_name_matches) == 1) {
     // Is there an exact match on the full name?  If so, we're good
     // This catches a slight misspelling in the last name
     if (isset($full_name_matches["{$first_name} {$last_name_matches[0]}"])) {
-      return ($full_name_matches["{$first_name} {$last_name_matches[0]}"]);
+      return (array($full_name_matches["{$first_name} {$last_name_matches[0]}"]));
     }
   }
 
@@ -137,33 +142,34 @@ function find_best_name_match ($matching_info, $first_name, $last_name) {
 
   // find the closest match amongst all the possible nicknames etc
   $best_name_matches = find_best_match_by_distance("{$first_name} {$last_name}", array_keys($possible_nicknames));
+  //echo "Best name matches for {$first_name} {$last_name} is " . implode(",", $best_name_matches) . "\n";
+  //echo "Check nicknames for {$first_name} {$last_name}: " . implode(",", array_keys($possible_nicknames)) . "\n";
 
   if (count($best_name_matches) == 0) {
-    return -1;  // no match found
+    return array();  // no match found
   }
 
   // Only one match
   if (count($best_name_matches) == 1) {
     if (count($possible_nicknames[$best_name_matches[0]]) == 1) {
       // Only one member matches - return the member id
-      return ($possible_nicknames[$best_name_matches[0]][0]);
+      return (array($possible_nicknames[$best_name_matches[0]][0]));
     }
   }
 
   
   // Multiple matches - but they may all be for the same member id, which is ok
-  $candidate_member_id = $possible_nicknames[$best_name_matches[0]][0];
+  $candidate_member_ids = array();
   foreach ($best_name_matches as $possible_name) {
     foreach ($possible_nicknames[$possible_name] as $possible_member_id) {
-      if ($candidate_member_id != $possible_member_id) {
-        // Hmmm, multiple members have too similar a name and we can't disambiguate
-        // just give up
-        return(-1);
+      if (!in_array($possible_member_id, $candidate_member_ids)) {
+        // Return all matching ids and let the user choose, hopefully it is just one
+        $candidate_member_ids[] = $possible_member_id;
       }
     }
   }
 
-  return($candidate_member_id);
+  return($candidate_member_ids);
 }
 
 ?>
