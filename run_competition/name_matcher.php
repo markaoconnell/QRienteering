@@ -58,6 +58,14 @@ function read_names_info($member_file, $nicknames_file) {
 }
 
 
+function get_full_name($member_id, $matching_info) {
+  return($matching_info["members_hash"][$member_id]["full_name"]);
+}
+
+function get_si_stick($member_id, $matching_info) {
+  return($matching_info["members_hash"][$member_id]["si_stick"]);
+}
+
 
 function find_best_match_by_distance($name_to_check, $list_of_names) {
 
