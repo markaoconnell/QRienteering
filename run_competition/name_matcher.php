@@ -66,6 +66,10 @@ function get_si_stick($member_id, $matching_info) {
   return($matching_info["members_hash"][$member_id]["si_stick"]);
 }
 
+function get_by_si_stick($si_stick, $matching_info) {
+  return($matching_info["si_hash"][$si_stick]);
+}
+
 
 function find_best_match_by_distance($name_to_check, $list_of_names) {
 
