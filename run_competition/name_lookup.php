@@ -48,7 +48,7 @@ else if (count($possible_member_ids) == 1) {
 <input type=hidden name="member_id" value="{$possible_member_ids[0]}"/>
 <p> Yes <input type=radio name="using_stick" value="yes" {$yes_checked_by_default} /> <input type=text name="si_stick_number" value="{$si_stick}" />
 <p> No <input type=radio name="using_stick" value="no" {$no_checked_by_default}/>
-<p><input type="submit" name="Register"/>
+<p><input type="submit" value="Register"/>
 </form>
 END_OF_FORM;
 }
