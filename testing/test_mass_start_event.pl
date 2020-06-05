@@ -13,11 +13,22 @@ my($COMPETITOR_4) = "JohnnyJohnCon";
 my($COMPETITOR_5) = "LinaNowak";
 my($COMPETITOR_6) = "RoxyAndTheGemstoneKitties";
 my($competitor_1_id, $competitor_2_id, $competitor_3_id, $competitor_4_id, $competitor_5_id, $competitor_6_id);
+my($output);
 
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 initialize_event();
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
 set_no_redirects_for_event("UnitTestingEvent");
+
+sub run_mass_start_courses {
+  my($cmd) = "php ../mass_start_courses.php";
+
+  hashes_to_artificial_file();
+  my($output);
+  $output = qx($cmd);
+
+  return($output);
+}
 
 sub register_one_entrant {
   %GET = qw(event UnitTestingEvent);
@@ -152,19 +163,25 @@ success();
 
 
 ###########
-# Test 2 - Competitor 1 starts the course and reaches two controls
-# Competitor 2 starts the course
-# Competitor 5 start the course and finds a control
-# 3 people on course
+# Test 2 - Mass start of Yellow and ScoreO
+# Then Competitor 1 reaches two controls
+# Competitor 5 finds a control
+# 6 people on course
 # 0 results
 
-# Competitor 1 starts and gets two controls
-%TEST_INFO = qw(Testname TestThreeStartersAtEvent);
+%TEST_INFO = qw(Testname TestThreeStartersAtEventYellowScoreMassStart);
+%GET = qw(event UnitTestingEvent courses_to_start 01-Yellow,02-ScoreO);
+$output = run_mass_start_courses();
+
+if (($output !~ /$COMPETITOR_1 on/) || ($output !~ /$COMPETITOR_2 on/) || ($output !~ /$COMPETITOR_5 on/) ||
+    ($output !~ /$COMPETITOR_6 on/) || ($output =~ /$COMPETITOR_3/) || ($output =~ /$COMPETITOR_4/)) {
+  error_and_exit("Incorrect results from starting only Yellow and ScoreO.\n$output");
+}
+
+# Competitor 1 gets two controls
 %COOKIE = qw(event UnitTestingEvent course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_1_id;
 %GET = ();  # empty hash
-
-start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 $GET{"control"} = "202";
 reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
@@ -174,20 +191,10 @@ reach_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 
-# Competitor 2 starts
-%COOKIE = qw(event UnitTestingEvent course 01-Yellow);
-$COOKIE{"competitor_id"} = $competitor_2_id;
-%GET = ();  # empty hash
-
-start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
-
-
-# Competitor 5 starts and gets a control
+# Competitor 5 gets a control
 %COOKIE = qw(event UnitTestingEvent course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_5_id;
 %GET = ();  # empty hash
-
-start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 $GET{"control"} = "301";
 reach_score_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
@@ -214,13 +221,20 @@ success();
 
 ###########
 # Test 3 - Competitor_1 finishes
-# Competitor 3 starts
+# Mass start White (competitors 3 and 4)
 # Competitor 2 finds 3 controls
 # Competitor 3 finds 1 control
-# Competitor 4 starts
 # Competitor 5 finds another control
 # Competitor 6 starts
-%TEST_INFO = qw(Testname OneFinisherThreeMoreStarters);
+%TEST_INFO = qw(Testname TestMassStartWhite);
+%GET = qw(event UnitTestingEvent courses_to_start 00-White);
+$output = run_mass_start_courses();
+
+if (($output =~ /$COMPETITOR_1/) || ($output =~ /$COMPETITOR_2/) || ($output =~ /$COMPETITOR_5/) ||
+    ($output =~ /$COMPETITOR_6/) || ($output !~ /$COMPETITOR_3 on/) || ($output !~ /$COMPETITOR_4 on/)) {
+  error_and_exit("Incorrect results from starting only White and not Yellow or ScoreO.\n$output");
+}
+
 
 # Competitor 1 finds two more controls
 %COOKIE = qw(event UnitTestingEvent course 01-Yellow);
@@ -233,22 +247,6 @@ reach_control_successfully(2, \%GET, \%COOKIE, \%TEST_INFO);
 
 $GET{"control"} = "208";
 reach_control_successfully(3, \%GET, \%COOKIE, \%TEST_INFO);
-
-
-# Competitor 3 starts
-%COOKIE = qw(event UnitTestingEvent course 00-White);
-$COOKIE{"competitor_id"} = $competitor_3_id;
-%GET = ();  # empty hash
-
-start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
-
-
-# Competitor 6 starts
-%COOKIE = qw(event UnitTestingEvent course 02-ScoreO);
-$COOKIE{"competitor_id"} = $competitor_6_id;
-%GET = ();  # empty hash
-
-start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 
@@ -301,13 +299,6 @@ $COOKIE{"competitor_id"} = $competitor_6_id;
 $GET{"control"} = "303";
 reach_score_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
-
-# Competitor 4 starts
-%COOKIE = qw(event UnitTestingEvent course 00-White);
-$COOKIE{"competitor_id"} = $competitor_4_id;
-%GET = ();  # empty hash
-
-start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 # Competitor 1 finds the final control and finishes
 %COOKIE = qw(event UnitTestingEvent course 01-Yellow);
