@@ -62,6 +62,10 @@ function get_full_name($member_id, $matching_info) {
   return($matching_info["members_hash"][$member_id]["full_name"]);
 }
 
+function get_member_name_info($member_id, $matching_info) {
+  return(array($matching_info["members_hash"][$member_id]["first"], $matching_info["members_hash"][$member_id]["last"]));
+}
+
 function get_si_stick($member_id, $matching_info) {
   return($matching_info["members_hash"][$member_id]["si_stick"]);
 }

@@ -1,6 +1,6 @@
 <?php
 require '../common_routines.php';
-require './name_matcher.php';
+require 'name_matcher.php';
 
 ck_testing();
 
@@ -22,6 +22,9 @@ if (!isset($_GET["member_id"])) {
 }
 else {
   $possible_member_ids = array($_GET["member_id"]);
+  if (get_full_name($possible_member_ids[0], $matching_info) == "") {
+    error_and_exit("No such member id {$_GET["member_id"]} found, please retry or ask for assistance.\n");
+  }
 }
 
 $error_string = "";

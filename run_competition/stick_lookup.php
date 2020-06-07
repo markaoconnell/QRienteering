@@ -1,25 +1,20 @@
 <?php
 require '../common_routines.php';
-require './name_matcher.php';
+require 'name_matcher.php';
 
 ck_testing();
 
 $matching_info = read_names_info("./members.csv", "./nicknames.csv");
 
-if (!isset($_GET["member_id"])) {
-  if (!isset($_GET["si_stick"])) {
-    error_and_exit("Unspecified SI stick number, please hit back and retry.\n");
-  }
-  
-  $si_stick = $_GET["si_stick"];
-  
-  $member_id = get_by_si_stick($si_stick, $matching_info);
-  if ($member_id == "") {
-    error_and_exit("No member with SI stick \"{$si_stick}\" found, please hit back and retry.\n");
-  }
+if (!isset($_GET["si_stick"])) {
+  error_and_exit("Unspecified SI stick number, please hit back and retry.\n");
 }
-else {
-  $member_id = $_GET["member_id"];
+
+$si_stick = $_GET["si_stick"];
+
+$member_id = get_by_si_stick($si_stick, $matching_info);
+if ($member_id == "") {
+  error_and_exit("No member with SI stick \"{$si_stick}\" found, please hit back and retry.\n");
 }
 
 $error_string = "";
