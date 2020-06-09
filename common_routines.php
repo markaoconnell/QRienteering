@@ -219,6 +219,18 @@ function read_controls($filename) {
 }
 
 
+// Turn a string of the form <key>,<base64value>,<key>,<base64value>,.... into a key->value hash
+function parse_registration_info($raw_info_string) {
+  $pair_list = explode(",", $raw_info_string);
+  $return_hash = array();
+  for ($i = 0; $i < count($pair_list); $i += 2) {
+    $return_hash[$pair_list[$i]] = base64_decode($pair_list[$i + 1]);
+  }
+
+  return($return_hash);
+}
+
+
 // Explode a comma separated string into an array
 function explode_lines(&$item1, $key)
 {

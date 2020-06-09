@@ -17,10 +17,26 @@ function is_event($filename) {
 
 function name_to_link($pathname) {
   $final_element = basename($pathname);
-  return ("<li><a href=./register.php?event=${final_element}>${final_element}</a>\n");
+  global $raw_registration_info, $registration_info_supplied;
+
+  if ($registration_info_supplied) {
+    return ("<li><a href=./register.php?event={$final_element}>{$final_element}</a>\n");
+  }
+  else {
+    return ("<li><a href=./register.php?event={$final_element}&registration_info={$raw_registration_info}>{$final_element}</a>\n");
+  }
 }
 
 echo "<p>\n";
+
+if (isset($_GET["registration_info"])) {
+  $registration_info_supplied = true;
+  $raw_registration_info = $_GET["registration_info"];
+  $registration_info = parse_registration_info($raw_registration_info);
+}
+else {
+  $registration_info_supplied = false;
+}
 
 $event = $_GET["event"];
 //echo "event is \"${event}\"<p>";
@@ -53,8 +69,15 @@ echo "<p>\n";
 echo "<p>Registration for orienteering event: ${event}\n<br>";
 echo "<form action=\"./register_competitor.php\">\n";
 
-echo "<br><p>What is your name?<br>\n";
-echo "<input type=\"text\" name=\"competitor_name\"><br>\n";
+if ($registration_info_supplied) {
+  echo "<br><p>Welcome:<br>\n";
+  echo "<input type=\"text\" name=\"competitor_name\" value=\"{$registration_info["first_name"]} {$registration_info["last_name"]}\" readonly><br>\n";
+  echo "<input type=\"hidden\" name=\"registration_info\" value=\"{$raw_registration_info}\">\n";
+}
+else {
+  echo "<br><p>What is your name?<br>\n";
+  echo "<input type=\"text\" name=\"competitor_name\"><br>\n";
+}
 echo "<input type=\"hidden\" name=\"event\" value=\"${event}\">\n";
 
 echo "<br><p>Select a course:<br>\n";

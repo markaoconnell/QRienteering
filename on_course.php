@@ -72,7 +72,7 @@ if ($found_registered_not_started) {
         if ($include_competitor_id) {
           $competitor_name .= " ({$competitor})";
         }
-        $results_string .= "<tr><td>${competitor_name}</td><td>$course</td></tr>";
+        $results_string .= "<tr><td>${competitor_name}</td><td>" . ltrim($course, "0..9-") . "</td></tr>";
       }
     }
   }

@@ -8,6 +8,15 @@ ck_testing();
 $competitor_name = $_GET["competitor_name"];
 $course = $_GET["course"];
 
+if (isset($_GET["registration_info"])) {
+  $registration_info_supplied = true;
+  $raw_registration_info = $_GET["registration_info"];
+  $registration_info = parse_registration_info($raw_registration_info);
+}
+else {
+  $registration_info_supplied = false;
+}
+
 
 $courses_array = scandir('./' . $_GET["event"] . '/Courses');
 $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
@@ -23,7 +32,7 @@ if (!in_array($course, $courses_array)) {
   $error = true;
 }
 
-if ($competitor_name === "") {
+if ($competitor_name == "") {
   $body_string .= "<p>ERROR: Competitor name must be specified.\n";
   $error = true;
 }
@@ -54,9 +63,24 @@ if (!$error) {
     fclose($competitor_file);
     file_put_contents($competitor_path . "/course", $course);
     mkdir("./{$competitor_path}/controls_found");
+
+    $current_time = time();
+
+    if ($registration_info_supplied) {
+      file_put_contents("{$competitor_path}/registration_info", $raw_registration_info);
+      if ($registration_info["si_stick"] != "") {
+        file_put_contents("{$competitor_path}/si_stick", $registration_info["si_stick"]);
+      }
+
+      if ($registation_info["is_member"] == "yes") {
+        // Two month timeout for the cookie about the member's name, should generally be sufficient
+        setcookie("member_first_name", $registration_info["first_name"], $current_time + 86400 * 60);
+        setcookie("member_last_name", $registration_info["last_name"], $current_time + 86400 * 60);
+      }
+    }
     
     // Set the cookies with the name, course, next control
-    $timeout_value = time() + 3600 * 6;  // 6 hour timeout, should be fine for most any course
+    $timeout_value = $current_time + 3600 * 6;  // 6 hour timeout, should be fine for most any course
     setcookie("competitor_id", $competitor_id, $timeout_value);
     setcookie("course", $course, $timeout_value);
     setcookie("event", $_GET["event"], $timeout_value);

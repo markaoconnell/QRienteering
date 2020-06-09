@@ -173,6 +173,82 @@ sub register_successfully {
 }
 
 
+###########
+# Successfully register a new competitor
+sub register_member_successfully {
+  my($get_ref, $cookie_ref, $registration_info_ref, $test_info_ref) = @_;
+
+  $test_info_ref->{"subroutine"} = "register_member_successfully";
+  my($raw_registration_info) = hash_to_registration_info_string($registration_info_ref);
+  $get_ref->{"registration_info"} = $raw_registration_info;
+  hashes_to_artificial_file();
+  $cmd = "php ../register_competitor.php";
+  $output = qx($cmd);
+
+  my($course) = $get_ref->{"course"};
+  my($readable_course_name) = $course;
+  $readable_course_name =~ s/^[0-9]+-//;
+  my($competitor_name) = $get_ref->{"competitor_name"};
+  $competitor_name =~ s/--space--/ /g;
+
+  if ($output !~ /Registration complete: $competitor_name on ${readable_course_name}/) {
+    error_and_exit("Web page output wrong, registration complete string not found.\n$output");
+  }
+  
+  #print $output;
+  
+  my($competitor_id);
+  $competitor_id = qx(ls -1t ./UnitTestingEvent/Competitors | head -n 1);
+  chomp($competitor_id);
+  print "My competitor_id is $competitor_id\n";
+  if (! -d "./UnitTestingEvent/Competitors/$competitor_id") {
+    error_and_exit("Directory ./UnitTestingEvent/Competitors/$competitor_id not found.");
+  }
+  
+  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  if ((! -f "$path/name") || (! -f "$path/course")) {
+    error_and_exit("One of $path/name or $path/course does not exist.");
+  }
+  
+  if ($registration_info_ref->{"si_stick"} ne "") {
+    @directory_contents = check_directory_contents($path, qw(name course controls_found registration_info si_stick));
+  }
+  else {
+    @directory_contents = check_directory_contents($path, qw(name course controls_found registration_info));
+  }
+  if ($#directory_contents != -1) {
+    error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
+  }
+  
+  @directory_contents = check_directory_contents("$path/controls_found", qw());
+  if ($#directory_contents != -1) {
+    error_and_exit("More files exist in $path/controls_found than expected: " . join("--", @directory_contents));
+  }
+  
+  my(@name_file) = file_get_contents("$path/name");
+  my(@course_file) = file_get_contents("$path/course");
+  
+  if (($#name_file != 0) || ($#course_file != 0) || ($name_file[0] ne $competitor_name) || ($course_file[0] ne $course)) {
+    error_and_exit("File contents wrong, name_file: " . join("--", @name_file) . "\n\tcourse_file: " . join("--" , @course_file));
+  }
+
+  my(@registration_info_contents) = file_get_contents("$path/registration_info");
+  if ((scalar(@registration_info_contents) != 1) || ($registration_info_contents[0] ne $raw_registration_info)) {
+    error_and_exit("File contents wrong, registration_info: " . join("--", @registration_info_contents));
+  }
+
+  if ($registration_info_ref->{"si_stick"} ne "") {
+    my(@stick_file_contents) = file_get_contents("$path/si_stick");
+    if ((scalar(@stick_file_contents) != 1) || ($stick_file_contents[0] ne $registration_info_ref->{"si_stick"})) {
+      error_and_exit("File contents wrong, stick_file_contents: " . join("--", @stick_file_contents));
+    }
+  }
+
+  delete($test_info_ref->{"subroutine"});
+  $test_info_ref->{"competitor_id"} = $competitor_id;
+}
+
+
 
 
 ###########
@@ -535,5 +611,7 @@ sub create_event_fail {
 
   return ($output);
 }
+
+
 
 1;

@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
+use MIME::Base64;
 
 my($get_ref, $cookie_ref, $post_ref, $test_info_ref, $test_filename);
 
@@ -109,6 +110,19 @@ sub set_no_redirects_for_event {
   my($event) = @_;
 
   open(NO_REDIRECTS, ">./${event}/no_redirects"); close(NO_REDIRECTS);
+}
+
+########################
+# Turn a hash into the information for the registration script
+sub hash_to_registration_info_string {
+  my($info_hash_ref) = @_;
+
+  my($info_return);
+  $info_return = join(",", map { join(",", $_, encode_base64($info_hash_ref->{$_})) } keys(%{$info_hash_ref}));
+  $info_return =~ s/\n//g;  # For some reason, newlines are being embedded at the end of the base64 encodes
+  #print "String is $info_return\n";
+
+  return($info_return);
 }
 
 1;
