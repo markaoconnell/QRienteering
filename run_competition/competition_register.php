@@ -5,14 +5,19 @@ ck_testing();
 
 echo get_web_page_header(true, false, true);
 
+$member_cookie_found = false;
+if (isset($_COOKIE["member_first_name"]) && isset($_COOKIE["member_last_name"])) {
+  $member_cookie_found = true;
+}
+
 ?>
 <p class="title"><u>NEOC club member registration:</u>
 <form action="./name_lookup.php">
 <p>Lookup by member name:
 <p>First name 
-<input type="text" name="competitor_first_name"><br>
+<input type="text" name="competitor_first_name" <?php if ($member_cookie_found) { echo "value=\"{$_COOKIE["member_first_name"]}\""; } ?> ><br>
 <p>Last name 
-<input type="text" name="competitor_last_name"><br>
+<input type="text" name="competitor_last_name" <?php if ($member_cookie_found) { echo "value=\"{$_COOKIE["member_last_name"]}\""; } ?> ><br>
 <input type="submit" value="Member name lookup">
 </form>
 

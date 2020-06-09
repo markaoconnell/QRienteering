@@ -70,5 +70,7 @@ echo get_web_page_header(true, false, true);
 
 echo $success_string;
 
+echo "<a href=\"./competition_register.php\">Go back and retry</a>\n";
+
 echo get_web_page_footer();
 ?>

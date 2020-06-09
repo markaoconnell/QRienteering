@@ -72,7 +72,7 @@ if (!$error) {
         file_put_contents("{$competitor_path}/si_stick", $registration_info["si_stick"]);
       }
 
-      if ($registation_info["is_member"] == "yes") {
+      if ($registration_info["is_member"] == "yes") {
         // Two month timeout for the cookie about the member's name, should generally be sufficient
         setcookie("member_first_name", $registration_info["first_name"], $current_time + 86400 * 60);
         setcookie("member_last_name", $registration_info["last_name"], $current_time + 86400 * 60);
