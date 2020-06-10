@@ -55,6 +55,41 @@ sub get_timestamp {
 
 #89898989;-:-:--:--:--;-:-:--:--:--;-:-:19:34:14;-:-:19:34:43;101;-:-:19:34:23;102;-:-:19:34:36;103;-:-:19:34:38;104;-:-:19:34:40;105;-:-:19:34:41;
 
+my($event) = "";
+my($url) = "http://www.mkoconnell.com/OMeetRegistrationTest/";
+my($VIEW_RESULTS) = "view_results.php";
+my($FINISH_COURSE) = "finish_course.php";
+
+while ($ARGV[0] =~ /^-/) {
+  if ($ARGV[0] eq "-e") {
+    $event = $ARGV[1];
+    shift; shift;
+  }
+  elsif ($ARGV[0] eq "-u") {
+    $url = $ARGV[1];
+    shift; shift;
+  }
+  else {
+    print "Usage: $0 -e <eventName>\n";
+    exit 1;
+  }
+}
+
+if ($event eq "") {
+  print "Usage: $0 -e <eventName>\n\t-e option required.\n";
+  exit 1;
+}
+
+# Ensure that the event specified is valid
+my($cmd) = "curl -s $url/$VIEW_RESULTS?event=$event";
+my($output);
+$output = qx($cmd);
+if ($output =~ /No such event found $event/) {
+  print "Event $event not found, please check if valid.\n";
+  exit 1;
+}
+#print $output;
+
 while (1) {
   read_results();
 
@@ -80,6 +115,18 @@ while (1) {
     print "Got results for ${key}: ${qr_result_string}\n";
     # Base64 encode for upload to the website
     my($web_site_string) = base64_encode($qr_result_string);
+    $web_site_string =~ s/\n//g;
+    $cmd = "curl -s $url/$FINISH_COURSE?event=$event&si_stick_finish=$web_site_string";
+    $output = qx($cmd);
+#    print $output;
+
+    if ($output =~ /(Name:.*), Course complete, (time taken .*)<p>/) {
+      print "$1 $2\n";
+    }
+
+    if ($output =~ /ERROR: DNF/) {
+      print "DNF\n";
+    }
 
     $results_by_stick{$key} = $new_results_by_stick{$key};
   }

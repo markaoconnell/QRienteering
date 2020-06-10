@@ -161,7 +161,8 @@ if (file_exists("${competitor_path}/dnf")) {
   echo "<p>ERROR: DNF status.\n";
 }
 
-echo "<p class=\"title\">Course complete, time taken " . formatted_time($time_taken) . "<p><p>";
+$competitor_name = file_get_contents("{$competitor_path}/name");
+echo "<p class=\"title\">Name: {$competitor_name}, Course complete, time taken " . formatted_time($time_taken) . "<p><p>";
 if ($score_course && ($score_penalty_msg != "")) {
   echo $score_penalty_msg;
 }
