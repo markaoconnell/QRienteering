@@ -480,6 +480,62 @@ sub finish_score_successfully {
 }
 
 
+###########
+# Finish the course successfully
+sub finish_scoreO_with_stick_successfully {
+  my($competitor_id, $course, $expected_points, $get_ref, $cookie_ref, $test_info_ref) = @_;
+
+  $test_info_ref->{"subroutine"} = "finish_scoreO_with_stick_successfully";
+  hashes_to_artificial_file();
+  $cmd = "php ../finish_course.php";
+  $output = qx($cmd);
+  
+  my($readable_course_name) = $course;
+  $readable_course_name =~ s/^[0-9]+-//;
+
+  if (($output =~ /ERROR: DNF status/) || ($output !~ /Course complete, time taken/) || ($output !~ /Results on ${readable_course_name}/) ||
+      ($output !~ m#<td>$expected_points</td>#)) {
+    error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
+  }
+  
+  #print $output;
+  
+  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  my($controls_found_path) = "$path/controls_found";
+  if (! -f "$controls_found_path/finish") {
+    error_and_exit("$controls_found_path/finish does not exist.");
+  }
+  
+  @directory_contents = check_directory_contents($path, qw(name course controls_found));
+  if (grep(/NOTFOUND/, @directory_contents)) {
+    error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
+  }
+  
+  # The only other files in the directory should be the numeric files for the controls found
+  @directory_contents = check_directory_contents($controls_found_path, qw(start finish));
+  if (grep(!/^[0-9]+,[0-9a-f]+$/, @directory_contents)) {
+    error_and_exit("More files exist in $controls_found_path than expected: " . join("--", @directory_contents));
+  }
+  
+  @file_contents_array = file_get_contents("$controls_found_path/finish");
+
+  my(%props_hash) = get_score_course_properties("./UnitTestingEvent/Courses/${course}");
+  
+  my(@start_time_array) = file_get_contents("$controls_found_path/start");
+  my($results_file) = sprintf("%04d,%06d,%s", $props_hash{"max"} - $expected_points, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
+  
+  
+  my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/${course}", $results_file);
+  if (grep(/NOTFOUND:$results_file/, @results_array)) {
+    error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
+  }
+  
+  delete($test_info_ref->{"subroutine"});
+
+  return($output);
+}
+
+
 
 ###########
 # Finish the course with a DNF

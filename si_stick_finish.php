@@ -71,6 +71,8 @@ function record_finish_by_si_stick($event, $si_results_string) {
 }
 
 function validate_and_save_results($event, $competitor, $si_stick, $start_pieces, $finish_pieces, $result_pieces) {
+  global $TYPE_FIELD, $SCORE_O_COURSE;
+
   $competitor_path = "./{$event}/Competitors/{$competitor}";
   if (!file_exists($competitor_path) || file_exists("{$competitor_path}/controls_found/start") || ($si_stick != file_get_contents("{$competitor_path}/si_stick"))) {
     // Houston, we have a problem
@@ -80,8 +82,9 @@ function validate_and_save_results($event, $competitor, $si_stick, $start_pieces
   $course = file_get_contents("{$competitor_path}/course");
   $controls_info = read_controls("./{$event}/Courses/{$course}/controls.txt");
   $controls_on_course = array_map(function ($elt) { return($elt[0]); }, $controls_info);
-  $course_properties = get_course_properties("./${event}/Courses/${course}");
+  $course_properties = get_course_properties("./{$event}/Courses/{$course}");
   $is_score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+
 
   // Skip the si_stick entry, the start entry, and the finish entry
   // Format of $result_pieces is <si_stick>;<start_timestamp>,start:<start_timestamp>,finish:<finish_timestamp>,<control>:<control_timestamp>:...
@@ -92,8 +95,10 @@ function validate_and_save_results($event, $competitor, $si_stick, $start_pieces
     $control_pieces = explode(":", $result_pieces[$i]);
     $control_is_valid = false;
 
-    if ($is_score_course && in_array($control_pieces[0], $controls_on_course)) {
-      $control_is_valid = true;
+    if ($is_score_course) {
+       if (in_array($control_pieces[0], $controls_on_course)) {
+         $control_is_valid = true;
+       }
     }
     else if ($controls_on_course[$next_control_number] == $control_pieces[0]) {
       $control_is_valid = true;

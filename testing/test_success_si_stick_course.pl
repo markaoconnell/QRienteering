@@ -134,6 +134,40 @@ success();
 
 
 
+###########
+# Test 5 - register another entrant successfully, with some information missing
+# Then complete a scoreO course
+%TEST_INFO = qw(Testname TestSiStickOnScoreO);
+%GET = qw(event UnitTestingEvent course 02-ScoreO);
+%REGISTRATION_INFO = qw(club_name QOC si_stick 1221 car_info ToyotaPriusGE7346 is_member no);
+$REGISTRATION_INFO{"first_name"} = "Surtout";
+$REGISTRATION_INFO{"last_name"} = "Burtout";
+$REGISTRATION_INFO{"email_address"} = "";
+$REGISTRATION_INFO{"cell_phone"} = "";
+$GET{"competitor_name"} = "Surtout--space--Burtout";
+%COOKIE = ();  # empty hash
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_id = $TEST_INFO{"competitor_id"};
+
+%GET = qw(event UnitTestingEvent);  # empty hash
+my(@si_results) = qw(1221;1600 start:1600 finish:2552 304:1734 302:1812 304:1919 301:2112 305:2332);
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_scoreO_with_stick_successfully($competitor_id, "02-ScoreO", 120 - 11, "02-ScoreO", \%GET, \%COOKIE, \%TEST_INFO);
+validate_file_present("./UnitTestingEvent/Competitors/${competitor_id}/controls_found/1734,304");
+validate_file_present("./UnitTestingEvent/Competitors/${competitor_id}/controls_found/1812,302");
+validate_file_present("./UnitTestingEvent/Competitors/${competitor_id}/controls_found/1919,304");
+validate_file_present("./UnitTestingEvent/Competitors/${competitor_id}/controls_found/2112,301");
+validate_file_present("./UnitTestingEvent/Competitors/${competitor_id}/controls_found/2332,305");
+
+success();
+
+
+
 
 ############
 # Cleanup
