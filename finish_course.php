@@ -1,6 +1,7 @@
 <?php
 require 'common_routines.php';
 require 'course_properties.php';
+require 'si_stick_finish.php';
 
 ck_testing();
 
@@ -21,9 +22,31 @@ ck_testing();
 
 // Get the submitted info
 // echo "<p>\n";
-$course = $_COOKIE["course"];
-$competitor_id = $_COOKIE["competitor_id"];
-$event = $_COOKIE["event"];
+if (isset($_GET["si_stick_finish"])) {
+  if (!isset($_GET["event"]) || ($_GET["event"] == "")) {
+    error_and_exit("ERROR: Cannot find competitor for registered stick {$finish_info["si_stick"]}: No event set.\n");
+  }
+
+  $event = $_GET["event"];
+  $si_results_string = base64_decode($_GET["si_stick_finish"]);
+  $finish_info = record_finish_by_si_stick($event, $si_results_string);
+
+  if ($finish_info["error"] != "") {
+    error_and_exit("ERROR: Cannot find competitor for registered stick {$finish_info["si_stick"]}: {$finish_info["error"]}\n");
+  }
+
+  $course = $finish_info["course"];
+  $competitor_id = $finish_info["competitor_id"];
+  $finish_time = $finish_info["finish_time"];
+}
+else {
+  $course = $_COOKIE["course"];
+  $competitor_id = $_COOKIE["competitor_id"];
+  $event = $_COOKIE["event"];
+  $finish_time = time();
+}
+
+$now = $finish_time;
 
 if (($event == "") || ($competitor_id == "")) {
   error_and_exit("<p>ERROR: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?" . get_error_info_string());
@@ -76,7 +99,6 @@ if (!file_exists("{$controls_found_path}/finish")) {
     }
   }
   
-  $now = time();
   file_put_contents("{$controls_found_path}/finish", strval($now));
   $course_started_at = file_get_contents("{$controls_found_path}/start");
   $time_taken = $now - $course_started_at;

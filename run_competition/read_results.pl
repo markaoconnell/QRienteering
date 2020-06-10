@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
+use MIME::Base64;
 
 
 my(@result_files) = qw(1/results.csv 1/resultslog.csv);
@@ -10,6 +11,7 @@ my(%new_results_by_stick) = qw();
 
 
 
+# Need to handle a reused stick - use stick-raw_start as the key???
 sub read_results {
 
   my($result_file);
@@ -27,8 +29,10 @@ sub read_results {
       $result_line =~ s/\r//g;
       my($stick, $raw_start, $raw_clear, @controls) = split(";", $result_line);
 
-      if (!defined($results_by_stick{$stick})) {
-        $new_results_by_stick{$stick} = \@controls;
+      my($hash_key) = "${stick};" . get_timestamp($raw_start);
+
+      if (!defined($results_by_stick{$hash_key})) {
+        $new_results_by_stick{$hash_key} = \@controls;
       }
     }
   }
@@ -74,6 +78,8 @@ while (1) {
 
     my($qr_result_string) = "${key}-" . join(",", "start:${start_timestamp}","finish:${finish_timestamp}", @qr_controls);
     print "Got results for ${key}: ${qr_result_string}\n";
+    # Base64 encode for upload to the website
+    my($web_site_string) = base64_encode($qr_result_string);
 
     $results_by_stick{$key} = $new_results_by_stick{$key};
   }
