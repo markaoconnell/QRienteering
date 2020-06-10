@@ -19,6 +19,10 @@ if ($event == "") {
   error_and_exit("<p>ERROR: Event not specified, no results can be shown.\n");
 }
 
+if (!file_exists("./{$event}") || !file_exists("./{$event}/Courses")) {
+  error_and_exit("<p>ERROR: No such event found {$event}.\n");
+}
+
 $results_string = "";
 if ($download_csv) {
   $results_string = "<pre>\n";
