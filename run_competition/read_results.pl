@@ -29,7 +29,7 @@ sub read_results {
       $result_line =~ s/\r//g;
       my($stick, $raw_start, $raw_clear, @controls) = split(";", $result_line);
 
-      my($hash_key) = "${stick};" . get_timestamp($raw_start);
+      my($hash_key) = "${stick};" . get_timestamp($controls[0]);
 
       if (!defined($results_by_stick{$hash_key})) {
         $new_results_by_stick{$hash_key} = \@controls;
@@ -111,14 +111,17 @@ while (1) {
       push(@qr_controls, "${control}:${control_timestamp}");
     }
 
-    my($qr_result_string) = "${key}-" . join(",", "start:${start_timestamp}","finish:${finish_timestamp}", @qr_controls);
+    my($qr_result_string) = "${key}," . join(",", "start:${start_timestamp}","finish:${finish_timestamp}", @qr_controls);
     print "Got results for ${key}: ${qr_result_string}\n";
     # Base64 encode for upload to the website
-    my($web_site_string) = base64_encode($qr_result_string);
+    #print "$qr_result_string\n";
+    my($web_site_string) = encode_base64($qr_result_string);
     $web_site_string =~ s/\n//g;
-    $cmd = "curl -s $url/$FINISH_COURSE?event=$event&si_stick_finish=$web_site_string";
+    $web_site_string =~ s/=/%3D/g;
+    $cmd = "curl -s $url/$FINISH_COURSE?event=$event\\\&si_stick_finish=$web_site_string";
     $output = qx($cmd);
-#    print $output;
+    #print "$cmd\n";
+    #print $output;
 
     if ($output =~ /(Name:.*), Course complete, (time taken .*)<p>/) {
       print "$1 $2\n";
@@ -126,6 +129,9 @@ while (1) {
 
     if ($output =~ /ERROR: DNF/) {
       print "DNF\n";
+    }
+    elsif ($output =~ /(ERROR.*)/) {
+      print "Error found: $1\n";
     }
 
     $results_by_stick{$key} = $new_results_by_stick{$key};
