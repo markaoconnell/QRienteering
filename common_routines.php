@@ -26,6 +26,48 @@ function formatted_time($time_in_seconds) {
   }
 }
 
+// Convert a time limit of the form XXhYYmZZs to seconds.
+// Note - all fields are optional
+// If just a number, it is assumed to be in seconds (backwards compatability)
+// Errors return a limit of -1
+function time_limit_to_seconds($time_limit_entry) {
+  $limit_in_seconds = 0;
+
+  if (preg_match('/^[0-9]+$/', $time_limit_entry)) {
+    // old style entry, assume just in seconds
+    return ($time_limit_entry);
+  }
+
+  $remaining_time = trim($time_limit_entry);
+  if (preg_match('/^[0-9]+h/', $remaining_time)) {
+    $h_location = strpos($remaining_time, "h");
+    $limit_in_seconds += substr($remaining_time, 0, $h_location) * 3600;
+    $remaining_time = substr($remaining_time, $h_location + 1);
+  }
+
+  $remaining_time = trim($remaining_time);
+  if (preg_match('/^[0-9]+m/', $remaining_time)) {
+    $m_location = strpos($remaining_time, "m");
+    $limit_in_seconds += substr($remaining_time, 0, $m_location) * 60;
+    $remaining_time = substr($remaining_time, $m_location + 1);
+  }
+
+  $remaining_time = trim($remaining_time);
+  if (preg_match('/^[0-9]+s/', $remaining_time)) {
+    $s_location = strpos($remaining_time, "s");
+    $limit_in_seconds += substr($remaining_time, 0, $s_location);
+    $remaining_time = substr($remaining_time, $s_location + 1);
+  }
+
+  if (trim($remaining_time) != "") {
+    return(-1);
+  }
+
+  return($limit_in_seconds);
+}
+
+
+
 // Return a string with the elapsed time in seconds formatted for easy parsing
 function csv_formatted_time($time_in_seconds) {
   $mins = floor($time_in_seconds / 60);

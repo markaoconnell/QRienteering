@@ -732,9 +732,13 @@ sub create_event_successfully {
         error_and_exit("Did not find ${event}/Courses/${course_name}/properties.txt when it should be there.");
       }
       my(%props_hash) = get_score_course_properties("${event}/Courses/${course_name}");
-      my($props_to_course_desc) = join(":", "s", $course_elements[1], $props_hash{"limit"}, $props_hash{"penalty"});
-      if ($props_to_course_desc ne $course_name_field) {
-        error_and_exit("Properties mismatch: $props_to_course_desc derived, $course_name_field supplied.\n");
+      if ($course_elements[3] ne $props_hash{"penalty"}) {
+        error_and_exit("Properties mismatch: " . $props_hash{"penalty"} . " derived, $course_elements[2] supplied.\n");
+      }
+
+      my($parse_result) = convert_to_seconds($course_elements[2]);
+      if ($parse_result != $props_hash{"limit"}) {
+        error_and_exit("Properties mismatch: time limit of $course_elements[2] ($parse_result) does not match value in seconds " . $props_hash{"limit"} . ".\n");
       }
     }
 

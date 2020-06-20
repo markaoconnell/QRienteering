@@ -125,4 +125,45 @@ sub hash_to_registration_info_string {
   return($info_return);
 }
 
+########################
+# Parse a time field and return it in seconds
+sub convert_to_seconds {
+  my($time_string) = @_;
+  my($time_in_seconds) = 0;
+
+#  print "Converting time_string of $time_string.\n";
+
+  if ($time_string =~ /^[0-9]+$/) {
+    return ($time_string);
+  }
+
+  $time_string =~ s/^\s+//g;
+  if ($time_string =~ /(^[0-9]+)h/) {
+#    print "Found hours in $time_string, $1\n";
+    $time_in_seconds += $1 * 3600;
+    $time_string =~ s/^[0-9]+h//;
+  }
+
+  $time_string =~ s/^\s+//g;
+  if ($time_string =~ /(^[0-9]+)m/) {
+#    print "Found minutes in $time_string, $1\n";
+    $time_in_seconds += $1 * 60;
+    $time_string =~ s/^[0-9]+m//;
+  }
+
+  $time_string =~ s/^\s+//g;
+  if ($time_string =~ /(^[0-9]+)s/) {
+#    print "Found seconds in $time_string, $1\n";
+    $time_in_seconds += $1;
+    $time_string =~ s/^[0-9]+s//;
+  }
+
+  $time_string =~ s/^\s+//g;
+  if ($time_string ne "") {
+    return -1;
+  }
+
+  return ($time_in_seconds);
+}
+
 1;
