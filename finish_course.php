@@ -59,6 +59,10 @@ if (!file_exists($competitor_path) || !file_exists("./{$event}/Courses/{$course}
   error_and_exit("<p>ERROR: Event \"{$event}\" or competitor \"{$competitor}\" appears to be no longer appears valid, please re-register and try again.\n");
 }
 
+if (file_exists("{$competitor_path}/si_stick") && !isset($_GET["si_stick_finish"])) {
+  error_and_exit("<p>ERROR: If using si stick, do not scan the finish QR code, use si stick to finish instead.\n");
+}
+
 $control_list = read_controls("./${event}/Courses/${course}/controls.txt");
 $controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
                                       array_map(function ($element) { return $element[1]; }, $control_list));

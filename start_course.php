@@ -24,6 +24,10 @@ else {
   error_and_exit("<p>ERROR: Bad registration for event \"{$event}\" and competitor \"{$competitor_id}\", please reregister and try again?");
 }
 
+if (file_exists("{$competitor_path}/si_stick")) {
+  error_and_exit("<p>ERROR: {$competitor_name} registered for {$event} with si_stick, should not scan start QR code.");
+}
+
 if (file_exists("${controls_found_path}/start")) {
   $error_string = "Course " . ltrim($course, "0..9-") . " already started for {$competitor_name}.";
 }

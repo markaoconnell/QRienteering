@@ -11,6 +11,7 @@ my($COMPETITOR_FIRST_NAME) = "Mark";
 my($COMPETITOR_LAST_NAME) = "OConnell_Registration_Testing";
 my($COMPETITOR_NAME) = "${COMPETITOR_FIRST_NAME}--space--${COMPETITOR_LAST_NAME}";
 my($competitor_id);
+my($cmd, $output);
 
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 initialize_event();
@@ -38,25 +39,64 @@ success();
 
 
 ###########
-# Test 2 - start the course
-# validate that the start entry is created
-%TEST_INFO = qw(Testname TestSuccessStart);
+# Test 2 - try and start the course
+# Should error - si stick starters done use QR start
+%TEST_INFO = qw(Testname TestQRStartWithSiStickFails);
 %COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
 
-start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
+hashes_to_artificial_file();
+$cmd = "php ../start_course.php";
+$output = qx($cmd);
+
+if ($output !~ /ERROR: ${COMPETITOR_FIRST_NAME} ${COMPETITOR_LAST_NAME} registered for UnitTestingEvent with si_stick, should not scan start QR code/) {
+  error_and_exit("Web page output wrong, bad registration error not found.\n$output");
+}
+
+#print $output;
 
 success();
 
 
 ###########
-# Test 3 - find all correct controls
-# Validate that the correct entry is created
-%TEST_INFO = qw(Testname FindAllValidControls);
+# Test 3 - Try scanning a control
+# Si stick users should not scan controls
+%TEST_INFO = qw(Testname ReachControlWhenUsingSiStickFails);
 %COOKIE = qw(event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+%GET = ();
+$GET{"control"} = "201";
 
+hashes_to_artificial_file();
+$cmd = "php ../reach_control.php";
+$output = qx($cmd);
+
+if ($output !~ /registered with si stick, should not scan QR code/) {
+  error_and_exit("Web page output wrong, should receive QR scanning error.\n$output");
+}
+
+#print $output;
+
+success();
+
+
+###############
+# Test 4 - Validate non-SI stick users can still register and run the course
+#
+%TEST_INFO = qw(Testname MixingQRandSiStickUsersWorks);
+%GET = qw(event UnitTestingEvent course 00-White competitor_name MarkOconnellQREntry);
+%COOKIE = ();  # empty hash
+
+register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
+my($qr_competitor_id) = $TEST_INFO{"competitor_id"};
+
+%COOKIE = qw(event UnitTestingEvent course 00-White);
+$COOKIE{"competitor_id"} = $qr_competitor_id;
+%GET = ();
+start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
+
+%GET = ();
 $GET{"control"} = "201";
 reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
@@ -72,21 +112,48 @@ reach_control_successfully(3, \%GET, \%COOKIE, \%TEST_INFO);
 $GET{"control"} = "205";
 reach_control_successfully(4, \%GET, \%COOKIE, \%TEST_INFO);
 
-success();
-
-
-###########
-# Test 4 - finish the course
-# Validate that the correct entry is created
-%TEST_INFO = qw(Testname TestFinishSuccessWhite);
-%COOKIE = qw(event UnitTestingEvent course 00-White);
-$COOKIE{"competitor_id"} = $competitor_id;
 %GET = (); # empty hash
-
 finish_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 success();
 
+
+###########
+# Test 5 - SI stick users should not scan the finish QR code
+#
+%TEST_INFO = qw(Testname TestQRFinishScanBySiStickUserFails);
+%COOKIE = qw(event UnitTestingEvent course 00-White);
+$COOKIE{"competitor_id"} = $competitor_id;
+
+%GET = ();  # empty hash
+hashes_to_artificial_file();
+$cmd = "php ../finish_course.php";
+$output = qx($cmd);
+
+if ($output !~ /ERROR: If using si stick, do not scan the finish QR code, use si stick to finish instead/) {
+  error_and_exit("Web page output wrong, should receive error about scanning QR code.\n$output");
+}
+
+#print $output;
+
+success();
+
+###########
+# Test 6 - Si Stick user finishes the course
+# 
+%TEST_INFO = qw(Testname TestSiStickFinishAfterQRFinisher);
+%COOKIE = ();
+%GET = qw(event UnitTestingEvent); # empty hash
+
+my(@si_results) = qw(2108369;200 start:200 finish:800 201:210 202:300 203:440 204:600 205:700);
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_with_stick_successfully($competitor_id, "00-White", \%GET, \%COOKIE, \%TEST_INFO);
+
+success();
 
 
 ############

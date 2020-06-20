@@ -61,6 +61,11 @@ $controls_points_hash = array_combine(array_map(function ($element) { return $el
 $course_properties = get_course_properties("./{$event}/Courses/{$course}");
 $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
 
+if (file_exists("${competitor_path}/si_stick")) {
+  $competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
+  error_and_exit("<p>{$competitor_name} on course {$course} registered with si stick, should not scan QR codes.\n");
+}
+
 if (!file_exists("${controls_found_path}/start")) {
   $competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
   error_and_exit("<p>Course " . ltrim($course, "0..9-") . " not started for {$competitor_name}, please return and scan Start QR code.\n");
