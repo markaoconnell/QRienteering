@@ -84,15 +84,23 @@ function parse_course_name($course_name) {
   return($return_info);
 }
 
+$event_created = false;
+$found_error = false;
+
 if (isset($_POST["submit"])) {
-  $found_error = false;
   echo "Name of event: " . $_POST["event_name"] . "\n<p>";
   $event_name = $_POST["event_name"];
   if (!ck_valid_chars($event_name) || (substr($event_name, -5) == ".done")) {
     echo "<p>ERROR: Event \"{$event_name}\" can only contain letters and numbers and cannot end in \".done\".\n";
     $found_error = true;
   }
+
   $event_name .= "Event";
+  if (file_exists("./{$event_name}")) {
+    echo "<p>ERROR: Event \"{$event_name}\" exists - is this a duplicate submission?\n";
+    $found_error = true;
+  }
+
   $course_array = array();
   //echo "<p>Here is the FILES array.\n";
   //print_r($_FILES);
@@ -252,6 +260,7 @@ if (isset($_POST["submit"])) {
       }
 
       echo "<p>Created event successfully {$event_name} with " . count($course_array) . " courses:\n\t" . implode("\n\t", $course_names_array) . "\n";
+      $event_created = true;
     }
   }
   else {
@@ -264,6 +273,7 @@ if (isset($_POST["submit"])) {
   }
 }
 
+if (!$event_created && !$found_error) {
 ?>
 <br>
 <form action=./create_event.php method=post enctype="multipart/form-data" >
@@ -296,5 +306,6 @@ if (isset($_POST["submit"])) {
 </form>
 
 <?php
+}
 echo get_web_page_footer();
 ?>
