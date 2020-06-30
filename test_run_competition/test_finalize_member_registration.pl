@@ -9,6 +9,10 @@ require "./setup_member_info.pl";
 my(%GET, %TEST_INFO, %COOKIE, %POST);
 my($cmd, $output);
 
+create_key_file();
+mkdir(get_base_path("UnitTestPlayground"));
+setup_member_files(get_base_path("UnitTestPlayground"));
+
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 
 ###############
@@ -67,14 +71,14 @@ sub compare_hashes {
 # Test 1 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberUsingDefaultStick);
-%GET = qw(member_id 31 using_stick yes si_stick_number 3959473);
+%GET = qw(key UnitTestPlayground member_id 31 using_stick yes si_stick_number 3959473);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/finalize_member_registration.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../register.php\?registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
@@ -96,14 +100,14 @@ success();
 # Test 2 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberUsingDifferentStick);
-%GET = qw(member_id 31 using_stick yes si_stick_number 141421);
+%GET = qw(key UnitTestPlayground member_id 31 using_stick yes si_stick_number 141421);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/finalize_member_registration.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../register.php\?registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
@@ -124,14 +128,14 @@ success();
 # Test 3 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberNotUsingStick);
-%GET = qw(member_id 31 using_stick no si_stick_number 141421);
+%GET = qw(key UnitTestPlayground member_id 31 using_stick no si_stick_number 141421);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/finalize_member_registration.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../register.php\?registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
@@ -153,14 +157,14 @@ success();
 # Test 4 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberNotUsingStickBadStickNumber);
-%GET = qw(member_id 41 using_stick no si_stick_number 14xx21);
+%GET = qw(key UnitTestPlayground member_id 41 using_stick no si_stick_number 14xx21);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/finalize_member_registration.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../register.php\?registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
@@ -184,14 +188,14 @@ success();
 # Test 5 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberUsingStickButNoDefault);
-%GET = qw(member_id 171 using_stick yes si_stick_number 314159);
+%GET = qw(key UnitTestPlayground member_id 171 using_stick yes si_stick_number 314159);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/finalize_member_registration.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../register.php\?registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
@@ -214,11 +218,11 @@ success();
 # Test 6 - Failed member registration - bad stick id specified
 # 
 %TEST_INFO = qw(Testname TestMemberUsingBadStickNumber);
-%GET = qw(member_id 41 using_stick yes si_stick_number 14xx21);
+%GET = qw(key UnitTestPlayground member_id 41 using_stick yes si_stick_number 14xx21);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/finalize_member_registration.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /Yes specified for SI stick usage but invalid SI stick number found/) {
@@ -232,12 +236,12 @@ success();
 # Test 7 - Failed member registration - bad stick id specified
 # 
 %TEST_INFO = qw(Testname TestMemberUsingEmptyStickNumber);
-%GET = qw(member_id 41 using_stick yes);
+%GET = qw(key UnitTestPlayground member_id 41 using_stick yes);
 $GET{"si_stick_number"} = "";
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/finalize_member_registration.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /Yes specified for SI stick usage but no SI stick number found/) {
@@ -251,15 +255,15 @@ success();
 # Test 8 - Failed member registration - no member id specified
 # 
 %TEST_INFO = qw(Testname TestNoMember);
-%GET = qw(using_stick yes si_stick_number 14xx21);
+%GET = qw(key UnitTestPlayground using_stick yes si_stick_number 14xx21);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/finalize_member_registration.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /No member id specified/) {
-  error_and_exit("Bad stick error message not found.\n$output");
+  error_and_exit("Bad error message: \"No member id\" not found.\n$output");
 }
 
 success();
@@ -268,11 +272,11 @@ success();
 # Test 9 - Failed member registration - using stick must be yes or no
 # 
 %TEST_INFO = qw(Testname TestUsingStickWrong);
-%GET = qw(member_id 314 using_stick maybe si_stick_number 14xx21);
+%GET = qw(key UnitTestPlayground member_id 314 using_stick maybe si_stick_number 14xx21);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/finalize_member_registration.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid value \"maybe\" for SI stick usage/) {
@@ -285,11 +289,11 @@ success();
 # Test 10 - Failed member registration - Using stick with no ID
 # 
 %TEST_INFO = qw(Testname TestUsingStickButNoStick);
-%GET = qw(member_id 314 using_stick yes);
+%GET = qw(key UnitTestPlayground member_id 314 using_stick yes);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/finalize_member_registration.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /Yes specified for SI stick usage but no SI stick number found/) {
@@ -304,11 +308,11 @@ success();
 # Test 11 - Failed member registration - bad id
 # 
 %TEST_INFO = qw(Testname TestMemberUsingBadId);
-%GET = qw(member_id 17100 using_stick yes si_stick_number 314159);
+%GET = qw(key UnitTestPlayground member_id 17100 using_stick yes si_stick_number 314159);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/finalize_member_registration.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /No such member id 17100 found/) {
@@ -320,4 +324,9 @@ success();
 
 #################
 # End the test successfully
-qx(rm members.csv nicknames.csv artificial_input);
+remove_member_files(get_base_path("UnitTestPlayground"));
+my($rm_cmd) = "rm -rf " . get_base_path("UnitTestPlayground");
+print "Executing $rm_cmd\n";
+qx($rm_cmd);
+remove_key_file();
+qx(rm artificial_input);

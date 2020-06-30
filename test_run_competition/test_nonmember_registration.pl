@@ -9,6 +9,10 @@ require "./setup_member_info.pl";
 my(%GET, %TEST_INFO, %COOKIE, %POST);
 my($cmd, $output);
 
+create_key_file();
+mkdir(get_base_path("UnitTestPlayground"));
+setup_member_files(get_base_path("UnitTestPlayground"));
+
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 
 ###############
@@ -67,14 +71,14 @@ sub compare_hashes {
 # Test 1 - Success non-member registration
 # 
 %TEST_INFO = qw(Testname TestNonMemberAllInfoProvided);
-%GET = qw(competitor_first_name Mark competitor_last_name OConnell club_name QOC si_stick 32768 email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470);
+%GET = qw(key UnitTestPlayground competitor_first_name Mark competitor_last_name OConnell club_name QOC si_stick 32768 email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/non_member.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/non_member.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../register.php\?registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
@@ -93,14 +97,14 @@ success();
 # Test 2 - Success non-member registration
 # Even if they claim to be a NEOC member, they are registered as a non-member
 %TEST_INFO = qw(Testname TestNonMemberAllInfoProvidedClaimsNEOC);
-%GET = qw(competitor_first_name Isabelle competitor_last_name Davenport club_name NEOC si_stick 32768 email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470);
+%GET = qw(key UnitTestPlayground competitor_first_name Isabelle competitor_last_name Davenport club_name NEOC si_stick 32768 email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/non_member.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/non_member.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../register.php\?registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
@@ -119,11 +123,11 @@ success();
 # Test 3 - Fail non-member registration - bad stick number
 # 
 %TEST_INFO = qw(Testname TestNonMemberBadStickId);
-%GET = qw(competitor_first_name Dasha competitor_last_name Wolfson club_name UNO si_stick 1o24 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro);
+%GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson club_name UNO si_stick 1o24 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/non_member.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/non_member.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid si_stick/) {
@@ -137,11 +141,11 @@ success();
 # Test 4 - Fail non-member registration - no first name
 # 
 %TEST_INFO = qw(Testname TestNonMemberNoFirstName);
-%GET = qw(competitor_last_name Baldwin club_name UNO si_stick 124 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro);
+%GET = qw(key UnitTestPlayground competitor_last_name Baldwin club_name UNO si_stick 124 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/non_member.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/non_member.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid \(empty\) first name/) {
@@ -154,11 +158,11 @@ success();
 # Test 4 - Fail non-member registration - no last name
 # 
 %TEST_INFO = qw(Testname TestNonMemberNoLastName);
-%GET = qw(competitor_first_name Karen club_name NEOC si_stick 124 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro);
+%GET = qw(key UnitTestPlayground competitor_first_name Karen club_name NEOC si_stick 124 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/non_member.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/non_member.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid \(empty\) last name/) {
@@ -172,15 +176,15 @@ success();
 # Test 5 - Success non-member registration
 # Test with less than all information provided
 %TEST_INFO = qw(Testname TestNonMemberSomeInfoProvided);
-%GET = qw(competitor_first_name Freddie competitor_last_name Mercury club_name DVOC email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470);
+%GET = qw(key UnitTestPlayground competitor_first_name Freddie competitor_last_name Mercury club_name DVOC email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470);
 $GET{"si_stick"} = "";
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/non_member.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/non_member.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../register.php\?registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
@@ -200,7 +204,7 @@ success();
 # Test 6 - Success non-member registration
 # Test with very little information provided
 %TEST_INFO = qw(Testname TestNonMemberMinimalInfoProvided);
-%GET = qw(competitor_first_name Queen competitor_last_name Elizabeth);
+%GET = qw(key UnitTestPlayground competitor_first_name Queen competitor_last_name Elizabeth);
 $GET{"si_stick"} = "";
 $GET{"club_name"} = "";
 $GET{"email"} = "";
@@ -209,10 +213,10 @@ $GET{"car_info"} = "";
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/non_member.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/non_member.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../register.php\?registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
@@ -234,4 +238,9 @@ success();
 
 #################
 # End the test successfully
-qx(rm members.csv nicknames.csv artificial_input);
+qx(rm artificial_input);
+remove_member_files(get_base_path("UnitTestPlayground"));
+my($rm_cmd) = "rm -rf " . get_base_path("UnitTestPlayground");
+print "Executing $rm_cmd\n";
+qx($rm_cmd);
+remove_key_file();

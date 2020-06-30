@@ -8,17 +8,21 @@ require "./setup_member_info.pl";
 my(%GET, %TEST_INFO, %COOKIE, %POST);
 my($cmd, $output);
 
+create_key_file();
+mkdir(get_base_path("UnitTestPlayground"));
+setup_member_files(get_base_path("UnitTestPlayground"));
+
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 
 ###########
 # Test 1 - Lookup an existing member with an SI stick
 # 
 %TEST_INFO = qw(Testname TestGoodMemberLookupWithSiStick);
-%GET = qw(competitor_first_name Mark competitor_last_name OConnell);
+%GET = qw(key UnitTestPlayground competitor_first_name Mark competitor_last_name OConnell);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/name_lookup.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Welcome Mark OConnell/) {
@@ -39,11 +43,11 @@ success();
 # Test 2 - Lookup an existing member without an SI stick
 # 
 %TEST_INFO = qw(Testname TestGoodMemberLookupNoSiStick);
-%GET = qw(competitor_first_name Lawrence competitor_last_name Berrill);
+%GET = qw(key UnitTestPlayground competitor_first_name Lawrence competitor_last_name Berrill);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/name_lookup.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Welcome Larry Berrill/) {
@@ -64,11 +68,11 @@ success();
 # Test 3 - Lookup someone not a member
 # 
 %TEST_INFO = qw(Testname TestNotAMember);
-%GET = qw(competitor_first_name William competitor_last_name Blake);
+%GET = qw(key UnitTestPlayground competitor_first_name William competitor_last_name Blake);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/name_lookup.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output =~ /Welcome William Blake/) {
@@ -86,11 +90,11 @@ success();
 # Test 4 - Lookup an ambiguous member
 # 
 %TEST_INFO = qw(Testname TestAmbiguousMember);
-%GET = qw(competitor_first_name Is competitor_last_name Finlayson);
+%GET = qw(key UnitTestPlayground competitor_first_name Is competitor_last_name Finlayson);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/name_lookup.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Ambiguous member name/) {
@@ -121,11 +125,11 @@ success();
 # Test 5 - Lookup given a member id (after ambiguous member)
 # 
 %TEST_INFO = qw(Testname TestMemberLookupWithSiStick);
-%GET = qw(member_id 109);
+%GET = qw(key UnitTestPlayground member_id 109);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/name_lookup.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Welcome Victoria Campbell/) {
@@ -147,11 +151,11 @@ success();
 # Test 6 - Lookup given a member id (after ambiguous member)
 # No SI stick
 %TEST_INFO = qw(Testname TestMemberLookupNoSiStick);
-%GET = qw(member_id 171);
+%GET = qw(key UnitTestPlayground member_id 171);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/name_lookup.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Welcome Peter Amram/) {
@@ -172,11 +176,11 @@ success();
 # Test 7 - Test bad member id
 # 
 %TEST_INFO = qw(Testname TestMemberLookupNoSiStick);
-%GET = qw(member_id 141421);
+%GET = qw(key UnitTestPlayground member_id 141421);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../run_competition/name_lookup.php";
+$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /No such member id 141421 found/) {
@@ -192,4 +196,9 @@ success();
 
 #################
 # End the test successfully
-qx(rm members.csv nicknames.csv artificial_input);
+qx(rm artificial_input);
+remove_member_files(get_base_path("UnitTestPlayground"));
+my($rm_cmd) = "rm -rf " . get_base_path("UnitTestPlayground");
+print "Executing $rm_cmd\n";
+qx($rm_cmd);
+remove_key_file();

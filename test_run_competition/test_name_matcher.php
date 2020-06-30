@@ -1,6 +1,6 @@
 <?php
 
-require '../run_competition/name_matcher.php';
+require '../OMeetWithMemberList/name_matcher.php';
 
 function error_and_exit($error_string) {
   echo "ERROR: {$error_string}\n";

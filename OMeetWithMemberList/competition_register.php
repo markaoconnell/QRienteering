@@ -1,5 +1,5 @@
 <?php
-require '../../OMeetCommon/common_routines.php';
+require '../OMeetCommon/common_routines.php';
 
 ck_testing();
 

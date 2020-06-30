@@ -1,5 +1,5 @@
 <?php
-require '../../OMeetCommon/common_routines.php';
+require '../OMeetCommon/common_routines.php';
 require 'name_matcher.php';
 
 ck_testing();
@@ -9,7 +9,7 @@ if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
 
-$matching_info = read_names_info(get_members_path($key, "../.."), get_nicknames_path($key, "../.."));
+$matching_info = read_names_info(get_members_path($key, ".."), get_nicknames_path($key, ".."));
 
 if (!isset($_GET["member_id"])) {
   error_and_exit("No member id specified, please restart registration.\n");
@@ -55,5 +55,5 @@ $registration_info_string = implode(",", array("first_name", base64_encode($name
                                                "is_member", base64_encode("yes")));
 
 // Redirect to the main registration screens
-echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../register.php?key={$key}&registration_info=${registration_info_string}\" /></head></html>";
+echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../OMeetRegistration/register.php?key={$key}&registration_info=${registration_info_string}\" /></head></html>";
 ?>

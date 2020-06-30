@@ -1,5 +1,5 @@
 <?php
-require '../../OMeetCommon/common_routines.php';
+require '../OMeetCommon/common_routines.php';
 
 ck_testing();
 
@@ -43,5 +43,5 @@ $registration_info_string = implode(",", array("first_name", base64_encode($firs
                                                "is_member", base64_encode("no")));
 
 // Redirect to the main registration screens
-echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../register.php?key={$key}&registration_info=${registration_info_string}\" /></head></html>";
+echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../OMeetRegistration/register.php?key={$key}&registration_info=${registration_info_string}\" /></head></html>";
 ?>

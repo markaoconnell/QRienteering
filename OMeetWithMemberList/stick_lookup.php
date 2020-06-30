@@ -1,5 +1,5 @@
 <?php
-require '../../OMeetCommon/common_routines.php';
+require '../OMeetCommon/common_routines.php';
 require 'name_matcher.php';
 
 ck_testing();
@@ -9,7 +9,7 @@ if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
 
-$matching_info = read_names_info(get_members_path($key, "../.."), get_nicknames_path($key, "../.."));
+$matching_info = read_names_info(get_members_path($key, ".."), get_nicknames_path($key, ".."));
 
 if (!isset($_GET["si_stick"])) {
   error_and_exit("Unspecified SI stick number, please hit back and retry.\n");
