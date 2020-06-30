@@ -22,7 +22,7 @@ set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
+$cmd = "php ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Welcome Mark OConnell/) {
@@ -47,7 +47,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
+$cmd = "php ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Welcome Larry Berrill/) {
@@ -72,7 +72,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
+$cmd = "php ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output =~ /Welcome William Blake/) {
@@ -94,7 +94,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
+$cmd = "php ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Ambiguous member name/) {
@@ -129,7 +129,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
+$cmd = "php ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Welcome Victoria Campbell/) {
@@ -155,7 +155,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
+$cmd = "php ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Welcome Peter Amram/) {
@@ -180,7 +180,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/name_lookup.php";
+$cmd = "php ../OMeetWithMemberList/name_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /No such member id 141421 found/) {

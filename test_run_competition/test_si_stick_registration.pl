@@ -21,7 +21,7 @@ set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/stick_lookup.php";
+$cmd = "php ../OMeetWithMemberList/stick_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Welcome Mark OConnell/) {
@@ -46,7 +46,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/stick_lookup.php";
+$cmd = "php ../OMeetWithMemberList/stick_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Welcome Issi Finlayson/) {
@@ -71,7 +71,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/stick_lookup.php";
+$cmd = "php ../OMeetWithMemberList/stick_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /No member with SI stick "271828" found/) {
@@ -88,7 +88,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/stick_lookup.php";
+$cmd = "php ../OMeetWithMemberList/stick_lookup.php";
 $output = qx($cmd);
 
 if ($output !~ /Unspecified SI stick number/) {

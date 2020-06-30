@@ -75,7 +75,7 @@ sub compare_hashes {
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -104,7 +104,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -132,7 +132,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -161,7 +161,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -192,7 +192,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -222,7 +222,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /Yes specified for SI stick usage but invalid SI stick number found/) {
@@ -241,7 +241,7 @@ $GET{"si_stick_number"} = "";
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /Yes specified for SI stick usage but no SI stick number found/) {
@@ -259,7 +259,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /No member id specified/) {
@@ -276,7 +276,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid value \"maybe\" for SI stick usage/) {
@@ -293,7 +293,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /Yes specified for SI stick usage but no SI stick number found/) {
@@ -312,7 +312,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php -c ./php.ini ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /No such member id 17100 found/) {
