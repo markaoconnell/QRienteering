@@ -1,10 +1,15 @@
 <?php
-require '../common_routines.php';
+require '../../OMeetCommon/common_routines.php';
 require 'name_matcher.php';
 
 ck_testing();
 
-$matching_info = read_names_info("./members.csv", "./nicknames.csv");
+$key = $_GET["key"];
+if (!key_is_valid($key)) {
+  error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
+}
+
+$matching_info = read_names_info(get_members_path($key, "../.."), get_nicknames_path($key, "../.."));
 
 if (!isset($_GET["si_stick"])) {
   error_and_exit("Unspecified SI stick number, please hit back and retry.\n");
@@ -25,6 +30,7 @@ $success_string .= "<p>Welcome {$printable_name}.\n";
 $success_string .= <<<END_OF_FORM
 <form action="./finalize_member_registration.php">
 <input type=hidden name="member_id" value="{$member_id}"/>
+<input type=hidden name="key" value="{$key}"/>
 <p> Is your name correct, and are you using your SI stick {$si_stick} today?<br>
 <p> Yes <input type=radio name="using_stick" value="yes" checked /> <input type=text name="si_stick_number" value="{$si_stick}" readonly/>
 <p> No <input type=radio name="using_stick" value="no" />

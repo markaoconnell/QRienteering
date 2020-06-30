@@ -1,5 +1,5 @@
 <?php
-require 'common_routines.php';
+require '../OMeetCommon/common_routines.php';
 
 ck_testing();
 
@@ -12,12 +12,13 @@ echo get_web_page_header(true, false, true);
 // phpinfo();
 
 function is_event($filename) {
-  return (is_dir($filename) && (substr($filename, -5) == "Event"));
+  return (substr($filename, -5) == "Event");
 }
 
 function name_to_link($pathname) {
+  global $key;
   $final_element = basename($pathname);
-  return ("<li><a href=./mass_start.php?event=${final_element}>${final_element}</a>\n");
+  return ("<li><a href=./mass_start.php?event=${final_element}&key=$key>${final_element}</a>\n");
 }
 
 echo "<p>\n";
@@ -25,10 +26,15 @@ $output_string = "";
 $mass_start_courses = array();
 
 $event = $_GET["event"];
+$key = $_GET["key"];
+if (!key_is_valid($key)) {
+  error_and_exit("Unknown management key \"$key\", are you using an authorized link?\n");
+}
+
 //echo "event is \"${event}\"<p>";
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";
 if ($event == "") {
-  $event_list = scandir("./");
+  $event_list = scandir(get_base_path($key, ".."));
   //print_r($event_list);
   $event_list = array_values(array_filter($event_list, is_event));
   //print_r($event_list);
@@ -46,11 +52,11 @@ if ($event == "") {
 }
 
 if ($event != "") {
-  $mass_start_courses = array_values(array_filter($_GET, function ($key) {
-                                        return ((strpos($key, "mass_start_") === 0) && ($_GET[$key] != "")); },  ARRAY_FILTER_USE_KEY));
+  $mass_start_courses = array_values(array_filter($_GET, function ($get_element) {
+                                        return ((strpos($get_element, "mass_start_") === 0) && ($_GET[$get_element] != "")); },  ARRAY_FILTER_USE_KEY));
 
   if (count($mass_start_courses) == 0) {
-    $courses_array = scandir("./${event}/Courses");
+    $courses_array = scandir(get_courses_path($event, $key, ".."));
     $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
     // print_r($courses_array);
   
@@ -69,6 +75,7 @@ if ($event != "") {
       }
       
       $output_string .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
+      $output_string .= "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
       $output_string .= "<input type=\"submit\" value=\"Submit\">\n";
       $output_string .= "</form>";
     }
@@ -81,6 +88,7 @@ if (($event != "") && (count($mass_start_courses) > 0)) {
   $output_string .= "<form action=\"mass_start_courses.php\">\n<input type=\"submit\" name=\"submit\" value=\"Confirm and start\">\n";
   $output_string .= "<input type=\"hidden\" name=\"courses_to_start\" value=\"" . implode(",", $mass_start_courses) . "\">\n";
   $output_string .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
+  $output_string .= "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
   $output_string .= "</form>\n";
 }
 

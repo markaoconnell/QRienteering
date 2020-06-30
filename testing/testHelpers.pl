@@ -87,9 +87,36 @@ sub get_score_course_properties {
   return(%props_hash);
 }
 
+my(%keys);
+sub create_key_file {
+  $keys{"UnitTestPlayground"} = "TestingDirectory";
+  $keys{"UnitTestAlternate"} = "NewDirectory_foo";
+
+  open(KEY_FILE, ">../keys");
+  my($element);
+  foreach $element (keys(%keys)) {
+    print KEY_FILE join(",", $element, $keys{$element}, "no_password") . "\n";
+  }
+  close(KEY_FILE);
+
+}
+
+sub remove_key_file {
+  if ( -f "../keys") {
+    unlink("../keys");
+  }
+  %keys = ();  # now an empty hash
+}
+
+# This too should be based on the key and the keyfile - leave it alone for now
+sub get_base_path {
+  my($key) = @_;  # Ignored for the moment, should really pay attention to this
+  return("../OMeetData/" . $keys{$key});
+}
+
 sub initialize_event {
   # Make the event for testing purposes
-  %{$post_ref} = qw(submit true event_name UnitTesting
+  %{$post_ref} = qw(submit true event_name UnitTesting key UnitTestPlayground
                     course_description White,201,202,203,204,205--newline--Yellow,202,204,206,208,210--newline--s:ScoreO:300:1,301:10,302:20,303:30,304:40,305:50);
 #  mkdir("UnitTestingEvent");
 #  mkdir("UnitTestingEvent/Competitors");
@@ -106,10 +133,13 @@ sub initialize_event {
 #  close(YELLOW);
 }
 
+# This is not flexible, this should be based on the key file, but it is ok for the moment
 sub set_no_redirects_for_event {
-  my($event) = @_;
+  my($event, $key) = @_;
 
-  open(NO_REDIRECTS, ">./${event}/no_redirects"); close(NO_REDIRECTS);
+  my($path) = get_base_path($key);
+
+  open(NO_REDIRECTS, ">${path}/${event}/no_redirects"); close(NO_REDIRECTS);
 }
 
 ########################

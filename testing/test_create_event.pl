@@ -7,6 +7,7 @@ require "success_call_helpers.pl";
 
 my(%GET, %TEST_INFO, %COOKIE, %POST);
 
+create_key_file();
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 
 
@@ -15,7 +16,7 @@ set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 %TEST_INFO = qw(Testname TestCreateEvent1);
 %GET = ();
 %COOKIE = ();  # empty hash
-%POST = qw(submit true event_name MOCTest1 course_description White,201,202--newline--Yellow,202,204--newline--Orange,204,208);
+%POST = qw(submit true key UnitTestPlayground event_name MOCTest1 course_description White,201,202--newline--Yellow,202,204--newline--Orange,204,208);
 
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
 
@@ -26,7 +27,7 @@ success();
 %TEST_INFO = qw(Testname TestCreateEvent2);
 %GET = ();
 %COOKIE = ();  # empty hash
-%POST = qw(submit true event_name MOCTest2 course_description --TestAComment--newline--White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--Orange,204,208);
+%POST = qw(submit true key UnitTestPlayground event_name MOCTest2 course_description --TestAComment--newline--White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--Orange,204,208);
 
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
 
@@ -38,7 +39,7 @@ success();
 %TEST_INFO = qw(Testname TestCreateEvent3);
 %GET = ();
 %COOKIE = ();  # empty hash
-%POST = qw(submit true event_name MOCTest3 course_description --TestAComment--newline--l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--l:Orange,204,208);
+%POST = qw(submit true key UnitTestPlayground event_name MOCTest3 course_description --TestAComment--newline--l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--l:Orange,204,208);
 
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
 
@@ -51,7 +52,7 @@ success();
 %TEST_INFO = qw(Testname TestCreateEvent4);
 %GET = ();
 %COOKIE = ();  # empty hash
-%POST = qw(submit true event_name MOCTest4 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:3600:10,204:10,208:20);
+%POST = qw(submit true key UnitTestPlayground event_name MOCTest4 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:3600:10,204:10,208:20);
 
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
 
@@ -64,7 +65,7 @@ success();
 %TEST_INFO = qw(Testname TestCreateEventScoreFormattedTime);
 %GET = ();
 %COOKIE = ();  # empty hash
-%POST = qw(submit true event_name MOCTest5 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:1h:10,204:10,208:20);
+%POST = qw(submit true key UnitTestPlayground event_name MOCTest5 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:1h:10,204:10,208:20);
 
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
 
@@ -77,7 +78,7 @@ success();
 %TEST_INFO = qw(Testname TestCreateEventScoreFormattedTimeMinutes);
 %GET = ();
 %COOKIE = ();  # empty hash
-%POST = qw(submit true event_name MOCTest6 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:60m:10,204:10,208:20);
+%POST = qw(submit true key UnitTestPlayground event_name MOCTest6 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:60m:10,204:10,208:20);
 
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
 
@@ -90,7 +91,7 @@ success();
 %TEST_INFO = qw(Testname TestCreateEventScoreODuplicateControl);
 %GET = ();
 %COOKIE = ();  # empty hash
-%POST = qw(submit true event_name MOCTest7 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:1h30m:10,204:10,208:20 204:10 208:20 204:10);
+%POST = qw(submit true key UnitTestPlayground event_name MOCTest7 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:1h30m:10,204:10,208:20 204:10 208:20 204:10);
 
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
 
@@ -104,7 +105,7 @@ success();
 %TEST_INFO = qw(Testname TestFailCreateEvent1);
 %GET = ();
 %COOKIE = ();  # empty hash
-%POST = qw(submit true event_name MOCTest8 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:3600,204:10,208:20);
+%POST = qw(submit true key UnitTestPlayground event_name MOCTest8 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:3600,204:10,208:20);
 
 create_event_fail("looks wrong: Unexpected number entries:", \%GET, \%COOKIE, \%POST, \%TEST_INFO);
 
@@ -117,7 +118,7 @@ success();
 %TEST_INFO = qw(Testname TestFailCreateEvent2);
 %GET = ();
 %COOKIE = ();  # empty hash
-%POST = qw(submit true event_name MOCTest9 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:1h5d:1,204:10,208:20);
+%POST = qw(submit true key UnitTestPlayground event_name MOCTest9 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:1h5d:1,204:10,208:20);
 
 create_event_fail("not in format XXhYYmZZs", \%GET, \%COOKIE, \%POST, \%TEST_INFO);
 
@@ -129,7 +130,7 @@ success();
 %TEST_INFO = qw(Testname TestFailCreateEvent3);
 %GET = ();
 %COOKIE = ();  # empty hash
-%POST = qw(submit true event_name MOCTest10 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:1h5s:1,204:10,208:20,208:30);
+%POST = qw(submit true key UnitTestPlayground event_name MOCTest10 course_description l:White,201,202--newline----TryAnotherComment--newline--Yellow,202,204--newline--s:Orange:1h5s:1,204:10,208:20,208:30);
 
 create_event_fail("duplicated with different point values", \%GET, \%COOKIE, \%POST, \%TEST_INFO);
 
@@ -141,5 +142,7 @@ success();
 ############
 # Cleanup
 
-qx(rm -rf MOCTest1Event MOCTest2Event MOCTest3Event MOCTest4Event MOCTest5Event MOCTest6Event);
+my($rm_cmd) = "rm -rf " . get_base_path("UnitTestPlayground");
+qx($rm_cmd);
+remove_key_file();
 qx(rm artificial_input);

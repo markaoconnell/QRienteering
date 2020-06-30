@@ -1,5 +1,5 @@
 <?php
-require 'common_routines.php';
+require '../OMeetCommon/common_routines.php';
 
 ck_testing();
 
@@ -8,12 +8,13 @@ ck_testing();
 $course = $_COOKIE["course"];
 $competitor_id = $_COOKIE["competitor_id"];
 $event = $_COOKIE["event"];
+$key = $_COOKIE["key"];
 
 if (($event == "") || ($competitor_id == "")) {
   error_and_exit("<p>ERROR: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?" . get_error_info_string());
 }
 
-$competitor_path = "./{$event}/Competitors/{$competitor_id}";
+$competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
 $controls_found_path = "{$competitor_path}/controls_found";
 // $control_list = file("./${event}/Courses/${course}");
 

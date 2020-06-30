@@ -1,5 +1,5 @@
 <?php
-require 'common_routines.php';
+require '../OMeetCommon/common_routines.php';
 
 ck_testing();
 
@@ -17,8 +17,13 @@ else {
   $registration_info_supplied = false;
 }
 
+$key = $_GET["key"];
+$event = $_GET["event"];
+if (!key_is_valid($key)) {
+  error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
+}
 
-$courses_array = scandir('./' . $_GET["event"] . '/Courses');
+$courses_array = scandir(get_courses_path($event, $key, ".."));
 $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
 // print_r($courses_array);
 // echo "<p>\n";
@@ -43,7 +48,7 @@ if (!$error) {
   $tries = 0;
   while ($tries < 5) {
     $competitor_id = uniqid();
-    $competitor_path = "./" . $_GET["event"] . "/Competitors/" . $competitor_id;
+    $competitor_path = get_competitor_path($competitor_id, $event, $key, "..");
     mkdir ($competitor_path, 0777);
     $competitor_file = fopen($competitor_path . "/name", "x");
     if ($competitor_file !== false) {
@@ -84,6 +89,7 @@ if (!$error) {
     setcookie("competitor_id", $competitor_id, $timeout_value);
     setcookie("course", $course, $timeout_value);
     setcookie("event", $_GET["event"], $timeout_value);
+    setcookie("key", $key, $timeout_value);
   }
 }
 

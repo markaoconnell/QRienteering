@@ -1,5 +1,5 @@
 <?php
-require '../common_routines.php';
+require '../../OMeetCommon/common_routines.php';
 
 ck_testing();
 
@@ -10,6 +10,11 @@ if (isset($_COOKIE["member_first_name"]) && isset($_COOKIE["member_last_name"]))
   $member_cookie_found = true;
 }
 
+$key = $_GET["key"];
+if (!key_is_valid($key)) {
+  error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
+}
+
 ?>
 <p class="title"><u>NEOC club member registration:</u>
 <form action="./name_lookup.php">
@@ -18,12 +23,14 @@ if (isset($_COOKIE["member_first_name"]) && isset($_COOKIE["member_last_name"]))
 <input type="text" name="competitor_first_name" <?php if ($member_cookie_found) { echo "value=\"{$_COOKIE["member_first_name"]}\""; } ?> ><br>
 <p>Last name 
 <input type="text" name="competitor_last_name" <?php if ($member_cookie_found) { echo "value=\"{$_COOKIE["member_last_name"]}\""; } ?> ><br>
+<input type="hidden" name="key" <?php echo "value=\"{$key}\""; ?> >
 <input type="submit" value="Member name lookup">
 </form>
 
 <form action="./stick_lookup.php">
 <p>Lookup by Si Stick:
 <input type="text" name="si_stick"><br>
+<input type="hidden" name="key" <?php echo "value=\"{$key}\""; ?> >
 <input type="submit" value="SI stick lookup">
 </form>
 
@@ -45,6 +52,7 @@ if (isset($_COOKIE["member_first_name"]) && isset($_COOKIE["member_last_name"]))
 <input type="text" name="cell_number"><br>
 <br><p>What car make/model did you come in (so we can see if you've left)?<br>
 <input type="text" name="car_info"><br>
+<input type="hidden" name="key" <?php echo "value=\"{$key}\""; ?> >
 <input type="submit" value="Submit">
 </form>
 

@@ -1,10 +1,11 @@
 <?php
-require 'common_routines.php';
-require 'course_properties.php';
+require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/course_properties.php';
 
 ck_testing();
 
 $event = $_COOKIE["event"];
+$key = $_COOKIE["key"];
 $control_id = $_GET["control"];
 $competitor_id = $_COOKIE["competitor_id"];
 
@@ -18,7 +19,7 @@ $success_msg = "";
 // Do an internal redirect, encoding the competitor_id and control - this is to prevent later
 // replays when this device is potentially redoing the course
 // A redo of the course will generate a new competitor_id, which will then be detected
-if (!file_exists("./${event}/no_redirects") && ($_GET["mumble"] == "")) {
+if (!file_exists(get_event_path($event, $key, "..") . "/no_redirects") && ($_GET["mumble"] == "")) {
   $current_time = time();
   $redirect_encoded_info = base64_encode("{$control_id},{$competitor_id},{$current_time}");
   echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=./reach_control.php?mumble=${redirect_encoded_info}\" /></head></html>";
@@ -45,34 +46,35 @@ if ($_GET["mumble"] != "") {
 // echo "<p>\n";
 $course = $_COOKIE["course"];
 
-if (!file_exists("./{$event}/Competitors/{$competitor_id}") || !file_exists("./{$event}/Courses/{$course}/controls.txt")) {
+$competitor_path = get_competitor_path($competitor_id, $event, $key, "..");
+$courses_path = get_courses_path($event, $key, "..");
+if (!file_exists($competitor_path) || !file_exists("{$courses_path}/{$course}/controls.txt")) {
   error_and_exit("Cannot find event {$event}, competitor {$competitor_id}, or course {$course}, please re-register and retry.\n");
 }
 
 
-$competitor_path = "./${event}/Competitors/${competitor_id}";
 $controls_found_path = "{$competitor_path}/controls_found";
-$control_list = read_controls("./{$event}/Courses/{$course}/controls.txt");
+$control_list = read_controls("{$courses_path}/{$course}/controls.txt");
 $controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
                                       array_map(function ($element) { return $element[1]; }, $control_list));
 // echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
 
-$course_properties = get_course_properties("./{$event}/Courses/{$course}");
+$course_properties = get_course_properties("{$courses_path}/{$course}");
 $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
 
 if (file_exists("${competitor_path}/si_stick")) {
-  $competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
+  $competitor_name = file_get_contents("{$competitor_path}/name");
   error_and_exit("<p>{$competitor_name} on course {$course} registered with si stick, should not scan QR codes.\n");
 }
 
 if (!file_exists("${controls_found_path}/start")) {
-  $competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
+  $competitor_name = file_get_contents("{$competitor_path}/name");
   error_and_exit("<p>Course " . ltrim($course, "0..9-") . " not started for {$competitor_name}, please return and scan Start QR code.\n");
 }
 
 if (file_exists("${controls_found_path}/finish")) {
-  $competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
+  $competitor_name = file_get_contents("{$competitor_path}/name");
   error_and_exit("<p>Course " . ltrim($course, "0..9-") . " already finished for {$competitor_name}, please return and re-register to restart the course.\n");
 }
 

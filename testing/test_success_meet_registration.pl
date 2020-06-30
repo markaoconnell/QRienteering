@@ -14,16 +14,17 @@ my($competitor_id);
 my($cmd, $output);
 
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
+create_key_file();
 initialize_event();
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
-set_no_redirects_for_event("UnitTestingEvent");
+set_no_redirects_for_event("UnitTestingEvent", "UnitTestPlayground");
 
 
 ###########
 # Test 1 - register a new entrant successfully
 # Test registration of a new entrant
 %TEST_INFO = qw(Testname TestSuccessRegistrationMemberWithStick);
-%GET = qw(event UnitTestingEvent course 00-White);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
 %REGISTRATION_INFO = qw(club_name NEOC si_stick 2108369 email_address mark@mkoconnell.com cell_phone 5086148225 car_info ChevyBoltEV3470MA is_member yes);
 $REGISTRATION_INFO{"first_name"} = $COMPETITOR_FIRST_NAME;
 $REGISTRATION_INFO{"last_name"} = $COMPETITOR_LAST_NAME;
@@ -42,12 +43,12 @@ success();
 # Test 2 - try and start the course
 # Should error - si stick starters done use QR start
 %TEST_INFO = qw(Testname TestQRStartWithSiStickFails);
-%COOKIE = qw(event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../start_course.php";
+$cmd = "php ../OMeet/start_course.php";
 $output = qx($cmd);
 
 if ($output !~ /ERROR: ${COMPETITOR_FIRST_NAME} ${COMPETITOR_LAST_NAME} registered for UnitTestingEvent with si_stick, should not scan start QR code/) {
@@ -63,13 +64,13 @@ success();
 # Test 3 - Try scanning a control
 # Si stick users should not scan controls
 %TEST_INFO = qw(Testname ReachControlWhenUsingSiStickFails);
-%COOKIE = qw(event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();
 $GET{"control"} = "201";
 
 hashes_to_artificial_file();
-$cmd = "php ../reach_control.php";
+$cmd = "php ../OMeet/reach_control.php";
 $output = qx($cmd);
 
 if ($output !~ /registered with si stick, should not scan QR code/) {
@@ -85,13 +86,13 @@ success();
 # Test 4 - Validate non-SI stick users can still register and run the course
 #
 %TEST_INFO = qw(Testname MixingQRandSiStickUsersWorks);
-%GET = qw(event UnitTestingEvent course 00-White competitor_name MarkOconnellQREntry);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent course 00-White competitor_name MarkOconnellQREntry);
 %COOKIE = ();  # empty hash
 
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 my($qr_competitor_id) = $TEST_INFO{"competitor_id"};
 
-%COOKIE = qw(event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $qr_competitor_id;
 %GET = ();
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -122,12 +123,12 @@ success();
 # Test 5 - SI stick users should not scan the finish QR code
 #
 %TEST_INFO = qw(Testname TestQRFinishScanBySiStickUserFails);
-%COOKIE = qw(event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 
 %GET = ();  # empty hash
 hashes_to_artificial_file();
-$cmd = "php ../finish_course.php";
+$cmd = "php ../OMeet/finish_course.php";
 $output = qx($cmd);
 
 if ($output !~ /ERROR: If using si stick, do not scan the finish QR code, use si stick to finish instead/) {
@@ -143,7 +144,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestSiStickFinishAfterQRFinisher);
 %COOKIE = ();
-%GET = qw(event UnitTestingEvent); # empty hash
+%GET = qw(key UnitTestPlayground event UnitTestingEvent); # empty hash
 
 my(@si_results) = qw(2108369;200 start:200 finish:800 201:210 202:300 203:440 204:600 205:700);
 my($base_64_results) = encode_base64(join(",", @si_results));
@@ -159,5 +160,7 @@ success();
 ############
 # Cleanup
 
-qx(rm -rf UnitTestingEvent);
+my($rm_cmd) = "rm -rf " . get_base_path("UnitTestPlayground");
+qx($rm_cmd);
+remove_key_file();
 qx(rm artificial_input);

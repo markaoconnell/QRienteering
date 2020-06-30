@@ -1,5 +1,5 @@
 <?php
-require '../common_routines.php';
+require '../../OMeetCommon/common_routines.php';
 
 ck_testing();
 
@@ -11,6 +11,11 @@ $si_stick = $_GET["si_stick"];
 $email_address = $_GET["email"];
 $cell_phone = $_GET["cell_number"];
 $car_info = $_GET["car_info"];
+$key = $_GET["key"];
+
+if (!key_is_valid($key)) {
+  error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
+}
 
 // Let's do some validations
 if ($first_name == "") {
@@ -38,5 +43,5 @@ $registration_info_string = implode(",", array("first_name", base64_encode($firs
                                                "is_member", base64_encode("no")));
 
 // Redirect to the main registration screens
-echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../register.php?registration_info=${registration_info_string}\" /></head></html>";
+echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../register.php?key={$key}&registration_info=${registration_info_string}\" /></head></html>";
 ?>

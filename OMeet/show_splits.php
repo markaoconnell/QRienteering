@@ -1,6 +1,6 @@
 <?php
-require 'common_routines.php';
-require 'course_properties.php';
+require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/course_properties.php';
 
 ck_testing();
 
@@ -9,19 +9,21 @@ ck_testing();
 $course = $_GET["course"];
 $time_and_competitor = $_GET["entry"];
 $event = $_GET["event"];
+$key = $_GET["key"];
 
 $result_pieces = explode(",", $time_and_competitor);
 $competitor_id = $result_pieces[2];
 
 
-$competitor_path = "./" . $event . "/Competitors/" . $competitor_id;
-$competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
+$competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
+$competitor_name = file_get_contents("{$competitor_path}/name");
 $controls_found_path = "{$competitor_path}/controls_found";
 
-$control_list = read_controls("./{$event}/Courses/{$course}/controls.txt");
+$courses_path = get_courses_path($event, $key, "..");
+$control_list = read_controls("{$courses_path}/{$course}/controls.txt");
 $controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
                                       array_map(function ($element) { return $element[1]; }, $control_list));
-$course_properties = get_course_properties("./{$event}/Courses/{$course}");
+$course_properties = get_course_properties("{$courses_path}/{$course}");
 $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
 //echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);

@@ -11,6 +11,8 @@ my($output);
 my(@COMPETITOR_BASE_NAMES) = qw(MarkOC KarenY JohnOC LydiaOC Granny Grandad LinaN Timber Androo Angie Janet James Robert Gramma);
 my($competitors_used_count) = 0;
 
+create_key_file();
+
 sub get_next_competitor_name {
   my($name) = $COMPETITOR_BASE_NAMES[$competitors_used_count % scalar(@COMPETITOR_BASE_NAMES)] . "_${competitors_used_count}";
   $competitors_used_count++;
@@ -20,7 +22,7 @@ sub get_next_competitor_name {
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 
 sub run_mass_start {
-  my($cmd) = "php ../mass_start.php";
+  my($cmd) = "php ../OMeetMgmt/mass_start.php";
   hashes_to_artificial_file();
   my($output);
   $output = qx($cmd);
@@ -29,7 +31,7 @@ sub run_mass_start {
 }
 
 sub run_mass_start_courses {
-  my($cmd) = "php ../mass_start_courses.php";
+  my($cmd) = "php ../OMeetMgmt/mass_start_courses.php";
 
   hashes_to_artificial_file();
   my($output);
@@ -43,31 +45,32 @@ sub run_mass_start_courses {
 # Test 1 - run with no events
 #
 %TEST_INFO = qw(Testname TestMassStartNoEvents);
+%GET = qw(key UnitTestPlayground);
 $output = run_mass_start();
 if ($output !~ /No available events/) {
   error_and_exit("Unexpected output - events found when there should be none.\n$output");
 }
+%GET = ();
 
 success();
-
-
-############
-# Create one event
-initialize_event();
-create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
-set_no_redirects_for_event("UnitTestingEvent");
-%POST = ();
 
 
 ###########
 # Test 2 - Multiple events - should see event list
 #
 %TEST_INFO = qw(Testname TestMassStartMultipleEvents);
-%GET = ();
 
-mkdir("./MOCEvent");
-mkdir("./TheThirdEvent");
+####
+# Create one event
+initialize_event();
+create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
+set_no_redirects_for_event("UnitTestingEvent", "UnitTestPlayground");
 
+
+mkdir(get_base_path("UnitTestPlayground") . "/MOCEvent");
+mkdir(get_base_path("UnitTestPlayground") . "/TheThirdEvent");
+
+%GET = qw(key UnitTestPlayground);
 $output = run_mass_start();
 
 if (($output !~ /MOCEvent/) || ($output !~ /TheThirdEvent/) || ($output !~ /UnitTestingEvent/)) {
@@ -82,7 +85,7 @@ success();
 # Test 3 - Multiple events - one passed via get
 # Should see course list
 %TEST_INFO = qw(Testname TestMassStartSelectOneEvent);
-%GET = qw(event UnitTestingEvent);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent);
 
 $output = run_mass_start();
 
@@ -101,10 +104,10 @@ success();
 # Test 4 - One event
 # Should see course list
 %TEST_INFO = qw(Testname TestMassStartOnlyOneEvent);
-%GET = qw();
+%GET = qw(key UnitTestPlayground);
 
-rmdir("./MOCEvent");
-rmdir("./TheThirdEvent");
+rmdir(get_base_path("UnitTestPlayground") . "/MOCEvent");
+rmdir(get_base_path("UnitTestPlayground") . "/TheThirdEvent");
 
 $output = run_mass_start();
 
@@ -124,7 +127,7 @@ success();
 # Test 5 - One event
 # Some courses selected
 %TEST_INFO = qw(Testname TestMassStartTwoCourses);
-%GET = qw(mass_start_00-White 00-White mass_start_02-ScoreO 02-ScoreO);
+%GET = qw(key UnitTestPlayground mass_start_00-White 00-White mass_start_02-ScoreO 02-ScoreO);
 
 
 $output = run_mass_start();
@@ -149,7 +152,7 @@ success();
 # Test 6 - One event
 # One course selected
 %TEST_INFO = qw(Testname TestMassStartOneCourse);
-%GET = qw(mass_start_02-ScoreO 02-ScoreO);
+%GET = qw(key UnitTestPlayground mass_start_02-ScoreO 02-ScoreO);
 
 
 $output = run_mass_start();
@@ -174,7 +177,7 @@ success();
 # Register three competitors, 2 on the "correct" course, and do a start
 %TEST_INFO = qw(Testname TestMassStartTwoCompetitors);
 
-%GET = qw(event UnitTestingEvent course 02-ScoreO);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
 my($competitor_1_name) = get_next_competitor_name();
 $GET{"competitor_name"} = $competitor_1_name;
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -185,14 +188,14 @@ $GET{"competitor_name"} = $competitor_2_name;
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 my($competitor_2) = $TEST_INFO{"competitor_id"};
 
-%GET = qw(event UnitTestingEvent course 01-Yellow);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent course 01-Yellow);
 my($unstarted_competitor_name) = get_next_competitor_name();
 $GET{"competitor_name"} = $unstarted_competitor_name;
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 my($unstarted_competitor) = $TEST_INFO{"competitor_id"};
 
 
-%GET = qw(event UnitTestingEvent courses_to_start 02-ScoreO);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent courses_to_start 02-ScoreO);
 $output = run_mass_start_courses();
 
 if (($output =~ /Competitors started BEFORE the mass start/) || ($output =~ /Bad courses specified, no competitors started/) ||
@@ -208,12 +211,13 @@ if (($output !~ /$competitor_1_name on/) || ($output !~ /$competitor_2_name on/)
   error_and_exit("Did not see competitor ${competitor_1_name} or ${competitor_2_name} as started.\n$output");
 }
 
-if ((! -f "./UnitTestingEvent/Competitors/${competitor_1}/controls_found/start") ||
-    (! -f "./UnitTestingEvent/Competitors/${competitor_2}/controls_found/start")) {
+my($path) = get_base_path("UnitTestPlayground"). "/UnitTestingEvent";
+if ((! -f "${path}/Competitors/${competitor_1}/controls_found/start") ||
+    (! -f "${path}/Competitors/${competitor_2}/controls_found/start")) {
   error_and_exit("Did not see competitor ${competitor_1} or ${competitor_2} start file.");
 }
 
-if (-f "./UnitTestingEvent/Competitors/${unstarted_competitor}/controls_found/start") {
+if (-f "${path}/Competitors/${unstarted_competitor}/controls_found/start") {
   error_and_exit("Why is competitor ${unstarted_competitor} marked as started?");
 }
 
@@ -225,7 +229,7 @@ success();
 # Test 8 - try a second mass start - no one more should start
 #
 %TEST_INFO = qw(Testname TestMassStartSecondTimeNoAction);
-%GET = qw(event UnitTestingEvent courses_to_start 02-ScoreO);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent courses_to_start 02-ScoreO);
 $output = run_mass_start_courses();
 
 if (($output =~ /Bad courses specified, no competitors started/) || ($output =~ /ERROR: No event or bad event/)) {
@@ -252,7 +256,7 @@ success();
 # Test 9 - Register more on ScoreO and start them
 %TEST_INFO = qw(Testname TestMassStartAdditionalCompetitors);
 
-%GET = qw(event UnitTestingEvent course 02-ScoreO);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
 my($competitor_3_name) = get_next_competitor_name();
 $GET{"competitor_name"} = $competitor_3_name;
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -264,7 +268,7 @@ register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 my($competitor_4) = $TEST_INFO{"competitor_id"};
 
 
-%GET = qw(event UnitTestingEvent courses_to_start 02-ScoreO);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent courses_to_start 02-ScoreO);
 $output = run_mass_start_courses();
 
 if (($output =~ /Bad courses specified, no competitors started/) || ($output =~ /ERROR: No event or bad event/)) {
@@ -292,12 +296,13 @@ if (($output !~ /$competitor_3_name on/) || ($output !~ /$competitor_4_name on/)
   error_and_exit("Did not see competitor ${competitor_3_name} or ${competitor_4_name} as started.\n$output");
 }
 
-if ((! -f "./UnitTestingEvent/Competitors/${competitor_3}/controls_found/start") ||
-    (! -f "./UnitTestingEvent/Competitors/${competitor_4}/controls_found/start")) {
+$path = get_base_path("UnitTestPlayground"). "/UnitTestingEvent";
+if ((! -f "${path}/Competitors/${competitor_3}/controls_found/start") ||
+    (! -f "${path}/Competitors/${competitor_4}/controls_found/start")) {
   error_and_exit("Did not see competitor ${competitor_3} or ${competitor_4} start file.");
 }
 
-if (-f "./UnitTestingEvent/Competitors/${unstarted_competitor}/controls_found/start") {
+if (-f "${path}/Competitors/${unstarted_competitor}/controls_found/start") {
   error_and_exit("Why is competitor ${unstarted_competitor} marked as started?");
 }
 
@@ -306,7 +311,7 @@ if (-f "./UnitTestingEvent/Competitors/${unstarted_competitor}/controls_found/st
 # Test 10 - Register more on ScoreO and White and start them both
 %TEST_INFO = qw(Testname TestMassStartAdditionalCompetitorsTwoCourses);
 
-%GET = qw(event UnitTestingEvent course 02-ScoreO);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
 my($competitor_5_name) = get_next_competitor_name();
 $GET{"competitor_name"} = $competitor_5_name;
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -317,7 +322,7 @@ $GET{"competitor_name"} = $competitor_6_name;
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 my($competitor_6) = $TEST_INFO{"competitor_id"};
 
-%GET = qw(event UnitTestingEvent course 00-White);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
 my($competitor_7_name) = get_next_competitor_name();
 $GET{"competitor_name"} = $competitor_7_name;
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -329,7 +334,7 @@ register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 my($competitor_8) = $TEST_INFO{"competitor_id"};
 
 
-%GET = qw(event UnitTestingEvent courses_to_start 02-ScoreO,00-White);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent courses_to_start 02-ScoreO,00-White);
 $output = run_mass_start_courses();
 
 if (($output =~ /Bad courses specified, no competitors started/) || ($output =~ /ERROR: No event or bad event/)) {
@@ -365,17 +370,18 @@ if (($output !~ /$competitor_7_name on/) || ($output !~ /$competitor_8_name on/)
   error_and_exit("Did not see competitor ${competitor_7_name} or ${competitor_8_name} as started.\n$output");
 }
 
-if ((! -f "./UnitTestingEvent/Competitors/${competitor_5}/controls_found/start") ||
-    (! -f "./UnitTestingEvent/Competitors/${competitor_6}/controls_found/start")) {
+$path = get_base_path("UnitTestPlayground"). "/UnitTestingEvent";
+if ((! -f "${path}/Competitors/${competitor_5}/controls_found/start") ||
+    (! -f "${path}/Competitors/${competitor_6}/controls_found/start")) {
   error_and_exit("Did not see competitor ${competitor_5} or ${competitor_6} start file.");
 }
 
-if ((! -f "./UnitTestingEvent/Competitors/${competitor_7}/controls_found/start") ||
-    (! -f "./UnitTestingEvent/Competitors/${competitor_8}/controls_found/start")) {
+if ((! -f "${path}/Competitors/${competitor_7}/controls_found/start") ||
+    (! -f "${path}/Competitors/${competitor_8}/controls_found/start")) {
   error_and_exit("Did not see competitor ${competitor_7} or ${competitor_8} start file.");
 }
 
-if (-f "./UnitTestingEvent/Competitors/${unstarted_competitor}/controls_found/start") {
+if (-f "${path}/Competitors/${unstarted_competitor}/controls_found/start") {
   error_and_exit("Why is competitor ${unstarted_competitor} marked as started?");
 }
 
@@ -386,7 +392,7 @@ success();
 # Test 11 - try a second mass start - no one more should start
 # Add a bad course
 %TEST_INFO = qw(Testname TestMassStartReplayWithBadCourse);
-%GET = qw(event UnitTestingEvent courses_to_start 02-ScoreO,03-Orange);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent courses_to_start 02-ScoreO,03-Orange);
 $output = run_mass_start_courses();
 
 if ($output !~ /Bad courses specified, no competitors started/) {
@@ -415,7 +421,8 @@ if (($output =~ /$competitor_7_name/) || ($output =~ /$competitor_8_name/)) {
   error_and_exit("Seeing messages for ${competitor_7_name} or ${competitor_8_name} even though White not started.\n$output");
 }
 
-if (-f "./UnitTestingEvent/Competitors/${unstarted_competitor}/controls_found/start") {
+$path = get_base_path("UnitTestPlayground"). "/UnitTestingEvent";
+if (-f "${path}/Competitors/${unstarted_competitor}/controls_found/start") {
   error_and_exit("Why is competitor ${unstarted_competitor} marked as started?");
 }
 
@@ -426,7 +433,7 @@ success();
 # Test 12 - start a bad event
 # 
 %TEST_INFO = qw(Testname TestMassStartBadEvent);
-%GET = qw(event BadTestingEvent courses_to_start 02-ScoreO);
+%GET = qw(key UnitTestPlayground event BadTestingEvent courses_to_start 02-ScoreO);
 $output = run_mass_start_courses();
 
 
@@ -448,5 +455,8 @@ success();
 ############
 # Cleanup
 
-qx(rm -rf UnitTestingEvent);
+my($rm_cmd) = "rm -rf " . get_base_path("UnitTestPlayground");
+print "Executing $rm_cmd\n";
+qx($rm_cmd);
+remove_key_file();
 qx(rm artificial_input);

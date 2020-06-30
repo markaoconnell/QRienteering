@@ -165,15 +165,16 @@ function get_input_form_style_header() {
 
 
 // Show the results for a course
-function show_results($event, $course, $show_points, $max_points) {
+function show_results($event, $key, $course, $show_points, $max_points, $path_to_top) {
   $result_string = "";
   $result_string .= "<p>Results on " . ltrim($course, "0..9-") . "\n";
 
-  if (!is_dir("./${event}/Results/${course}")) {
+  $results_path = get_results_path($event, $key, $path_to_top);
+  if (!is_dir("{$results_path}/${course}")) {
     $result_string .= "<p>No Results yet<p><p><p>\n";
     return($result_string);
   }
-  $results_list = scandir("./${event}/Results/${course}");
+  $results_list = scandir("{$results_path}/${course}");
   $results_list = array_diff($results_list, array(".", ".."));
 
   if ($show_points) {
@@ -187,7 +188,8 @@ function show_results($event, $course, $show_points, $max_points) {
   $dnfs = "";
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);
-    $competitor_name = file_get_contents("./${event}/Competitors/" . $result_pieces[2] . "/name");
+    $competitor_path = get_competitor_path($result_pieces[2], $event, $key, $path_to_top);
+    $competitor_name = file_get_contents("${competitor_path}/name");
     if ($show_points) {
       $points_value = "<td>" . ($max_points - $result_pieces[0]) . "</td>";
     }
@@ -195,12 +197,12 @@ function show_results($event, $course, $show_points, $max_points) {
       $points_value = "";
     }
 
-    if (!file_exists("./${event}/Competitors/" . $result_pieces[2] . "/dnf")) {
-      $result_string .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&entry=${this_result}\">${competitor_name}</a></td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
+    if (!file_exists("./${competitor_path}/dnf")) {
+      $result_string .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&key={$key}&entry=${this_result}\">${competitor_name}</a></td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
     }
     else {
       // For a scoreO course, there are no DNFs, so $points_value should always be "", but show it just in case
-      $dnfs .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&entry=${this_result}\">${competitor_name}</a></td><td>DNF</td>{$points_value}</tr>\n";
+      $dnfs .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&key={$key}&entry=${this_result}\">${competitor_name}</a></td><td>DNF</td>{$points_value}</tr>\n";
     }
   }
   $result_string .= "${dnfs}</table>\n<p><p><p>";
@@ -208,21 +210,24 @@ function show_results($event, $course, $show_points, $max_points) {
 }
 
 // Show the results for a course as a csv
-function get_csv_results($event, $course, $show_points, $max_points) {
+function get_csv_results($event, $key, $course, $show_points, $max_points, $path_to_top) {
   $result_string = "";
   $readable_course_name = ltrim($course, "0..9-");
 
   // No results yet - .csv is empty
-  if (!is_dir("./${event}/Results/${course}")) {
+  $results_path = get_results_path($event, $key, $path_to_top);
+  if (!is_dir("{$results_path}/{$course}")) {
     return("");
   }
-  $results_list = scandir("./${event}/Results/${course}");
+  
+  $results_list = scandir("${results_path}/{$course}");
   $results_list = array_diff($results_list, array(".", ".."));
 
   $dnfs = "";
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);
-    $competitor_name = file_get_contents("./${event}/Competitors/" . $result_pieces[2] . "/name");
+    $competitor_path = get_competitor_path($result_pieces[2], $event, $key, $path_to_top);
+    $competitor_name = file_get_contents("${competitor_path}/name");
     if ($show_points) {
       $points_value = $max_points - $result_pieces[0];
     }
@@ -230,7 +235,7 @@ function get_csv_results($event, $course, $show_points, $max_points) {
       $points_value = "";
     }
 
-    if (!file_exists("./${event}/Competitors/" . $result_pieces[1] . "/dnf")) {
+    if (!file_exists("{$competitor_path}/dnf")) {
       $result_string .= "${readable_course_name};${competitor_name};" . csv_formatted_time($result_pieces[1]) . ";{$points_value}\n";
     }
     else {
@@ -240,15 +245,15 @@ function get_csv_results($event, $course, $show_points, $max_points) {
   return($result_string);
 }
 
-function get_all_course_result_links($event) {
-  $course_list = scandir("./${event}/Courses");
+function get_all_course_result_links($event, $key, $path_to_top) {
+  $course_list = scandir(get_courses_path($event, $key, $path_to_top));
   $course_list = array_diff($course_list, array(".", ".."));
 
   $links_string = "<p>Show results for ";
   foreach ($course_list as $one_course) {
-    $links_string .= "<a href=\"./view_results?event=${event}&course=$one_course\">" . ltrim($one_course, "0..9-") . "</a> \n";
+    $links_string .= "<a href=\"./view_results?event=${event}&key={$key}&course=$one_course\">" . ltrim($one_course, "0..9-") . "</a> \n";
   }
-  $links_string .= "<a href=\"./view_results?event=${event}\">All</a> \n";
+  $links_string .= "<a href=\"./view_results?event=${event}&key={$key}\">All</a> \n";
 
   return($links_string);
 }
@@ -273,76 +278,100 @@ function parse_registration_info($raw_info_string) {
 }
 
 
-// Explode a comma separated string into an array
-function explode_lines(&$item1, $key)
-{
-   $item1 = explode(",", $item1);
-   array_walk($item1, 'html_decoder');
+// Functions to return the paths to commonly used areas
+$keys_read = false;
+$keys_hash = array();
+
+// For testing purposes only
+function key_reset() {
+  global $keys_read, $keys_hash;
+
+  $keys_read = false;
+  $keys_hash = array();
 }
 
-// Implode an array into a comma separated string
-function implode_line(&$item1, $key)
-{
-   array_walk($item1, 'html_encoder');
-   $item1 = implode(",", $item1);
-}
+function key_is_valid($key) {
+  global $keys_read, $keys_hash;
 
-// Decode an entry from html
-// First translate from > to , to restore commas in the individual entries
-// Then decode the other special characters
-// This works because a natural > is one of the special characters to be decoded
-// - it had been replaced by a &gt;!
-function html_decoder(&$item1, $key)
-{
-   $item1 = str_replace(">", ",", $item1);
-   $item1 = html_entity_decode($item1);
-}
+  if (!$keys_read) {
+    if (file_exists("../keys")) {
+      $key_file_lines = file("../keys", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      foreach ($key_file_lines as $key_line) {
+        // Format is key, path, password
+        $line_pieces = explode(",", $key_line);
+        $keys_hash[trim($line_pieces[0])] = array(trim($line_pieces[1]), trim($line_pieces[2]));
+      }
 
-// Encode an entry to html
-// First encode it, then convert , to > so that a true , can be used as
-// an entry separator in the .csv file.  This is safe since any original
-// > would be encoded by the htmlentities encoding!
-function html_encoder(&$item1, $key)
-{
-   $item1 = htmlentities($item1);
-   $item1 = str_replace(",", ">", $item1);
-}
-
-
-// Take file contents as an array of arrays, where the sub-arrays will become comma separated
-// lines and the main arrays will each be a separate line in the output file.
-// All will be html encoded, and ',' will be encoded as '>' in the file.
-// NOTE: This function rather implicitly assumes that the filename is in the current directory and
-//       ends with .csv!!!
-function write_file($file_array, $filename)
-{
-  array_walk($file_array, 'implode_line');
-  $file_array = implode("\n", $file_array);
-
-  $file_base_name = basename($filename, ".csv");
-
-// Make a backup copy, one per day
-  rename($filename, $file_base_name . unixtojd(). ".csv");
-
-// Then write the new file
-  $handle = fopen($filename, "w");
-  fwrite($handle, $file_array);
-  fclose($handle);
-}
-
-
-// Read the file $filename into the array.  The file is assumed to be a .csv file.
-// Each line of the file will be an entry in the array $file_array.  Each line will furthermore
-// be split up into a subarray, with each element of the subarray one of the elements from the line,
-// all assuming that the entries were comma separated to begin with.
-function read_file(&$file_array, $filename)
-{
-$file_array = file($filename);
-foreach ($file_array as $key => $value)
-  {
-  $file_array[$key] = rtrim($value);
+      $keys_read = true;
+    }
+    else {
+      $keys_read = true;
+    }
   }
 
-array_walk($file_array, 'explode_lines');
+  // Legacy hack for the moment - a blank key without a key file is ok
+  if (!file_exists("../keys") && ($key == "")) {
+    return true;
+  }
+
+  return(isset($keys_hash[$key]));
+}
+
+function key_password_ok($key, $password) {
+  global $keys_hash;
+
+  // Key must have been checked for validity already
+  // an empty key is temporarily allowed for backward compatibility
+  if ($key != "") {
+    return(key_is_valid($key) && ($keys_hash[$key][1] == $password));
+  } 
+
+  return true;
+}
+
+function key_to_path($key) {
+  global $keys_hash;
+
+  // Key must have been checked for validity already
+  // an empty key is temporarily allowed for backward compatibility
+  if ($key != "") {
+    if (key_is_valid($key)) {
+      return($keys_hash[$key][0]);
+    }
+  } 
+
+  return "";
+}
+
+function get_courses_path($event, $key, $path_to_top) {
+  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}/Courses");
+}
+
+function get_competitor_directory($event, $key, $path_to_top) {
+  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}/Competitors");
+}
+
+function get_competitor_path($competitor, $event, $key, $path_to_top) {
+  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}/Competitors/{$competitor}");
+}
+
+function get_results_path($event, $key, $path_to_top) {
+  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}/Results");
+}
+
+function get_event_path($event, $key, $path_to_top) {
+  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}");
+}
+
+function get_base_path($key, $path_to_top) {
+  return($path_to_top . "/OMeetData/" . key_to_path($key));
+}
+
+function get_members_path($key, $path_to_top) {
+  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/members.csv");
+}
+
+function get_nicknames_path($key, $path_to_top) {
+  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/nicknames.csv");
 }
 ?>

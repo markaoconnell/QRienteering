@@ -14,15 +14,16 @@ my($COMPETITOR_NAME) = "Mark_OConnell_DNF_Testing";
 
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 initialize_event();
+create_key_file();
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
-set_no_redirects_for_event("UnitTestingEvent");
+set_no_redirects_for_event("UnitTestingEvent", "UnitTestPlayground");
 %POST = ();
 
 ###########
 # Test 1 - register a new entrant successfully
 # Test registration of a new entrant
 %TEST_INFO = qw(Testname TestSuccessRegistration);
-%GET = qw(event UnitTestingEvent course 00-White);
+%GET = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
 $GET{"competitor_name"} = $COMPETITOR_NAME;
 %COOKIE = ();  # empty hash
 
@@ -38,7 +39,7 @@ success();
 # Test 2 - start the course
 # validate that the start entry is created
 %TEST_INFO = qw(Testname TestSuccessStart);
-%COOKIE = qw(event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = ();  # empty hash
 
@@ -51,7 +52,7 @@ success();
 # Test 3 - find a control
 # Validate that the correct entry is created
 %TEST_INFO = qw(Testname TestFind201);
-%COOKIE = qw(event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = qw(control 201);
 
@@ -64,7 +65,7 @@ success();
 # Test 4 - finish the course
 # Validate that the correct entry is created
 %TEST_INFO = qw(Testname TestFinishEarlyDNF);
-%COOKIE = qw(event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 %GET = (); # empty hash
 
@@ -77,5 +78,8 @@ success();
 ############
 # Cleanup
 
-qx(rm -rf UnitTestingEvent);
+my($rm_cmd) = "rm -rf " . get_base_path("UnitTestPlayground");
+print "Executing $rm_cmd\n";
+qx($rm_cmd);
+remove_key_file();
 qx(rm artificial_input);

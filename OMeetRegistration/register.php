@@ -1,5 +1,5 @@
 <?php
-require 'common_routines.php';
+require '../OMeetCommon/common_routines.php';
 
 ck_testing();
 
@@ -17,13 +17,13 @@ function is_event($filename) {
 
 function name_to_link($pathname) {
   $final_element = basename($pathname);
-  global $raw_registration_info, $registration_info_supplied;
+  global $raw_registration_info, $registration_info_supplied, $key;
 
   if ($registration_info_supplied) {
-    return ("<li><a href=./register.php?event={$final_element}>{$final_element}</a>\n");
+    return ("<li><a href=./register.php?event={$final_element}&key={$key}>{$final_element}</a>\n");
   }
   else {
-    return ("<li><a href=./register.php?event={$final_element}&registration_info={$raw_registration_info}>{$final_element}</a>\n");
+    return ("<li><a href=./register.php?event={$final_element}&key={$key}&registration_info={$raw_registration_info}>{$final_element}</a>\n");
   }
 }
 
@@ -38,11 +38,16 @@ else {
   $registration_info_supplied = false;
 }
 
+$key = $_GET["key"];
+if (!key_is_valid($key)) {
+  error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
+}
+
 $event = $_GET["event"];
 //echo "event is \"${event}\"<p>";
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";
 if (strcmp($event, "") == 0) {
-  $event_list = scandir("./");
+  $event_list = scandir(get_base_path($key, ".."));
   //print_r($event_list);
   $event_list = array_filter($event_list, is_event);
   //print_r($event_list);
@@ -61,7 +66,7 @@ if (strcmp($event, "") == 0) {
   }
 }
 
-$courses_array = scandir("./${event}/Courses");
+$courses_array = scandir(get_courses_path($event, $key, ".."));
 $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
 // print_r($courses_array);
 echo "<p>\n";
@@ -78,7 +83,8 @@ else {
   echo "<br><p>What is your name?<br>\n";
   echo "<input type=\"text\" name=\"competitor_name\"><br>\n";
 }
-echo "<input type=\"hidden\" name=\"event\" value=\"${event}\">\n";
+echo "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
+echo "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
 
 echo "<br><p>Select a course:<br>\n";
 foreach ($courses_array as $course_name) {
@@ -88,8 +94,8 @@ foreach ($courses_array as $course_name) {
 echo "<input type=\"submit\" value=\"Submit\">\n";
 echo "</form>";
 
-echo "<p><a href=\"./view_results?event=${event}\">View results</a>";
-echo "<p><a href=\"./on_course?event=${event}\">Out on course</a><p>";
+echo "<p><a href=\"./view_results?event={$event}&key={$key}\">View results</a>";
+echo "<p><a href=\"./on_course?event={$event}&key={$key}\">Out on course</a><p>";
 
 
 echo get_web_page_footer();

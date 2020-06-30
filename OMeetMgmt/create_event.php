@@ -1,5 +1,5 @@
 <?php
-require 'common_routines.php';
+require '../OMeetCommon/common_routines.php';
 
 ck_testing();
 
@@ -13,7 +13,7 @@ $MAX_CONTROLS = 50;
 
 $verbose = isset($_POST["verbose"]);
 
-require 'course_properties.php';
+require '../OMeetCommon/course_properties.php';
 
 // Utility functions
 function ck_valid_chars($string_to_check) {
@@ -90,13 +90,20 @@ $found_error = false;
 if (isset($_POST["submit"])) {
   echo "Name of event: " . $_POST["event_name"] . "\n<p>";
   $event_name = $_POST["event_name"];
+  $key = $_POST["key"];
+
   if (!ck_valid_chars($event_name) || (substr($event_name, -5) == ".done")) {
     echo "<p>ERROR: Event \"{$event_name}\" can only contain letters and numbers and cannot end in \".done\".\n";
     $found_error = true;
   }
 
+  if (!key_is_valid($key)) {
+    error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
+  }
+
   $event_name .= "Event";
-  if (file_exists("./{$event_name}")) {
+  $event_path = get_event_path($event_name, $key, "..");
+  if (file_exists($event_path)) {
     echo "<p>ERROR: Event \"{$event_name}\" exists - is this a duplicate submission?\n";
     $found_error = true;
   }
@@ -236,18 +243,22 @@ if (isset($_POST["submit"])) {
     
     if (!$found_error) {
       # Create the event itself
-      mkdir("./{$event_name}");
-      mkdir("./{$event_name}/Competitors");
-      mkdir("./{$event_name}/Courses");
-      mkdir("./{$event_name}/Results");
+      if (!is_dir(get_base_path($key, ".."))) {
+        mkdir(get_base_path($key, ".."));
+      }
+
+      mkdir($event_path);
+      mkdir("{$event_path}/Competitors");
+      mkdir("{$event_path}/Courses");
+      mkdir("{$event_path}/Results");
   
       $course_names_array = array();
       for ($i = 0; $i < count($course_array); $i++) {
         $prefix = sprintf("%02d", $i);
-        mkdir("./{$event_name}/Courses/{$prefix}-{$course_array[$i][0]}");
-        mkdir("./{$event_name}/Results/{$prefix}-{$course_array[$i][0]}");
+        mkdir("{$event_path}/Courses/{$prefix}-{$course_array[$i][0]}");
+        mkdir("{$event_path}/Results/{$prefix}-{$course_array[$i][0]}");
         $course_names_array[] = $course_array[$i][0];
-        file_put_contents("./${event_name}/Courses/{$prefix}-{$course_array[$i][0]}/controls.txt", implode("\n", $course_array[$i][1]));
+        file_put_contents("${event_path}/Courses/{$prefix}-{$course_array[$i][0]}/controls.txt", implode("\n", $course_array[$i][1]));
 
         if ($course_array[$i][2][$TYPE_FIELD] == $SCORE_O_COURSE) {
           $course_info = $course_array[$i][2];
@@ -255,7 +266,7 @@ if (isset($_POST["submit"])) {
           foreach ($course_info as $key => $value) {
             $properties_string .= $key . ":" . $value . "\n";
           }
-          file_put_contents("./{$event_name}/Courses/{$prefix}-{$course_array[$i][0]}/properties.txt", $properties_string);
+          file_put_contents("{$event_path}/Courses/{$prefix}-{$course_array[$i][0]}/properties.txt", $properties_string);
         }
       }
 

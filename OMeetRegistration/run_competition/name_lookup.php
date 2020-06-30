@@ -1,10 +1,15 @@
 <?php
-require '../common_routines.php';
+require '../../OMeetCommon/common_routines.php';
 require 'name_matcher.php';
 
 ck_testing();
 
-$matching_info = read_names_info("./members.csv", "./nicknames.csv");
+$key = $_GET["key"];
+if (!key_is_valid($key)) {
+  error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
+}
+
+$matching_info = read_names_info(get_members_path($key, "../.."), get_nicknames_path($key, "../.."));
 
 if (!isset($_GET["member_id"])) {
   if (!isset($_GET["competitor_first_name"]) || ($_GET["competitor_first_name"] == "")) {
@@ -51,6 +56,7 @@ else if (count($possible_member_ids) == 1) {
 <input type=hidden name="member_id" value="{$possible_member_ids[0]}"/>
 <p> Yes <input type=radio name="using_stick" value="yes" {$yes_checked_by_default} /> <input type=text name="si_stick_number" value="{$si_stick}" />
 <p> No <input type=radio name="using_stick" value="no" {$no_checked_by_default}/>
+<input type="hidden" name="key" value="{$key}">
 <p><input type="submit" value="Register"/>
 </form>
 END_OF_FORM;
@@ -61,6 +67,7 @@ else {
   foreach ($possible_member_ids as $possible_member) {
     $success_string .= "<p><input type=radio name=\"member_id\" value=\"{$possible_member}\"> " . get_full_name($possible_member, $matching_info) . "\n";
   }
+  $success_string .= "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
   $success_string .= "<p><input type=submit name=\"Choose member\"/>\n";
   $success_string .= "</form>\n";
 }
@@ -70,7 +77,7 @@ echo get_web_page_header(true, false, true);
 
 echo $success_string;
 
-echo "<a href=\"./competition_register.php\">Go back and retry</a>\n";
+echo "<a href=\"./competition_register.php?key={$key}\">Go back and retry</a>\n";
 
 echo get_web_page_footer();
 ?>

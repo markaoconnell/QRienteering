@@ -16,11 +16,11 @@ sub reach_control_ok {
   $competitor_id = $cookie_ref->{"competitor_id"};
   $test_info_ref->{"subroutine"} = "reach_control";
 
-  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  $path = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Competitors/$competitor_id";
   my($extra_file_present) = ( -f "${path}/extra" );
 
   hashes_to_artificial_file();
-  $cmd = "php ../reach_control.php";
+  $cmd = "php ../OMeet/reach_control.php";
   $output = qx($cmd);
 
   my($control) = $get_ref->{"control"};
@@ -124,7 +124,7 @@ sub register_successfully {
 
   $test_info_ref->{"subroutine"} = "register_successfully";
   hashes_to_artificial_file();
-  $cmd = "php ../register_competitor.php";
+  $cmd = "php ../OMeetRegistration/register_competitor.php";
   $output = qx($cmd);
 
   my($course) = $get_ref->{"course"};
@@ -139,14 +139,19 @@ sub register_successfully {
   #print $output;
   
   my($competitor_id);
-  $competitor_id = qx(ls -1t ./UnitTestingEvent/Competitors | head -n 1);
+  my($ls_cmd);
+  my($event_path);
+  $event_path = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"};
+  $ls_cmd = "ls -1t ${event_path}/Competitors | head -n 1";
+  #$competitor_id = qx(ls -1t ./UnitTestingEvent/Competitors | head -n 1);
+  $competitor_id = qx($ls_cmd);
   chomp($competitor_id);
   print "My competitor_id is $competitor_id\n";
-  if (! -d "./UnitTestingEvent/Competitors/$competitor_id") {
-    error_and_exit("Directory ./UnitTestingEvent/Competitors/$competitor_id not found.");
+  if (! -d "${event_path}/Competitors/$competitor_id") {
+    error_and_exit("Directory ${event_path}/Competitors/$competitor_id not found.");
   }
   
-  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  $path = "${event_path}/Competitors/$competitor_id";
   if ((! -f "$path/name") || (! -f "$path/course")) {
     error_and_exit("One of $path/name or $path/course does not exist.");
   }
@@ -182,7 +187,7 @@ sub register_member_successfully {
   my($raw_registration_info) = hash_to_registration_info_string($registration_info_ref);
   $get_ref->{"registration_info"} = $raw_registration_info;
   hashes_to_artificial_file();
-  $cmd = "php ../register_competitor.php";
+  $cmd = "php ../OMeetRegistration/register_competitor.php";
   $output = qx($cmd);
 
   my($course) = $get_ref->{"course"};
@@ -198,14 +203,20 @@ sub register_member_successfully {
   #print $output;
   
   my($competitor_id);
-  $competitor_id = qx(ls -1t ./UnitTestingEvent/Competitors | head -n 1);
+  my($ls_cmd);
+  my($event_path);
+  $event_path = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"};
+  $ls_cmd = "ls -1t ${event_path}/Competitors | head -n 1";
+  #$competitor_id = qx(ls -1t ./UnitTestingEvent/Competitors | head -n 1);
+  $competitor_id = qx($ls_cmd);
+
   chomp($competitor_id);
   print "My competitor_id is $competitor_id\n";
-  if (! -d "./UnitTestingEvent/Competitors/$competitor_id") {
-    error_and_exit("Directory ./UnitTestingEvent/Competitors/$competitor_id not found.");
+  if (! -d "${event_path}/Competitors/$competitor_id") {
+    error_and_exit("Directory ${event_path}/Competitors/$competitor_id not found.");
   }
   
-  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  $path = "${event_path}/Competitors/$competitor_id";
   if ((! -f "$path/name") || (! -f "$path/course")) {
     error_and_exit("One of $path/name or $path/course does not exist.");
   }
@@ -258,7 +269,7 @@ sub start_successfully {
 
   $test_info_ref->{"subroutine"} = "start_successfully";
   hashes_to_artificial_file();
-  $cmd = "php ../start_course.php";
+  $cmd = "php ../OMeet/start_course.php";
   $output = qx($cmd);
   
   my($competitor_name);
@@ -273,7 +284,7 @@ sub start_successfully {
   
   #print $output;
   
-  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  $path = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Competitors/$competitor_id";
   if (! -f "$path/controls_found/start") {
     error_and_exit("$path/controls_found/start does not exist.");
   }
@@ -308,7 +319,7 @@ sub finish_successfully {
 
   $test_info_ref->{"subroutine"} = "finish_successfully";
   hashes_to_artificial_file();
-  $cmd = "php ../finish_course.php";
+  $cmd = "php ../OMeet/finish_course.php";
   $output = qx($cmd);
   
   my($course) = $cookie_ref->{"course"};
@@ -322,7 +333,7 @@ sub finish_successfully {
   
   #print $output;
   
-  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  $path = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Competitors/$competitor_id";
   my($controls_found_path) = "$path/controls_found";
   if (! -f "$controls_found_path/finish") {
     error_and_exit("$controls_found_path/finish does not exist.");
@@ -353,7 +364,8 @@ sub finish_successfully {
   my($results_file) = sprintf("%04d,%06d,%s", 0, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
   
   
-  my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/${course}", $results_file);
+  my($results_dir) = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Results/${course}";
+  my(@results_array) = check_directory_contents($results_dir, $results_file);
   if (grep(/NOTFOUND:$results_file/, @results_array)) {
     error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
   }
@@ -369,7 +381,7 @@ sub finish_with_stick_successfully {
 
   $test_info_ref->{"subroutine"} = "finish_with_stick_successfully";
   hashes_to_artificial_file();
-  $cmd = "php ../finish_course.php";
+  $cmd = "php ../OMeet/finish_course.php";
   $output = qx($cmd);
   
   my($readable_course_name) = $course;
@@ -381,7 +393,7 @@ sub finish_with_stick_successfully {
   
   #print $output;
   
-  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  $path = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Competitors/$competitor_id";
   my($controls_found_path) = "$path/controls_found";
   if (! -f "$controls_found_path/finish") {
     error_and_exit("$controls_found_path/finish does not exist.");
@@ -409,7 +421,8 @@ sub finish_with_stick_successfully {
   my($results_file) = sprintf("%04d,%06d,%s", 0, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
   
   
-  my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/${course}", $results_file);
+  my($results_dir) = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Results/${course}";
+  my(@results_array) = check_directory_contents($results_dir, $results_file);
   if (grep(/NOTFOUND:$results_file/, @results_array)) {
     error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
   }
@@ -425,7 +438,7 @@ sub finish_score_successfully {
 
   $test_info_ref->{"subroutine"} = "finish_score_successfully";
   hashes_to_artificial_file();
-  $cmd = "php ../finish_course.php";
+  $cmd = "php ../OMeet/finish_course.php";
   $output = qx($cmd);
   
   my($course) = $cookie_ref->{"course"};
@@ -440,7 +453,7 @@ sub finish_score_successfully {
   
   #print $output;
   
-  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  $path = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Competitors/$competitor_id";
   my($controls_found_path) = "$path/controls_found";
   if (! -f "$controls_found_path/finish") {
     error_and_exit("$controls_found_path/finish does not exist.");
@@ -463,13 +476,14 @@ sub finish_score_successfully {
     error_and_exit("File contents wrong, $controls_found_path/finish: " . join("--", @file_contents_array) . " vs time_now of $time_now.");
   }
 
-  my(%props_hash) = get_score_course_properties("./UnitTestingEvent/Courses/${course}");
+  my(%props_hash) = get_score_course_properties(get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Courses/${course}");
   
   my(@start_time_array) = file_get_contents("$controls_found_path/start");
   my($results_file) = sprintf("%04d,%06d,%s", $props_hash{"max"} - $expected_points, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
   
   
-  my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/${course}", $results_file);
+  my($results_dir) = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Results/${course}";
+  my(@results_array) = check_directory_contents($results_dir, $results_file);
   if (grep(/NOTFOUND:$results_file/, @results_array)) {
     error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
   }
@@ -487,7 +501,7 @@ sub finish_scoreO_with_stick_successfully {
 
   $test_info_ref->{"subroutine"} = "finish_scoreO_with_stick_successfully";
   hashes_to_artificial_file();
-  $cmd = "php ../finish_course.php";
+  $cmd = "php ../OMeet/finish_course.php";
   $output = qx($cmd);
   
   my($readable_course_name) = $course;
@@ -500,7 +514,7 @@ sub finish_scoreO_with_stick_successfully {
   
   #print $output;
   
-  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  $path = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Competitors/$competitor_id";
   my($controls_found_path) = "$path/controls_found";
   if (! -f "$controls_found_path/finish") {
     error_and_exit("$controls_found_path/finish does not exist.");
@@ -519,13 +533,14 @@ sub finish_scoreO_with_stick_successfully {
   
   @file_contents_array = file_get_contents("$controls_found_path/finish");
 
-  my(%props_hash) = get_score_course_properties("./UnitTestingEvent/Courses/${course}");
+  my(%props_hash) = get_score_course_properties(get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Courses/${course}");
   
   my(@start_time_array) = file_get_contents("$controls_found_path/start");
   my($results_file) = sprintf("%04d,%06d,%s", $props_hash{"max"} - $expected_points, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
   
   
-  my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/${course}", $results_file);
+  my($results_dir) = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Results/${course}";
+  my(@results_array) = check_directory_contents($results_dir, $results_file);
   if (grep(/NOTFOUND:$results_file/, @results_array)) {
     error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
   }
@@ -544,7 +559,7 @@ sub finish_with_dnf {
 
   $test_info_ref->{"subroutine"} = "finish_with_dnf";
   hashes_to_artificial_file();
-  $cmd = "php ../finish_course.php";
+  $cmd = "php ../OMeet/finish_course.php";
   $output = qx($cmd);
   
   my($course) = $cookie_ref->{"course"};
@@ -558,7 +573,7 @@ sub finish_with_dnf {
   
   #print $output;
   
-  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  $path = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Competitors/$competitor_id";
   my($controls_found_path) = "${path}/controls_found";
   if (! -f "$controls_found_path/finish") {
     error_and_exit("$controls_found_path/finish does not exist.");
@@ -576,7 +591,7 @@ sub finish_with_dnf {
   
   my($number_controls_found_on_course) = scalar(@directory_contents);
 
-  @file_contents_array = file_get_contents("./UnitTestingEvent/Courses/${course}/controls.txt");
+  @file_contents_array = file_get_contents(get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Courses/${course}/controls.txt");
   my($number_controls_on_course) = scalar(@file_contents_array);
   
   @file_contents_array = file_get_contents("$controls_found_path/finish");
@@ -589,7 +604,8 @@ sub finish_with_dnf {
   my($results_file) = sprintf("%04d,%06d,%s", $number_controls_on_course - $number_controls_found_on_course, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
   
   
-  my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/${course}", $results_file);
+  my($results_dir) = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Results/${course}";
+  my(@results_array) = check_directory_contents($results_dir, $results_file);
   if (grep(/NOTFOUND:$results_file/, @results_array)) {
     error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
   }
@@ -606,7 +622,7 @@ sub finish_with_stick_dnf {
 
   $test_info_ref->{"subroutine"} = "finish_with_stick_dnf";
   hashes_to_artificial_file();
-  $cmd = "php ../finish_course.php";
+  $cmd = "php ../OMeet/finish_course.php";
   $output = qx($cmd);
   
   my($readable_course_name) = $course;
@@ -618,7 +634,7 @@ sub finish_with_stick_dnf {
   
   #print $output;
   
-  $path = "./UnitTestingEvent/Competitors/$competitor_id";
+  $path = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Competitors/$competitor_id";
   my($controls_found_path) = "$path/controls_found";
   if (! -f "$controls_found_path/finish") {
     error_and_exit("$controls_found_path/finish does not exist.");
@@ -637,7 +653,7 @@ sub finish_with_stick_dnf {
   
   my($number_controls_found_on_course) = scalar(@directory_contents);
 
-  @file_contents_array = file_get_contents("./UnitTestingEvent/Courses/${course}/controls.txt");
+  @file_contents_array = file_get_contents(get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Courses/${course}/controls.txt");
   my($number_controls_on_course) = scalar(@file_contents_array);
   
   @file_contents_array = file_get_contents("$controls_found_path/finish");
@@ -646,7 +662,8 @@ sub finish_with_stick_dnf {
   my($results_file) = sprintf("%04d,%06d,%s", $number_controls_on_course - $number_controls_found_on_course, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
   
   
-  my(@results_array) = check_directory_contents("./UnitTestingEvent/Results/${course}", $results_file);
+  my($results_dir) = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Results/${course}";
+  my(@results_array) = check_directory_contents($results_dir, $results_file);
   if (grep(/NOTFOUND:$results_file/, @results_array)) {
     error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
   }
@@ -661,14 +678,14 @@ sub create_event_successfully {
 
   $test_info_ref->{"subroutine"} = "create_event_successfully";
   hashes_to_artificial_file();
-  $cmd = "php ../create_event.php";
+  $cmd = "php ../OMeetMgmt/create_event.php";
   $output = qx($cmd);
   
   if ($output !~ /Created event successfully/) {
     error_and_exit("Web page output wrong, no message about successful event creation.\n$output");
   }
 
-  my($event) = "./" . $post_ref->{"event_name"} . "Event";
+  my($event) = get_base_path($post_ref->{"key"}) . "/" . $post_ref->{"event_name"} . "Event";
 
   # Validate proper directories exist
   if (! -d $event) {
@@ -759,7 +776,7 @@ sub create_event_fail {
 
   $test_info_ref->{"subroutine"} = "create_event_fail";
   hashes_to_artificial_file();
-  $cmd = "php ../create_event.php";
+  $cmd = "php ../OMeetMgmt/create_event.php";
   $output = qx($cmd);
   
   if ($output =~ /Created event successfully/) {
@@ -770,7 +787,7 @@ sub create_event_fail {
     error_and_exit("Web page output wrong, expected error message not found.\n$output");
   }
 
-  my($event) = "./" . $post_ref->{"event_name"} . "Event";
+  my($event) = get_base_path($post_ref->{"key"}) . "/" . $post_ref->{"event_name"} . "Event";
 
   # Validate proper directories exist
   if ( -d $event) {

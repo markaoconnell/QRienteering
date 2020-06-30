@@ -1,6 +1,6 @@
 <?php
-require 'common_routines.php';
-require 'course_properties.php';
+require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/course_properties.php';
 require 'si_stick_finish.php';
 
 ck_testing();
@@ -28,8 +28,9 @@ if (isset($_GET["si_stick_finish"])) {
   }
 
   $event = $_GET["event"];
+  $key = $_GET["key"];
   $si_results_string = base64_decode($_GET["si_stick_finish"]);
-  $finish_info = record_finish_by_si_stick($event, $si_results_string);
+  $finish_info = record_finish_by_si_stick($event, $key, $si_results_string);
 
   if ($finish_info["error"] != "") {
     error_and_exit("ERROR: Cannot find competitor for registered stick {$finish_info["si_stick"]}: {$finish_info["error"]}\n");
@@ -43,6 +44,7 @@ else {
   $course = $_COOKIE["course"];
   $competitor_id = $_COOKIE["competitor_id"];
   $event = $_COOKIE["event"];
+  $key = $_COOKIE["key"];
   $finish_time = time();
 }
 
@@ -52,10 +54,12 @@ if (($event == "") || ($competitor_id == "")) {
   error_and_exit("<p>ERROR: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?" . get_error_info_string());
 }
 
-$competitor_path = "./" . $event . "/Competitors/" . $competitor_id;
+$competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
 $controls_found_path = "{$competitor_path}/controls_found";
 
-if (!file_exists($competitor_path) || !file_exists("./{$event}/Courses/{$course}/controls.txt")) {
+$courses_path = get_courses_path($event, $key, "..");
+$results_path = get_results_path($event, $key, "..");
+if (!file_exists($competitor_path) || !file_exists("{$courses_path}/{$course}/controls.txt")) {
   error_and_exit("<p>ERROR: Event \"{$event}\" or competitor \"{$competitor}\" appears to be no longer appears valid, please re-register and try again.\n");
 }
 
@@ -63,11 +67,11 @@ if (file_exists("{$competitor_path}/si_stick") && !isset($_GET["si_stick_finish"
   error_and_exit("<p>ERROR: If using si stick, do not scan the finish QR code, use si stick to finish instead.\n");
 }
 
-$control_list = read_controls("./${event}/Courses/${course}/controls.txt");
+$control_list = read_controls("${courses_path}/${course}/controls.txt");
 $controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
                                       array_map(function ($element) { return $element[1]; }, $control_list));
 
-$course_properties = get_course_properties("./{$event}/Courses/{$course}");
+$course_properties = get_course_properties("{$courses_path}/{$course}");
 $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
 if ($score_course) {
   $max_score = $course_properties[$MAX_SCORE_FIELD];
@@ -106,8 +110,8 @@ if (!file_exists("{$controls_found_path}/finish")) {
   file_put_contents("{$controls_found_path}/finish", strval($now));
   $course_started_at = file_get_contents("{$controls_found_path}/start");
   $time_taken = $now - $course_started_at;
-  if (!file_exists("./${event}/Results/${course}")) {
-    mkdir("./${event}/Results/${course}");
+  if (!file_exists("{$results_path}/${course}")) {
+    mkdir("{$results_path}/${course}");
   }
 
   // Just pluck off the controls found (ignore the timestamp for now
@@ -138,7 +142,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
   }
 
   $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $competitor_id);
-  file_put_contents("./${event}/Results/${course}/${result_filename}", "");
+  file_put_contents("{$results_path}/${course}/${result_filename}", "");
 }
 else {
   $error_string .= "<p>Second scan of finish?  Finish time not updated.\n";
@@ -153,6 +157,8 @@ else {
 setcookie("competitor_id", $competitor_id, $now - 86400);
 setcookie("course", $course, $now - 86400);
 setcookie("next_control", "start", $now - 86400);
+setcookie("key", $key, $now - 86400);
+setcookie("event", $event, $now - 86400);
 
 
 echo get_web_page_header(true, true, false);
@@ -171,8 +177,8 @@ if ($score_course && ($score_penalty_msg != "")) {
   echo $score_penalty_msg;
 }
 
-echo show_results($event, $course, $score_course, $max_score);
-echo get_all_course_result_links($event);
+echo show_results($event, $key, $course, $score_course, $max_score, "..");
+echo get_all_course_result_links($event, $key, "..");
 
 // echo "<p>Course started at ${course_started_at}, course finished at ${now}, difference is ${time_taken}.\n";
 
