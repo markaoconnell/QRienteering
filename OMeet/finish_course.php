@@ -54,6 +54,11 @@ if (($event == "") || ($competitor_id == "")) {
   error_and_exit("<p>ERROR: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?" . get_error_info_string());
 }
 
+if (!key_is_valid($key)) {
+  error_and_exit("Bad location key \"{$key}\", is this an unauthorized link?\n");
+}
+
+
 $competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
 $controls_found_path = "{$competitor_path}/controls_found";
 

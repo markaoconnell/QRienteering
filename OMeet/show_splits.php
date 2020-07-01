@@ -11,11 +11,20 @@ $time_and_competitor = $_GET["entry"];
 $event = $_GET["event"];
 $key = $_GET["key"];
 
+if (($event == "") || (!key_is_valid($key))) {
+  error_and_exit("Empty event \"{$event}\" or bad location key \"{$key}\", is this an unauthorized link?\n");
+}
+
 $result_pieces = explode(",", $time_and_competitor);
 $competitor_id = $result_pieces[2];
 
 
 $competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
+
+if (!is_dir($competitor_path)) {
+  error_and_exit("Cannot find competitor \"{$competitor_id}\" for {$event} and {$key}, please check that this is an authorized link.\n");
+}
+
 $competitor_name = file_get_contents("{$competitor_path}/name");
 $controls_found_path = "{$competitor_path}/controls_found";
 

@@ -21,6 +21,10 @@ $event = $_GET["event"];
 $key = $_GET["key"];
 $include_competitor_id = ($_GET["include_competitor_id"] != "");
 
+if (($event == "") || (!key_is_valid($key))) {
+  error_and_exit("Empty event \"{$event}\" or bad location key \"{$key}\", is this an unauthorized link?\n");
+}
+
 $results_string = "";
 $competitor_directory = get_competitor_directory($event, $key, "..");
 $competitor_list = scandir("${competitor_directory}");

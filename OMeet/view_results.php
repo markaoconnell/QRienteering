@@ -18,7 +18,7 @@ if ($event == "") {
 
 $courses_path = get_courses_path($event, $key, "..");
 if (!file_exists($courses_path)) {
-  error_and_exit("<p>ERROR: No such event found {$event}.\n");
+  error_and_exit("<p>ERROR: No such event found {$event} (or bad location key {$key}).\n");
 }
 
 $results_string = "";

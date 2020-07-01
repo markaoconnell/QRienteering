@@ -14,7 +14,7 @@ echo get_web_page_header(true, false, false);
 
 // Validate that all looks good
 $error = false;
-if ($key == "") {
+if (($key == "") || !key_is_valid($key)) {
   echo "<p>ERROR No key specified in cookie.\n";
   $error = true;
 }
