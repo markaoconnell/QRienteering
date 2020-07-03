@@ -89,24 +89,24 @@ $found_error = false;
 
 if (isset($_POST["submit"])) {
   echo "Name of event: " . $_POST["event_name"] . "\n<p>";
-  $event_name = $_POST["event_name"];
+  $event_fullname = $_POST["event_name"];
   $key = $_POST["key"];
 
-  if (!ck_valid_chars($event_name) || (substr($event_name, -5) == ".done")) {
-    echo "<p>ERROR: Event \"{$event_name}\" can only contain letters and numbers and cannot end in \".done\".\n";
-    $found_error = true;
-  }
+//  if (!ck_valid_chars($event_name) || (substr($event_name, -5) == ".done")) {
+//    echo "<p>ERROR: Event \"{$event_name}\" can only contain letters and numbers and cannot end in \".done\".\n";
+//    $found_error = true;
+//  }
 
   if (!key_is_valid($key)) {
     error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
   }
 
-  $event_name .= "Event";
-  $event_path = get_event_path($event_name, $key, "..");
-  if (file_exists($event_path)) {
-    echo "<p>ERROR: Event \"{$event_name}\" exists - is this a duplicate submission?\n";
-    $found_error = true;
-  }
+//  $event_name .= "Event";
+//  $event_path = get_event_path($event_name, $key, "..");
+//  if (file_exists($event_path)) {
+//    echo "<p>ERROR: Event \"{$event_name}\" exists - is this a duplicate submission?\n";
+//    $found_error = true;
+//  }
 
   $course_array = array();
   //echo "<p>Here is the FILES array.\n";
@@ -244,13 +244,29 @@ if (isset($_POST["submit"])) {
     if (!$found_error) {
       # Create the event itself
       if (!is_dir(get_base_path($key, ".."))) {
-        mkdir(get_base_path($key, ".."));
+        mkdir(get_base_path($key, ".."), 0755, true);  // Create the intermediate directories as necessary
+      }
+
+      $event_name_attempts = 0;
+      while ($event_name_attempts < 100) {
+        $event_name = uniqid("event-");
+        $event_path = get_event_path($event_name, $key, "..");
+
+        if (!file_exists($event_path)) {
+          break;
+        }
+
+        $event_name_attempts++;
+      }
+      if (($event_name_attempts >= 100)  || file_exists($event_path)) {
+        error_and_exit("Internal error creating event, please wait and retry.");
       }
 
       mkdir($event_path);
       mkdir("{$event_path}/Competitors");
       mkdir("{$event_path}/Courses");
       mkdir("{$event_path}/Results");
+      file_put_contents("{$event_path}/description", $event_fullname);
   
       $course_names_array = array();
       for ($i = 0; $i < count($course_array); $i++) {
@@ -270,7 +286,10 @@ if (isset($_POST["submit"])) {
         }
       }
 
-      echo "<p>Created event successfully {$event_name} with " . count($course_array) . " courses:\n\t" . implode("\n\t", $course_names_array) . "\n";
+      echo "<p>Created event successfully {$event_fullname} with " . count($course_array) . " courses:\n\t" . implode("\n\t", $course_names_array) . "\n";
+      $registration_link = realpath(dirname($_SERVER["REQUEST_URI"]) . "../OMeetRegistration/register.php") . "?key={$key}";
+      echo "<p>Paths to register are:<p><ul><li>Event specific registration: {$registration_link}?event=${event_name}</li>\n";
+      echo "<li>General registration: {$registration_link}<li></ul><p>/n";
       $event_created = true;
     }
   }
@@ -289,7 +308,6 @@ if (!$event_created && !$found_error) {
 <br>
 <form action=./create_event.php method=post enctype="multipart/form-data" >
 <p class="title">What is the name of the event?<br>
-<p>Note that "Event" will be automatically appended to the entered event name.
 <p>
 <input name=event_name type=text>
 <br><br><br><p><p>

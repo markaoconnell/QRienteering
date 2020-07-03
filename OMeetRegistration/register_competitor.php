@@ -20,7 +20,11 @@ else {
 $key = $_GET["key"];
 $event = $_GET["event"];
 if (!key_is_valid($key)) {
-  error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
+  error_and_exit("Unknown key \"{$key}\", are you using an authorized link?\n");
+}
+
+if (!is_dir(get_event_path($event, $key, "..")) || !file_exists(get_event_path($event, $key, "..") . "/description")) {
+  error_and_exit("Unknown event \"{$event}\" (" . get_base_path($event, $key, "..") . "), are you using an authorized link?\n");
 }
 
 $courses_array = scandir(get_courses_path($event, $key, ".."));

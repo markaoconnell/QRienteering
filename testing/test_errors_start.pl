@@ -16,7 +16,8 @@ set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 initialize_event();
 create_key_file();
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
-set_no_redirects_for_event("UnitTestingEvent", "UnitTestPlayground");
+my($event_id) = $TEST_INFO{"event_id"};
+set_no_redirects_for_event($event_id, "UnitTestPlayground");
 
 
 ###########
@@ -50,8 +51,8 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeet/start_course.php";
 $output = qx($cmd);
 
-if ($output !~ /ERROR: Bad registration for event "OldEvent"/) {
-  error_and_exit("Web page output wrong, bad registration error not found.\n$output");
+if ($output !~ /ERROR: Bad event "OldEvent", was this created properly/) {
+  error_and_exit("Web page output wrong, bad event error not found.\n$output");
 }
 
 #print $output;
@@ -63,14 +64,15 @@ success();
 # Test 3 - start with the right event but bad course
 # Should return an error message
 %TEST_INFO = qw(Testname TestStartGoodEventBadCourse);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 03-Orange);
+%COOKIE = qw(key UnitTestPlayground course 03-Orange);
 $COOKIE{"competitor_id"} = "moc";
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 hashes_to_artificial_file();
 $cmd = "php ../OMeet/start_course.php";
 $output = qx($cmd);
 
-if ($output !~ /ERROR: Bad registration for event "UnitTestingEvent"/) {
+if ($output !~ /ERROR: Bad registration for event "UnitTesting" and competitor "moc", please reregister and try again/) {
   error_and_exit("Web page output wrong, bad registration error not found.\n$output");
 }
 
@@ -84,8 +86,9 @@ success();
 # Test 4 - start multiple times
 # First register, then start
 %TEST_INFO = qw(Testname MultipleStart);
-%GET = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%GET = qw(key UnitTestPlayground course 00-White);
 $GET{"competitor_name"} = $COMPETITOR_NAME;
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -93,16 +96,18 @@ $competitor_id = $TEST_INFO{"competitor_id"};
 
 
 # Now start the course
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Now start the course again - this is the real part of the test
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 hashes_to_artificial_file();
 $cmd = "php ../OMeet/start_course.php";

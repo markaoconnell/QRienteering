@@ -18,12 +18,14 @@ set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 create_key_file();
 initialize_event();
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
-set_no_redirects_for_event("UnitTestingEvent", "UnitTestPlayground");
+my($event_id) = $TEST_INFO{"event_id"};
+set_no_redirects_for_event($event_id, "UnitTestPlayground");
 
 sub register_one_entrant {
-  %GET = qw(key UnitTestPlayground event UnitTestingEvent);
+  %GET = qw(key UnitTestPlayground);
   $GET{"course"} = $_[1];
   $GET{"competitor_name"} = $_[0];
+  $GET{"event"} = $event_id;
   %COOKIE = ();  # empty hash
   
   #print "Register $_[0] on $_[1]\n";
@@ -35,7 +37,8 @@ sub register_one_entrant {
 sub check_results {
   my($expected_table_rows) = @_;
 
-  %GET = qw(key UnitTestPlayground event UnitTestingEvent);
+  %GET = qw(key UnitTestPlayground);
+  $GET{"event"} = $event_id;
   %COOKIE = ();
   hashes_to_artificial_file();
 
@@ -56,7 +59,8 @@ sub check_results {
 sub check_on_course {
   my($expected_table_rows) = @_;
 
-  %GET = qw(key UnitTestPlayground event UnitTestingEvent);
+  %GET = qw(key UnitTestPlayground);
+  $GET{"event"} = $event_id;
   %COOKIE = ();
   hashes_to_artificial_file();
 
@@ -77,7 +81,8 @@ sub check_on_course {
 sub check_competitor_on_course {
   my($competitor_name, $competitor_id) = @_;
 
-  %GET = qw(key UnitTestPlayground event UnitTestingEvent include_competitor_id 1);
+  %GET = qw(key UnitTestPlayground include_competitor_id 1);
+  $GET{"event"} = $event_id;
   %COOKIE = ();
   hashes_to_artificial_file();
 
@@ -105,14 +110,15 @@ sub check_splits {
     error_and_exit("Incorrect result file: $result_file.");
   }
 
-  if ( -f get_base_path("UnitTestPlayground") . "/UnitTestingEvent/Competitors/$result_competitor/course") {
-    my($path) = get_base_path("UnitTestPlayground") . "/UnitTestingEvent/Competitors/$result_competitor/course";
+  if ( -f get_base_path("UnitTestPlayground") . "/${event_id}/Competitors/$result_competitor/course") {
+    my($path) = get_base_path("UnitTestPlayground") . "/${event_id}/Competitors/$result_competitor/course";
     my($course) = qx(cat $path);
     chomp($course);
 
-    %GET = qw(key UnitTestPlayground event UnitTestingEvent);
+    %GET = qw(key UnitTestPlayground);
     $GET{"course"} = $course;
     $GET{"entry"} = $result_file;
+    $GET{"event"} = $event_id;
     %COOKIE = ();
     hashes_to_artificial_file();
 
@@ -162,7 +168,8 @@ success();
 
 # Competitor 1 starts and gets two controls
 %TEST_INFO = qw(Testname TestThreeStartersAtEvent);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 01-Yellow);
+%COOKIE = qw(key UnitTestPlayground course 01-Yellow);
+$COOKIE{"event"} = $event_id;
 $COOKIE{"competitor_id"} = $competitor_1_id;
 %GET = ();  # empty hash
 
@@ -177,16 +184,18 @@ reach_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 2 starts
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 01-Yellow);
+%COOKIE = qw(key UnitTestPlayground course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_2_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 5 starts and gets a control
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_5_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -225,8 +234,9 @@ success();
 %TEST_INFO = qw(Testname OneFinisherThreeMoreStarters);
 
 # Competitor 1 finds two more controls
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 01-Yellow);
+%COOKIE = qw(key UnitTestPlayground course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_1_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 
@@ -238,16 +248,18 @@ reach_control_successfully(3, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 3 starts
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_3_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 6 starts
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_6_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -255,8 +267,9 @@ start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 2 finds 2 controls
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 01-Yellow);
+%COOKIE = qw(key UnitTestPlayground course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_2_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 $GET{"control"} = "202";
@@ -267,8 +280,9 @@ reach_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 3 finds a control
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_3_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 
@@ -277,8 +291,9 @@ reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 5 finds a control
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_5_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 
@@ -287,8 +302,9 @@ reach_score_control_successfully(2, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 2 finds the next control
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 01-Yellow);
+%COOKIE = qw(key UnitTestPlayground course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_2_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 $GET{"control"} = "206";
@@ -296,8 +312,9 @@ reach_control_successfully(2, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 6 finds a control
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_6_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 $GET{"control"} = "303";
@@ -305,15 +322,17 @@ reach_score_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 4 starts
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_4_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 # Competitor 1 finds the final control and finishes
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 01-Yellow);
+%COOKIE = qw(key UnitTestPlayground course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_1_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 $GET{"control"} = "210";
@@ -356,8 +375,9 @@ success();
 %TEST_INFO = qw(Testname AllFinishWithTwoDNFs);
 
 # Competitor 3 finds more controls
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_3_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 
@@ -369,8 +389,9 @@ reach_control_successfully(2, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 6 finds a control
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_6_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 
@@ -381,8 +402,9 @@ reach_score_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 2 DNFs
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 01-Yellow);
+%COOKIE = qw(key UnitTestPlayground course 01-Yellow);
 $COOKIE{"competitor_id"} = $competitor_2_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
@@ -390,8 +412,9 @@ finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 3 finds all remaining controls
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_3_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 
@@ -403,8 +426,9 @@ reach_control_successfully(4, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 4 finds some controls then DNFs
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_4_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 $GET{"control"} = "201";
@@ -417,24 +441,27 @@ finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 5 finishes
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_5_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 finish_score_successfully(100, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 3 finishes
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_3_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 finish_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Competitor 6 finishes
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_6_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 finish_score_successfully(70, \%GET, \%COOKIE, \%TEST_INFO);
@@ -474,11 +501,11 @@ $expected_number_splits{$competitor_4_id} = 2;
 $expected_number_splits{$competitor_5_id} = 3;
 $expected_number_splits{$competitor_6_id} = 2;
 
-my($results_path) = get_base_path("UnitTestPlayground") . "/UnitTestingEvent/Results/*";
+my($results_path) = get_base_path("UnitTestPlayground") . "/${event_id}/Results/*";
 my(@results_files) = qx(ls -1 $results_path);
 chomp(@results_files);
 
-@results_files = grep(!/UnitTestingEvent/, @results_files);
+@results_files = grep(!/$event_id/, @results_files);
 
 #print "Found files " . join("--", @results_files);
 my($result_file);

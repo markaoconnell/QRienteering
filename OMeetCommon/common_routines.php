@@ -251,9 +251,9 @@ function get_all_course_result_links($event, $key, $path_to_top) {
 
   $links_string = "<p>Show results for ";
   foreach ($course_list as $one_course) {
-    $links_string .= "<a href=\"./view_results?event=${event}&key={$key}&course=$one_course\">" . ltrim($one_course, "0..9-") . "</a> \n";
+    $links_string .= "<a href=\"../OMeet/view_results?event=${event}&key={$key}&course=$one_course\">" . ltrim($one_course, "0..9-") . "</a> \n";
   }
-  $links_string .= "<a href=\"./view_results?event=${event}&key={$key}\">All</a> \n";
+  $links_string .= "<a href=\"../OMeet/view_results?event=${event}&key={$key}\">All</a> \n";
 
   return($links_string);
 }

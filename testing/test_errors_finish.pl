@@ -17,7 +17,8 @@ set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 initialize_event();
 create_key_file();
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
-set_no_redirects_for_event("UnitTestingEvent", "UnitTestPlayground");
+my($event_id) = $TEST_INFO{"event_id"};
+set_no_redirects_for_event($event_id, "UnitTestPlayground");
 
 
 
@@ -47,6 +48,7 @@ success();
 %TEST_INFO = qw(Testname TestFinishOldEvent);
 %COOKIE = qw(key UnitTestPlayground event OldEvent course 00-White);
 $COOKIE{"competitor_id"} = "moc";
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 hashes_to_artificial_file();
 $cmd = "php ../OMeet/finish_course.php";
@@ -65,8 +67,9 @@ success();
 # Test 3 - finish with a bad course
 # Should return an error message
 %TEST_INFO = qw(Testname TestFinishGoodEventBadCourse);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 03-Orange);
+%COOKIE = qw(key UnitTestPlayground course 03-Orange);
 $COOKIE{"competitor_id"} = "moc";
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 hashes_to_artificial_file();
 $cmd = "php ../OMeet/finish_course.php";
@@ -87,8 +90,9 @@ success();
 # First register, then call finish without calling start
 %TEST_INFO = qw(Testname FinishWithoutStart);
 
-%GET = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%GET = qw(key UnitTestPlayground course 00-White);
 $GET{"competitor_name"} = $COMPETITOR_NAME;
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -96,8 +100,9 @@ $competitor_id = $TEST_INFO{"competitor_id"};
 
 
 # Now finish the course (should not work, as we haven't started)
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 hashes_to_artificial_file();
 $cmd = "php ../OMeet/finish_course.php";
@@ -144,16 +149,18 @@ if (-d "${path}/Results/00-White") {
 # This will be a dnf, but I just want to make sure the second finish is handled
 %TEST_INFO = qw(Testname FinishTwice);
 
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Now finish the course
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
@@ -161,8 +168,9 @@ finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Now finish the course a second time
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 $output = finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
@@ -182,8 +190,9 @@ success();
 # Try it with a ScoreO
 %TEST_INFO = qw(Testname FinishWithoutStartScoreO);
 
-%GET = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%GET = qw(key UnitTestPlayground course 02-ScoreO);
 $GET{"competitor_name"} = $COMPETITOR_NAME_2;
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -191,8 +200,9 @@ $competitor_id2 = $TEST_INFO{"competitor_id"};
 
 
 # Now finish the course (should not work, as we haven't started)
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_id2;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 hashes_to_artificial_file();
 $cmd = "php ../OMeet/finish_course.php";
@@ -238,16 +248,18 @@ if (-d "${path}/Results/02-ScoreO") {
 # Call start (already registered in prior test), then finish twice
 %TEST_INFO = qw(Testname FinishTwiceScoreO);
 
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_id2;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Now finish the course
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_id2;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 finish_score_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
@@ -255,8 +267,9 @@ finish_score_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 
 # Now finish the course a second time
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_id2;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 $output = finish_score_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);

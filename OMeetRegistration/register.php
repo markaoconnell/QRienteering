@@ -12,18 +12,20 @@ echo get_web_page_header(true, false, true);
 // phpinfo();
 
 function is_event($filename) {
-  return (is_dir($filename) && (substr($filename, strlen($filename) - 5) == "Event"));
+  global $base_path;
+  return ((substr($filename, 0, 6) == "event-") && is_dir("${base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
 }
 
-function name_to_link($pathname) {
-  $final_element = basename($pathname);
-  global $raw_registration_info, $registration_info_supplied, $key;
+function name_to_link($event_id) {
+  global $raw_registration_info, $registration_info_supplied, $key, $base_path;
+
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
 
   if ($registration_info_supplied) {
-    return ("<li><a href=./register.php?event={$final_element}&key={$key}>{$final_element}</a>\n");
+    return ("<li><a href=./register.php?event={$event_id}&key={$key}>{$event_fullname}</a>\n");
   }
   else {
-    return ("<li><a href=./register.php?event={$final_element}&key={$key}&registration_info={$raw_registration_info}>{$final_element}</a>\n");
+    return ("<li><a href=./register.php?event={$event_id}&key={$key}&registration_info={$raw_registration_info}>{$event_fullname}</a>\n");
   }
 }
 
@@ -43,11 +45,13 @@ if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
 
+$base_path = get_base_path($key, "..");
+
 $event = $_GET["event"];
 //echo "event is \"${event}\"<p>";
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";
 if (strcmp($event, "") == 0) {
-  $event_list = scandir(get_base_path($key, ".."));
+  $event_list = scandir($base_path);
   //print_r($event_list);
   $event_list = array_filter($event_list, is_event);
   //print_r($event_list);
@@ -94,8 +98,8 @@ foreach ($courses_array as $course_name) {
 echo "<input type=\"submit\" value=\"Submit\">\n";
 echo "</form>";
 
-echo "<p><a href=\"./view_results?event={$event}&key={$key}\">View results</a>";
-echo "<p><a href=\"./on_course?event={$event}&key={$key}\">Out on course</a><p>";
+echo "<p><a href=\"../OMeet/view_results?event={$event}&key={$key}\">View results</a>";
+echo "<p><a href=\"../OMeet/on_course?event={$event}&key={$key}\">Out on course</a><p>";
 
 
 echo get_web_page_footer();

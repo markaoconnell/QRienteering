@@ -685,11 +685,27 @@ sub create_event_successfully {
     error_and_exit("Web page output wrong, no message about successful event creation.\n$output");
   }
 
-  my($event) = get_base_path($post_ref->{"key"}) . "/" . $post_ref->{"event_name"} . "Event";
 
+  my($ls_cmd);
+  my($event_id);
+  $ls_cmd = "ls -1t " . get_base_path($post_ref->{"key"}) . " | head -n 1"; 
+  $event_id = qx($ls_cmd);
+  chomp($event_id);
+  print "New event id is $event_id\n";
+
+  my($event_path) = get_base_path($post_ref->{"key"}) . "/${event_id}";
   # Validate proper directories exist
-  if (! -d $event) {
-    error_and_exit("Proper directory for $event not found.\n");
+  if (! -d $event_path) {
+    error_and_exit("Proper directory for $event_path not found.\n");
+  }
+
+  if (! -f "$event_path/description") {
+    error_and_exit("Description file for $event_path not found.\n");
+  }
+
+  my($event_description) = file_get_contents("${event_path}/description");
+  if ($event_description ne $post_ref->{"event_name"}) {
+    error_and_exit("Event description \"${event_description}\" does match input of \"" . $post_ref->{"event_name"} . "\"\n");
   }
 
   my($number_courses);
@@ -700,24 +716,24 @@ sub create_event_successfully {
   }
   $number_courses++;   # There is normally one fewer newline than the number of courses
   
-  @directory_contents = check_directory_contents($event, qw(Competitors Results Courses));
+  @directory_contents = check_directory_contents($event_path, qw(description Competitors Results Courses));
   if (scalar(@directory_contents) != 0) {
-    error_and_exit("More files exist in $event than expected: " . join("--", @directory_contents));
+    error_and_exit("More files exist in $event_path than expected: " . join("--", @directory_contents));
   }
   
-  @directory_contents = check_directory_contents("${event}/Competitors", qw());
+  @directory_contents = check_directory_contents("${event_path}/Competitors", qw());
   if (scalar(@directory_contents) != 0) {
-    error_and_exit("More files exist in ${event}/Competitors than expected: " . join("--", @directory_contents));
+    error_and_exit("More files exist in ${event_path}/Competitors than expected: " . join("--", @directory_contents));
   }
   
-  @directory_contents = check_directory_contents("${event}/Results", qw());
+  @directory_contents = check_directory_contents("${event_path}/Results", qw());
   if (scalar(@directory_contents) != $number_courses) {
-    error_and_exit("Different number of files exist in ${event}/Results than expected: " . join("--", @directory_contents));
+    error_and_exit("Different number of files exist in ${event_path}/Results than expected: " . join("--", @directory_contents));
   }
   
-  @directory_contents = check_directory_contents("${event}/Courses", qw());
+  @directory_contents = check_directory_contents("${event_path}/Courses", qw());
   if (scalar(@directory_contents) != $number_courses) {
-    error_and_exit("Different number of files exist in ${event}/Courses than expected: " . join("--", @directory_contents));
+    error_and_exit("Different number of files exist in ${event_path}/Courses than expected: " . join("--", @directory_contents));
   }
 
   # Validate that the course properties are set correctly
@@ -740,15 +756,15 @@ sub create_event_successfully {
     }
 
     if ($course_name_field !~ /^s:/) {
-      if ( -f "${event}/Courses/${course_name}/properties.txt") {
-        error_and_exit("Found ${event}/Courses/${course_name}/properties.txt unexpectedly.");
+      if ( -f "${event_path}/Courses/${course_name}/properties.txt") {
+        error_and_exit("Found ${event_path}/Courses/${course_name}/properties.txt unexpectedly.");
       }
     }
     else {
-      if (! -f "${event}/Courses/${course_name}/properties.txt") {
-        error_and_exit("Did not find ${event}/Courses/${course_name}/properties.txt when it should be there.");
+      if (! -f "${event_path}/Courses/${course_name}/properties.txt") {
+        error_and_exit("Did not find ${event_path}/Courses/${course_name}/properties.txt when it should be there.");
       }
-      my(%props_hash) = get_score_course_properties("${event}/Courses/${course_name}");
+      my(%props_hash) = get_score_course_properties("${event_path}/Courses/${course_name}");
       if ($course_elements[3] ne $props_hash{"penalty"}) {
         error_and_exit("Properties mismatch: " . $props_hash{"penalty"} . " derived, $course_elements[2] supplied.\n");
       }
@@ -764,6 +780,7 @@ sub create_event_successfully {
   
   
   delete($test_info_ref->{"subroutine"});
+  $test_info_ref->{"event_id"} = $event_id;
 
   return ($output);
 }

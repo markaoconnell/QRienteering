@@ -29,14 +29,16 @@ set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 create_key_file();
 initialize_event();
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
-set_no_redirects_for_event("UnitTestingEvent", "UnitTestPlayground");
+my($event_id) = $TEST_INFO{"event_id"};
+set_no_redirects_for_event($event_id, "UnitTestPlayground");
 
 
 ###########
 # Test 1 - register a new entrant successfully
 # Test registration of a new entrant
 %TEST_INFO = qw(Testname TestSuccessRegistrationMemberWithStick);
-%GET = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%GET = qw(key UnitTestPlayground course 00-White);
+$GET{"event"} = $event_id;
 %REGISTRATION_INFO = qw(club_name NEOC si_stick 5086148225 email_address karen@mkoconnell.com cell_phone 5083959473 car_info ToyotaCorolla is_member yes);
 $REGISTRATION_INFO{"first_name"} = $COMPETITOR_FIRST_NAME;
 $REGISTRATION_INFO{"last_name"} = $COMPETITOR_LAST_NAME;
@@ -55,7 +57,8 @@ success();
 # Test 2 - start the course
 # validate that the start entry is created
 %TEST_INFO = qw(Testname TestFinishWithSiStick);
-%GET = qw(key UnitTestPlayground event UnitTestingEvent);  # empty hash
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
 my(@si_results) = qw(5086148225;200 start:200 finish:800 201:210 202:300 203:440 204:600 205:700);
 my($base_64_results) = encode_base64(join(",", @si_results));
 $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
@@ -78,7 +81,8 @@ success();
 # Test 3 - register another entrant successfully
 # Then DNF
 %TEST_INFO = qw(Testname TestDNFWhenRunningWithStick);
-%GET = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%GET = qw(key UnitTestPlayground course 00-White);
+$GET{"event"} = $event_id;
 %REGISTRATION_INFO = qw(club_name NEOC si_stick 3291200 email_address karen@mkoconnell.com cell_phone 5083959473 car_info ToyotaCorolla is_member yes);
 $REGISTRATION_INFO{"first_name"} = $COMPETITOR_FIRST_NAME;
 $REGISTRATION_INFO{"last_name"} = $COMPETITOR_LAST_NAME;
@@ -88,7 +92,8 @@ $GET{"competitor_name"} = $COMPETITOR_NAME;
 register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
 $competitor_id = $TEST_INFO{"competitor_id"};
 
-%GET = qw(key UnitTestPlayground event UnitTestingEvent);  # empty hash
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
 my(@si_results) = qw(3291200;400 start:400 finish:1600 201:510 202:1200);
 my($base_64_results) = encode_base64(join(",", @si_results));
 $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
@@ -108,7 +113,8 @@ success();
 # Test 4 - register another entrant successfully
 # Then complete the course, but with extra controls found
 %TEST_INFO = qw(Testname TestExtraControlsWhenRunningWithStick);
-%GET = qw(key UnitTestPlayground event UnitTestingEvent course 01-Yellow);
+%GET = qw(key UnitTestPlayground course 01-Yellow);
+$GET{"event"} = $event_id;
 %REGISTRATION_INFO = qw(club_name CSU si_stick 4371408 email_address karen@mkoconnell.com cell_phone 7787878 car_info HondaOdyssey is_member no);
 $REGISTRATION_INFO{"first_name"} = "Surtout";
 $REGISTRATION_INFO{"last_name"} = "Burtout";
@@ -118,7 +124,8 @@ $GET{"competitor_name"} = "Surtout--space--Burtout";
 register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
 $competitor_id = $TEST_INFO{"competitor_id"};
 
-%GET = qw(key UnitTestPlayground event UnitTestingEvent);  # empty hash
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
 my(@si_results) = qw(4371408;800 start:800 finish:1484 202:910 301:985 204:1030 206:1200 208:1269 101:1337 210:1403);
 my($base_64_results) = encode_base64(join(",", @si_results));
 $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
@@ -142,7 +149,8 @@ success();
 # Test 5 - register another entrant successfully, with some information missing
 # Then complete a scoreO course
 %TEST_INFO = qw(Testname TestSiStickOnScoreO);
-%GET = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%GET = qw(key UnitTestPlayground course 02-ScoreO);
+$GET{"event"} = $event_id;
 %REGISTRATION_INFO = qw(club_name QOC si_stick 1221 car_info ToyotaPriusGE7346 is_member no);
 $REGISTRATION_INFO{"first_name"} = "Surtout";
 $REGISTRATION_INFO{"last_name"} = "Burtout";
@@ -154,7 +162,8 @@ $GET{"competitor_name"} = "Surtout--space--Burtout";
 register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
 $competitor_id = $TEST_INFO{"competitor_id"};
 
-%GET = qw(key UnitTestPlayground event UnitTestingEvent);  # empty hash
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
 my(@si_results) = qw(1221;1600 start:1600 finish:2552 304:1734 302:1812 304:1919 301:2112 305:2332);
 my($base_64_results) = encode_base64(join(",", @si_results));
 $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes

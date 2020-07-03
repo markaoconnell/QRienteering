@@ -14,13 +14,15 @@ set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 create_key_file();
 initialize_event();
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
-set_no_redirects_for_event("UnitTestingEvent", "UnitTestPlayground");
+my($event_id) = $TEST_INFO{"event_id"};
+set_no_redirects_for_event($event_id, "UnitTestPlayground");
 
 
 sub run_score_course {
   my($time_on_course, @controls_to_find) = @_;
 
-  %GET = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+  %GET = qw(key UnitTestPlayground course 02-ScoreO);
+  $GET{"event"} = $event_id;
   $GET{"competitor_name"} = $COMPETITOR_NAME;
   %COOKIE = ();  # empty hash
   
@@ -28,8 +30,9 @@ sub run_score_course {
   $competitor_id = $TEST_INFO{"competitor_id"};
   
   
-  %COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+  %COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
   $COOKIE{"competitor_id"} = $competitor_id;
+  $COOKIE{"event"} = $event_id;
   %GET = ();  # empty hash
   
   start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -44,8 +47,9 @@ sub run_score_course {
   
   #
   # Find the controls specified
-  %COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+  %COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
   $COOKIE{"competitor_id"} = $competitor_id;
+  $COOKIE{"event"} = $event_id;
 
   my($this_control);
   my($controls_found_count) = 0;

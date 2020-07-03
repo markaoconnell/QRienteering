@@ -11,14 +11,15 @@ echo get_web_page_header(true, false, true);
 // echo 'Current PHP version: ' . phpversion();
 // phpinfo();
 
-function is_event($filename) {
-  return (substr($filename, -5) == "Event");
+function is_event_open($filename) {
+  global $base_path;
+  return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && !file_exists("${base_path}/{$filename}/done"));
 }
 
-function name_to_link($pathname) {
-  global $key;
-  $final_element = basename($pathname);
-  return ("<li><a href=./mass_start.php?event=${final_element}&key=$key>${final_element}</a>\n");
+function name_to_link($event_id) {
+  global $key, $base_path;
+  $event_fullname = file_get_contents("${base_path}/{$event_id}/description");
+  return ("<li><a href=./mass_start.php?event=${event_id}&key=$key>${event_fullname}</a>\n");
 }
 
 echo "<p>\n";
@@ -31,12 +32,14 @@ if (!key_is_valid($key)) {
   error_and_exit("Unknown management key \"$key\", are you using an authorized link?\n");
 }
 
+$base_path = get_base_path($key, "..");
+
 //echo "event is \"${event}\"<p>";
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";
 if ($event == "") {
-  $event_list = scandir(get_base_path($key, ".."));
+  $event_list = scandir($base_path);
   //print_r($event_list);
-  $event_list = array_values(array_filter($event_list, is_event));
+  $event_list = array_values(array_filter($event_list, is_event_open));
   //print_r($event_list);
   if (count($event_list) == 1) {
     $event = basename($event_list[0]);
@@ -66,7 +69,7 @@ if ($event != "") {
     else {
       $output_string .= "<p>\n";
       
-      $output_string .= "<p>Mass start for orienteering event: ${event}\n<br>";
+      $output_string .= "<p>Mass start for orienteering event: " . file_get_contents("{$base_path}/{$event}/description") . "\n<br>";
       $output_string .= "<form action=\"./mass_start.php\">\n";
       
       $output_string .= "<br><p>Select one or more courses:<br>\n";

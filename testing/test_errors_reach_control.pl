@@ -18,7 +18,8 @@ set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 initialize_event();
 create_key_file();
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
-set_no_redirects_for_event("UnitTestingEvent", "UnitTestPlayground");
+my($event_id) = $TEST_INFO{"event_id"};
+set_no_redirects_for_event($event_id, "UnitTestPlayground");
 
 
 
@@ -76,8 +77,9 @@ success();
 # Test 3 - reach a control with a bad course
 # Should return an error message
 %TEST_INFO = qw(Testname TestReachControlBadCourse);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 03-Orange);
+%COOKIE = qw(key UnitTestPlayground course 03-Orange);
 $COOKIE{"competitor_id"} = "moc";
+$COOKIE{"event"} = $event_id;
 %GET = qw(control 201);
 hashes_to_artificial_file();
 $cmd = "php ../OMeet/reach_control.php";
@@ -97,15 +99,17 @@ success();
 # Test 4 - After registering, try bad reach_control calls again
 # First register, then call reach_control incorrectly a few different ways
 %TEST_INFO = qw(Testname TestReachControlAfterRegisteringBadCourse);
-%GET = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%GET = qw(key UnitTestPlayground course 00-White);
 $GET{"competitor_name"} = $COMPETITOR_NAME;
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 $competitor_id = $TEST_INFO{"competitor_id"};
 
-%GET = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%GET = qw(key UnitTestPlayground course 02-ScoreO);
 $GET{"competitor_name"} = $COMPETITOR_NAME_2;
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -113,8 +117,9 @@ $competitor_id2 = $TEST_INFO{"competitor_id"};
 
 
 # Now reach a control but with a bad course
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 03-Orange);
+%COOKIE = qw(key UnitTestPlayground course 03-Orange);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = qw(control 201);
 hashes_to_artificial_file();
 $cmd = "php ../OMeet/reach_control.php";
@@ -143,8 +148,9 @@ success();
 # Test: Corrupt competitor id on the course
 # Now reach a control but with a bad competitor id
 %TEST_INFO = qw(Testname TestBadCompetitorOnCourse);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = "moc-who-is-not-there";
+$COOKIE{"event"} = $event_id;
 %GET = qw(control 201);
 hashes_to_artificial_file();
 $cmd = "php ../OMeet/reach_control.php";
@@ -172,8 +178,9 @@ success();
 # Test: Reach a control before starting the course
 # 
 %TEST_INFO = qw(Testname TestReachControlNoStart);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = qw(control 201);
 
 hashes_to_artificial_file();
@@ -185,8 +192,9 @@ if ($output !~ /not started for $COMPETITOR_NAME, please return and scan Start Q
 }
 
 # Try for the ScoreO competitor too
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_id2;
+$COOKIE{"event"} = $event_id;
 %GET = qw(control 301);
 
 hashes_to_artificial_file();
@@ -206,8 +214,9 @@ success();
 # Test: Reach the same control twice, after starting
 # Should be fine
 %TEST_INFO = qw(Testname TestReachControlTwice);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
@@ -224,8 +233,9 @@ success();
 # Test: Reach the same control twice, after starting
 # Should be fine
 %TEST_INFO = qw(Testname TestReachControlTwiceScoreO);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_id2;
+$COOKIE{"event"} = $event_id;
 %GET = ();
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
@@ -242,8 +252,9 @@ success();
 # Test: Reach the same control again, after starting
 # this time with the encoded mumble
 %TEST_INFO = qw(Testname TestReachControlAgainWithMumble);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();
 $GET{"mumble"} = encode_base64("201,$competitor_id," . time());
 $TEST_INFO{"control"} = "201";
@@ -257,8 +268,9 @@ success();
 # Test: Reach the same control again, after starting
 # this time with the encoded mumble on a ScoreO
 %TEST_INFO = qw(Testname TestReachControlAgainWithMumbleScoreO);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_id2;
+$COOKIE{"event"} = $event_id;
 %GET = ();
 $GET{"mumble"} = encode_base64("301,$competitor_id2," . time());
 $TEST_INFO{"control"} = "301";
@@ -272,8 +284,9 @@ success();
 # Test: Reach the correct control with a mumble
 # 
 %TEST_INFO = qw(Testname TestReachControlCorrectlyWithMumble);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();
 $GET{"mumble"} = encode_base64("202,$competitor_id," . time());
 $TEST_INFO{"control"} = "202";
@@ -287,8 +300,9 @@ success();
 # Test: Reach the correct control with a mumble
 #       On a ScoreO this time
 %TEST_INFO = qw(Testname TestReachControlCorrectlyWithMumbleScoreO);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_id2;
+$COOKIE{"event"} = $event_id;
 %GET = ();
 $GET{"mumble"} = encode_base64("302,$competitor_id2," . time());
 $TEST_INFO{"control"} = "302";
@@ -301,8 +315,9 @@ success();
 ################
 # Test: Reach the wrong control
 %TEST_INFO = qw(Testname TestReachWrongControl);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = qw(control 345);
 
 hashes_to_artificial_file();
@@ -327,8 +342,9 @@ success();
 ################
 # Test: Reach the wrong control on a ScoreO
 %TEST_INFO = qw(Testname TestReachWrongControlScoreO);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 02-ScoreO);
+%COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_id2;
+$COOKIE{"event"} = $event_id;
 %GET = qw(control 345);
 
 hashes_to_artificial_file();
@@ -356,8 +372,9 @@ success();
 # this time with the encoded mumble
 # but with an old time (replay of old result)
 %TEST_INFO = qw(Testname TestReachControlAgainWithMumbleTooLate);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();
 $GET{"mumble"} = encode_base64("202,$competitor_id," . (time() - 300));
 
@@ -385,8 +402,9 @@ success();
 # Test: Reach a new control with an old mumble
 # (not sure how this would happen, but let's confirm that it doesn't work)
 %TEST_INFO = qw(Testname TestReachCorrectControlWithMumbleTooLate);
-%COOKIE = qw(key UnitTestPlayground event UnitTestingEvent course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();
 $GET{"mumble"} = encode_base64("203,$competitor_id," . (time() - 300));
 

@@ -10,13 +10,15 @@ echo get_web_page_header(true, false, false);
 // echo 'Current PHP version: ' . phpversion();
 // phpinfo();
 
-function is_event($filename) {
-  return (is_dir($filename) && (substr($filename, -5) == "Event"));
+function is_event_open($filename) {
+  global $base_path;
+  return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
 }
 
-function name_to_link($pathname) {
-  $final_element = basename($pathname);
-  return ("<li><a href=./finish_event.php?event=${final_element}>${final_element}</a>\n");
+function name_to_link($event_id) {
+  global $base_path, $key;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li><a href=./finish_event.php?event=${event_id}&key={$key}>${$event_fullname}</a>\n");
 }
 
 echo "<p>\n";
@@ -28,21 +30,33 @@ if (!key_is_valid($key)) {
   error_and_exit("Unknown management key \"$key\", are you using an authorized link?\n");
 }
 
+$base_path = get_base_path($key, "..");
+
 if (strcmp($event_name, "") == 0) {
-  $event_list = scandir(get_base_path($key, ".."));
-  $event_list = array_filter($event_list, is_event);
+  $event_list = scandir($base_path);
+  $event_list = array_filter($event_list, is_event_open);
   $event_output_array = array_map(name_to_link, $event_list);
-  echo "<p>Choose your event:<p>\n<ul>\n" . implode("\n", $event_output_array) . "</ul>";
-}
-else {
-  if (substr($event_name, -5) == ".done") {
-    echo "<p>Event {$event_name} already completed.";
+  if (count($event_output_array) > 0) {
+    echo "<p>Choose your event:<p>\n<ul>\n" . implode("\n", $event_output_array) . "</ul>";
   }
   else {
-    $event_path = get_event_path($event_name, $key, "..");
-
-    rename("{$event_path}", "{$event_path}.done");
-    echo "<p>Event {$event_name} completed.";
+    echo "<p>No unfinished events found.\n";
+  }
+}
+else {
+  $event_path = get_event_path($event_name, $key, "..");
+  if (!is_dir($event_path) || !file_exists("{$event_path}/description")) {
+    echo "<p>Bad event key specified \"{$event_name}\", please retry.\n";
+  }
+  else {
+    $event_fullname = file_get_contents("{$event_path}/description");
+    if (file_exists("{$event_path}/done")) {
+      echo "<p>Event {$event_fullname} already completed.";
+    }
+    else {
+      file_put_contents("{$event_path}/done", "");
+      echo "<p>Event {$event_fullname} completed.";
+    }
   }
 }
 

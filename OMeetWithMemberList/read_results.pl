@@ -56,6 +56,7 @@ sub get_timestamp {
 #89898989;-:-:--:--:--;-:-:--:--:--;-:-:19:34:14;-:-:19:34:43;101;-:-:19:34:23;102;-:-:19:34:36;103;-:-:19:34:38;104;-:-:19:34:40;105;-:-:19:34:41;
 
 my($event) = "";
+my($event_key) = "";
 my($url) = "http://www.mkoconnell.com/OMeetRegistrationTest/";
 my($VIEW_RESULTS) = "view_results.php";
 my($FINISH_COURSE) = "finish_course.php";
@@ -65,27 +66,31 @@ while ($ARGV[0] =~ /^-/) {
     $event = $ARGV[1];
     shift; shift;
   }
+  elsif ($ARGV[0] eq "-k") {
+    $event_key = $ARGV[1];
+    shift; shift;
+  }
   elsif ($ARGV[0] eq "-u") {
     $url = $ARGV[1];
     shift; shift;
   }
   else {
-    print "Usage: $0 -e <eventName>\n";
+    print "Usage: $0 -e <eventName> -k <eventKey> [ -u <url> ]\n";
     exit 1;
   }
 }
 
-if ($event eq "") {
-  print "Usage: $0 -e <eventName>\n\t-e option required.\n";
+if (($event eq "")  || ($event_key eq "")) {
+  print "Usage: $0 -e <eventName> -k <eventKey> [ -u <url> ]\n\t-e and -k options required.\n";
   exit 1;
 }
 
 # Ensure that the event specified is valid
-my($cmd) = "curl -s $url/$VIEW_RESULTS?event=$event";
+my($cmd) = "curl -s $url/$VIEW_RESULTS?event=$event\\\&key=$event_key";
 my($output);
 $output = qx($cmd);
 if ($output =~ /No such event found $event/) {
-  print "Event $event not found, please check if valid.\n";
+  print "Event $event not found, please check if event $event and key $event_key are valid.\n";
   exit 1;
 }
 #print $output;
@@ -118,7 +123,7 @@ while (1) {
     my($web_site_string) = encode_base64($qr_result_string);
     $web_site_string =~ s/\n//g;
     $web_site_string =~ s/=/%3D/g;
-    $cmd = "curl -s $url/$FINISH_COURSE?event=$event\\\&si_stick_finish=$web_site_string";
+    $cmd = "curl -s $url/$FINISH_COURSE?event=$event\\\&key=$event_key\\\&si_stick_finish=$web_site_string";
     $output = qx($cmd);
     #print "$cmd\n";
     #print $output;
