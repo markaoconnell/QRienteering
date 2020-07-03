@@ -40,7 +40,7 @@ success();
 %TEST_INFO = qw(Testname TestSuccessStart);
 %COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
-$COOKIE{"event} = $event_id;
+$COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
@@ -53,7 +53,7 @@ success();
 # Validate that the correct entry is created
 %TEST_INFO = qw(Testname FindAllValidControls);
 %COOKIE = qw(key UnitTestPlayground course 00-White);
-$COOKIE{"event} = $event_id;
+$COOKIE{"event"} = $event_id;
 $COOKIE{"competitor_id"} = $competitor_id;
 
 $GET{"control"} = "201";
@@ -80,7 +80,7 @@ success();
 %TEST_INFO = qw(Testname TestFinishSuccessWhite);
 %COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
-$COOKIE{"event} = $event_id;
+$COOKIE{"event"} = $event_id;
 %GET = (); # empty hash
 
 finish_successfully(\%GET, \%COOKIE, \%TEST_INFO);
