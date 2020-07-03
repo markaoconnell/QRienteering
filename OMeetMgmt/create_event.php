@@ -286,10 +286,21 @@ if (isset($_POST["submit"])) {
         }
       }
 
-      echo "<p>Created event successfully {$event_fullname} with " . count($course_array) . " courses:\n\t" . implode("\n\t", $course_names_array) . "\n";
-      $registration_link = realpath(dirname($_SERVER["REQUEST_URI"]) . "../OMeetRegistration/register.php") . "?key={$key}";
-      echo "<p>Paths to register are:<p><ul><li>Event specific registration: {$registration_link}?event=${event_name}</li>\n";
-      echo "<li>General registration: {$registration_link}<li></ul><p>/n";
+      echo "<p>Created event successfully {$event_fullname} with " . count($course_array) . " courses:<ul><li>" . implode("<li>", $course_names_array) . "</ul>\n";
+      if (isset($_SERVER["HTTPS"])) {
+        $proto = "https://";
+      }
+      else {
+        $proto = "http://";
+      }
+      $registration_link = $proto . $_SERVER["SERVER_NAME"] . dirname(dirname($_SERVER["REQUEST_URI"])) . "/OMeetRegistration/register.php" . "?key={$key}";
+      //echo "<p>Server URI is: " . $_SERVER["REQUEST_URI"] . "\n";
+      //echo "<p>Server URI dirname is: " . dirname($_SERVER["REQUEST_URI"]) . "\n";
+      //echo "<p>Server URI dirname and rel path is: " . dirname($_SERVER["REQUEST_URI"]) . "/../OMeetRegistration/register.php" . "\n";
+      //echo "<p>Service URI after realpath is " . dirname(dirname($_SERVER["REQUEST_URI"])) . "/OMeetRegistration/register.php" . "\n";
+      //echo "<p>Server name is " . $_SERVER["SERVER_NAME"] . "\n";
+      echo "<p>Paths to register are:<p><ul><li>Event specific registration: {$registration_link}&event=${event_name}</li>\n";
+      echo "<li>General registration: {$registration_link}</li></ul><p>\n";
       $event_created = true;
     }
   }
@@ -302,6 +313,12 @@ if (isset($_POST["submit"])) {
     echo "<p>Errors found, course not created.\n";
   }
 }
+else {
+  $key = $_GET["key"];
+  if (!key_is_valid($key)) {
+    error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
+  }
+}
 
 if (!$event_created && !$found_error) {
 ?>
@@ -309,9 +326,10 @@ if (!$event_created && !$found_error) {
 <form action=./create_event.php method=post enctype="multipart/form-data" >
 <p class="title">What is the name of the event?<br>
 <p>
-<input name=event_name type=text>
+<input name=event_name type=text size=80>
 <br><br><br><p><p>
 <input type="hidden" name="MAX_FILE_SIZE" value="4096" />
+<input type="hidden" name="key" value="<?php echo $key ?>" />
 <p class="title">Enter a filename with the course/control details for the event:
 <input name=upload_file type=file>
 <p><p>

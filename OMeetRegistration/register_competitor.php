@@ -67,6 +67,8 @@ if (!$error) {
   else {
     $body_string .= "<p>Registration complete: " . $competitor_name . " on " . ltrim($course, "0..9-");
 
+    $cookie_path = dirname(dirname($_SERVER["REQUEST_URI"]));
+
     // Save the information about the competitor
     fwrite($competitor_file, $competitor_name);
     fclose($competitor_file);
@@ -83,17 +85,17 @@ if (!$error) {
 
       if ($registration_info["is_member"] == "yes") {
         // Two month timeout for the cookie about the member's name, should generally be sufficient
-        setcookie("member_first_name", $registration_info["first_name"], $current_time + 86400 * 60);
-        setcookie("member_last_name", $registration_info["last_name"], $current_time + 86400 * 60);
+        setcookie("member_first_name", $registration_info["first_name"], $current_time + 86400 * 60, $cookie_path);
+        setcookie("member_last_name", $registration_info["last_name"], $current_time + 86400 * 60, $cookie_path);
       }
     }
     
     // Set the cookies with the name, course, next control
     $timeout_value = $current_time + 3600 * 6;  // 6 hour timeout, should be fine for most any course
-    setcookie("competitor_id", $competitor_id, $timeout_value);
-    setcookie("course", $course, $timeout_value);
-    setcookie("event", $_GET["event"], $timeout_value);
-    setcookie("key", $key, $timeout_value);
+    setcookie("competitor_id", $competitor_id, $timeout_value, $cookie_path);
+    setcookie("course", $course, $timeout_value, $cookie_path);
+    setcookie("event", $_GET["event"], $timeout_value, $cookie_path);
+    setcookie("key", $key, $timeout_value, $cookie_path);
   }
 }
 

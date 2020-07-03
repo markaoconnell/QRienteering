@@ -18,7 +18,7 @@ function is_event_open($filename) {
 function name_to_link($event_id) {
   global $base_path, $key;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
-  return ("<li><a href=./finish_event.php?event=${event_id}&key={$key}>${$event_fullname}</a>\n");
+  return ("<li><a href=./finish_event.php?event=${event_id}&key={$key}>{$event_fullname}</a>\n");
 }
 
 echo "<p>\n";

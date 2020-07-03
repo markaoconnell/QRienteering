@@ -21,7 +21,7 @@ function name_to_link($event_id) {
 
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
 
-  if ($registration_info_supplied) {
+  if (!$registration_info_supplied) {
     return ("<li><a href=./register.php?event={$event_id}&key={$key}>{$event_fullname}</a>\n");
   }
   else {
@@ -70,12 +70,16 @@ if (strcmp($event, "") == 0) {
   }
 }
 
+if (file_exists("{$base_path}/{$event}/done")) {
+  error_and_exit("Event " . file_get_contents("{$base_path}/{$event}/description") . " has completed and registrations are no longer possible.\n");
+}
+
 $courses_array = scandir(get_courses_path($event, $key, ".."));
 $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
 // print_r($courses_array);
 echo "<p>\n";
 
-echo "<p>Registration for orienteering event: ${event}\n<br>";
+echo "<p>Registration for orienteering event: " . file_get_contents("{$base_path}/{$event}/description") . "\n<br>";
 echo "<form action=\"./register_competitor.php\">\n";
 
 if ($registration_info_supplied) {
