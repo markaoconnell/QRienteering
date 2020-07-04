@@ -108,7 +108,8 @@ function validate_and_save_results($event, $key, $competitor, $si_stick, $start_
 
     if ($control_is_valid) {
       // Save the control in the expected format
-      file_put_contents("{$competitor_path}/controls_found/{$control_pieces[1]},{$control_pieces[0]}", "");
+      $time_6_digits = sprintf("%06d", $control_pieces[1]);
+      file_put_contents("{$competitor_path}/controls_found/{$time_6_digits},{$control_pieces[0]}", "");
     }
     else {
       $extra_controls_string .= "{$control_pieces[1]},{$control_pieces[0]}\n";

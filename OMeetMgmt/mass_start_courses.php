@@ -48,7 +48,8 @@ if (($event != "") && file_exists($event_path) && is_dir($courses_path)) {
           file_put_contents("{$competitor_path}/{$competitor}/controls_found/start", $mass_start_time);
         }
         else {
-          file_put_contents("{$competitor_path}/{$competitor}/controls_found/mass_si_stick_start", $si_stick_start_time);
+          file_put_contents("{$competitor_path}/{$competitor}/mass_si_stick_start", $si_stick_start_time);
+          file_put_contents("{$competitor_path}/{$competitor}/raw_mass_start_time", strftime("%T", $mass_start_time));
         }
         $started_array[] = "{$competitor_name} on " . ltrim($course_for_competitor, "0..9-");
       }

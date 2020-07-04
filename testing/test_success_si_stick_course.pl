@@ -67,11 +67,11 @@ $GET{"si_stick_finish"} = $base_64_results;
 
 finish_with_stick_successfully($competitor_id, "00-White", \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/210,201");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/300,202");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/440,203");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/600,204");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/700,205");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000210,201");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000300,202");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000440,203");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000600,204");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000700,205");
 
 success();
 
@@ -103,8 +103,8 @@ $GET{"si_stick_finish"} = $base_64_results;
 finish_with_stick_dnf($competitor_id, "00-White", \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
 validate_file_present("${path}/Competitors/${competitor_id}/dnf");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/510,201");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/1200,202");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000510,201");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001200,202");
 
 success();
 
@@ -135,11 +135,11 @@ $GET{"si_stick_finish"} = $base_64_results;
 finish_with_stick_successfully($competitor_id, "01-Yellow", \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
 validate_file_present("${path}/Competitors/${competitor_id}/extra");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/910,202");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/1030,204");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/1200,206");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/1269,208");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/1403,210");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000910,202");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001030,204");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001200,206");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001269,208");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001403,210");
 
 success();
 
@@ -172,11 +172,11 @@ $GET{"si_stick_finish"} = $base_64_results;
 
 finish_scoreO_with_stick_successfully($competitor_id, "02-ScoreO", 120 - 11, \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/1734,304");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/1812,302");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/1919,304");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/2112,301");
-validate_file_present("${path}/Competitors/${competitor_id}/controls_found/2332,305");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001734,304");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001812,302");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001919,304");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/002112,301");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/002332,305");
 
 success();
 

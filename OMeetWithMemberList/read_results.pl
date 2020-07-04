@@ -50,7 +50,7 @@ sub get_timestamp {
 
 #  print "Converted ${or_time} to ${timestamp}.\n";
 
-  return($timestamp);
+  return(sprintf("%06d", $timestamp));
 }
 
 #89898989;-:-:--:--:--;-:-:--:--:--;-:-:19:34:14;-:-:19:34:43;101;-:-:19:34:23;102;-:-:19:34:36;103;-:-:19:34:38;104;-:-:19:34:40;105;-:-:19:34:41;
