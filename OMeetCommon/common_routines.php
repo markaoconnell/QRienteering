@@ -39,6 +39,20 @@ function time_limit_to_seconds($time_limit_entry) {
   }
 
   $remaining_time = trim($time_limit_entry);
+  if (preg_match('/^[0-9]+M/', $remaining_time)) {
+    $month_location = strpos($remaining_time, "M");
+    $limit_in_seconds += substr($remaining_time, 0, $month_location) * 86400 * 30;
+    $remaining_time = substr($remaining_time, $month_location + 1);
+  }
+
+  $remaining_time = trim($remaining_time);
+  if (preg_match('/^[0-9]+d/', $remaining_time)) {
+    $d_location = strpos($remaining_time, "d");
+    $limit_in_seconds += substr($remaining_time, 0, $d_location) * 86400;
+    $remaining_time = substr($remaining_time, $d_location + 1);
+  }
+
+  $remaining_time = trim($remaining_time);
   if (preg_match('/^[0-9]+h/', $remaining_time)) {
     $h_location = strpos($remaining_time, "h");
     $limit_in_seconds += substr($remaining_time, 0, $h_location) * 3600;

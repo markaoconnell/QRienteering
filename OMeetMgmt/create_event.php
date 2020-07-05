@@ -318,6 +318,10 @@ else {
   if (!key_is_valid($key)) {
     error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
   }
+
+  if (!is_dir(get_base_path($key, ".."))) {
+    error_and_exit("No event directory found, please contact administrator to create \"{$base_path}\"");
+  }
 }
 
 if (!$event_created && !$found_error) {

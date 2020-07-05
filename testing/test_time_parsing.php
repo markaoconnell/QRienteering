@@ -23,7 +23,14 @@ $test_cases = array(
   "24h 12m 30s  " => 87150,
   "1h 10s and no more" => -1,
   "1h1rm" => -1,
-  "five hours" => -1
+  "five hours" => -1,
+  "1d" => 86400,
+  "3d" => 259200,
+  "1M" => 2592000,
+  "2M" => 5184000,
+  "1M14d" => 3801600,
+  "1d12h" => 129600,
+  "36h" => 129600
 );
 
 $failure = false;
@@ -31,7 +38,7 @@ $failure = false;
 foreach (array_keys($test_cases) as $test_key) {
   $result = time_limit_to_seconds($test_key);
   if ($result != $test_cases[$test_key]) {
-    echo "ERROR: Wrong results for {$test_key}, did not product {$test_cases[$test_key]}, got $result instead.\n";
+    echo "ERROR: Wrong results for {$test_key}, did not produce {$test_cases[$test_key]}, got $result instead.\n";
     $failure = true;
   }
 }
