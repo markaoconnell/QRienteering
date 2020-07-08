@@ -57,12 +57,13 @@ if (!key_is_valid($key)) {
 $base_path = get_base_path($key, "..");
 if (file_exists("{$base_path}/waiver_link")) {
   $waiver_link = file_get_contents("{$base_path}/waiver_link");
-  echo "<p><input type=checkbox name=\"waiver_signed\" value=\"signed\">I have read and agreed to <a href=\"{$waiver_link}\">the waiver</a><br>\n";
+  echo "<p><input type=checkbox name=\"waiver_signed\" value=\"signed\">  I have read and agreed to <a href=\"{$waiver_link}\">the waiver</a><br>\n";
 }
 else {
-  echo "<p><input type=checkbox name=\"waiver_signed\" value=\"signed\">I am participating of my own accord and hold the organizers harmless for any injury sustained.<br>\n";
+  echo "<p><input type=checkbox name=\"waiver_signed\" value=\"signed\">  I am participating of my own accord and hold the organizers harmless for any injury sustained.<br>\n";
 }
 ?>
+<br><br>
 <input type="submit" value="Submit">
 </form>
 
