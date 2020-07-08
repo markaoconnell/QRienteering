@@ -53,6 +53,16 @@ if (!key_is_valid($key)) {
 <br><p>What car make/model did you come in (so we can see if you've left)?<br>
 <input type="text" name="car_info"><br>
 <input type="hidden" name="key" <?php echo "value=\"{$key}\""; ?> >
+<?php
+$base_path = get_base_path($key, "..");
+if (file_exists("{$base_path}/waiver_link")) {
+  $waiver_link = file_get_contents("{$base_path}/waiver_link");
+  echo "<p><input type=checkbox name=\"waiver_signed\" value=\"signed\">I have read and agreed to <a href=\"{$waiver_link}\">the waiver</a><br>\n";
+}
+else {
+  echo "<p><input type=checkbox name=\"waiver_signed\" value=\"signed\">I am participating of my own accord and hold the organizers harmless for any injury sustained.<br>\n";
+}
+?>
 <input type="submit" value="Submit">
 </form>
 

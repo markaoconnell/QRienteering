@@ -12,6 +12,7 @@ $email_address = $_GET["email"];
 $cell_phone = $_GET["cell_number"];
 $car_info = $_GET["car_info"];
 $key = $_GET["key"];
+$waiver_signed = $_GET["waiver_signed"];
 
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
@@ -30,6 +31,10 @@ if ($si_stick != "") {
   if (!preg_match("/^[0-9]+$/", $si_stick)) {
     error_and_exit("Invalid si_stick \"{$si_stick}\", only numbers allowed.  Please go back and re-enter.\n");
   }
+}
+
+if ($waiver_signed != "signed") {
+  error_and_exit("The waiver must be acknowledged in order to participate in this event.\n");
 }
 
 $success_string = "";
