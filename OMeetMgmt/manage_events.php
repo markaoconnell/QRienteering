@@ -24,8 +24,9 @@ function name_to_registration_link($event_id) {
 function name_to_results_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
-  return ("<li><a href={$base_path_for_links}/OMeet/view_results.php?event=${event_id}&key={$key}>{$event_fullname}</a>" . 
-          "<ul><li><a href={$base_path_for_links}/OMeet/on_course.php?event=${event_id}&key={$key}>still on course</a></ul>\n");
+  return ("<li><a href={$base_path_for_links}/OMeet/view_results.php?event={$event_id}&key={$key}>{$event_fullname}</a>" . 
+          "<ul><li><a href={$base_path_for_links}/OMeet/on_course.php?event={$event_id}&key={$key}>still on course</a>" . 
+              "<li><a href={$base_path_for_links}/OMeetWithMemberList/competitor_info.php?event={$event_id}&key={$key}>Meet Director view of competitors</a></ul>\n");
 }
 
 $key = $_GET["key"];
