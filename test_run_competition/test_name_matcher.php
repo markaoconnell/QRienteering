@@ -118,16 +118,16 @@ $si_hash = $matching_info["si_hash"];
 $nicknames_hash = $matching_info["nicknames_hash"];
 
 // Test a few known entries to make sure that things parsed correctly
-if (!isset($full_name_hash["Lydia OConnell"])) {
+if (!isset($full_name_hash[strtolower("Lydia OConnell")])) {
   error_and_exit("Missing name Lydia OConnell");
 }
-if (!isset($full_name_hash["Mark OConnell"])) {
+if (!isset($full_name_hash[strtolower("Mark OConnell")])) {
   error_and_exit("Missing name Mark OConnell");
 }
-if (!isset($last_name_hash["OConnell"])) {
+if (!isset($last_name_hash[strtolower("OConnell")])) {
   error_and_exit("Missing last name OConnell");
 }
-if (!isset($last_name_hash["Yeowell"])) {
+if (!isset($last_name_hash[strtolower("Yeowell")])) {
   error_and_exit("Missing last name Yeowell");;
 }
 if (!isset($si_hash["2108369"])) {
@@ -136,7 +136,7 @@ if (!isset($si_hash["2108369"])) {
 if (!isset($si_hash["3959473"])) {
   error_and_exit("Missing si stick 3959473");;
 }
-if (!isset($nicknames_hash["Chris"])) {
+if (!isset($nicknames_hash[strtolower("Chris")])) {
   error_and_exit("Missing nickname Chris");;
 }
 if (!isset($members_hash["41"])) {
@@ -145,20 +145,31 @@ if (!isset($members_hash["41"])) {
 if (isset($last_name_hash["no_one_has_this_last_name"])) {
   error_and_exit("Too many last names, no_one_has_this_last_name");
 }
-if (isset($last_name_hash["OConnelly"])) {
+if (isset($last_name_hash[strtolower("OConnelly")])) {
   error_and_exit("Too man last names, OConnelly");
 }
-if (isset($full_name_hash["Marcus OConnell"])) {
+if (isset($full_name_hash[strtolower("Marcus OConnell")])) {
   error_and_exit("Too many names, Marcus OConnell");
+}
+// Validate that the names from the member file are available as originally entered
+if (($members_hash["41"]["first"] != "Larry") || ($members_hash["41"]["last"] != "Berrill")) {
+  error_and_exit("Member 41 is not Larry Berrill, is " . $members_hash["41"]["first"] . " " . $members_hash["41"]["last"]);
+}
+if (($members_hash["262"]["first"] != "Xavier") || ($members_hash["262"]["last"] != "Fradera")) {
+  error_and_exit("Member 262 is not Xavier Fradera, is " . $members_hash["262"]["first"] . " " . $members_hash["262"]["last"]);
 }
 
 
 check_name_match ($matching_info, "Mark", "OConnell", array(32));
 check_name_match ($matching_info, "Mark", "O'Connell", array(32));
+// Name matching should be case insensitive, check that
+check_name_match ($matching_info, "mark", "oconnell", array(32));
+check_name_match ($matching_info, "mark", "o'connell", array(32));
 check_name_match ($matching_info, "Marc", "OConnell", array(232,32));
 check_name_match ($matching_info, "Mary", "OConnell", array(232));
 check_name_match ($matching_info, "Martha", "OConnell", array());
 check_name_match ($matching_info, "Mart", "OConnell", array(32, 232));
+check_name_match ($matching_info, "MART", "OCONNELL", array(32, 232));
 check_name_match ($matching_info, "Robert", "OConnell", array());
 check_name_match ($matching_info, "Lawrence", "Berrill", array(41));
 check_name_match ($matching_info, "Larry", "Berrill", array(41));

@@ -28,13 +28,14 @@ function read_names_info($member_file, $nicknames_file) {
       }
 
       // Weed out duplicate names - assume someone accidentally joined twice
-      if (!isset($full_name_hash["{$pieces[1]} {$pieces[2]}"])) {
+      $lower_case_full_name = strtolower("{$pieces[1]} {$pieces[2]}");
+      if (!isset($full_name_hash[$lower_case_full_name])) {
         $member_hash[$pieces[0]] = array("first" => $pieces[1],
                                          "last" => $pieces[2],
                                          "full_name" => "{$pieces[1]} {$pieces[2]}",
                                          "si_stick"=> $pieces[3]);
-        $last_name_hash[$pieces[2]][] = $pieces[0]; 
-        $full_name_hash["{$pieces[1]} {$pieces[2]}"] = $pieces[0];
+        $last_name_hash[strtolower($pieces[2])][] = $pieces[0]; 
+        $full_name_hash[$lower_case_full_name] = $pieces[0];
       }
     }
   }
@@ -42,7 +43,7 @@ function read_names_info($member_file, $nicknames_file) {
   if (file_exists($nicknames_file)) {
     $nickname_list = file($nicknames_file, FILE_IGNORE_NEW_LINES);
     foreach ($nickname_list as $equivalent_names_csv) {
-      $pieces = explode(";", $equivalent_names_csv);
+      $pieces = explode(";", strtolower($equivalent_names_csv));
       $pieces = array_filter($pieces, function ($elt) { return (trim($elt) != ""); } );
       foreach ($pieces as $name_in_list) {
         $nicknames_hash[$name_in_list] = $pieces;
@@ -103,6 +104,9 @@ function find_best_name_match ($matching_info, $first_name, $last_name) {
   $full_name_hash = $matching_info["full_name_hash"];
   $nicknames_hash = $matching_info["nicknames_hash"];
 
+  $first_name = strtolower($first_name);
+  $last_name = strtolower($last_name);
+
   // Try the easy case - the name simply exists in the list
   $full_name = "{$first_name} {$last_name}";
   if (isset($full_name_hash[$full_name])) {
@@ -139,7 +143,7 @@ function find_best_name_match ($matching_info, $first_name, $last_name) {
   foreach ($last_name_matches as $possible_last_name) {
     //echo "Looking at members " . implode (",", $last_name_hash[$possible_last_name]) . " for nicknames\n";
     foreach ($last_name_hash[$possible_last_name] as $possible_member_id) {
-      $possible_member_first_name = $member_hash[$possible_member_id]["first"];
+      $possible_member_first_name = strtolower($member_hash[$possible_member_id]["first"]);
       if (isset($nicknames_hash[$possible_member_first_name])) {
         // Multiple nicknames are possible, remember them all
         $nicknames_to_check = $nicknames_hash[$possible_member_first_name];
