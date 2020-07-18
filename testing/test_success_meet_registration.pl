@@ -27,7 +27,7 @@ set_no_redirects_for_event($event_id, "UnitTestPlayground");
 %TEST_INFO = qw(Testname TestSuccessRegistrationMemberWithStick);
 %GET = qw(key UnitTestPlayground course 00-White);
 $GET{"event"} = $event_id;
-%REGISTRATION_INFO = qw(club_name NEOC si_stick 2108369 email_address mark@mkoconnell.com cell_phone 5086148225 car_info ChevyBoltEV3470MA is_member yes);
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 2108369 email_address mark:@mkoconnell.com cell_phone 5086148225 car_info ChevyBoltEV3470MA is_member yes);
 $REGISTRATION_INFO{"first_name"} = $COMPETITOR_FIRST_NAME;
 $REGISTRATION_INFO{"last_name"} = $COMPETITOR_LAST_NAME;
 $GET{"competitor_name"} = $COMPETITOR_NAME;

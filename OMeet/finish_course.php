@@ -172,12 +172,15 @@ if ($error_string != "") {
   echo "<p>ERROR: ${error_string}\n";
 }
 
+$dnf_string = "";
 if (file_exists("${competitor_path}/dnf")) {
   echo "<p>ERROR: DNF status.\n";
+  $dnf_string = " - DNF";
 }
 
 $competitor_name = file_get_contents("{$competitor_path}/name");
-echo "<p class=\"title\">Name: {$competitor_name}, Course complete, time taken " . formatted_time($time_taken) . "<p><p>";
+$readable_course_name = ltrim($course, "0..9-");
+echo "<p class=\"title\">Results for: {$competitor_name}, course complete ({$readable_course_name}{$dnf_string}), time taken " . formatted_time($time_taken) . "<p><p>";
 if ($score_course && ($score_penalty_msg != "")) {
   echo $score_penalty_msg;
 }
@@ -186,6 +189,41 @@ echo show_results($event, $key, $course, $score_course, $max_score, "..");
 echo get_all_course_result_links($event, $key, "..");
 
 // echo "<p>Course started at ${course_started_at}, course finished at ${now}, difference is ${time_taken}.\n";
+
+if (file_exists("{$competitor_path}/registration_info")) {
+  $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
+  if ($registration_info["email_address"] != "") {
+    // See if this looks like a valid email
+    $email_addr = $registration_info["email_address"];
+    if (preg_match("/^[a-zA-z0-9_.\-]+@[a-zA-Z0-9_.\-]+/", $email_addr)) {
+      $headers = array();
+      $headers[] = "From: markandkaren@mkoconnell.com";
+      $headers[] = "Reply-To: markandkaren@mkoconnell.com";
+      $headers[] = "MIME-Version: 1.0";
+      $headers[] = "Content-type: text/html; charset=iso-8859-1";
+
+      $header_string = implode("\r\n", $headers);
+
+      $course_description = file_get_contents(get_event_path($event, $key, "..") . "/description");
+      $body_string = "<html><body>\r\n" .
+                     "<p>Orienteering results for\r\n{$course_description}\r\n" .
+                     wordwrap(get_email_course_result_links($event, $key, ".."), 70, "\r\n") . "\r\n</body></html>";
+      
+      //echo "<p>Mail: Attempting mail send to {$email_addr} with results.\n";
+      $email_send_result = mail($email_addr, "Orienteering Results", $body_string, $header_string);
+
+      if ($email_send_result) {
+        echo "<p>Mail: Sent results to {$email_addr}.\n";
+      }
+      else {
+        echo "<p>Mail: Failed when sending results to {$email_addr}\n";
+      }
+    }
+    else {
+      echo "<p>Mail: {$email_addr} looks fake, no result email attempted.\n";
+    }
+  }
+}
 
 echo get_web_page_footer();
 ?>

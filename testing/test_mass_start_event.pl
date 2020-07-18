@@ -236,19 +236,19 @@ $competitor_5_id = register_one_entrant($COMPETITOR_5, "02-ScoreO");
 $competitor_6_id = register_one_entrant($COMPETITOR_6, "02-ScoreO");
 
 # Also register three people using si sticks
-%REGISTRATION_INFO = qw(club_name NEOC si_stick 2108369 email_address mark@mkoconnell.com cell_phone 5086148225 car_info ToyotaCorolla is_member yes);
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 2108369 email_address mark:@mkoconnell.com cell_phone 5086148225 car_info ToyotaCorolla is_member yes);
 $REGISTRATION_INFO{"first_name"} = $SI_COMPETITOR_1_FIRST_NAME;
 $REGISTRATION_INFO{"last_name"} = $SI_COMPETITOR_1_LAST_NAME;
 $si_competitor_1_id = register_si_entrant(\%REGISTRATION_INFO, "00-White");
 
 
-%REGISTRATION_INFO = qw(club_name DVOA si_stick 314159 email_address hermione@mkoconnell.com cell_phone 5083959473 car_info ToyotaCorolla is_member yes);
+%REGISTRATION_INFO = qw(club_name DVOA si_stick 314159 email_address hermione:@mkoconnell.com cell_phone 5083959473 car_info ToyotaCorolla is_member yes);
 $REGISTRATION_INFO{"first_name"} = $SI_COMPETITOR_2_FIRST_NAME;
 $REGISTRATION_INFO{"last_name"} = $SI_COMPETITOR_2_LAST_NAME;
 $si_competitor_2_id = register_si_entrant(\%REGISTRATION_INFO, "01-Yellow");
 
 
-%REGISTRATION_INFO = qw(club_name QOC si_stick 141421 email_address ginny@mkoconnell.com cell_phone 5083291200 car_info FlyingCar is_member yes);
+%REGISTRATION_INFO = qw(club_name QOC si_stick 141421 email_address ginny:@mkoconnell.com cell_phone 5083291200 car_info FlyingCar is_member yes);
 $REGISTRATION_INFO{"first_name"} = $SI_COMPETITOR_3_FIRST_NAME;
 $REGISTRATION_INFO{"last_name"} = $SI_COMPETITOR_3_LAST_NAME;
 $si_competitor_3_id = register_si_entrant(\%REGISTRATION_INFO, "02-ScoreO");

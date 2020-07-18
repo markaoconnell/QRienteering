@@ -44,7 +44,7 @@ foreach (array_keys($test_cases) as $test_key) {
 }
 
 if ($failure) {
-  mkdir("UnitTestingEvent");
+  mkdir("../OMeetData/TestingDirectory");
 }
 else {
   echo "Test time parsing passed successfully\n";

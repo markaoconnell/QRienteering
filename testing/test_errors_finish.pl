@@ -176,7 +176,7 @@ $COOKIE{"event"} = $event_id;
 $output = finish_with_dnf(\%GET, \%COOKIE, \%TEST_INFO);
 
 
-if (($output !~ /Course complete, time taken/) || ($output !~ /Results on White/) ||
+if (($output !~ /course complete.*DNF.*, time taken/) || ($output !~ /Results on White/) ||
     ($output !~ /$COMPETITOR_NAME/) || ($output !~ /DNF/) || ($output !~ /Second scan of finish/)) {
   error_and_exit("Web page output wrong, no second finish scan message found.\n$output");
 }
@@ -275,7 +275,7 @@ $COOKIE{"event"} = $event_id;
 $output = finish_score_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 
-if (($output !~ /Course complete, time taken/) || ($output !~ /Results on ScoreO/) ||
+if (($output !~ /course complete.*, time taken/) || ($output !~ /Results on ScoreO/) ||
     ($output !~ /$COMPETITOR_NAME_2/) || ($output =~ /DNF/) || ($output !~ /Second scan of finish/)) {
   error_and_exit("Web page output wrong, no second finish scan message found.\n$output");
 }

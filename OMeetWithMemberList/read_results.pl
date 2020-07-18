@@ -128,15 +128,12 @@ while (1) {
     #print "$cmd\n";
     #print $output;
 
-    if ($output =~ /(Name:.*), Course complete, (time taken .*)<p>/) {
-      print "$1 $2\n";
+    if ($output =~ /(Results for:.*)<p>/) {
+      print "$1\n";
     }
 
-    if ($output =~ /ERROR: DNF/) {
-      print "DNF\n";
-    }
-    elsif ($output =~ /(ERROR.*)/) {
-      print "Error found: $1\n";
+    if ($output =~ /(Second scan.*)/) {
+      print "$1\n";
     }
 
     $results_by_stick{$key} = $new_results_by_stick{$key};

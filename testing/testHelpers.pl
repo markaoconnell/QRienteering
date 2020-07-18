@@ -117,7 +117,7 @@ sub get_base_path {
 sub initialize_event {
   # Make the event for testing purposes
   %{$post_ref} = qw(submit true event_name UnitTesting key UnitTestPlayground
-                    course_description White,201,202,203,204,205--newline--Yellow,202,204,206,208,210--newline--s:ScoreO:300:1,301:10,302:20,303:30,304:40,305:50);
+                    course_description White,201,202,203,204,205--newline--Yellow,202,204,206,208,210--newline--s:ScoreO:300:1,301:10,302:20,303:30,304:40,305:50--newline--Butterfly,401,402,403,401,404,405,401,406,407);
 #  mkdir("UnitTestingEvent");
 #  mkdir("UnitTestingEvent/Competitors");
 #  mkdir("UnitTestingEvent/Results");

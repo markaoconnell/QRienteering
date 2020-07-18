@@ -327,7 +327,7 @@ sub finish_successfully {
   my($readable_course_name) = $course;
   $readable_course_name =~ s/^[0-9]+-//;
 
-  if (($output =~ /ERROR: DNF status/) || ($output !~ /Course complete, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
+  if (($output =~ /ERROR: DNF status/) || ($output !~ /course complete.*, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
   }
   
@@ -387,11 +387,15 @@ sub finish_with_stick_successfully {
   my($readable_course_name) = $course;
   $readable_course_name =~ s/^[0-9]+-//;
 
-  if (($output =~ /ERROR: DNF status/) || ($output !~ /Course complete, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
+  if (($output =~ /ERROR: DNF status/) || ($output !~ /course complete.*, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
   }
   
   #print $output;
+
+  if ($output =~ /(Mail:.*)/) {
+    print "Found $1\n";
+  }
   
   $path = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Competitors/$competitor_id";
   my($controls_found_path) = "$path/controls_found";
@@ -446,7 +450,7 @@ sub finish_score_successfully {
   my($readable_course_name) = $course;
   $readable_course_name =~ s/^[0-9]+-//;
 
-  if (($output =~ /ERROR: DNF status/) || ($output !~ /Course complete, time taken/) || ($output !~ /Results on ${readable_course_name}/) ||
+  if (($output =~ /ERROR: DNF status/) || ($output !~ /course complete.*, time taken/) || ($output !~ /Results on ${readable_course_name}/) ||
       ($output !~ m#<td>$expected_points</td>#)) {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
   }
@@ -507,12 +511,16 @@ sub finish_scoreO_with_stick_successfully {
   my($readable_course_name) = $course;
   $readable_course_name =~ s/^[0-9]+-//;
 
-  if (($output =~ /ERROR: DNF status/) || ($output !~ /Course complete, time taken/) || ($output !~ /Results on ${readable_course_name}/) ||
+  if (($output =~ /ERROR: DNF status/) || ($output !~ /course complete.*, time taken/) || ($output !~ /Results on ${readable_course_name}/) ||
       ($output !~ m#<td>$expected_points</td>#)) {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
   }
   
   #print $output;
+  
+  if ($output =~ /(Mail:.*)/) {
+    print "Found $1\n";
+  }
   
   $path = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Competitors/$competitor_id";
   my($controls_found_path) = "$path/controls_found";
@@ -567,7 +575,7 @@ sub finish_with_dnf {
   my($readable_course_name) = $course;
   $readable_course_name =~ s/^[0-9]+-//;
 
-  if (($output !~ /DNF/) || ($output !~ /Course complete, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
+  if (($output !~ /DNF/) || ($output !~ /course complete.*DNF.*, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
   }
   
@@ -628,11 +636,15 @@ sub finish_with_stick_dnf {
   my($readable_course_name) = $course;
   $readable_course_name =~ s/^[0-9]+-//;
 
-  if (($output !~ /DNF/) || ($output !~ /Course complete, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
+  if (($output !~ /DNF/) || ($output !~ /course complete.*DNF.*, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
   }
   
   #print $output;
+  
+  if ($output =~ /(Mail:.*)/) {
+    print "Found $1\n";
+  }
   
   $path = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Competitors/$competitor_id";
   my($controls_found_path) = "$path/controls_found";
