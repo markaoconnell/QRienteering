@@ -89,7 +89,7 @@ if (($event eq "")  || ($event_key eq "")) {
 my($cmd) = "curl -s $url/$VIEW_RESULTS?event=$event\\\&key=$event_key";
 my($output);
 $output = qx($cmd);
-if ($output =~ /No such event found $event/) {
+if (($output =~ /No such event found $event/) || ($output !~ /Show results for/) || ($output !~ /show_splits\?course/)) {
   print "Event $event not found, please check if event $event and key $event_key are valid.\n";
   exit 1;
 }
