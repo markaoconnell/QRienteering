@@ -4,7 +4,7 @@ use strict;
 use MIME::Base64;
 
 
-my(@result_files) = qw(1/results.csv 1/resultslog.csv);
+my(@result_files) = qw(30/results.csv 30/resultslog.csv);
 
 my(%results_by_stick) = qw();
 my(%new_results_by_stick) = qw();
@@ -57,9 +57,12 @@ sub get_timestamp {
 
 my($event) = "";
 my($event_key) = "";
-my($url) = "http://www.mkoconnell.com/OMeetRegistrationTest/";
+my($verbose) = 0;
+my($debug) = 0;
+my($url) = "http://www.mkoconnell.com/OMeet/";
 my($VIEW_RESULTS) = "view_results.php";
 my($FINISH_COURSE) = "finish_course.php";
+my($REGISTER_COURSE) = "register.php";
 
 while ($ARGV[0] =~ /^-/) {
   if ($ARGV[0] eq "-e") {
@@ -74,6 +77,14 @@ while ($ARGV[0] =~ /^-/) {
     $url = $ARGV[1];
     shift; shift;
   }
+  elsif ($ARGV[0] eq "-d") {
+    $debug = 1;
+    shift;
+  }
+  elsif ($ARGV[0] eq "-v") {
+    $verbose = 1;
+    shift;
+  }
   else {
     print "Usage: $0 -e <eventName> -k <eventKey> [ -u <url> ]\n";
     exit 1;
@@ -86,19 +97,29 @@ if (($event eq "")  || ($event_key eq "")) {
 }
 
 # Ensure that the event specified is valid
-my($cmd) = "curl -s $url/$VIEW_RESULTS?event=$event\\\&key=$event_key";
+my($cmd) = "curl -s \"$url/$VIEW_RESULTS?event=$event&key=$event_key\"";
+print "Running $cmd\n" if ($debug);
 my($output);
 $output = qx($cmd);
+print $output if ($debug);
 if (($output =~ /No such event found $event/) || ($output !~ /Show results for/) || ($output !~ /show_splits\?course/)) {
   print "Event $event not found, please check if event $event and key $event_key are valid.\n";
   exit 1;
 }
 #print $output;
 
+my($loop_count) = 0;
 while (1) {
+  $loop_count++;
   read_results();
 
-  print "Found new keys: " . join(",", keys(%new_results_by_stick)) . "\n";
+  if (($loop_count % 20) == 0) {
+    my($now) = qx(date);
+    chomp($now);
+
+    print "Awaiting new results at: ${now}\r";
+  }
+  print "Found new keys: " . join(",", keys(%new_results_by_stick)) . "\n" if ($verbose && scalar(keys(%new_results_by_stick) > 0));
   
   my($key);
   foreach $key (keys(%new_results_by_stick)) {
@@ -117,17 +138,22 @@ while (1) {
     }
 
     my($qr_result_string) = "${key}," . join(",", "start:${start_timestamp}","finish:${finish_timestamp}", @qr_controls);
-    print "Got results for ${key}: ${qr_result_string}\n";
+    print "Got results for ${key}: ${qr_result_string}\n" if ($verbose);
     # Base64 encode for upload to the website
     #print "$qr_result_string\n";
     my($web_site_string) = encode_base64($qr_result_string);
     $web_site_string =~ s/\n//g;
     $web_site_string =~ s/=/%3D/g;
-    $cmd = "curl -s $url/$FINISH_COURSE?event=$event\\\&key=$event_key\\\&si_stick_finish=$web_site_string";
+    $cmd = "curl -s \"$url/$FINISH_COURSE?event=$event&key=$event_key&si_stick_finish=$web_site_string\"";
+    print "Running $cmd\n" if ($debug);
     $output = qx($cmd);
     #print "$cmd\n";
-    #print $output;
+    print $output if ($debug);
 
+    if ($output =~ /(Cannot find.*)/) {
+      print "$1\n";
+    }
+  
     if ($output =~ /(Results for:.*)<p>/) {
       print "$1\n";
     }
@@ -141,5 +167,5 @@ while (1) {
 
   %new_results_by_stick = ();
 
-  sleep(10);
+  sleep(3);
 }
