@@ -42,22 +42,21 @@ else if (count($possible_member_ids) == 1) {
   $si_stick = get_si_stick($possible_member_ids[0], $matching_info);
   $success_string .= "<p>Welcome {$printable_name}.\n";
   if ($si_stick != "") {
-    $success_string .= "<p>Are you using a SI stick ({$si_stick}) today?";
     $yes_checked_by_default = "checked";
     $no_checked_by_default = "";
   }
   else {
-    $success_string .= "<p> Are you using a SI Stick today?";
     $yes_checked_by_default = "";
     $no_checked_by_default = "checked";
   }
+  $success_string .= "<p>How are you orienteering today?";
   $success_string .= <<<END_OF_FORM
 <form action="./finalize_member_registration.php">
 <input type=hidden name="member_id" value="{$possible_member_ids[0]}"/>
-<p> Yes <input type=radio name="using_stick" value="yes" {$yes_checked_by_default} /> <input type=text name="si_stick_number" value="{$si_stick}" />
-<p> No <input type=radio name="using_stick" value="no" {$no_checked_by_default}/>
+<p> Using Si Stick <input type=radio name="using_stick" value="yes" {$yes_checked_by_default} /> <input type=text name="si_stick_number" value="{$si_stick}" />
+<p> Using QR codes <input type=radio name="using_stick" value="no" {$no_checked_by_default}/>
 <input type="hidden" name="key" value="{$key}">
-<p><input type="submit" value="Register"/>
+<p><input type="submit" value="Choose course"/>
 </form>
 END_OF_FORM;
 }

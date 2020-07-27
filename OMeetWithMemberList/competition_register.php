@@ -64,7 +64,7 @@ else {
 }
 ?>
 <br><br>
-<input type="submit" value="Submit">
+<input type="submit" value="Choose course">
 </form>
 
 <?php

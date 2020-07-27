@@ -28,7 +28,11 @@ if ($output !~ /Welcome Mark OConnell/) {
   error_and_exit("Name of member \"Mark OConnell\" not found.\n$output");
 }
 
-if ($output !~ /Is your name correct, and are you using your SI stick 2108369 today/) {
+if ($output !~ /How are you orienteering today/) {
+  error_and_exit("Success message not found for \"Mark OConnell\".\n$output");
+}
+
+if ($output !~ /value="2108369" readonly/) {
   error_and_exit("SI stick of member \"Mark OConnell\" not found.\n$output");
 }
 
@@ -53,7 +57,7 @@ if ($output !~ /Welcome Issi Finlayson/) {
   error_and_exit("Name of member \"Issi Finlayson\" not found.\n$output");
 }
 
-if ($output !~ /Is your name correct, and are you using your SI stick 559 today/) {
+if (($output !~ /How are you orienteering today/) || ($output !~ /value="559" readonly/)) {
   error_and_exit("SI stick of member \"Issi Finlayson\" not found.\n$output");
 }
 

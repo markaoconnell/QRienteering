@@ -29,7 +29,7 @@ if ($output !~ /Welcome Mark OConnell/) {
   error_and_exit("Name of member \"Mark OConnell\" not found.\n$output");
 }
 
-if ($output !~ /\(2108369\)/) {
+if ($output !~ /value="2108369"/) {
   error_and_exit("SI stick of member \"Mark OConnell\" not found.\n$output");
 }
 
@@ -54,7 +54,7 @@ if ($output !~ /Welcome Larry Berrill/) {
   error_and_exit("Name of member \"Larry Berrill\" not found.\n$output");
 }
 
-if ($output !~ /Are you using a SI Stick today/) {
+if ($output !~ /How are you orienteering today/) {
   error_and_exit("SI stick of member \"Larry Berrill\" was incorrectly found.\n$output");
 }
 
@@ -136,7 +136,7 @@ if ($output !~ /Welcome Victoria Campbell/) {
   error_and_exit("Member 109 -> Victoria Campbell was not found.\n$output");
 }
 
-if ($output !~ /\(1024\)/) {
+if ($output !~ /value="1024"/) {
   error_and_exit("SI stick of member \"Victoria Campbell\" not found.\n$output");
 }
 
@@ -162,7 +162,7 @@ if ($output !~ /Welcome Peter Amram/) {
   error_and_exit("Member 171 -> Peter Amram was not found.\n$output");
 }
 
-if ($output !~ /Are you using a SI Stick today/) {
+if ($output !~ /How are you orienteering today/) {
   error_and_exit("SI stick of member \Peter Amram\" was incorrectly found.\n$output");
 }
 
@@ -187,7 +187,7 @@ if ($output !~ /No such member id 141421 found/) {
   error_and_exit("No bad member id message found.\n$output");
 }
 
-if ($output =~ /Are you using a SI Stick/) {
+if ($output =~ /How are you orienteering today/) {
   error_and_exit("Bad member id but found SI stick message.\n$output");
 }
 

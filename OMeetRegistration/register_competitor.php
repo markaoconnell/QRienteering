@@ -63,6 +63,7 @@ if (!$error) {
 
   if ($tries === 5) {
     $body_string .= "ERROR Cannot register " . $competitor_name . " with id: " . $competitor_id . "\n";
+    $error = true;
   }
   else {
     $body_string .= "<p>Registration complete: " . $competitor_name . " on " . ltrim($course, "0..9-");
@@ -102,6 +103,11 @@ if (!$error) {
 echo get_web_page_header(true, false, false);
 
 echo $body_string;
+
+if (!$error) {
+  echo "<p>Please scan the start QR code to begin or click the \"Start course\" button below.\n";
+  echo "<p><form action=\"../OMeet/start_course.php\"> <input type=\"submit\" value=\"Start course\"> </form>\n";
+}
 
 echo get_web_page_footer();
 ?>
