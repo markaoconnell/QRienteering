@@ -59,7 +59,7 @@ else {
 
 
 
-echo get_web_page_header(true, true, false);
+echo get_web_page_header(true, false, true);
 
 echo $output_string;
 

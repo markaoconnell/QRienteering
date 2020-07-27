@@ -33,6 +33,7 @@ $courses_array = array_diff($courses_array, array(".", "..")); // Remove the ann
 // echo "<p>\n";
 
 $body_string = "";
+$using_si_stick = false;
 
 // Validate the info
 $error = false;
@@ -82,6 +83,7 @@ if (!$error) {
       file_put_contents("{$competitor_path}/registration_info", $raw_registration_info);
       if ($registration_info["si_stick"] != "") {
         file_put_contents("{$competitor_path}/si_stick", $registration_info["si_stick"]);
+        $using_si_stick = true;
       }
 
       if ($registration_info["is_member"] == "yes") {
@@ -100,13 +102,25 @@ if (!$error) {
   }
 }
 
-echo get_web_page_header(true, false, false);
+if (!$error) {
+  set_success_background();
+}
+else {
+  set_error_background();
+}
+
+echo get_web_page_header(true, false, true);
 
 echo $body_string;
 
 if (!$error) {
-  echo "<p>Please scan the start QR code to begin or click the \"Start course\" button below.\n";
-  echo "<p><form action=\"../OMeet/start_course.php\"> <input type=\"submit\" value=\"Start course\"> </form>\n";
+  if ($using_si_stick) {
+    echo "<p>To start the course, clear and check your SI stick, then proceed to the start control with your SI stick.\n";
+  }
+  else {
+    echo "<p>To start the course, please proceed to start and scan the start QR code there or click the \"Start course\" button below to start now.\n";
+    echo "<p><form action=\"../OMeet/start_course.php\"> <input type=\"submit\" value=\"Start course\"> </form>\n";
+  }
 }
 
 echo get_web_page_footer();

@@ -189,6 +189,13 @@ else {
   }
 }
 
+if ($error_string == "") {
+  set_success_background();
+}
+else {
+  set_error_background();
+}
+
 echo get_web_page_header(true, false, false);
 
 if ($error_string == "") {

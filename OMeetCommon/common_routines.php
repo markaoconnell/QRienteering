@@ -97,8 +97,12 @@ function is_mobile () {
 }
 
 
+$bg_color = "";
+
 // Print out the default headers
 function get_web_page_header($paragraph_style, $table_style, $form_style) {
+  global $bg_color;
+
   $headers_to_show = <<<END_OF_HEADERS
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
@@ -108,6 +112,10 @@ function get_web_page_header($paragraph_style, $table_style, $form_style) {
   <title>Orienteering Event Management</title>
   <meta content="Mark O'Connell" name="author">
 END_OF_HEADERS;
+
+  if ($bg_color != "") {
+    $headers_to_show .= get_bg_color_element($bg_color);
+  }
 
   if ($paragraph_style) {
     $headers_to_show .= get_paragraph_style_header();
@@ -131,11 +139,25 @@ function get_web_page_footer() {
 }
 
 function error_and_exit($error_string) {
+
+  set_error_background();
+
   echo get_web_page_header(true, false, false);
   echo $error_string;
   echo get_web_page_footer();
   exit(1);
 }
+
+function set_success_background() {
+  global $bg_color;
+  $bg_color = "#66ff33";
+}
+
+function set_error_background() {
+  global $bg_color;
+  $bg_color = "#cc3300";
+}
+
 
 function get_error_info_string() {
   $extra_error_info = <<<END_OF_ERROR_INFO
@@ -145,6 +167,11 @@ If this is hanging in the woods, please leave it alone so as not to ruin an exis
 others may be currently enjoying.
 END_OF_ERROR_INFO;
   return ($extra_error_info);
+}
+
+// get the background color
+function get_bg_color_element($bg_color) {
+  return "<style>\n body {\nbackground-color: {$bg_color};\n}\n</style>\n";
 }
 
 // get table style elements

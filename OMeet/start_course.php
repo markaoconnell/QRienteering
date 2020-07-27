@@ -48,6 +48,13 @@ else {
   file_put_contents("${controls_found_path}/start", strval(time()));
 }
 
+if ($error_string == "") {
+  set_success_background();
+}
+else {
+  set_error_background();
+}
+
 echo get_web_page_header(true, false, false);
 
 if ($error_string == "") {
