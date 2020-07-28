@@ -46,7 +46,11 @@ if (isset($_SERVER["HTTPS"])) {
 else {
   $proto = "http://";
 }
+// Make sure that the base path doesn't end in a /, this makes life easier when crafting the links
 $base_path_for_links = $proto . $_SERVER["SERVER_NAME"] . dirname(dirname($_SERVER["REQUEST_URI"]));
+if (substr($base_path_for_links, -1) == "/") {
+  $base_path_for_links = substr($base_path_for_links, 0, -1);
+}
 
 if (isset($_GET["recent_event_timeout"])) {
   $recent_event_timeout = time_limit_to_seconds($_GET["recent_event_timeout"]);

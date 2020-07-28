@@ -93,12 +93,14 @@ if (!$error) {
       }
     }
     
-    // Set the cookies with the name, course, next control
-    $timeout_value = $current_time + 3600 * 6;  // 6 hour timeout, should be fine for most any course
-    setcookie("competitor_id", $competitor_id, $timeout_value, $cookie_path);
-    setcookie("course", $course, $timeout_value, $cookie_path);
-    setcookie("event", $_GET["event"], $timeout_value, $cookie_path);
-    setcookie("key", $key, $timeout_value, $cookie_path);
+    if (!$using_si_stick) {
+      // Set the cookies with the name, course, next control
+      $timeout_value = $current_time + 3600 * 6;  // 6 hour timeout, should be fine for most any course
+      setcookie("competitor_id", $competitor_id, $timeout_value, $cookie_path);
+      setcookie("course", $course, $timeout_value, $cookie_path);
+      setcookie("event", $_GET["event"], $timeout_value, $cookie_path);
+      setcookie("key", $key, $timeout_value, $cookie_path);
+    }
   }
 }
 
