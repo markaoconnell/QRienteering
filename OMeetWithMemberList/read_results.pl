@@ -26,6 +26,8 @@ sub read_ini_file {
   while (<INI_FILE>) {
     chomp;
     s/^[ \t]*//;  # Remove leading whitespace
+    s/#.*//;   # Remove comments
+    next if (/^$/);  # Skip blank lines (skip if was just a comment)
     my($key, $value) = split("[ \t=]+");
     $ini_file_contents{$key} = $value; 
     #print "Initialization: $key => $value.\n";
