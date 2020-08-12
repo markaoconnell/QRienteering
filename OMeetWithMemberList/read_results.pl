@@ -11,6 +11,7 @@ my(%new_results_by_stick) = qw();
 
 my($debug) = 0;
 my($verbose) = 0;
+my($testing_run) = 0;
 my($url) = "http://www.mkoconnell.com/OMeet/not_there";
 
 my($VIEW_RESULTS) = "OMeet/view_results.php";
@@ -40,11 +41,10 @@ sub read_ini_file {
 sub get_event {
   my($event_key) = @_;
 
-  my($cmd) = "curl -s \"$url/$MANAGE_EVENTS?key=$event_key&recent_event_timeout=12h\"";
-  print "Running $cmd\n" if ($debug);
+  # Check to see if this is a testing run
+
   my($output);
-  $output = qx($cmd);
-  print "Cmd output is $output\n" if ($debug);
+  $output = make_url_call($MANAGE_EVENTS, "key=$event_key&recent_event_timeout=12h");
 
   my(@event_matches) = ($output =~ m#(view_results.php?.*?>.*?<)/a>#g);
 
@@ -128,6 +128,34 @@ sub get_timestamp {
   return($timestamp);
 }
 
+sub make_url_call {
+  my($php_script_to_call, $params) = @_;
+  my($cmd, $output);
+
+  if ($testing_run && (-f "../$php_script_to_call")) {
+    my(@param_pairs) = split("&", $params);
+    my(%GET) = map { split("="); } @param_pairs;
+
+    open(ARTIFICIAL_FILE, ">./artificial_input");
+    my($entry);
+    foreach $entry (keys(%GET)) {
+      print ARTIFICIAL_FILE "GET $entry $GET{$entry}\n";
+    }
+    close(ARTIFICIAL_FILE);
+
+    $cmd = "php ../$php_script_to_call";
+  }
+  else {
+    $cmd = "curl -s \"$url/$php_script_to_call?$params\"";
+  }
+
+  print "Running $cmd\n" if ($debug);
+  $output = qx($cmd);
+  print $output if ($debug);
+
+  return ($output);
+}
+
 #89898989;-:-:--:--:--;-:-:--:--:--;-:-:19:34:14;-:-:19:34:43;101;-:-:19:34:23;102;-:-:19:34:36;103;-:-:19:34:38;104;-:-:19:34:40;105;-:-:19:34:41;
 
 my(%initializations) = read_ini_file();
@@ -141,6 +169,18 @@ if ($initializations{"key"} ne "") {
 
 if ($initializations{"url"} ne "") {
   $url = $initializations{"url"};
+}
+
+if ($initializations{"debug"} ne "") {
+  $debug = $initializations{"debug"};
+}
+
+if ($initializations{"verbose"} ne "") {
+  $verbose = $initializations{"verbose"};
+}
+
+if ($initializations{"testing_run"} ne "") {
+  $testing_run = $initializations{"testing_run"};
 }
 
 my($or_path) = ".";
@@ -169,6 +209,10 @@ while ($ARGV[0] =~ /^-/) {
     $verbose = 1;
     shift;
   }
+  elsif ($ARGV[0] eq "-t") {
+    $testing_run = 1;
+    shift;
+  }
   else {
     print "Usage: $0 -e <eventName> -k <eventKey> [ -u <url> ]\n";
     exit 1;
@@ -191,11 +235,8 @@ if (($event eq "")  || ($event_key eq "")) {
 }
 
 # Ensure that the event specified is valid
-my($cmd) = "curl -s \"$url/$VIEW_RESULTS?event=$event&key=$event_key\"";
-print "Running $cmd\n" if ($debug);
 my($output);
-$output = qx($cmd);
-print $output if ($debug);
+$output = make_url_call($VIEW_RESULTS, "event=$event&key=$event_key");
 if (($output =~ /No such event found $event/) || ($output !~ /Show results for/)) {
   print "Event $event not found, please check if event $event and key $event_key are valid.\n";
   exit 1;
@@ -204,6 +245,12 @@ if (($output =~ /No such event found $event/) || ($output !~ /Show results for/)
 
 
 # Find the OR event to manage - it should be the last event
+# The or_path variable should point to a valid directory
+if (! -d $or_path) {
+  print "ERROR: No such directory \"$or_path\", cannot read results from OR downloads.\n";
+  exit 1;
+}
+
 my($or_event_number) = 1;
 while (-f "$or_path/$or_event_number/results.csv") {
   print "Found $or_path/$or_event_number/results.csv\n" if ($debug);
@@ -221,7 +268,6 @@ print "Using OR event $or_event_number\n" if ($verbose);
 
 my($loop_count) = 0;
 while (1) {
-  $loop_count++;
   read_results();
 
   if (($loop_count % 20) == 0) {
@@ -255,11 +301,7 @@ while (1) {
     my($web_site_string) = encode_base64($qr_result_string);
     $web_site_string =~ s/\n//g;
     $web_site_string =~ s/=/%3D/g;
-    $cmd = "curl -s \"$url/$FINISH_COURSE?event=$event&key=$event_key&si_stick_finish=$web_site_string\"";
-    print "Running $cmd\n" if ($debug);
-    $output = qx($cmd);
-    #print "$cmd\n";
-    print $output if ($debug);
+    $output = make_url_call($FINISH_COURSE, "event=$event&key=$event_key&si_stick_finish=$web_site_string");
 
     if ($output =~ /(Cannot find.*)/) {
       print "$1\n";
@@ -278,5 +320,8 @@ while (1) {
 
   %new_results_by_stick = ();
 
+  last if ($testing_run);  # For testing, no need to wait for more results
+
   sleep(3);
+  $loop_count++;
 }
