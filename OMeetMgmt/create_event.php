@@ -279,8 +279,8 @@ if (isset($_POST["submit"])) {
         if ($course_array[$i][2][$TYPE_FIELD] == $SCORE_O_COURSE) {
           $course_info = $course_array[$i][2];
           $properties_string = "";
-          foreach ($course_info as $key => $value) {
-            $properties_string .= $key . ":" . $value . "\n";
+          foreach ($course_info as $props_key => $props_value) {
+            $properties_string .= $props_key . ":" . $props_value . "\n";
           }
           file_put_contents("{$event_path}/Courses/{$prefix}-{$course_array[$i][0]}/properties.txt", $properties_string);
         }

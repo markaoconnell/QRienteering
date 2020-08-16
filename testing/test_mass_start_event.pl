@@ -343,6 +343,14 @@ success();
 $GET{"event"} = $event_id;
 $output = run_mass_start_courses();
 
+##########
+# For the si stick results, we need to adjust the control times
+# based on the mass start time.  Estimate the mass start time based
+# on the current time.
+my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime();
+my($estimated_start_time) = ($hour * 3600) + ($min * 60) + $sec;
+##########
+
 if (($output =~ /$COMPETITOR_1/) || ($output =~ /$COMPETITOR_2/) || ($output =~ /$COMPETITOR_5/) ||
     ($output =~ /$COMPETITOR_6/) || ($output !~ /$COMPETITOR_3 on/) || ($output !~ /$COMPETITOR_4 on/)) {
   error_and_exit("Incorrect results from starting only White and not Yellow or ScoreO.\n$output");
@@ -564,12 +572,8 @@ $COOKIE{"event"} = $event_id;
 
 finish_score_successfully(70, \%GET, \%COOKIE, \%TEST_INFO);
 
-##########
-# For the si stick results, we need to adjust the control times
-# based on the mass start time.  Estimate the mass start time based
-# on the current time.
-my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime();
-my($estimated_start_time) = ($hour * 3600) + ($min * 60) + $sec;
+# See the TestMassStartWhite for an explanation
+# of the estimated start time
 
 # si competitor 1 finishes
 %GET = qw(key UnitTestPlayground);  # empty hash

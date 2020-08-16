@@ -91,11 +91,12 @@ sub read_results {
 
   my($result_file);
   foreach $result_file (@result_files) {
+#	print "Opening $result_file to read results.\n" if ($debug);
     open(INFILE, "<$result_file");
     my(@result_lines) = <INFILE>;
     close(INFILE);
 
-    #print "Read " . scalar(@result_lines) . " lines from $result_file.\n";
+#    print "Read " . scalar(@result_lines) . " lines from $result_file.\n";
   
     chomp(@result_lines);
 
@@ -158,6 +159,7 @@ sub make_url_call {
 
 #89898989;-:-:--:--:--;-:-:--:--:--;-:-:19:34:14;-:-:19:34:43;101;-:-:19:34:23;102;-:-:19:34:36;103;-:-:19:34:38;104;-:-:19:34:40;105;-:-:19:34:41;
 
+$| = 1; # try using unbuffered IO so that we can see the output
 my(%initializations) = read_ini_file();
 my($event) = "";
 my($event_name) = "";
@@ -251,30 +253,27 @@ if (! -d $or_path) {
   exit 1;
 }
 
-my($or_event_number) = 1;
-while (-f "$or_path/$or_event_number/results.csv") {
-  print "Found $or_path/$or_event_number/results.csv\n" if ($debug);
-  $or_event_number++;
-  if (($or_event_number % 200) == 0) {
-    print "At or event $or_event_number, is everything correct?\n";
-  }
-}
-if ($or_event_number > 1) {
-  $or_event_number--;  # The final one that was present is the correct one
-}
+opendir(OR_DIR, "$or_path") || die "Cannot open OR directory $or_path";
+my(@or_dir_contents) = readdir(OR_DIR);
+close(OR_DIR);
+print join(",", @or_dir_contents) . ": elements found in \"$or_path\".\n" if ($debug);
+my(@or_events) = grep { /^[0-9]+$/ && -d "$or_path/$_" } @or_dir_contents;
+my(@sorted_or_events) = sort { $a <=> $b } @or_events;
+print join(",", @sorted_or_events) . ": sorted elements found in \"$or_path\".\n" if ($debug);
+my($or_event_number) = $sorted_or_events[$#sorted_or_events];
 print "Using OR event $or_event_number\n" if ($verbose);
 
-@result_files = ("$or_path/$or_event_number/results.csv", "$or_path/$or_event_number/resultlog.csv");
+@result_files = ("$or_path/$or_event_number/results.csv", "$or_path/$or_event_number/resultslog.csv");
 
 my($loop_count) = 0;
 while (1) {
   read_results();
 
   if (($loop_count % 20) == 0) {
-    my($now) = qx(date);
-    chomp($now);
+    my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+                                                localtime(time);
 
-    print "Awaiting new results at: ${now}\r";
+    printf "Awaiting new results at: %02d:%02d:%02d\r", $hour, $min, $sec;
   }
   print "Found new keys: " . join(",", keys(%new_results_by_stick)) . "\n" if ($verbose && scalar(keys(%new_results_by_stick) > 0));
   
@@ -303,6 +302,8 @@ while (1) {
     $web_site_string =~ s/=/%3D/g;
     $output = make_url_call($FINISH_COURSE, "event=$event&key=$event_key&si_stick_finish=$web_site_string");
 
+    my($si_stick, $start_time) = split(";", $key);
+	print "\nResults for si_stick ${si_stick}:\n";
     if ($output =~ /(Cannot find.*)/) {
       print "$1\n";
     }
