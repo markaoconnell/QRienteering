@@ -18,6 +18,8 @@ sub reach_control_ok {
 
   $path = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Competitors/$competitor_id";
   my($extra_file_present) = ( -f "${path}/extra" );
+  my($course) = $cookie_ref->{"course"};
+  $course =~ s/^[0-9]+-//;
 
   hashes_to_artificial_file();
   $cmd = "php ../OMeet/reach_control.php";
@@ -33,7 +35,7 @@ sub reach_control_ok {
   my($control_num_for_print_string) = $control_num_on_course + 1;
   
   if ($score_course) {
-    if ($output !~ /Reached $control on ScoreO, earned [0-9]+ points/) {
+    if ($output !~ /Reached $control on $course, earned [0-9]+ points/) {
       error_and_exit("Web page output wrong, correct control string not found for score course (duplicate=$duplicate).\n$output");
     }
   }
