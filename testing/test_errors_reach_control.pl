@@ -187,7 +187,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeet/reach_control.php";
 $output = qx($cmd);
 
-if ($output !~ /not started for $COMPETITOR_NAME, please return and scan Start QR code/) {
+if ($output !~ /auto-started at [0-9:]+ for $COMPETITOR_NAME, for a more accurate time please re-register and be certain to scan the Start QR code/) {
   error_and_exit("Web page output wrong, no failed to start message.\n$output");
 }
 
@@ -201,7 +201,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeet/reach_control.php";
 $output = qx($cmd);
 
-if ($output !~ /not started for $COMPETITOR_NAME_2, please return and scan Start QR code/) {
+if ($output !~ /auto-started at [0-9:]+ for $COMPETITOR_NAME_2, for a more accurate time please re-register and be certain to scan the Start QR code/) {
   error_and_exit("Web page output wrong, no failed to start message.\n$output");
 }
 
@@ -217,11 +217,7 @@ success();
 %COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 $COOKIE{"event"} = $event_id;
-%GET = ();
-start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
-
 %GET = qw(control 201);
-reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 # The second one should appear like the first
 reach_control_again(0, \%GET, \%COOKIE, \%TEST_INFO);
@@ -236,11 +232,7 @@ success();
 %COOKIE = qw(key UnitTestPlayground course 02-ScoreO);
 $COOKIE{"competitor_id"} = $competitor_id2;
 $COOKIE{"event"} = $event_id;
-%GET = ();
-start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
-
 %GET = qw(control 301);
-reach_score_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
 # The second one should appear like the first
 reach_score_control_again(0, \%GET, \%COOKIE, \%TEST_INFO);

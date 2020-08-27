@@ -130,7 +130,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
     //$total_score = calculate_score($unique_controls, $controls_points_hash);
     $total_score = array_reduce($unique_controls, function ($carry, $elt) use ($controls_points_hash) { return($carry + $controls_points_hash[$elt]); }, 0);
     // Reduce the total_score if over time
-    if ($time_taken > $course_properties[$LIMIT_FIELD]) {
+    if (($course_properties[$LIMIT_FIELD] > 0) && ($time_taken > $course_properties[$LIMIT_FIELD])) {
       $time_over = $time_taken - $course_properties[$LIMIT_FIELD];
       $minutes_over = floor(($time_over + 59) / 60);
       $penalty = $minutes_over * $course_properties[$PENALTY_FIELD];
@@ -226,6 +226,8 @@ if (file_exists("{$competitor_path}/registration_info")) {
     }
   }
 }
+
+echo "<p><p>Want to <a href=\"https://www.newenglandorienteering.org/meet-directors/142-mark-o-connell\">give feedback?</a>  All comments welcome.\n";
 
 echo get_web_page_footer();
 ?>

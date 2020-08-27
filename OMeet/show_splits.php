@@ -121,7 +121,7 @@ echo $table_string;
 echo "<p>Total Time: " . formatted_time($result_pieces[1]) . "\n";
 if ($score_course) {
   echo "<p>Final Score: " . ($course_properties[$MAX_SCORE_FIELD] - $result_pieces[0]) . "\n";
-  if ($result_pieces[1] > $course_properties[$LIMIT_FIELD]) {
+  if (($course_properties[$LIMIT_FIELD] > 0) && ($result_pieces[1] > $course_properties[$LIMIT_FIELD])) {
     $time_over = $result_pieces[1] - $course_properties[$LIMIT_FIELD];
     $minutes_over = floor(($time_over + 59) / 60);
     $penalty = $minutes_over * $course_properties[$PENALTY_FIELD];

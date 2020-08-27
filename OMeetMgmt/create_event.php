@@ -334,19 +334,21 @@ if (!$event_created && !$found_error) {
 <br><br><br><p><p>
 <input type="hidden" name="MAX_FILE_SIZE" value="4096" />
 <input type="hidden" name="key" value="<?php echo $key ?>" />
-<p class="title">Enter a filename with the course/control details for the event:
-<input name=upload_file type=file>
-<p><p>
-<br>
-<p class="title">Alternatively, enter the file contents here.
-<p>One course per line, comma separated.
+<p class="title">Enter a filename with the course/control details for the event.
+<p>Format of the file: One course per line, comma separated.
 <ul>
 <li>Normal Course: NameOfCourse,control,control,control,...
   <ul><li>Example: White,102,105,106</ul>
 <li>ScoreO Course: s:NameOfCourse:time limit:penalty per minute,control:points,control:points,control:points,...
   <ul><li>Example: s:ScoutScoreO:2h:2,102:10,110:20,203:30,101:10,109:15
-      <li>Time limit format is XXhYYmZZs for XX hours, XX minutes, XX seconds, note no spaces</ul>
+      <li>Time limit format is XXhYYmZZs for XX hours, XX minutes, XX seconds, note no spaces
+      <li>Use a time limit of 0 to indicate unlimited time</ul>
 </ul>
+<input name=upload_file type=file>
+<p>
+<br>
+<p class="title">Alternatively, enter the information directly here.
+<p>
 <textarea name=course_description rows=10 cols=60>
 --Replace this with your course description--
 </textarea>

@@ -17,14 +17,14 @@ function is_event_recently_closed($filename) {
 function name_to_registration_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
-  return ("<li>{$event_fullname}<ul><li><a href={$base_path_for_links}/OMeetRegistration/register.php?event=${event_id}&key={$key}>Non-meet Registration</a>" .
+  return ("<li>{$event_fullname}<ul><li><a href={$base_path_for_links}/OMeetRegistration/register.php?event=${event_id}&key={$key}>BYOM Registration</a>" .
                                    "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}>Meet Registration</a></ul>\n");
 }
 
 function name_to_results_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
-  return ("<li><a href={$base_path_for_links}/OMeet/view_results.php?event={$event_id}&key={$key}>{$event_fullname}</a>" . 
+  return ("<li><a href={$base_path_for_links}/OMeet/view_results.php?event={$event_id}&key={$key}>Results for {$event_fullname}</a>" . 
           "<ul><li><a href={$base_path_for_links}/OMeet/on_course.php?event={$event_id}&key={$key}>still on course</a>" . 
               "<li><a href={$base_path_for_links}/OMeetWithMemberList/competitor_info.php?event={$event_id}&key={$key}>Meet Director view of competitors</a></ul>\n");
 }

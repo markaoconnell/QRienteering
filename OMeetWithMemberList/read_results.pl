@@ -53,13 +53,13 @@ sub get_event {
     return("", "");
   }
   elsif (scalar(@event_matches) == 1) {
-    $event_matches[0] =~ /(event-[0-9a-f]*).*>(.*)</;
+    $event_matches[0] =~ /(event-[0-9a-f]*).*>Results for (.*)</;
     print "Found single matching event ($1) named $2.\n" if ($verbose);
     return($1, $2);
   }
   else {
     my(@event_ids) = map { /(event-[0-9a-f]*)/; $1 } @event_matches;
-    my(@event_names) = map { />(.*)</; $1 } @event_matches;
+    my(@event_names) = map { />Results for (.*)</; $1 } @event_matches;
     print "Please choose the event:\n";
     my($i);
     for ($i = 0; $i < scalar(@event_names); $i++) {

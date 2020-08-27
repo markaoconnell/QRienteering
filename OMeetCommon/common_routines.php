@@ -372,11 +372,6 @@ function key_is_valid($key) {
     }
   }
 
-  // Legacy hack for the moment - a blank key without a key file is ok
-  if (!file_exists("../keys") && ($key == "")) {
-    return true;
-  }
-
   return(isset($keys_hash[$key]));
 }
 
@@ -384,24 +379,16 @@ function key_password_ok($key, $password) {
   global $keys_hash;
 
   // Key must have been checked for validity already
-  // an empty key is temporarily allowed for backward compatibility
-  if ($key != "") {
-    return(key_is_valid($key) && ($keys_hash[$key][1] == $password));
-  } 
-
-  return true;
+  return(key_is_valid($key) && ($keys_hash[$key][1] == $password));
 }
 
 function key_to_path($key) {
   global $keys_hash;
 
   // Key must have been checked for validity already
-  // an empty key is temporarily allowed for backward compatibility
-  if ($key != "") {
-    if (key_is_valid($key)) {
-      return($keys_hash[$key][0]);
-    }
-  } 
+  if (key_is_valid($key)) {
+    return($keys_hash[$key][0]);
+  }
 
   return "";
 }

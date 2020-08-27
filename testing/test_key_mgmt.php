@@ -11,12 +11,12 @@ if (file_exists("../keys")) {
 
 // Test the legacy cases
 // no keys file present
-if (!key_is_valid("")) {
-  echo "ERROR: Empty key, with no key file, returned not valid.\n";
+if (key_is_valid("")) {
+  echo "ERROR: Empty key, with no key file, returned valid.\n";
   $failure = true;
 }
 else {
-  echo "Success: empty key\n";
+  echo "Success: empty key with no key file\n";
 }
 
 if (key_is_valid("valid_key")) {
@@ -27,16 +27,16 @@ else {
   echo "Success: valid_key is bad\n";
 }
 
-if (!key_password_ok("", "")) {
-  echo "ERROR: Empty key, with no key file, returned bad password.\n";
+if (key_password_ok("", "")) {
+  echo "ERROR: Empty key and password, with no key file, returned ok.\n";
   $failure = true;
 }
 else {
   echo "Success: empty key and password ok.\n";
 }
 
-if (!key_password_ok("", "unused")) {
-  echo "ERROR: Empty key, with no key file and \"unused\" as password, returned bad password.\n";
+if (key_password_ok("", "unused")) {
+  echo "ERROR: Empty key, with no key file and \"unused\" as password, returned ok.\n";
   $failure = true;
 }
 else {
@@ -183,6 +183,7 @@ foreach ($testing_values as $test_array) {
 
 
 if ($failure) {
+  mkdir("../OMeetData/TestingDirectory");
   mkdir("../OMeetData/TestingDirectory/UnitTestingEvent");
 }
 else {

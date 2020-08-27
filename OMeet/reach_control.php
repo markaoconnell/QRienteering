@@ -68,9 +68,13 @@ if (file_exists("${competitor_path}/si_stick")) {
   error_and_exit("<p>{$competitor_name} on course {$course} registered with si stick, should not scan QR codes.\n");
 }
 
+$autostart_msg = "";
 if (!file_exists("${controls_found_path}/start")) {
   $competitor_name = file_get_contents("{$competitor_path}/name");
-  error_and_exit("<p>Course " . ltrim($course, "0..9-") . " not started for {$competitor_name}, please return and scan Start QR code.\n");
+  $time_of_registration = stat("{$competitor_path}/name")["mtime"];
+  file_put_contents("{$controls_found_path}/start", $time_of_registration);
+  $autostart_msg = "<p>Course " . ltrim($course, "0..9-") . " auto-started at " . strftime("%T", $time_of_registration) .
+                   " for {$competitor_name}, for a more accurate time please re-register and be certain to scan the Start QR code.\n";
 }
 
 if (file_exists("${controls_found_path}/finish")) {
@@ -85,6 +89,7 @@ $start_time = file_get_contents("./{$controls_found_path}/start");
 $time_now = time();
 $time_on_course = $time_now - $start_time;
 $extra_info_msg = "";
+$append_finish_message = false;
 // echo "<br>Controls done on the ${course} course.<br>\n";
 // print_r($controls_done);
 
@@ -111,11 +116,13 @@ if ($score_course) {
     file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
   }
 
-  if ($time_on_course <= $course_properties[$LIMIT_FIELD]) {
-    $extra_info_msg = "<p>Time remaining on course: " . formatted_time($course_properties[$LIMIT_FIELD] - $time_on_course) . "\n";
-  }
-  else {
-    $extra_info_msg = "<p>Time limit expired by: " . formatted_time($time_on_course - $course_properties[$LIMIT_FIELD]) . "\n";
+  if ($course_properties[$LIMIT_FIELD] > 0) {
+    if ($time_on_course <= $course_properties[$LIMIT_FIELD]) {
+      $extra_info_msg = "<p>Time remaining on course: " . formatted_time($course_properties[$LIMIT_FIELD] - $time_on_course) . "\n";
+    }
+    else {
+      $extra_info_msg = "<p>Time limit expired by: " . formatted_time($time_on_course - $course_properties[$LIMIT_FIELD]) . "\n";
+    }
   }
 
   // Don't forget to include the control we just found!
@@ -140,7 +147,22 @@ else {
   $number_controls_found = count($controls_done);
   $prior_control_repeat = false;
   // echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found][0] . "--\n";
-  if ($control_id != $control_list[$number_controls_found][0]) {
+  if ($number_controls_found >= count($control_list)) {
+    // We should be finishing the course
+    // Possible that we scanned the last control twice - check for that
+    $append_finish_message = true;
+    if ($control_id != $control_list[count($control_list) - 1][0]) {
+      $error_string .= "<p>Found wrong control: {$control_id}, course " . ltrim($course, "0..9-") . ", control #" . ($number_controls_found + 1) .
+                          ", expected to finish course.\n";
+      $extra_control_string = strval($time_now) . ",{$control_id}\n";
+      file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
+    }
+    else {
+      $success_msg = "<p>Control {$control_id} correct but already scanned on " . ltrim($course, "0..9-") . "\n" .
+                     "<p>0 more to find, next is Finish.\n";
+    }
+  }
+  else if ($control_id != $control_list[$number_controls_found][0]) {
     // echo "<p>This looks like the wrong control\n";
     // Not the right control, but if we're still at the prior control, the person probably just scanned the control twice - that's ok
     if ($number_controls_found == 0) {
@@ -162,6 +184,7 @@ else {
       $remaining_controls = count($control_list) - $number_controls_found;
       if ($remaining_controls <= 0) {
         $next_control = "Finish";
+        $append_finish_message = true;
       }
       else {
         $next_control = $control_list[$number_controls_found][0];
@@ -178,6 +201,7 @@ else {
     $remaining_controls = count($control_list) - $number_controls_found - 1;
     if ($remaining_controls <= 0) {
       $next_control = "Finish";
+      $append_finish_message = true;
     }
     else {
       $next_control = $control_list[$number_controls_found + 1][0];
@@ -187,9 +211,20 @@ else {
                    "<p>{$remaining_controls} more to find, next is {$next_control}.\n";
     // echo "<p>Saved to the file ${competitor_path}/${number_controls_found}.\n";
   }
+
+  if ($append_finish_message) {
+    $finish_msg .= "<p style=\"text-align:center; background: #faf60f; color: #2809db; padding: 25px;\">Remember to scan finish to indicate you are off the course</p>";
+    if ($success_msg != "") {
+      $success_msg .= $finish_msg;
+    }
+
+    if ($error_string != "") {
+      $error_string .= $finish_msg;
+    }
+  }
 }
 
-if ($error_string == "") {
+if (($error_string == "") && ($autostart_msg == "")) {
   set_success_background();
 }
 else {
@@ -204,6 +239,11 @@ if ($error_string == "") {
 else {
   echo "<p>ERROR: {$error_string}\n";
 }
+
+if ($autostart_msg != "") {
+  echo $autostart_msg;
+}
+
 echo "<br><p>Time on course is: " . formatted_time($time_on_course) . "\n";
 
 if ($extra_info_msg != "") {
