@@ -1,14 +1,11 @@
 #!/bin/sh
 
-for i in test_*.php
-do
-  php ./${i}
-  if [ -d ../OMeetData/TestingDirectory ]
-  then
-    echo ERROR: Test did not cleanup, did it fail perhaps\?
-    exit 1
-  fi
-done
+php test_name_matcher.php
+if [ -f failure ]
+then
+  echo ERROR: possible test failure?  Failure file present.
+  exit 1
+fi
 
 for i in test_*.pl
 do

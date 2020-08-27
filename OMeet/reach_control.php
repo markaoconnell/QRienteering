@@ -1,10 +1,11 @@
 <?php
-require 'common_routines.php';
-require 'course_properties.php';
+require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/course_properties.php';
 
 ck_testing();
 
 $event = $_COOKIE["event"];
+$key = $_COOKIE["key"];
 $control_id = $_GET["control"];
 $competitor_id = $_COOKIE["competitor_id"];
 
@@ -18,7 +19,7 @@ $success_msg = "";
 // Do an internal redirect, encoding the competitor_id and control - this is to prevent later
 // replays when this device is potentially redoing the course
 // A redo of the course will generate a new competitor_id, which will then be detected
-if (!file_exists("./${event}/no_redirects") && ($_GET["mumble"] == "")) {
+if (!file_exists(get_event_path($event, $key, "..") . "/no_redirects") && ($_GET["mumble"] == "")) {
   $current_time = time();
   $redirect_encoded_info = base64_encode("{$control_id},{$competitor_id},{$current_time}");
   echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=./reach_control.php?mumble=${redirect_encoded_info}\" /></head></html>";
@@ -45,29 +46,39 @@ if ($_GET["mumble"] != "") {
 // echo "<p>\n";
 $course = $_COOKIE["course"];
 
-if (!file_exists("./{$event}/Competitors/{$competitor_id}") || !file_exists("./{$event}/Courses/{$course}/controls.txt")) {
+$competitor_path = get_competitor_path($competitor_id, $event, $key, "..");
+$courses_path = get_courses_path($event, $key, "..");
+if (!file_exists($competitor_path) || !file_exists("{$courses_path}/{$course}/controls.txt")) {
   error_and_exit("Cannot find event {$event}, competitor {$competitor_id}, or course {$course}, please re-register and retry.\n");
 }
 
 
-$competitor_path = "./${event}/Competitors/${competitor_id}";
 $controls_found_path = "{$competitor_path}/controls_found";
-$control_list = read_controls("./{$event}/Courses/{$course}/controls.txt");
+$control_list = read_controls("{$courses_path}/{$course}/controls.txt");
 $controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
                                       array_map(function ($element) { return $element[1]; }, $control_list));
 // echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
 
-$course_properties = get_course_properties("./{$event}/Courses/{$course}");
+$course_properties = get_course_properties("{$courses_path}/{$course}");
 $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
 
+if (file_exists("${competitor_path}/si_stick")) {
+  $competitor_name = file_get_contents("{$competitor_path}/name");
+  error_and_exit("<p>{$competitor_name} on course {$course} registered with si stick, should not scan QR codes.\n");
+}
+
+$autostart_msg = "";
 if (!file_exists("${controls_found_path}/start")) {
-  $competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
-  error_and_exit("<p>Course " . ltrim($course, "0..9-") . " not started for {$competitor_name}, please return and scan Start QR code.\n");
+  $competitor_name = file_get_contents("{$competitor_path}/name");
+  $time_of_registration = stat("{$competitor_path}/name")["mtime"];
+  file_put_contents("{$controls_found_path}/start", $time_of_registration);
+  $autostart_msg = "<p>Course " . ltrim($course, "0..9-") . " auto-started at " . strftime("%T", $time_of_registration) .
+                   " for {$competitor_name}, for a more accurate time please re-register and be certain to scan the Start QR code.\n";
 }
 
 if (file_exists("${controls_found_path}/finish")) {
-  $competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
+  $competitor_name = file_get_contents("{$competitor_path}/name");
   error_and_exit("<p>Course " . ltrim($course, "0..9-") . " already finished for {$competitor_name}, please return and re-register to restart the course.\n");
 }
 
@@ -78,6 +89,7 @@ $start_time = file_get_contents("./{$controls_found_path}/start");
 $time_now = time();
 $time_on_course = $time_now - $start_time;
 $extra_info_msg = "";
+$append_finish_message = false;
 // echo "<br>Controls done on the ${course} course.<br>\n";
 // print_r($controls_done);
 
@@ -104,11 +116,13 @@ if ($score_course) {
     file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
   }
 
-  if ($time_on_course <= $course_properties[$LIMIT_FIELD]) {
-    $extra_info_msg = "<p>Time remaining on course: " . formatted_time($course_properties[$LIMIT_FIELD] - $time_on_course) . "\n";
-  }
-  else {
-    $extra_info_msg = "<p>Time limit expired by: " . formatted_time($time_on_course - $course_properties[$LIMIT_FIELD]) . "\n";
+  if ($course_properties[$LIMIT_FIELD] > 0) {
+    if ($time_on_course <= $course_properties[$LIMIT_FIELD]) {
+      $extra_info_msg = "<p>Time remaining on course: " . formatted_time($course_properties[$LIMIT_FIELD] - $time_on_course) . "\n";
+    }
+    else {
+      $extra_info_msg = "<p>Time limit expired by: " . formatted_time($time_on_course - $course_properties[$LIMIT_FIELD]) . "\n";
+    }
   }
 
   // Don't forget to include the control we just found!
@@ -133,7 +147,22 @@ else {
   $number_controls_found = count($controls_done);
   $prior_control_repeat = false;
   // echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found][0] . "--\n";
-  if ($control_id != $control_list[$number_controls_found][0]) {
+  if ($number_controls_found >= count($control_list)) {
+    // We should be finishing the course
+    // Possible that we scanned the last control twice - check for that
+    $append_finish_message = true;
+    if ($control_id != $control_list[count($control_list) - 1][0]) {
+      $error_string .= "<p>Found wrong control: {$control_id}, course " . ltrim($course, "0..9-") . ", control #" . ($number_controls_found + 1) .
+                          ", expected to finish course.\n";
+      $extra_control_string = strval($time_now) . ",{$control_id}\n";
+      file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
+    }
+    else {
+      $success_msg = "<p>Control {$control_id} correct but already scanned on " . ltrim($course, "0..9-") . "\n" .
+                     "<p>0 more to find, next is Finish.\n";
+    }
+  }
+  else if ($control_id != $control_list[$number_controls_found][0]) {
     // echo "<p>This looks like the wrong control\n";
     // Not the right control, but if we're still at the prior control, the person probably just scanned the control twice - that's ok
     if ($number_controls_found == 0) {
@@ -155,6 +184,7 @@ else {
       $remaining_controls = count($control_list) - $number_controls_found;
       if ($remaining_controls <= 0) {
         $next_control = "Finish";
+        $append_finish_message = true;
       }
       else {
         $next_control = $control_list[$number_controls_found][0];
@@ -171,6 +201,7 @@ else {
     $remaining_controls = count($control_list) - $number_controls_found - 1;
     if ($remaining_controls <= 0) {
       $next_control = "Finish";
+      $append_finish_message = true;
     }
     else {
       $next_control = $control_list[$number_controls_found + 1][0];
@@ -180,6 +211,24 @@ else {
                    "<p>{$remaining_controls} more to find, next is {$next_control}.\n";
     // echo "<p>Saved to the file ${competitor_path}/${number_controls_found}.\n";
   }
+
+  if ($append_finish_message) {
+    $finish_msg .= "<p style=\"text-align:center; background: #faf60f; color: #2809db; padding: 25px;\">Remember to scan finish to indicate you are off the course</p>";
+    if ($success_msg != "") {
+      $success_msg .= $finish_msg;
+    }
+
+    if ($error_string != "") {
+      $error_string .= $finish_msg;
+    }
+  }
+}
+
+if (($error_string == "") && ($autostart_msg == "")) {
+  set_success_background();
+}
+else {
+  set_error_background();
 }
 
 echo get_web_page_header(true, false, false);
@@ -190,6 +239,11 @@ if ($error_string == "") {
 else {
   echo "<p>ERROR: {$error_string}\n";
 }
+
+if ($autostart_msg != "") {
+  echo $autostart_msg;
+}
+
 echo "<br><p>Time on course is: " . formatted_time($time_on_course) . "\n";
 
 if ($extra_info_msg != "") {

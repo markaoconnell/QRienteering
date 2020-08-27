@@ -1,5 +1,5 @@
 <?php
-require 'common_routines.php';
+require '../OMeetCommon/common_routines.php';
 
 ck_testing();
 
@@ -11,7 +11,9 @@ $MAX_CONTROL_VALUE = 100;
 $MAX_COURSES = 20;
 $MAX_CONTROLS = 50;
 
-require 'course_properties.php';
+$verbose = isset($_POST["verbose"]);
+
+require '../OMeetCommon/course_properties.php';
 
 // Utility functions
 function ck_valid_chars($string_to_check) {
@@ -48,9 +50,13 @@ function parse_course_name($course_name) {
     if ($info[0] == $SCORE_COURSE_ID) {
       $return_info[$NAME_FIELD] = $info[1];
       $return_info[$TYPE_FIELD] = $SCORE_O_COURSE;
-      $return_info[$LIMIT_FIELD] = $info[2];
+      $return_info[$LIMIT_FIELD] = time_limit_to_seconds($info[2]);
       $return_info[$PENALTY_FIELD] = $info[3];
       $expected_fields = 4; 
+
+      if ($return_info[$LIMIT_FIELD] == -1) {
+        $return_info[$ERROR_FIELD] = "Time limit field not understandable, {$info[2]} not in format XXhYYmZZs.\n";
+      }
     }
     else if ($info[0] == $LINEAR_COURSE_ID) {
       $return_info[$NAME_FIELD] = $info[1];
@@ -78,15 +84,30 @@ function parse_course_name($course_name) {
   return($return_info);
 }
 
+$event_created = false;
+$found_error = false;
+
 if (isset($_POST["submit"])) {
-  $found_error = false;
   echo "Name of event: " . $_POST["event_name"] . "\n<p>";
-  $event_name = $_POST["event_name"];
-  if (!ck_valid_chars($event_name) || (substr($event_name, -5) == ".done")) {
-    echo "<p>Event \"{$event_name}\" can only contain letters and numbers and cannot end in \".done\".\n";
-    $found_error = true;
+  $event_fullname = $_POST["event_name"];
+  $key = $_POST["key"];
+
+//  if (!ck_valid_chars($event_name) || (substr($event_name, -5) == ".done")) {
+//    echo "<p>ERROR: Event \"{$event_name}\" can only contain letters and numbers and cannot end in \".done\".\n";
+//    $found_error = true;
+//  }
+
+  if (!key_is_valid($key)) {
+    error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
   }
-  $event_name .= "Event";
+
+//  $event_name .= "Event";
+//  $event_path = get_event_path($event_name, $key, "..");
+//  if (file_exists($event_path)) {
+//    echo "<p>ERROR: Event \"{$event_name}\" exists - is this a duplicate submission?\n";
+//    $found_error = true;
+//  }
+
   $course_array = array();
   //echo "<p>Here is the FILES array.\n";
   //print_r($_FILES);
@@ -106,7 +127,9 @@ if (isset($_POST["submit"])) {
 
   $course_list = explode("\n", $file_contents);
   $num_courses=count($course_list);
-  echo "<p>There are ${num_courses} courses found.\n";
+  if ($verbose) {
+    echo "<p>There are ${num_courses} courses found.\n";
+  }
 
   if ($num_courses < $MAX_COURSES) {
     foreach ($course_list as $this_course) {
@@ -128,16 +151,18 @@ if (isset($_POST["submit"])) {
       $course_name = $course_info[$NAME_FIELD];
 
       if ($course_info[$ERROR_FIELD] != "") {
-        echo "<p>Course entry {$this_course} looks wrong: {$course_info[$ERROR_FIELD]}\n";
+        echo "<p>ERROR: Course entry {$this_course} looks wrong: {$course_info[$ERROR_FIELD]}\n";
         $found_error = true;
       }
 
       if ((ctype_alpha(substr($course_name, 0, 1))) && (ck_valid_chars($course_name)) && 
             (strlen($course_name) < $MAX_COURSE_NAME_LEN)) {
-        echo "<p>Course name {$course_name} passes the checks.\n";
+        if ($verbose) {
+          echo "<p>Course name {$course_name} passes the checks.\n";
+        }
       }
       else {
-        echo "<p>Course name \"{$course_name}\" fails the checks, only letters, numbers, and - allowed.\n";
+        echo "<p>ERROR: Course name \"{$course_name}\" fails the checks, only letters, numbers, and - allowed.\n";
         $found_error = true;
       }
 
@@ -156,10 +181,12 @@ if (isset($_POST["submit"])) {
       }
 
       if (array_search(0, $check_controls) === false) {
-        echo "<p>Control list all seems to be correctly formatted and not too long.\n";
+        if ($verbose) {
+          echo "<p>Control list all seems to be correctly formatted and not too long.\n";
+        }
       }
       else {
-        echo "<p>Control list contains either non-alphanumeric characters or too long.\n";
+        echo "<p>ERROR: Control list contains either non-alphanumeric characters or too long.\n";
         echo "<p>Checking results: " . join(",", $check_controls) . "\n";
         $found_error = true;
       }
@@ -167,6 +194,27 @@ if (isset($_POST["submit"])) {
       if (count($control_list) > $MAX_CONTROLS) {
         echo "<p>ERROR: Too many controls found - " . count($control_list) . "\n";
         $found_error = true;
+      }
+
+      // Validate that if there are duplicate entries, that at least the point values are the same
+      if ($course_info[$TYPE_FIELD] == $SCORE_O_COURSE) {
+        $control_dedup_hash = array();
+        foreach ($control_list as $control_entry) {
+          $pieces = explode(":", $control_entry);
+          if (!isset($control_dedup_hash[$pieces[0]])) {
+            $control_dedup_hash[$pieces[0]] = $pieces[1];
+          }
+          else if ($control_dedup_hash[$pieces[0]] != $pieces[1]) {
+            $found_error = true;
+            echo "<p>ERROR: Control {$pieces[0]} duplicated with different point values {$control_dedup_hash[$pieces[0]]} and {$pieces[1]}.\n";
+          }
+          else {
+            echo "<p>INFO: Control {$pieces[0]} duplicated, ignoring second entry.\n";
+          }
+        }
+
+        $control_list = array_map(function ($elt) use ($control_dedup_hash) { return (implode(":", array($elt, $control_dedup_hash[$elt]))); },
+                                  array_keys($control_dedup_hash));
       }
 
       if (count($course_name_and_controls) > 1) {
@@ -182,7 +230,9 @@ if (isset($_POST["submit"])) {
           $course_info[$MAX_SCORE_FIELD] = $max_score;
         }
 
-        echo "<p>Found controls for course {$course_name}: " . implode("--", $control_list) . "\n";
+        if ($verbose) {
+          echo "<p>Found controls for course {$course_name}: " . implode("--", $control_list) . "\n";
+        }
         $course_array[] = array($course_name, $control_list, $course_info);
       }
       else {
@@ -193,28 +243,65 @@ if (isset($_POST["submit"])) {
     
     if (!$found_error) {
       # Create the event itself
-      mkdir("./{$event_name}");
-      mkdir("./{$event_name}/Competitors");
-      mkdir("./{$event_name}/Courses");
-      mkdir("./{$event_name}/Results");
+      if (!is_dir(get_base_path($key, ".."))) {
+        mkdir(get_base_path($key, ".."), 0755, true);  // Create the intermediate directories as necessary
+      }
+
+      $event_name_attempts = 0;
+      while ($event_name_attempts < 100) {
+        $event_name = uniqid("event-");
+        $event_path = get_event_path($event_name, $key, "..");
+
+        if (!file_exists($event_path)) {
+          break;
+        }
+
+        $event_name_attempts++;
+      }
+      if (($event_name_attempts >= 100)  || file_exists($event_path)) {
+        error_and_exit("Internal error creating event, please wait and retry.");
+      }
+
+      mkdir($event_path);
+      mkdir("{$event_path}/Competitors");
+      mkdir("{$event_path}/Courses");
+      mkdir("{$event_path}/Results");
+      file_put_contents("{$event_path}/description", $event_fullname);
   
+      $course_names_array = array();
       for ($i = 0; $i < count($course_array); $i++) {
         $prefix = sprintf("%02d", $i);
-        mkdir("./{$event_name}/Courses/{$prefix}-{$course_array[$i][0]}");
-        mkdir("./{$event_name}/Results/{$prefix}-{$course_array[$i][0]}");
-        file_put_contents("./${event_name}/Courses/{$prefix}-{$course_array[$i][0]}/controls.txt", implode("\n", $course_array[$i][1]));
+        mkdir("{$event_path}/Courses/{$prefix}-{$course_array[$i][0]}");
+        mkdir("{$event_path}/Results/{$prefix}-{$course_array[$i][0]}");
+        $course_names_array[] = $course_array[$i][0];
+        file_put_contents("${event_path}/Courses/{$prefix}-{$course_array[$i][0]}/controls.txt", implode("\n", $course_array[$i][1]));
 
         if ($course_array[$i][2][$TYPE_FIELD] == $SCORE_O_COURSE) {
           $course_info = $course_array[$i][2];
           $properties_string = "";
-          foreach ($course_info as $key => $value) {
-            $properties_string .= $key . ":" . $value . "\n";
+          foreach ($course_info as $props_key => $props_value) {
+            $properties_string .= $props_key . ":" . $props_value . "\n";
           }
-          file_put_contents("./{$event_name}/Courses/{$prefix}-{$course_array[$i][0]}/properties.txt", $properties_string);
+          file_put_contents("{$event_path}/Courses/{$prefix}-{$course_array[$i][0]}/properties.txt", $properties_string);
         }
       }
 
-      echo "<p>Created event successfully {$event_name}\n";
+      echo "<p>Created event successfully {$event_fullname} with " . count($course_array) . " courses:<ul><li>" . implode("<li>", $course_names_array) . "</ul>\n";
+      if (isset($_SERVER["HTTPS"])) {
+        $proto = "https://";
+      }
+      else {
+        $proto = "http://";
+      }
+      $registration_link = $proto . $_SERVER["SERVER_NAME"] . dirname(dirname($_SERVER["REQUEST_URI"])) . "/OMeetRegistration/register.php" . "?key={$key}";
+      //echo "<p>Server URI is: " . $_SERVER["REQUEST_URI"] . "\n";
+      //echo "<p>Server URI dirname is: " . dirname($_SERVER["REQUEST_URI"]) . "\n";
+      //echo "<p>Server URI dirname and rel path is: " . dirname($_SERVER["REQUEST_URI"]) . "/../OMeetRegistration/register.php" . "\n";
+      //echo "<p>Service URI after realpath is " . dirname(dirname($_SERVER["REQUEST_URI"])) . "/OMeetRegistration/register.php" . "\n";
+      //echo "<p>Server name is " . $_SERVER["SERVER_NAME"] . "\n";
+      echo "<p>Paths to register are:<p><ul><li>Event specific registration: {$registration_link}&event=${event_name}</li>\n";
+      echo "<li>General registration: {$registration_link}</li></ul><p>\n";
+      $event_created = true;
     }
   }
   else {
@@ -226,30 +313,52 @@ if (isset($_POST["submit"])) {
     echo "<p>Errors found, course not created.\n";
   }
 }
+else {
+  $key = $_GET["key"];
+  if (!key_is_valid($key)) {
+    error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
+  }
 
+  if (!is_dir(get_base_path($key, ".."))) {
+    error_and_exit("No event directory found, please contact administrator to create \"{$base_path}\"");
+  }
+}
+
+if (!$event_created && !$found_error) {
 ?>
 <br>
 <form action=./create_event.php method=post enctype="multipart/form-data" >
 <p class="title">What is the name of the event?<br>
-<p>Note that "Event" will be automatically appended to the entered event name.
 <p>
-<input name=event_name type=text>
+<input name=event_name type=text size=80>
 <br><br><br><p><p>
 <input type="hidden" name="MAX_FILE_SIZE" value="4096" />
-<p class="title">Enter a filename with the course/control details for the event:
+<input type="hidden" name="key" value="<?php echo $key ?>" />
+<p class="title">Enter a filename with the course/control details for the event.
+<p>Format of the file: One course per line, comma separated.
+<ul>
+<li>Normal Course: NameOfCourse,control,control,control,...
+  <ul><li>Example: White,102,105,106</ul>
+<li>ScoreO Course: s:NameOfCourse:time limit:penalty per minute,control:points,control:points,control:points,...
+  <ul><li>Example: s:ScoutScoreO:2h:2,102:10,110:20,203:30,101:10,109:15
+      <li>Time limit format is XXhYYmZZs for XX hours, XX minutes, XX seconds, note no spaces
+      <li>Use a time limit of 0 to indicate unlimited time</ul>
+</ul>
 <input name=upload_file type=file>
-<p><p>
+<p>
 <br>
-<p class="title">Alternatively, enter the file contents here.
-<p>One course per line, comma separated.
-<p>NameOfCourse,control,control,control,...<p>
+<p class="title">Alternatively, enter the information directly here.
+<p>
 <textarea name=course_description rows=10 cols=60>
 --Replace this with your course description--
 </textarea>
+<p><p>
+<input type=checkbox name="verbose" value="true">Show verbose output (useful only if course creation is failing)
 <p><p>
 <input name="submit" type="submit">
 </form>
 
 <?php
+}
 echo get_web_page_footer();
 ?>

@@ -1,6 +1,6 @@
 <?php
-require 'common_routines.php';
-require 'course_properties.php';
+require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/course_properties.php';
 
 ck_testing();
 
@@ -9,19 +9,30 @@ ck_testing();
 $course = $_GET["course"];
 $time_and_competitor = $_GET["entry"];
 $event = $_GET["event"];
+$key = $_GET["key"];
+
+if (($event == "") || (!key_is_valid($key))) {
+  error_and_exit("Empty event \"{$event}\" or bad location key \"{$key}\", is this an unauthorized link?\n");
+}
 
 $result_pieces = explode(",", $time_and_competitor);
 $competitor_id = $result_pieces[2];
 
 
-$competitor_path = "./" . $event . "/Competitors/" . $competitor_id;
-$competitor_name = file_get_contents("./{$event}/Competitors/{$competitor_id}/name");
+$competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
+
+if (!is_dir($competitor_path)) {
+  error_and_exit("Cannot find competitor \"{$competitor_id}\" for {$event} and {$key}, please check that this is an authorized link.\n");
+}
+
+$competitor_name = file_get_contents("{$competitor_path}/name");
 $controls_found_path = "{$competitor_path}/controls_found";
 
-$control_list = read_controls("./{$event}/Courses/{$course}/controls.txt");
+$courses_path = get_courses_path($event, $key, "..");
+$control_list = read_controls("{$courses_path}/{$course}/controls.txt");
 $controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
                                       array_map(function ($element) { return $element[1]; }, $control_list));
-$course_properties = get_course_properties("./{$event}/Courses/{$course}");
+$course_properties = get_course_properties("{$courses_path}/{$course}");
 $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
 //echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
@@ -110,7 +121,7 @@ echo $table_string;
 echo "<p>Total Time: " . formatted_time($result_pieces[1]) . "\n";
 if ($score_course) {
   echo "<p>Final Score: " . ($course_properties[$MAX_SCORE_FIELD] - $result_pieces[0]) . "\n";
-  if ($result_pieces[1] > $course_properties[$LIMIT_FIELD]) {
+  if (($course_properties[$LIMIT_FIELD] > 0) && ($result_pieces[1] > $course_properties[$LIMIT_FIELD])) {
     $time_over = $result_pieces[1] - $course_properties[$LIMIT_FIELD];
     $minutes_over = floor(($time_over + 59) / 60);
     $penalty = $minutes_over * $course_properties[$PENALTY_FIELD];

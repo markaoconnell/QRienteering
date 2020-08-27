@@ -1,20 +1,24 @@
 <?php
-require 'common_routines.php';
+require '../OMeetCommon/common_routines.php';
 
 ck_testing();
 
 // Get the submitted info
 // echo "<p>\n";
-$competitor_name = $_COOKIE["competitor_name"];
 $course = $_COOKIE["course"];
 $competitor_id = $_COOKIE["competitor_id"];
-$next_control = $_COOKIE["next_control"];
 $event = $_COOKIE["event"];
+$key = $_COOKIE["key"];
 
 echo get_web_page_header(true, false, false);
 
 // Validate that all looks good
 $error = false;
+if (($key == "") || !key_is_valid($key)) {
+  echo "<p>ERROR No key specified in cookie.\n";
+  $error = true;
+}
+
 if ($event == "") {
   echo "<p>ERROR No event specified in cookie.\n";
   $error = true;
@@ -41,7 +45,7 @@ if ($next_control == "" ) {
 }
 
 
-$courses_array = scandir('./' . $event . '/Courses');
+$courses_array = scandir(get_courses_path($event, $key, ".."));
 $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
 // print_r($courses_array);
 // echo "<p>\n";
@@ -53,7 +57,7 @@ if (!in_array($course, $courses_array)) {
 }
 
 // Input information is all valid, check the saved competitor information
-$competitor_path = "./" . $event . "/Competitors/" . $competitor_id;
+$competitor_path = get_competitor_path($competitor_id, $event, $key, "..");
 if (!file_exists($competitor_path)) {
   echo "<p>ERROR no competitor entry found \"${competitor_path}\"\n";
   $error = true;

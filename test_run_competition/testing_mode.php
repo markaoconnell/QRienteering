@@ -19,13 +19,11 @@ function artificial_input_file_parse() {
       if (count($this_line_elements) == 3) {
         if ($this_line_elements[0] == "GET") {
 //echo "Set GET {$this_line_elements[1]} to {$this_line_elements[2]}\n";
-          $post_processed_value = str_replace("--space--", " ", $this_line_elements[2]);
-          $_GET[$this_line_elements[1]] = $post_processed_value;
+          $_GET[$this_line_elements[1]] = $this_line_elements[2];
         }
         else if ($this_line_elements[0] == "COOKIE") {
 //echo "Set COOKIE {$this_line_elements[1]} to {$this_line_elements[2]}\n";
-          $post_processed_value = str_replace("--space--", " ", $this_line_elements[2]);
-          $_COOKIE[$this_line_elements[1]] = $post_processed_value;
+          $_COOKIE[$this_line_elements[1]] = $this_line_elements[2];
         }
         else if ($this_line_elements[0] == "POST") {
 // POSTs are more likely to have embedded newlines, which don't play nicely with the

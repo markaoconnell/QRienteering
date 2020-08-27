@@ -1,6 +1,6 @@
 <?php
-require 'common_routines.php';
-require 'course_properties.php';
+require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/course_properties.php';
 
 ck_testing();
 
@@ -18,14 +18,20 @@ else {
 }
 
 $event = $_GET["event"];
+$key = $_GET["key"];
 $include_competitor_id = ($_GET["include_competitor_id"] != "");
 
+if (($event == "") || (!key_is_valid($key))) {
+  error_and_exit("Empty event \"{$event}\" or bad location key \"{$key}\", is this an unauthorized link?\n");
+}
+
 $results_string = "";
-$competitor_directory = "./${event}/Competitors";
+$competitor_directory = get_competitor_directory($event, $key, "..");
 $competitor_list = scandir("${competitor_directory}");
 $competitor_list = array_diff($competitor_list, array(".", ".."));
 
-$courses_array = scandir('./' . $_GET["event"] . '/Courses');
+$courses_path = get_courses_path($event, $key, "..");
+$courses_array = scandir($courses_path);
 $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
 
 $current_time = time();
@@ -72,7 +78,7 @@ if ($found_registered_not_started) {
         if ($include_competitor_id) {
           $competitor_name .= " ({$competitor})";
         }
-        $results_string .= "<tr><td>${competitor_name}</td><td>$course</td></tr>";
+        $results_string .= "<tr><td>${competitor_name}</td><td>" . ltrim($course, "0..9-") . "</td></tr>";
       }
     }
   }
@@ -84,7 +90,7 @@ foreach (array_keys($on_course) as $course) {
 //  print_r($on_course[$course]);
   if (count($on_course[$course]) > 0) {
     $outstanding_entrants = true;
-    $course_properties = get_course_properties("./${event}/Courses/${course}");
+    $course_properties = get_course_properties("${courses_path}/${course}");
     $is_score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
 
     $results_string .= "<p>Currently on " . ltrim($course, "0..9-") . "\n";

@@ -11,15 +11,19 @@ my($COMPETITOR_NAME) = "Mark_OConnell_ScoreO_Testing";
 my($competitor_id);
 
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
+create_key_file();
 initialize_event();
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
-set_no_redirects_for_event("UnitTestingEvent");
+my($event_id) = $TEST_INFO{"event_id"};
+set_no_redirects_for_event($event_id, "UnitTestPlayground");
 
 
 sub run_score_course {
-  my($time_on_course, @controls_to_find) = @_;
+  my($time_on_course, $course, @controls_to_find) = @_;
 
-  %GET = qw(event UnitTestingEvent course 02-ScoreO);
+  %GET = qw(key UnitTestPlayground);
+  $GET{"course"} = $course;
+  $GET{"event"} = $event_id;
   $GET{"competitor_name"} = $COMPETITOR_NAME;
   %COOKIE = ();  # empty hash
   
@@ -27,23 +31,28 @@ sub run_score_course {
   $competitor_id = $TEST_INFO{"competitor_id"};
   
   
-  %COOKIE = qw(event UnitTestingEvent course 02-ScoreO);
+  %COOKIE = qw(key UnitTestPlayground);
   $COOKIE{"competitor_id"} = $competitor_id;
+  $COOKIE{"course"} = $course;
+  $COOKIE{"event"} = $event_id;
   %GET = ();  # empty hash
   
   start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
   # Artificially adjust the start time on the course
   my($artificial_start_time) = time() - $time_on_course;
-  open(START_FILE, ">./UnitTestingEvent/Competitors/$competitor_id/controls_found/start");
+  my($start_file_path) = get_base_path($COOKIE{"key"}) . "/" . $COOKIE{"event"} . "/Competitors/${competitor_id}/controls_found/start";
+  open(START_FILE, ">${start_file_path}");
   print START_FILE $artificial_start_time;
   close(START_FILE);
   
   
   #
   # Find the controls specified
-  %COOKIE = qw(event UnitTestingEvent course 02-ScoreO);
+  %COOKIE = qw(key UnitTestPlayground);
   $COOKIE{"competitor_id"} = $competitor_id;
+  $COOKIE{"course"} = $course;
+  $COOKIE{"event"} = $event_id;
 
   my($this_control);
   my($controls_found_count) = 0;
@@ -53,7 +62,7 @@ sub run_score_course {
     if ($this_control =~ /^-/) {
       # Control not on the course
       hashes_to_artificial_file();
-      my($cmd) = "php ../reach_control.php";
+      my($cmd) = "php ../OMeet/reach_control.php";
       my($output);
       $output = qx($cmd);
 
@@ -72,14 +81,26 @@ sub run_score_course {
 }
 
 
-################3
+#################
 # Test1: Find all the controls in time
 # Finish the course
 # Validate that the correct entry is created
 %TEST_INFO = qw(Testname TestFindAllScoreOControls);
 
-run_score_course(120, qw(301 302 303 304 305));
+run_score_course(120, "02-ScoreO", qw(301 302 303 304 305));
 finish_score_successfully(150, \%GET, \%COOKIE, \%TEST_INFO);
+
+success();
+
+
+#################
+# Test1.5: Find all the controls
+# Finish the course
+# Validate that the correct entry is created
+%TEST_INFO = qw(Testname TestGetEmAllGotEmAll2Mins);
+
+run_score_course(120, "04-GetEmAll", qw(301 302 303 304 305));
+finish_score_successfully(5, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
 
@@ -89,10 +110,23 @@ success();
 #
 %TEST_INFO = qw(Testname TestFindAllScoreOControls1MinPenalty);
 
-run_score_course(330, qw(301 302 303 304 305));
+run_score_course(330, "02-ScoreO", qw(301 302 303 304 305));
 finish_score_successfully(149, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
+
+
+#################
+# Test2.5: Find all the controls
+# Finish the course
+# Validate that the correct entry is created
+%TEST_INFO = qw(Testname TestGetEmAllGotEmAll5Mins);
+
+run_score_course(330, "04-GetEmAll", qw(301 302 303 304 305));
+finish_score_successfully(5, \%GET, \%COOKIE, \%TEST_INFO);
+
+success();
+
 
 
 ################3
@@ -100,10 +134,23 @@ success();
 #
 %TEST_INFO = qw(Testname TestFindAllScoreOControls5MinPenalty);
 
-run_score_course(630, qw(301 302 303 304 305));
+run_score_course(630, "02-ScoreO", qw(301 302 303 304 305));
 finish_score_successfully(144, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
+
+
+#################
+# Test3.5: Find all the controls
+# Finish the course
+# Validate that the correct entry is created
+%TEST_INFO = qw(Testname TestGetEmAllGotEmAll10Mins);
+
+run_score_course(630, "04-GetEmAll", qw(301 302 303 304 305));
+finish_score_successfully(5, \%GET, \%COOKIE, \%TEST_INFO);
+
+success();
+
 
 
 
@@ -112,10 +159,23 @@ success();
 #
 %TEST_INFO = qw(Testname TestFindThreeScoreOControls);
 
-run_score_course(230, qw(301 303 305));
+run_score_course(230, "02-ScoreO", qw(301 303 305));
 finish_score_successfully(90, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
+
+
+#################
+# Test4.5: Find some of the controls
+# Finish the course
+# Validate that the correct entry is created
+%TEST_INFO = qw(Testname TestGetEmAllMissedSome10Mins);
+
+run_score_course(630, "04-GetEmAll", qw(301 304 305));
+finish_score_successfully(3, \%GET, \%COOKIE, \%TEST_INFO);
+
+success();
+
 
 
 ################3
@@ -123,7 +183,7 @@ success();
 #
 %TEST_INFO = qw(Testname TestFindTwoScoreOControls2MinPenalty);
 
-run_score_course(400, qw(302 304));
+run_score_course(400, "02-ScoreO", qw(302 304));
 finish_score_successfully(58, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
@@ -135,7 +195,7 @@ success();
 %TEST_INFO = qw(Testname TestFindDuplicateScoreOControls);
 
 $ADD_INTER_CONTROL_DELAY = 1;
-run_score_course(140, qw(301 301 301 301));
+run_score_course(140, "02-ScoreO", qw(301 301 301 301));
 finish_score_successfully(10, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
@@ -147,7 +207,7 @@ success();
 %TEST_INFO = qw(Testname TestFindLotsDuplicateScoreOControls);
 
 $ADD_INTER_CONTROL_DELAY = 1;
-run_score_course(150, qw(301 302 303 301 304 302 303 305 301 302 303 304 305));
+run_score_course(150, "02-ScoreO", qw(301 302 303 301 304 302 303 305 301 302 303 304 305));
 finish_score_successfully(150, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
@@ -159,7 +219,7 @@ success();
 %TEST_INFO = qw(Testname TestFindBadScoreOControls);
 
 $ADD_INTER_CONTROL_DELAY = 0;
-run_score_course(150, qw(301 302 303 -301 304 -302 -303 305 -301 -302 -303 -304 -305));
+run_score_course(150, "02-ScoreO", qw(301 302 303 -301 304 -302 -303 305 -301 -302 -303 -304 -305));
 finish_score_successfully(150, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
@@ -173,7 +233,7 @@ success();
 %TEST_INFO = qw(Testname TestNegativeScoreOResult);
 
 $ADD_INTER_CONTROL_DELAY = 0;
-run_score_course(1569, qw(301));
+run_score_course(1569, "02-ScoreO", qw(301));
 finish_score_successfully(-12, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
@@ -183,5 +243,8 @@ success();
 ############
 # Cleanup
 
-qx(rm -rf UnitTestingEvent);
+my($rm_cmd) = "rm -rf " . get_base_path("UnitTestPlayground");
+print "Executing $rm_cmd\n";
+qx($rm_cmd);
+remove_key_file();
 qx(rm artificial_input);

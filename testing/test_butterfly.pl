@@ -6,7 +6,7 @@ require "testHelpers.pl";
 require "success_call_helpers.pl";
 
 my(%GET, %TEST_INFO, %COOKIE, %POST);
-my($COMPETITOR_NAME) = "Mark_OConnell_Success_Testing";
+my($COMPETITOR_NAME) = "Mark_OConnell_Flutterby";
 my($competitor_id);
 
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
@@ -20,8 +20,8 @@ set_no_redirects_for_event($event_id, "UnitTestPlayground");
 ###########
 # Test 1 - register a new entrant successfully
 # Test registration of a new entrant
-%TEST_INFO = qw(Testname TestSuccessRegistration);
-%GET = qw(key UnitTestPlayground course 00-White);
+%TEST_INFO = qw(Testname TestButterflyRegistration);
+%GET = qw(key UnitTestPlayground course 03-Butterfly);
 $GET{"competitor_name"} = $COMPETITOR_NAME;
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
@@ -37,8 +37,8 @@ success();
 ###########
 # Test 2 - start the course
 # validate that the start entry is created
-%TEST_INFO = qw(Testname TestSuccessStart);
-%COOKIE = qw(key UnitTestPlayground course 00-White);
+%TEST_INFO = qw(Testname TestButterflyStart);
+%COOKIE = qw(key UnitTestPlayground course 03-Butterfly);
 $COOKIE{"competitor_id"} = $competitor_id;
 $COOKIE{"event"} = $event_id;
 %GET = ();  # empty hash
@@ -51,25 +51,39 @@ success();
 ###########
 # Test 3 - find all correct controls
 # Validate that the correct entry is created
-%TEST_INFO = qw(Testname FindAllValidControls);
-%COOKIE = qw(key UnitTestPlayground course 00-White);
+%TEST_INFO = qw(Testname FindAllButterflyControls);
+%COOKIE = qw(key UnitTestPlayground course 03-Butterfly);
 $COOKIE{"event"} = $event_id;
 $COOKIE{"competitor_id"} = $competitor_id;
 
-$GET{"control"} = "201";
+$GET{"control"} = "401";
 reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
 
-$GET{"control"} = "202";
+$GET{"control"} = "402";
 reach_control_successfully(1, \%GET, \%COOKIE, \%TEST_INFO);
 
-$GET{"control"} = "203";
+$GET{"control"} = "403";
 reach_control_successfully(2, \%GET, \%COOKIE, \%TEST_INFO);
 
-$GET{"control"} = "204";
+sleep(2);  # Make sure that the repeated control will have a different timestamp
+$GET{"control"} = "401";
 reach_control_successfully(3, \%GET, \%COOKIE, \%TEST_INFO);
 
-$GET{"control"} = "205";
+$GET{"control"} = "404";
 reach_control_successfully(4, \%GET, \%COOKIE, \%TEST_INFO);
+
+$GET{"control"} = "405";
+reach_control_successfully(5, \%GET, \%COOKIE, \%TEST_INFO);
+
+sleep(2);  # Make sure that the repeated control will have a different timestamp
+$GET{"control"} = "401";
+reach_control_successfully(6, \%GET, \%COOKIE, \%TEST_INFO);
+
+$GET{"control"} = "406";
+reach_control_successfully(7, \%GET, \%COOKIE, \%TEST_INFO);
+
+$GET{"control"} = "407";
+reach_control_successfully(8, \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
 
@@ -78,7 +92,7 @@ success();
 # Test 4 - finish the course
 # Validate that the correct entry is created
 %TEST_INFO = qw(Testname TestFinishSuccessWhite);
-%COOKIE = qw(key UnitTestPlayground course 00-White);
+%COOKIE = qw(key UnitTestPlayground course 03-Butterfly);
 $COOKIE{"competitor_id"} = $competitor_id;
 $COOKIE{"event"} = $event_id;
 %GET = (); # empty hash

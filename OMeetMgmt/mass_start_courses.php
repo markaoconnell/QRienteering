@@ -1,5 +1,5 @@
 <?php
-require 'common_routines.php';
+require '../OMeetCommon/common_routines.php';
 
 ck_testing();
 
@@ -10,19 +10,32 @@ $already_started_array = array();
 $started_array = array();
 
 $event = $_GET["event"];
+$key = $_GET["key"];
+
+if (!key_is_valid($key)) {
+  error_and_exit("Unknown management key \"$key\", are you using an authorized link?\n");
+}
+
 $courses_to_start = explode(",", $_GET["courses_to_start"]);
 //echo "event is \"${event}\"<p>";
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";
-if (($event != "") && file_exists("./{$event}") && is_dir("./{$event}/Courses")) {
+$event_path = get_event_path($event, $key, "..");
+$courses_path = get_courses_path($event, $key, "..");
+if (($event != "") && file_exists($event_path) && is_dir($courses_path)) {
 
   // Make sure the courses are valid
-  $validated_courses = array_filter($courses_to_start, function ($course) use ($event) { return(file_exists("./{$event}/Courses/{$course}/controls.txt")); } );
+  $validated_courses = array_filter($courses_to_start, function ($course) use ($courses_path) { return(file_exists("{$courses_path}/{$course}/controls.txt")); } );
   $invalid_courses = array_diff($courses_to_start, $validated_courses);
 
   // Get the list of competitors who haven't started and are on one of the courses to mass_start
+  // Generate a start time for the si stick users - these generally seem to be timestamps for the current day,
+  // so ignore everything but the hour, minute, second for today and use that as the si stick start time
   $mass_start_time = time();
-  $competitor_path = "./{$event}/Competitors";
-  $competitor_list = scandir("{$competitor_path}");
+  $si_stick_mass_start_pieces = explode(":", strftime("%T", $mass_start_time));
+  $si_stick_start_time = ($si_stick_mass_start_pieces[0] * 3600) + ($si_stick_mass_start_pieces[1] * 60) + $si_stick_mass_start_pieces[0];
+
+  $competitor_path = get_competitor_directory($event, $key, "..");
+  $competitor_list = scandir($competitor_path);
   $competitor_list = array_diff($competitor_list, array(".", ".."));
 
   foreach ($competitor_list as $competitor) {
@@ -31,7 +44,13 @@ if (($event != "") && file_exists("./{$event}") && is_dir("./{$event}/Courses"))
       $competitor_name = file_get_contents("{$competitor_path}/{$competitor}/name");
 
       if (!file_exists("{$competitor_path}/{$competitor}/controls_found/start")) {
-        file_put_contents("{$competitor_path}/{$competitor}/controls_found/start", $mass_start_time);
+        if (!file_exists("{$competitor_path}/{$competitor}/si_stick")) {
+          file_put_contents("{$competitor_path}/{$competitor}/controls_found/start", $mass_start_time);
+        }
+        else {
+          file_put_contents("{$competitor_path}/{$competitor}/mass_si_stick_start", $si_stick_start_time);
+          file_put_contents("{$competitor_path}/{$competitor}/raw_mass_start_time", strftime("%T", $mass_start_time));
+        }
         $started_array[] = "{$competitor_name} on " . ltrim($course_for_competitor, "0..9-");
       }
       else {
