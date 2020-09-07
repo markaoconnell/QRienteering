@@ -87,6 +87,23 @@ sub get_score_course_properties {
   return(%props_hash);
 }
 
+sub set_email_properties {
+  my($key) = @_;
+  my($email_props_path) = get_base_path($key) . "/email_properties.txt";
+  open(EMAIL_PROPS_FILE, ">$email_props_path");
+  print EMAIL_PROPS_FILE "from: markandkaren" . "@" . "mkoconnell.com\n";
+  print EMAIL_PROPS_FILE "reply-to: markandkaren" . "@" . "mkoconnell.com\n";
+  print EMAIL_PROPS_FILE "subject: Results of NEOC Orienteering meet\n";
+  print EMAIL_PROPS_FILE "extra-info: <p>Learn more about NEOC at <a href=\"www.newenglandorienteering.org\">our website</a>.\n";
+  close(EMAIL_PROPS_FILE);
+}
+
+sub remove_email_properties {
+  my($key) = @_;
+  my($email_props_path) = get_base_path($key) . "/email_properties.txt";
+  unlink($email_props_path);
+}
+
 my(%keys);
 sub create_key_file {
   $keys{"UnitTestPlayground"} = "TestingDirectory";

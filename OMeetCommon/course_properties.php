@@ -16,12 +16,30 @@ $SCORE_COURSE_ID = "s";
 
 
 function get_course_properties($course_path) {
-  $props_as_hash = array();
-  if (file_exists("${course_path}/properties.txt")) {
-    $properties_contents = file("{$course_path}/properties.txt");
-    array_map(function ($string) use (&$props_as_hash) { $pieces = explode(":", trim($string)); $props_as_hash[$pieces[0]] = $pieces[1]; },
-              $properties_contents);
+  if (file_exists("{$course_path}/properties.txt")) {
+    return(get_properties("{$course_path}/properties.txt", false));
   }
+
+  return(array());
+}
+
+function get_email_properties($base_path) {
+  if (file_exists("{$base_path}/email_properties.txt")) {
+    return(get_properties("{$base_path}/email_properties.txt", true));
+  }
+
+  return(array());
+}
+
+function get_properties($properties_path, $filter_for_comments) {
+  $props_as_hash = array();
+  $properties_contents = file($properties_path);
+  if ($filter_for_comments) {
+    $properties_contents = array_filter($properties_contents, function ($line) { return (ltrim($line)[0] != "#"); });
+  }
+  array_map(function ($string) use (&$props_as_hash) { $first_colon = strpos($string, ":");
+                                                       $props_as_hash[trim(substr($string, 0, $first_colon))] = trim(substr($string, $first_colon + 1)); },
+              $properties_contents);
 
   return($props_as_hash);
 }

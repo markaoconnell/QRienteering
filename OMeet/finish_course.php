@@ -193,26 +193,42 @@ echo get_all_course_result_links($event, $key, "..");
 
 if (file_exists("{$competitor_path}/registration_info")) {
   $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
-  if ($registration_info["email_address"] != "") {
+  $email_properties = get_email_properties(get_base_path($key, ".."));
+  //print_r($email_properties);
+  $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]);
+  if (($registration_info["email_address"] != "") && $email_enabled) {
     // See if this looks like a valid email
     $email_addr = $registration_info["email_address"];
     if (preg_match("/^[a-zA-z0-9_.\-]+@[a-zA-Z0-9_.\-]+/", $email_addr)) {
       $headers = array();
-      $headers[] = "From: markandkaren@mkoconnell.com";
-      $headers[] = "Reply-To: markandkaren@mkoconnell.com";
+      $headers[] = "From: " . $email_properties["from"];
+      $headers[] = "Reply-To: ". $email_properties["reply-to"];
       $headers[] = "MIME-Version: 1.0";
       $headers[] = "Content-type: text/html; charset=iso-8859-1";
 
       $header_string = implode("\r\n", $headers);
 
       $course_description = file_get_contents(get_event_path($event, $key, "..") . "/description");
+      if (isset($email_properties["extra_info"])) {
+        $extra_info = $email_properties["extra_info"];
+      }
+      else {
+        $extra_info = "";
+      }
       $body_string = "<html><body>\r\n" .
                      "<p>Orienteering results for\r\n{$course_description}\r\n" .
                      wordwrap("{$results_string}\r\n", 70, "\r\n") . 
-                     wordwrap(get_email_course_result_links($event, $key, ".."), 70, "\r\n") . "\r\n</body></html>";
+                     wordwrap(get_email_course_result_links($event, $key, ".."), 70, "\r\n") . 
+                     wordwrap("<p><p>{$extra_info}\r\n", 70, "\r\n") . "\r\n</body></html>";
       
       //echo "<p>Mail: Attempting mail send to {$email_addr} with results.\n";
-      $email_send_result = mail($email_addr, "Orienteering Results", $body_string, $header_string);
+      if (isset($email_properties["subject"])) {
+        $subject = $email_properties["subject"];
+      }
+      else {
+        $subject = "Orienteering Results";
+      }
+      $email_send_result = mail($email_addr, $subject, $body_string, $header_string);
 
       if ($email_send_result) {
         echo "<p>Mail: Sent results to {$email_addr}.\n";

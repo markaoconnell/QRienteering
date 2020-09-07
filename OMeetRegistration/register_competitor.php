@@ -86,7 +86,7 @@ if (!$error) {
         $using_si_stick = true;
       }
 
-      if ($registration_info["is_member"] == "yes") {
+      if (($registration_info["is_member"] == "yes") && ($registration_info["member_id"] != "")) {
         // Format will be member_id:timestamp_of_last_registration,member_id:timestamp_of_last_registration,...
         // 3 month timeout
         $time_cutoff = $current_time - (86400 * 90);
