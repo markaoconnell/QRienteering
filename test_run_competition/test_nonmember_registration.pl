@@ -75,7 +75,7 @@ sub compare_hashes {
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
+$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -101,7 +101,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
+$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -127,7 +127,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
+$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid si_stick/) {
@@ -145,7 +145,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
+$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid \(empty\) first name/) {
@@ -162,7 +162,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
+$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid \(empty\) last name/) {
@@ -181,7 +181,7 @@ $GET{"si_stick"} = "";
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
+$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -213,7 +213,7 @@ $GET{"car_info"} = "";
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
+$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -244,7 +244,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
+$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
 $output = qx($cmd);
 
 if ($output !~ /The waiver must be acknowledged/) {

@@ -82,7 +82,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC si_stick 3959473 is_member yes);
+my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC si_stick 3959473 member_id 31 is_member yes);
 $expected_hash{"email_address"} = "";
 $expected_hash{"cell_phone"} = "";
 $expected_hash{"car_info"} = "";
@@ -111,7 +111,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC si_stick 141421 is_member yes);
+my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC si_stick 141421 member_id 31 is_member yes);
 $expected_hash{"email_address"} = "";
 $expected_hash{"cell_phone"} = "";
 $expected_hash{"car_info"} = "";
@@ -139,7 +139,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC is_member yes);
+my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC member_id 31 is_member yes);
 $expected_hash{"email_address"} = "";
 $expected_hash{"cell_phone"} = "";
 $expected_hash{"car_info"} = "";
@@ -168,7 +168,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Larry last_name Berrill club_name NEOC is_member yes);
+my(%expected_hash) = qw(first_name Larry last_name Berrill club_name NEOC member_id 41 is_member yes);
 $expected_hash{"email_address"} = "";
 $expected_hash{"cell_phone"} = "";
 $expected_hash{"car_info"} = "";
@@ -199,7 +199,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Peter last_name Amram club_name NEOC is_member yes si_stick 314159);
+my(%expected_hash) = qw(first_name Peter last_name Amram club_name NEOC is_member yes member_id 171 si_stick 314159);
 $expected_hash{"email_address"} = "";
 $expected_hash{"cell_phone"} = "";
 $expected_hash{"car_info"} = "";

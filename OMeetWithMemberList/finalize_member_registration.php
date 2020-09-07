@@ -52,6 +52,7 @@ $registration_info_string = implode(",", array("first_name", base64_encode($name
                                                "email_address", base64_encode(""),
                                                "cell_phone", base64_encode(""),
                                                "car_info", base64_encode(""),
+                                               "member_id", base64_encode($member_id),
                                                "is_member", base64_encode("yes")));
 
 // Redirect to the main registration screens

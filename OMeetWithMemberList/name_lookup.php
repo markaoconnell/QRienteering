@@ -27,6 +27,7 @@ if (!isset($_GET["member_id"])) {
 }
 else {
   $possible_member_ids = array($_GET["member_id"]);
+
   if (get_full_name($possible_member_ids[0], $matching_info) == "") {
     error_and_exit("No such member id {$_GET["member_id"]} found, please retry or ask for assistance.\n");
   }
@@ -76,7 +77,7 @@ echo get_web_page_header(true, false, true);
 
 echo $success_string;
 
-echo "<a href=\"./competition_register.php?key={$key}\">Go back and retry</a>\n";
+echo "<a href=\"./competition_register.php?key={$key}&member=1\">Start over and re-enter information</a>\n";
 
 echo get_web_page_footer();
 ?>

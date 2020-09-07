@@ -8,11 +8,7 @@ $first_name = $_GET["competitor_first_name"];
 $last_name = $_GET["competitor_last_name"];
 $club_name = $_GET["club_name"];
 $si_stick = $_GET["si_stick"];
-$email_address = $_GET["email"];
-$cell_phone = $_GET["cell_number"];
-$car_info = $_GET["car_info"];
 $key = $_GET["key"];
-$waiver_signed = $_GET["waiver_signed"];
 
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
@@ -33,20 +29,43 @@ if ($si_stick != "") {
   }
 }
 
-if ($waiver_signed != "signed") {
-  error_and_exit("The waiver must be acknowledged in order to participate in this event.\n");
+echo get_web_page_header(true, false, true);
+
+echo "<p class=title><u>Safety information</u>\n";
+echo "<form action=\"./non_member_with_safety_info.php\">\n";
+echo "<input type=hidden name=\"competitor_first_name\" value=\"{$first_name}\">\n";
+echo "<input type=hidden name=\"competitor_last_name\" value=\"{$last_name}\">\n";
+echo "<input type=hidden name=\"club_name\" value=\"{$club_name}\">\n";
+echo "<input type=hidden name=\"si_stick\" value=\"{$si_stick}\">\n";
+echo "<input type=hidden name=\"key\" value=\"{$key}\">\n";
+
+
+$base_path = get_base_path($key, "..");
+if (file_exists("{$base_path}/waiver_link")) {
+  $waiver_link = file_get_contents("{$base_path}/waiver_link");
+  echo "<p><strong><input type=checkbox name=\"waiver_signed\" value=\"signed\">  (Required) I have read and agreed to <a href=\"{$waiver_link}\">the waiver</a></strong><br>\n";
 }
+else {
+  echo "<p><strong><input type=checkbox name=\"waiver_signed\" value=\"signed\">  (Required) I am participating of my own accord and hold the organizers harmless for any injury sustained.</strong><br>\n";
+}
+?>
 
-$success_string = "";
-$registration_info_string = implode(",", array("first_name", base64_encode($first_name),
-                                               "last_name", base64_encode($last_name),
-                                               "club_name", base64_encode($club_name),
-                                               "si_stick", base64_encode($si_stick),
-                                               "email_address", base64_encode($email_address),
-                                               "cell_phone", base64_encode($cell_phone),
-                                               "car_info", base64_encode($car_info),
-                                               "is_member", base64_encode("no")));
+<p>It is important that you scan finish at the end of your course so that we know you are safely off the course.
+<p>In case there is any question if you have (or have not) safely returned, we need a way to contact you to verify your safety.
+<p>This information is maintained while you are on the course and destroyed when you finish the course.
 
-// Redirect to the main registration screens
-echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../OMeetRegistration/register.php?key={$key}&registration_info=${registration_info_string}\" /></head></html>";
+<br><p>(Best option) Your cell phone number, or a parent's, spouse's, etc.<br>
+<input type="text" name="cell_number"><br>
+<br><p>What car (make/model/plate) did you come in (we can check the lot to see if you've left)?<br>
+<input type="text" name="car_info"><br>
+
+<p>
+<br><p>(Optional) If you would like results emailed to you, please supply a valid email<br>
+<input type="text" name="email"><br><br>
+
+<input type="submit" value="Choose course">
+</form>
+
+<?php
+echo get_web_page_footer();
 ?>
