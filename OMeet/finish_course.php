@@ -1,6 +1,7 @@
 <?php
 require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/course_properties.php';
+require '../OMeetCommon/generate_splits_output.php';
 require 'si_stick_finish.php';
 
 ck_testing();
@@ -89,6 +90,7 @@ else {
 //echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
 $error_string = "";
+$result_filename = "";
 
 if (!file_exists("${controls_found_path}/start")) {
   error_and_exit("<p>Course " . ltrim($course, "0..9-") . " not yet started.\n<br>Please scan the start QR code to start a course.\n");
@@ -209,8 +211,9 @@ if (file_exists("{$competitor_path}/registration_info")) {
       $header_string = implode("\r\n", $headers);
 
       $course_description = file_get_contents(get_event_path($event, $key, "..") . "/description");
-      if (isset($email_properties["extra_info"])) {
-        $extra_info = $email_properties["extra_info"];
+      $email_extra_info_file = get_email_extra_info_file(get_base_path($key, ".."));
+      if (file_exists($email_extra_info_file)) {
+        $extra_info = implode("\r\n", file($email_extra_info_file));
       }
       else {
         $extra_info = "";
@@ -218,8 +221,14 @@ if (file_exists("{$competitor_path}/registration_info")) {
       $body_string = "<html><body>\r\n" .
                      "<p>Orienteering results for\r\n{$course_description}\r\n" .
                      wordwrap("{$results_string}\r\n", 70, "\r\n") . 
-                     wordwrap(get_email_course_result_links($event, $key, ".."), 70, "\r\n") . 
-                     wordwrap("<p><p>{$extra_info}\r\n", 70, "\r\n") . "\r\n</body></html>";
+                     wordwrap(get_email_course_result_links($event, $key, ".."), 70, "\r\n");
+
+      if (isset($email_properties["include-splits"]) && ($result_filename != "")) {
+        $splits_output = get_splits_output($competitor_id, $event, $key, $result_filename);
+        $body_string .= wordwrap("<p><p>{$splits_output}\r\n", 70, "\r\n") . "\r\n</body></html>";
+      }
+
+      $body_string .= wordwrap("<p><p>{$extra_info}\r\n", 70, "\r\n") . "\r\n</body></html>";
       
       //echo "<p>Mail: Attempting mail send to {$email_addr} with results.\n";
       if (isset($email_properties["subject"])) {

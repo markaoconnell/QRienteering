@@ -31,6 +31,10 @@ function get_email_properties($base_path) {
   return(array());
 }
 
+function get_email_extra_info_file($base_path) {
+  return("{$base_path}/email_extra_info.txt");
+}
+
 function get_properties($properties_path, $filter_for_comments) {
   $props_as_hash = array();
   $properties_contents = file($properties_path);

@@ -334,8 +334,8 @@ if (!$event_created && !$found_error) {
 <br><br><br><p><p>
 <input type="hidden" name="MAX_FILE_SIZE" value="4096" />
 <input type="hidden" name="key" value="<?php echo $key ?>" />
-<p class="title">Enter a filename with the course/control details for the event.
-<p>Format of the file: One course per line, comma separated.
+<p class="title">Enter course/control details for the event.
+<p>Format of the information: One course per line, comma separated.
 <ul>
 <li>Normal Course: NameOfCourse,control,control,control,...
   <ul><li>Example: White,102,105,106</ul>
@@ -344,10 +344,17 @@ if (!$event_created && !$found_error) {
       <li>Time limit format is XXhYYmZZs for XX hours, XX minutes, XX seconds, note no spaces
       <li>Use a time limit of 0 to indicate unlimited time</ul>
 </ul>
+<p>Note: It is normally a good idea to type this information into a Word Doc, or a Google doc, or
+someone else, then copy-and-paste it in below - makes it much easier if you have to re-enter due to a 
+mistake if you can just copy-and-paste it in again!
+<?php
+if (0) {
+?>
 <input name=upload_file type=file>
 <p>
 <br>
 <p class="title">Alternatively, enter the information directly here.
+<?php } ?>
 <p>
 <textarea name=course_description rows=10 cols=60>
 --Replace this with your course description--
