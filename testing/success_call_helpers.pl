@@ -773,6 +773,10 @@ sub create_event_successfully {
       if ( -f "${event_path}/Courses/${course_name}/properties.txt") {
         error_and_exit("Found ${event_path}/Courses/${course_name}/properties.txt unexpectedly.");
       }
+
+      if (! -d "${event_path}/Courses/${course_name}") {
+        error_and_exit("Course directory ${event_path}/Courses/${course_name} does not exist when it should.");
+      }
     }
     else {
       if (! -f "${event_path}/Courses/${course_name}/properties.txt") {

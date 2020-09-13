@@ -9,6 +9,7 @@ $TYPE_FIELD = "type";
 $PENALTY_FIELD = "penalty";
 $LIMIT_FIELD = "limit";
 $MAX_SCORE_FIELD = "max";
+$CONTROLS = "controls";
 $ERROR_FIELD = "error";
 
 $LINEAR_COURSE_ID = "l";

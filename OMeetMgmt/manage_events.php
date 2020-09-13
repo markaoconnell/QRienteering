@@ -29,6 +29,12 @@ function name_to_results_link($event_id) {
               "<li><a href={$base_path_for_links}/OMeetWithMemberList/competitor_info.php?event={$event_id}&key={$key}>Meet Director view of competitors</a></ul>\n");
 }
 
+function name_to_add_course_link($event_id) {
+  global $base_path, $key, $base_path_for_links;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/add_course_to_event.php?event={$event_id}&key={$key}>Add new course to {$event_fullname}</a>");
+}
+
 $key = $_GET["key"];
 if (!key_is_valid($key)) {
   error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
@@ -65,6 +71,7 @@ $event_list = scandir($base_path);
 $open_event_list = array_filter($event_list, is_event_open);
 $closed_event_list = array_filter($event_list, is_event_recently_closed);
 $open_event_links = array_map(name_to_registration_link, $open_event_list);
+$add_course_links = array_map(name_to_add_course_link, $open_event_list);
 $open_event_result_links = array_map(name_to_results_link, $open_event_list);
 $closed_event_result_links = array_map(name_to_results_link, $closed_event_list);
 
@@ -76,6 +83,11 @@ echo get_web_page_header(true, false, false);
 <p>
 <ol>
 <li> <a href=<?php echo "./create_event.php?key={$key}"; ?>>Create a new event</a>
+<?php
+  if (count($open_event_list) > 0) {
+    echo "<ul>" .  implode("\n", $add_course_links) . "</ul>\n";
+  }
+?>
 
 <li> Get a registration link: 
 <ul>
