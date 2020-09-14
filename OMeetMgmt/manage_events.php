@@ -33,7 +33,13 @@ function name_to_add_course_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
   return ("<li><a href={$base_path_for_links}/OMeetMgmt/add_course_to_event.php?event={$event_id}&key={$key}>Add new course to {$event_fullname}</a>" . 
-          "<a href={$base_path_for_links}/OMeetMgmt/download_event.php?event={$event_id}&key={$key}> (download full event description)</a>");
+          "<a href={$base_path_for_links}/OMeetMgmt/create_event.php?clone_event={$event_id}&key={$key}> (create a copy of this event)</a>");
+}
+
+function name_to_clone_course_link($event_id) {
+  global $base_path, $key, $base_path_for_links;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/create_event.php?clone_event={$event_id}&key={$key}> Create a copy of {$event_fullname}</a>");
 }
 
 $key = $_GET["key"];
@@ -73,6 +79,7 @@ $open_event_list = array_filter($event_list, is_event_open);
 $closed_event_list = array_filter($event_list, is_event_recently_closed);
 $open_event_links = array_map(name_to_registration_link, $open_event_list);
 $add_course_links = array_map(name_to_add_course_link, $open_event_list);
+$add_course_links2 = array_map(name_to_clone_course_link, $closed_event_list);
 $open_event_result_links = array_map(name_to_results_link, $open_event_list);
 $closed_event_result_links = array_map(name_to_results_link, $closed_event_list);
 
@@ -87,6 +94,9 @@ echo get_web_page_header(true, false, false);
 <?php
   if (count($open_event_list) > 0) {
     echo "<ul>" .  implode("\n", $add_course_links) . "</ul>\n";
+  }
+  if (count($closed_event_list) > 0) {
+    echo "<ul>" .  implode("\n", $add_course_links2) . "</ul>\n";
   }
 ?>
 

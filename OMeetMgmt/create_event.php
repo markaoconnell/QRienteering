@@ -6,6 +6,7 @@ ck_testing();
 echo get_web_page_header(true, false, false);
 
 $verbose = isset($_POST["verbose"]);
+$cloning_event = false;
 
 require '../OMeetCommon/course_properties.php';
 require '../OMeetMgmt/event_mgmt_common.php';
@@ -147,6 +148,40 @@ else {
   if (!is_dir(get_base_path($key, ".."))) {
     error_and_exit("No event directory found, please contact administrator to create \"{$base_path}\"");
   }
+  
+  if (isset($_GET["clone_event"])) {
+    $cloning_event = true;
+    $clone_event = $_GET["clone_event"];
+
+    $existing_event_path = get_event_path($clone_event, $key, "..");
+    if (!is_dir($existing_event_path)) {
+      error_and_exit("Event not found, is \"{$key}\" and \"{$clone_event}\" a valid pair?\n");
+    }
+
+    $existing_event_name = file_get_contents("{$existing_event_path}/description");
+    $path_to_courses = get_courses_path($clone_event, $key, "..");
+    $current_courses = scandir($path_to_courses);
+    $current_courses = array_diff($current_courses, array(".", ".."));
+
+    $existing_event_description_string = "";
+    foreach ($current_courses as $this_course) {
+      $control_list = read_controls("{$path_to_courses}/{$this_course}/controls.txt");
+
+      $course_properties = get_course_properties("{$path_to_courses}/{$this_course}");
+      $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+
+      if ($score_course) {
+        $existing_event_description_string .=
+                                     "s:" . ltrim($this_course, "0..9-") . ":" . $course_properties[$LIMIT_FIELD] . "s:" . $course_properties[$PENALTY_FIELD] . "," .
+                                     implode(",", array_map(function ($elt) { return ($elt[0] . ":" . $elt[1]); }, $control_list)) . "\n";
+      }
+      else {
+        $existing_event_description_string .=
+                                      "l:" . ltrim($this_course, "0..9-") . "," .
+                                      implode(",", array_map(function ($elt) { return ($elt[0]); }, $control_list)) . "\n";
+      }
+    }
+  }
 }
 
 if (!$event_created && !$found_error) {
@@ -155,7 +190,7 @@ if (!$event_created && !$found_error) {
 <form action=./create_event.php method=post enctype="multipart/form-data" >
 <p class="title">What is the name of the event?<br>
 <p>
-<input name=event_name type=text size=80>
+<input name=event_name type=text size=80 <?php if ($cloning_event) { echo "value=\"Copy of {$existing_event_name}\""; } ?> >
 <br><br><br><p><p>
 <input type="hidden" name="MAX_FILE_SIZE" value="4096" />
 <input type="hidden" name="key" value="<?php echo $key ?>" />
@@ -163,9 +198,13 @@ if (!$event_created && !$found_error) {
 <p>Format of the information: One course per line, comma separated.
 <ul>
 <li>Normal Course: NameOfCourse,control,control,control,...
-  <ul><li>Example: White,102,105,106</ul>
+  <ul>
+      <li>May precede the name with "l:" to unambiguously indicate a normal (linear) course
+      <li>Example:   <strong>White,102,105,106</strong>
+      <li>Example 2: <strong>l:Yellow,108,109</strong>
+  </ul>
 <li>ScoreO Course: s:NameOfCourse:time limit:penalty per minute,control:points,control:points,control:points,...
-  <ul><li>Example: s:ScoutScoreO:2h:2,102:10,110:20,203:30,101:10,109:15
+  <ul><li>Example: <strong>s:ScoutScoreO:2h:2,102:10,110:20,203:30,101:10,109:15</strong>
       <li>Time limit format is XXhYYmZZs for XX hours, XX minutes, XX seconds, note no spaces
       <li>Use a time limit of 0 to indicate unlimited time</ul>
 </ul>
@@ -183,6 +222,11 @@ if (0) {
 <p>
 <textarea name=course_description rows=10 cols=60>
 --Replace this with your course description--
+<?php
+  if ($cloning_event) {
+    echo $existing_event_description_string;
+  }
+?>
 </textarea>
 <p><p>
 <input type=checkbox name="verbose" value="true">Show verbose output (useful only if course creation is failing)
