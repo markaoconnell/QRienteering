@@ -13,14 +13,23 @@ require '../OMeetMgmt/event_mgmt_common.php';
 $event_created = false;
 $found_error = false;
 
-if (isset($_GET["submit"])) {
-  $key = $_GET["key"];
-  $event = $_GET["event"];
-  $course_description = $_GET["course_description"];
+$key = $_GET["key"];
+if (!key_is_valid($key)) {
+  error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
+}
 
-  if (!key_is_valid($key)) {
-    error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
-  }
+if (!is_dir(get_base_path($key, ".."))) {
+  error_and_exit("No directory found for events, is your key \"{$key}\" valid?\n");
+}
+
+$event = $_GET["event"];
+$event_path = get_event_path($event, $key, "..");
+if (!is_dir($event_path)) {
+  error_and_exit("No event directory found, is \"{$event}\" from a valid link?\n");
+}
+
+if (isset($_GET["submit"])) {
+  $course_description = $_GET["course_description"];
 
   $event_path = get_event_path($event, $key, "..");
 
@@ -56,28 +65,12 @@ if (isset($_GET["submit"])) {
     echo "<p>Errors found, course not added.\n";
   }
 }
-else {
-  $key = $_GET["key"];
-  if (!key_is_valid($key)) {
-    error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
-  }
 
-  if (!is_dir(get_base_path($key, ".."))) {
-    error_and_exit("No directory found for events, is your key \"{$key}\" valid?\n");
-  }
+$current_courses = scandir("{$event_path}/Courses");
+$current_courses = array_diff($current_courses, array(".", ".."));
+$current_courses = array_map(function ($elt) { return ("<li>" . ltrim($elt, "0..9-")); }, $current_courses);
 
-  $event = $_GET["event"];
-  $event_path = get_event_path($event, $key, "..");
-  if (!is_dir($event_path)) {
-    error_and_exit("No event directory found, is \"{$event}\" from a valid link?\n");
-  }
-
-  $current_courses = scandir("{$event_path}/Courses");
-  $current_courses = array_diff($current_courses, array(".", ".."));
-  $current_courses = array_map(function ($elt) { return ("<li>" . ltrim($elt, "0..9-")); }, $current_courses);
-
-  $current_event_name = file_get_contents("{$event_path}/description");
-}
+$current_event_name = file_get_contents("{$event_path}/description");
 
 
 if (!$event_created && !$found_error) {

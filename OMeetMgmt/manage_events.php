@@ -32,7 +32,8 @@ function name_to_results_link($event_id) {
 function name_to_add_course_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
-  return ("<li><a href={$base_path_for_links}/OMeetMgmt/add_course_to_event.php?event={$event_id}&key={$key}>Add new course to {$event_fullname}</a>");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/add_course_to_event.php?event={$event_id}&key={$key}>Add new course to {$event_fullname}</a>" . 
+          "<a href={$base_path_for_links}/OMeetMgmt/download_event.php?event={$event_id}&key={$key}> (download full event description)</a>");
 }
 
 $key = $_GET["key"];
