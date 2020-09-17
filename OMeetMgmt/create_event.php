@@ -199,7 +199,7 @@ if (!$event_created && !$found_error) {
 <ul>
 <li>Normal Course: NameOfCourse,control,control,control,...
   <ul>
-      <li>May precede the name with "l:" to unambiguously indicate a normal (linear) course
+      <li>May precede the name with "l:" (lowercase letter L) to unambiguously indicate a normal (linear) course
       <li>Example:   <strong>White,102,105,106</strong>
       <li>Example 2: <strong>l:Yellow,108,109</strong>
   </ul>

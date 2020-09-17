@@ -90,9 +90,13 @@ if (!$event_created && !$found_error) {
 <p>Format of the information: 
 <ul>
 <li>Normal Course: NameOfCourse,control,control,control,...
-  <ul><li>Example: White,102,105,106</ul>
+  <ul>
+      <li>May precede the name with "l:" (lowercase letter L) to unambiguously indicate a normal (linear) course
+      <li>Example:   <strong>White,102,105,106</strong>
+      <li>Example 2: <strong>l:Yellow,108,109</strong>
+  </ul>
 <li>ScoreO Course: s:NameOfCourse:time limit:penalty per minute,control:points,control:points,control:points,...
-  <ul><li>Example: s:ScoutScoreO:2h:2,102:10,110:20,203:30,101:10,109:15
+  <ul><li>Example: <strong>s:ScoutScoreO:2h:2,102:10,110:20,203:30,101:10,109:15</strong>
       <li>Time limit format is XXhYYmZZs for XX hours, XX minutes, XX seconds, note no spaces
       <li>Use a time limit of 0 to indicate unlimited time</ul>
 </ul>

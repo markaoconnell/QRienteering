@@ -42,6 +42,12 @@ function name_to_clone_course_link($event_id) {
   return ("<li><a href={$base_path_for_links}/OMeetMgmt/create_event.php?clone_event={$event_id}&key={$key}> Create a copy of {$event_fullname}</a>");
 }
 
+function name_to_get_qrcodes_link($event_id) {
+  global $base_path, $key, $base_path_for_links;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/get_event_qr_codes.php?event={$event_id}&key={$key}> Get QR codes for {$event_fullname}</a>");
+}
+
 $key = $_GET["key"];
 if (!key_is_valid($key)) {
   error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
@@ -81,6 +87,7 @@ $open_event_links = array_map(name_to_registration_link, $open_event_list);
 $add_course_links = array_map(name_to_add_course_link, $open_event_list);
 $add_course_links2 = array_map(name_to_clone_course_link, $closed_event_list);
 $open_event_result_links = array_map(name_to_results_link, $open_event_list);
+$qrcode_links = array_map(name_to_get_qrcodes_link, $open_event_list);
 $closed_event_result_links = array_map(name_to_results_link, $closed_event_list);
 
 
@@ -103,6 +110,11 @@ echo get_web_page_header(true, false, false);
 <li> Get a registration link: 
 <ul>
 <?php echo implode("\n", $open_event_links); ?>
+</ul>
+
+<li> Get QR codes
+<ul>
+<?php echo implode("\n", $qrcode_links); ?>
 </ul>
 
 <li> <a href=<?php echo "./mass_start.php?key={$key}"; ?>>Mass start an event</a>
