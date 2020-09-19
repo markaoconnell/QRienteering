@@ -91,6 +91,18 @@ function csv_formatted_time($time_in_seconds) {
 }
 
 
+// Return a string with the elapsed time in seconds formatted for easy parsing
+function format_time_as_minutes_since_midnight($unix_timestamp) {
+  $hours_mins_secs = strftime("%T", $unix_timestamp);
+  $time_pieces = explode(":", $hours_mins_secs);
+
+  $mins = ($time_pieces[0] * 60) + $time_pieces[1];
+  $secs = $time_pieces[2];
+
+  return sprintf("%4d:%02d", $mins, $secs);
+}
+
+
 // Am I running on a mobile device?
 function is_mobile () {
   return is_numeric(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), "mobile"));
@@ -285,6 +297,42 @@ function get_csv_results($event, $key, $course, $show_points, $max_points, $path
     }
   }
   return($result_string);
+}
+
+// Get the results for a course as an array
+function get_results_as_array($event, $key, $course, $show_points, $max_points, $path_to_top) {
+  $result_array = array();
+  $readable_course_name = ltrim($course, "0..9-");
+
+  // No results yet - .csv is empty
+  $results_path = get_results_path($event, $key, $path_to_top);
+  if (!is_dir("{$results_path}/{$course}")) {
+    return($result_array);
+  }
+  
+  $results_list = scandir("${results_path}/{$course}");
+  $results_list = array_diff($results_list, array(".", ".."));
+
+  foreach ($results_list as $this_result) {
+    $result_pieces = explode(",", $this_result);
+    $competitor_path = get_competitor_path($result_pieces[2], $event, $key, $path_to_top);
+    $competitor_name = file_get_contents("${competitor_path}/name");
+    if ($show_points) {
+      $points_value = $max_points - $result_pieces[0];
+    }
+    else {
+      $points_value = 0;
+    }
+
+    $competitor_result_array = array();
+    $competitor_result_array["competitor_id"] = $result_pieces[2];
+    $competitor_result_array["competitor_name"] = $competitor_name;
+    $competitor_result_array["time"] = csv_formatted_time($result_pieces[1]);
+    $competitor_result_array["dnf"] = file_exists("{$competitor_path}/dnf");
+    $competitor_result_array["scoreo_points"] = $points_value;
+    $result_array[] = $competitor_result_array;
+  }
+  return($result_array);
 }
 
 function get_all_course_result_links($event, $key, $path_to_top) {

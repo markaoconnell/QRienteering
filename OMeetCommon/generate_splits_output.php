@@ -126,4 +126,76 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
   
   return $splits_string;
 }
+
+
+function get_splits_as_array($competitor_id, $event, $key) {
+
+  $splits_array = array();
+  $control_times_array = array();
+  $competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
+  
+  if (!is_dir($competitor_path)) {
+    return($splits_array());
+  }
+  
+  $controls_found_path = "{$competitor_path}/controls_found";
+  $course = file_get_contents("{$competitor_path}/course");
+  
+  $courses_path = get_courses_path($event, $key, "..");
+  $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
+  $controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
+                                        array_map(function ($element) { return $element[1]; }, $control_list));
+  $course_properties = get_course_properties("{$courses_path}/{$course}");
+  $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+  //echo "Controls on the ${course} course.<br>\n";
+  // print_r($control_list);
+  $error_string = "";
+  
+  if (file_exists("{$controls_found_path}/start")) {
+    $start_time = file_get_contents("{$controls_found_path}/start");
+    $splits_array["start"] = $start_time;
+  }
+  else {
+    $start_time = 0;
+    $splits_array["start"] = "-";
+  }
+  
+  
+  // See how many controls have been completed
+  $controls_done = scandir("./{$controls_found_path}");
+  $controls_done = array_diff($controls_done, array(".", "..", "start", "finish")); // Remove the annoying . and .. entries
+  $number_controls_found = count($controls_done);
+  
+  //echo "Controls done is: <p>";
+  //print_r($controls_done);
+  
+  $split_times = array();
+  $cumulative_time = array();
+  $controls_found = array();
+  $prior_control_time = $start_time;
+  $total_score = 0;
+  $i = 0;
+  foreach ($controls_done as $entry) {
+    $control_info_array = explode(",", $entry);  // format is <time>,<control_id>
+    $controls_found[$i] = $control_info_array[1];
+    $time_at_control[$i] = $control_info_array[0];
+    $split_times[$i] = $time_at_control[$i] - $prior_control_time;
+    $cumulative_time[$i] = $time_at_control[$i] - $start_time;
+
+    $control_entry = array();
+    $control_entry["control_id"] = $control_info_array[1];
+    $control_entry["raw_time"] = $control_info_array[0];
+    $control_entry["split_time"] = $split_times[$i];
+    $control_entry["cumulative_time"] = $cumulative_time[$i];
+    $control_times_array[] = $control_entry;
+
+    $prior_control_time = $time_at_control[$i];
+    $i++;
+  }
+  $finish_time = file_get_contents("{$controls_found_path}/finish");
+  $splits_array["finish"] = $finish_time;
+  $splits_array["controls"] = $control_times_array;
+  
+  return $splits_array;
+}
 ?>
