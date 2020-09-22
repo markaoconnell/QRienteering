@@ -3,6 +3,7 @@
 
 
 function get_splits_output($competitor_id, $event, $key, $final_results_line) {
+  global $TYPE_FIELD, $SCORE_O_COURSE, $LIMIT_FIELD, $PENALTY_FIELD, $MAX_SCORE_FIELD;
 
   $competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
   
