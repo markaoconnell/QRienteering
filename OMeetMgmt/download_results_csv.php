@@ -9,7 +9,7 @@ ck_testing();
 // echo "<p>\n";
 $event = $_GET["event"];
 $key = $_GET["key"];
-$download_csv = true;
+$download_csv = !isset($_GET["show_as_html"]);
 
 if ($event == "") {
   error_and_exit("<p>ERROR: Event not specified, no results can be shown.\n");
@@ -20,15 +20,9 @@ if (!file_exists($courses_path)) {
   error_and_exit("<p>ERROR: No such event found {$event} (or bad location key {$key}).\n");
 }
 
-echo get_web_page_header(true, true, false);
-
-if ($download_csv) {
-  echo "<pre>\n";
-}
-
 // Do the header line
 // Oddity #1: WinSplits doesn't seem happy if this line is not there, I don't know why
-echo "Stno;SI card;Database Id;Surname;First name;YB;S;Block;nc;Start;Finish;Time;Classifier;Club no.;Cl.name;City;Nat;Cl. no.;Short;Long;Num1;Num2;Num3;Text1;Text2;Text3;Adr. name;Street;Line2;Zip;City;Phone;Fax;EMail;Id/Club;Rented;Start fee;Paid;Course no.;Course;km;m;Course controls;Pl;Start punch;Finish punch;Control1;Punch1;Control2;Punch2;Control3;Punch3;Control4;Punch4;Control5;Punch5;Control6;Punch6;Control7;Punch7;Control8;Punch8;Control9;Punch9;Control10;Punch10;(may be more) ...\n";
+$output = "Stno;SI card;Database Id;Surname;First name;YB;S;Block;nc;Start;Finish;Time;Classifier;Club no.;Cl.name;City;Nat;Cl. no.;Short;Long;Num1;Num2;Num3;Text1;Text2;Text3;Adr. name;Street;Line2;Zip;City;Phone;Fax;EMail;Id/Club;Rented;Start fee;Paid;Course no.;Course;km;m;Course controls;Pl;Start punch;Finish punch;Control1;Punch1;Control2;Punch2;Control3;Punch3;Control4;Punch4;Control5;Punch5;Control6;Punch6;Control7;Punch7;Control8;Punch8;Control9;Punch9;Control10;Punch10;(may be more) ...\n";
 
 $course_list = scandir($courses_path);
 $course_list = array_diff($course_list, array(".", ".."));
@@ -124,7 +118,7 @@ foreach ($course_list as $one_course) {
     }
 
     // Oddity #2: The line MUST end in a semicolon!!!
-    echo "{$winsplits_csv_line};\n";
+    $output .= "{$winsplits_csv_line};\n";
     $start_number++;
     $place++;
   }
@@ -132,6 +126,17 @@ foreach ($course_list as $one_course) {
 }
 
 if ($download_csv) {
+  header('Content-disposition: attachment; filename=splits.csv');
+  header('Content-type: application/octet-stream');
+}
+else {
+  echo get_web_page_header(true, true, false);
+  echo "<pre>\n";
+}
+
+echo $output;
+
+if (!$download_csv) {
   echo "</pre>\n";
 }
 
