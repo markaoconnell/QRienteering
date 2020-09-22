@@ -119,7 +119,13 @@ if (isset($_POST["submit"])) {
       else {
         $proto = "http://";
       }
-      $registration_link = $proto . $_SERVER["SERVER_NAME"] . dirname(dirname($_SERVER["REQUEST_URI"])) . "/OMeetRegistration/register.php" . "?key={$key}";
+
+      $url_prefix = $proto . $_SERVER["SERVER_NAME"] . dirname(dirname($_SERVER["REQUEST_URI"]));
+      while (substr($url_prefix, -1) == "/") {
+        $url_prefix = substr($url_prefix, 0, -1);
+      }
+
+      $registration_link = $url_prefix . "/OMeetRegistration/register.php" . "?key={$key}";
       //echo "<p>Server URI is: " . $_SERVER["REQUEST_URI"] . "\n";
       //echo "<p>Server URI dirname is: " . dirname($_SERVER["REQUEST_URI"]) . "\n";
       //echo "<p>Server URI dirname and rel path is: " . dirname($_SERVER["REQUEST_URI"]) . "/../OMeetRegistration/register.php" . "\n";

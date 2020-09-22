@@ -49,7 +49,7 @@ else {
   $proto = "http://";
 }
 $url_prefix = $proto . $_SERVER["SERVER_NAME"] . dirname(dirname($_SERVER["REQUEST_URI"]));
-while (substr($url_prefxix, -1) == "/") {
+while (substr($url_prefix, -1) == "/") {
   $url_prefix = substr($url_prefix, 0, -1);
 }
 
@@ -74,8 +74,8 @@ echo "<ul>" .
      "</ul>\n";
 echo "<li><strong>Registration QR codes</strong> (for ogranized meets, reusable at different venues)\n";
 echo "<ul>\n";
-echo "<li><input type=checkbox name=\"qr-Non-Member registration\" value=\"{$url_prefix}/OMeetWithMemberList/non_member.php?{$add_key_string}\">Non member registration\n";
-echo "<li><input type=checkbox name=\"qr-Member registration\" value=\"{$url_prefix}/OMeetWithMemberList/member.php?{$add_key_string}\">Member registration\n";
+echo "<li><input type=checkbox name=\"qr-Non-Member registration\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?{$add_key_string}\">Non member registration\n";
+echo "<li><input type=checkbox name=\"qr-Member registration\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?member=1&{$add_key_string}\">Member registration\n";
 echo "</ul>\n";
 echo "<li><strong>On-course QR codes</strong> (resuable across events/courses)\n";
 echo "<ul>\n";
