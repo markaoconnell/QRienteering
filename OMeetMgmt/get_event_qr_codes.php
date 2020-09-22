@@ -70,19 +70,23 @@ $add_event_string = "event={$event}";
 echo "<ul>\n";
 echo "<li><strong>Non-reusable registration</strong> (for non-organized meet events (Bring Your Own Map))\n";
 echo "<ul>" .
-        "<li><input type=checkbox checked name=\"qr-BYOM registration\" value=\"{$url_prefix}/OMeetRegistration/register.php?{$add_key_string}&{$add_event_string}\">BYOM registration" .
+        "<li><input type=checkbox checked name=\"qr-" . base64_encode("BYOM registration") .
+                          "\" value=\"{$url_prefix}/OMeetRegistration/register.php?{$add_key_string}&{$add_event_string}\">BYOM registration" .
      "</ul>\n";
 echo "<li><strong>Registration QR codes</strong> (for ogranized meets, reusable at different venues)\n";
 echo "<ul>\n";
-echo "<li><input type=checkbox name=\"qr-Non-Member registration\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?{$add_key_string}\">Non member registration\n";
-echo "<li><input type=checkbox name=\"qr-Member registration\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?member=1&{$add_key_string}\">Member registration\n";
+echo "<li><input type=checkbox name=\"qr-" . base64_encode("Non-Member registration") .
+                          "\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?{$add_key_string}\">Non member registration\n";
+echo "<li><input type=checkbox name=\"qr-" . base64_encode("Member registration") .
+                          "\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?member=1&{$add_key_string}\">Member registration\n";
 echo "</ul>\n";
 echo "<li><strong>On-course QR codes</strong> (resuable across events/courses)\n";
 echo "<ul>\n";
-echo "<li><input type=checkbox name=\"qr-Start\" value=\"{$url_prefix}/OMeet/start_course.php\">Start\n";
-echo "<li><input type=checkbox name=\"qr-Finish\" value=\"{$url_prefix}/OMeet/finish_course.php\">Finish\n";
+echo "<li><input type=checkbox name=\"qr-" . base64_encode("Start") . "\" value=\"{$url_prefix}/OMeet/start_course.php\">Start\n";
+echo "<li><input type=checkbox name=\"qr-" . base64_encode("Finish") . "\" value=\"{$url_prefix}/OMeet/finish_course.php\">Finish\n";
 foreach (array_keys($all_controls) as $one_control) {
-  echo "<li><input type=checkbox name=\"qr-Control {$one_control}\" value=\"{$url_prefix}/OMeet/reach_control.php?control={$one_control}\">Control {$one_control}\n";
+  echo "<li><input type=checkbox name=\"qr-" . base64_encode("Control {$one_control}") .
+                        "\" value=\"{$url_prefix}/OMeet/reach_control.php?control={$one_control}\">Control {$one_control}\n";
 }
 echo "</ul>\n";
 echo "</ul>\n";

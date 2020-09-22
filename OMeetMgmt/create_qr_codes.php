@@ -27,7 +27,7 @@ ck_testing();
 $qr_code_files = array();
 foreach (array_keys($_POST) as $posted_item) {
   if (substr($posted_item, 0, 3) == "qr-") {
-    $qr_code_name = substr($posted_item, 3);
+    $qr_code_name = base64_decode(substr($posted_item, 3));
     $qr_code_value = $_POST[$posted_item];
 
     $qr = QRCode::getMinimumQRCode($qr_code_value, QR_ERROR_CORRECT_LEVEL_L);

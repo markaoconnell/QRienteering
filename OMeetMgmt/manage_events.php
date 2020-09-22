@@ -18,7 +18,8 @@ function name_to_registration_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
   return ("<li>{$event_fullname}<ul><li><a href={$base_path_for_links}/OMeetRegistration/register.php?event=${event_id}&key={$key}>BYOM Registration</a>" .
-                                   "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}>Meet Registration</a></ul>\n");
+                                   "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}&member=1>Member meet Registration</a>" .
+                                   "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}>Non-member meet Registration</a></ul>\n");
 }
 
 function name_to_results_link($event_id) {
