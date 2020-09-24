@@ -30,6 +30,18 @@ if (!is_dir($existing_event_path)) {
   error_and_exit("Event not found, is \"{$key}\" and \"{$event}\" a valid pair?\n");
 }
 
+$checked_by_default = "";
+if (isset($_GET["select-all"])) {
+  $checked_by_default = "checked";
+  $select_button_label = "Deselect all";
+  $select_button_name = "deselect-all";
+}
+else {
+  $checked_by_default = "";
+  $select_button_label = "Select all";
+  $select_button_name = "select-all";
+}
+
 $existing_event_name = file_get_contents("{$existing_event_path}/description");
 $path_to_courses = get_courses_path($event, $key, "..");
 $current_courses = scandir($path_to_courses);
@@ -63,8 +75,14 @@ $add_event_string = "event={$event}";
 
 ?>
 <br>
-<form action="./create_qr_codes.php" method=post enctype="multipart/form-data" >
 <p class="title">Generate QR codes for <?php  echo $existing_event_name; ?>.<br>
+<form action="./get_event_qr_codes.php" method=get>
+<input type=hidden name=key value="<?php echo $key; ?>">
+<input type=hidden name=event value="<?php echo $event; ?>">
+<input type=submit name="<?php echo $select_button_name; ?>" value="<?php echo $select_button_label; ?>">
+</form>
+
+<form action="./create_qr_codes.php" method=post enctype="multipart/form-data" >
 <p><p>
 <?php
 echo "<ul>\n";
@@ -75,17 +93,17 @@ echo "<ul>" .
      "</ul>\n";
 echo "<li><strong>Registration QR codes</strong> (for ogranized meets, reusable at different venues)\n";
 echo "<ul>\n";
-echo "<li><input type=checkbox name=\"qr-" . base64_encode("Non-Member registration") .
+echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Non-Member registration") .
                           "\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?{$add_key_string}\">Non member registration\n";
-echo "<li><input type=checkbox name=\"qr-" . base64_encode("Member registration") .
+echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Member registration") .
                           "\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?member=1&{$add_key_string}\">Member registration\n";
 echo "</ul>\n";
 echo "<li><strong>On-course QR codes</strong> (resuable across events/courses)\n";
 echo "<ul>\n";
-echo "<li><input type=checkbox name=\"qr-" . base64_encode("Start") . "\" value=\"{$url_prefix}/OMeet/start_course.php\">Start\n";
-echo "<li><input type=checkbox name=\"qr-" . base64_encode("Finish") . "\" value=\"{$url_prefix}/OMeet/finish_course.php\">Finish\n";
+echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Start") . "\" value=\"{$url_prefix}/OMeet/start_course.php\">Start\n";
+echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Finish") . "\" value=\"{$url_prefix}/OMeet/finish_course.php\">Finish\n";
 foreach (array_keys($all_controls) as $one_control) {
-  echo "<li><input type=checkbox name=\"qr-" . base64_encode("Control {$one_control}") .
+  echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Control {$one_control}") .
                         "\" value=\"{$url_prefix}/OMeet/reach_control.php?control={$one_control}\">Control {$one_control}\n";
 }
 echo "</ul>\n";
