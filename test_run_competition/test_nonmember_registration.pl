@@ -138,7 +138,106 @@ success();
 
 
 ###########
-# Test 4 - Fail non-member registration - no first name
+# Test 4 - Initial non-member information incomplete
+# 
+%TEST_INFO = qw(Testname TestNonMemberNoFirstName);
+%GET = qw(key UnitTestPlayground competitor_last_name Wolfson);
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/non_member.php";
+$output = qx($cmd);
+
+if ($output !~ /please go back and enter a valid first name/) {
+  error_and_exit("Did not detect missing first name.\n$output");
+}
+
+success();
+
+
+
+###########
+# Test 5 - Initial non-member information incomplete
+# 
+%TEST_INFO = qw(Testname TestNonMemberNoLastName);
+%GET = qw(key UnitTestPlayground competitor_first_name Dasha);
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/non_member.php";
+$output = qx($cmd);
+
+if ($output !~ /please go back and enter a valid last name/) {
+  error_and_exit("Did not detect missing last name.\n$output");
+}
+
+success();
+
+
+###########
+# Test 6 - Initial non-member information incomplete
+# 
+%TEST_INFO = qw(Testname TestNonMemberBadSiStick);
+%GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson si_stick abcde);
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/non_member.php";
+$output = qx($cmd);
+
+if ($output !~ /Invalid si_stick/) {
+  error_and_exit("Did not detect poorly formatted si stick.\n$output");
+}
+
+success();
+
+
+###########
+# Test 7 - Initial non-member information all good
+# 
+%TEST_INFO = qw(Testname TestNonMemberAllIsGood);
+%GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson si_stick 1234);
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/non_member.php";
+$output = qx($cmd);
+
+if ($output !~ /type=checkbox name="waiver_signed"/) {
+  error_and_exit("Did not detect find waiver signed checkbox.\n$output");
+}
+
+if ($output !~ /input type="submit" value="Choose course"/) {
+  error_and_exit("Did not detect submit button to choose a course.\n$output");
+}
+
+success();
+
+
+###########
+# Test 8 - Initial non-member information all good, no si stick
+# 
+%TEST_INFO = qw(Testname TestNonMemberAllIsGood);
+%GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson);
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/non_member.php";
+$output = qx($cmd);
+
+if ($output !~ /type=checkbox name="waiver_signed"/) {
+  error_and_exit("Did not detect find waiver signed checkbox.\n$output");
+}
+
+if ($output !~ /input type="submit" value="Choose course"/) {
+  error_and_exit("Did not detect submit button to choose a course.\n$output");
+}
+
+success();
+
+
+###########
+# Test 9 - Fail non-member registration - no first name
 # 
 %TEST_INFO = qw(Testname TestNonMemberNoFirstName);
 %GET = qw(key UnitTestPlayground competitor_last_name Baldwin club_name UNO si_stick 124 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro waiver_signed signed);
@@ -155,7 +254,7 @@ if ($output !~ /Invalid \(empty\) first name/) {
 success();
 
 ###########
-# Test 4 - Fail non-member registration - no last name
+# Test 10 - Fail non-member registration - no last name
 # 
 %TEST_INFO = qw(Testname TestNonMemberNoLastName);
 %GET = qw(key UnitTestPlayground competitor_first_name Karen club_name NEOC si_stick 124 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro waiver_signed signed);
@@ -173,7 +272,7 @@ success();
 
 
 ###########
-# Test 5 - Success non-member registration
+# Test 11 - Success non-member registration
 # Test with less than all information provided
 %TEST_INFO = qw(Testname TestNonMemberSomeInfoProvided);
 %GET = qw(key UnitTestPlayground competitor_first_name Freddie competitor_last_name Mercury club_name DVOC email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470 waiver_signed signed);
@@ -201,7 +300,7 @@ if ($error_string ne "") {
 success();
 
 ###########
-# Test 6 - Success non-member registration
+# Test 12 - Success non-member registration
 # Test with very little information provided
 %TEST_INFO = qw(Testname TestNonMemberMinimalInfoProvided);
 %GET = qw(key UnitTestPlayground competitor_first_name Queen competitor_last_name Elizabeth waiver_signed signed);
@@ -237,7 +336,7 @@ success();
 
 
 ###########
-# Test 7 - Fail non-member registration - no waiver signed
+# Test 13 - Fail non-member registration - no waiver signed
 # 
 %TEST_INFO = qw(Testname TestNonMemberNoWaiver);
 %GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson club_name UNO si_stick 1024 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro);

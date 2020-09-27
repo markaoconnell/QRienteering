@@ -445,34 +445,34 @@ function key_to_path($key) {
 }
 
 function get_courses_path($event, $key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}/Courses");
+  return("../OMeetData/" . key_to_path($key) . "/{$event}/Courses");
 }
 
 function get_competitor_directory($event, $key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}/Competitors");
+  return("../OMeetData/" . key_to_path($key) . "/{$event}/Competitors");
 }
 
 function get_competitor_path($competitor, $event, $key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}/Competitors/{$competitor}");
+  return("../OMeetData/" . key_to_path($key) . "/{$event}/Competitors/{$competitor}");
 }
 
 function get_results_path($event, $key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}/Results");
+  return("../OMeetData/" . key_to_path($key) . "/{$event}/Results");
 }
 
 function get_event_path($event, $key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}");
+  return("../OMeetData/" . key_to_path($key) . "/{$event}");
 }
 
 function get_base_path($key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key));
+  return("../OMeetData/" . key_to_path($key));
 }
 
 function get_members_path($key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/members.csv");
+  return("../OMeetData/" . key_to_path($key) . "/members.csv");
 }
 
 function get_nicknames_path($key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/nicknames.csv");
+  return("../OMeetData/" . key_to_path($key) . "/nicknames.csv");
 }
 ?>

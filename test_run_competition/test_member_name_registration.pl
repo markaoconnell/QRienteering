@@ -194,6 +194,152 @@ if ($output =~ /How are you orienteering today/) {
 success();
 
 
+
+###########
+# Test 8 - Make sure that members in the cookie appear properly
+# 
+%TEST_INFO = qw(Testname TestSavedMemberIdLookup);
+%GET = qw(key UnitTestPlayground member 1);
+%COOKIE = ();  # empty hash
+
+my($time_now) = time();
+my($saved_member_id_string) = "31:${time_now},314:${time_now}";
+$COOKIE{"member_ids"} = $saved_member_id_string;
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/competition_register.php";
+$output = qx($cmd);
+
+if ($output !~ /Register known member on this device/) {
+  error_and_exit("Message about known members not found.\n$output");
+}
+
+if ($output !~ /Karen Yeowell/) {
+  error_and_exit("Saved member Karen Yeowell (31) not found.\n$output");
+}
+
+if ($output !~ /Mark OConnell/) {
+  error_and_exit("Saved member Mark OConnell (314) not found.\n$output");
+}
+
+success();
+
+
+###########
+# Test 9 - Make sure that members in the cookie appear properly
+# 
+%TEST_INFO = qw(Testname TestSavedMemberIdLookupSomeTimedOut);
+%GET = qw(key UnitTestPlayground member 1);
+%COOKIE = ();  # empty hash
+
+my($time_now) = time();
+my($time_earlier) = time() - (86400 * 30 * 5);
+my($saved_member_id_string) = "31:${time_now},314:${time_earlier}";
+$COOKIE{"member_ids"} = $saved_member_id_string;
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/competition_register.php";
+$output = qx($cmd);
+
+if ($output !~ /Register known member on this device/) {
+  error_and_exit("Message about known members not found.\n$output");
+}
+
+if ($output !~ /Karen Yeowell/) {
+  error_and_exit("Saved member Karen Yeowell (31) not found.\n$output");
+}
+
+if ($output =~ /Mark OConnell/) {
+  error_and_exit("Saved member Mark OConnell (314) found even though timed out.\n$output");
+}
+
+success();
+
+
+###########
+# Test 10 - Make sure things work if all cookie members are timed out
+# 
+%TEST_INFO = qw(Testname TestSavedMemberIdLookupAllTimedOut);
+%GET = qw(key UnitTestPlayground member 1);
+%COOKIE = ();  # empty hash
+
+my($time_now) = time();
+my($time_earlier) = time() - (86400 * 30 * 5);
+my($saved_member_id_string) = "31:${time_earlier},314:${time_earlier}";
+$COOKIE{"member_ids"} = $saved_member_id_string;
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/competition_register.php";
+$output = qx($cmd);
+
+if ($output =~ /Register known member on this device/) {
+  error_and_exit("Message about known members found even though all members timed out.\n$output");
+}
+
+if ($output =~ /Karen Yeowell/) {
+  error_and_exit("Saved member Karen Yeowell (31) found even though timed out.\n$output");
+}
+
+if ($output =~ /Mark OConnell/) {
+  error_and_exit("Saved member Mark OConnell (314) found even though timed out.\n$output");
+}
+
+success();
+
+
+###########
+# Test 11 - Make sure things work if there is no cookie for saved members
+# 
+%TEST_INFO = qw(Testname TestSavedMemberIdLookupNoCookie);
+%GET = qw(key UnitTestPlayground member 1);
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/competition_register.php";
+$output = qx($cmd);
+
+if ($output =~ /Register known member on this device/) {
+  error_and_exit("Message about known members found even though no saved member cookie present.\n$output");
+}
+
+if ($output !~ /<u>NEOC club member registration/) {
+  error_and_exit("Message about member registration not found even though member was specified.\n$output");
+}
+
+if ($output =~ /Non-NEOC club member registration/) {
+  error_and_exit("Message about non-member registration found even though member was specified.\n$output");
+}
+
+success();
+
+
+
+###########
+# Test 12 - Make sure things work for non-members
+# 
+%TEST_INFO = qw(Testname TestRegistrationNonMember);
+%GET = qw(key UnitTestPlayground);
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/competition_register.php";
+$output = qx($cmd);
+
+if ($output =~ /Register known member on this device/) {
+  error_and_exit("Message about known members found even though no saved member cookie present.\n$output");
+}
+
+if ($output =~ /<u>NEOC club member registration/) {
+  error_and_exit("Message about member registration found even though member was not specified.\n$output");
+}
+
+if ($output !~ /Non-NEOC club member registration/) {
+  error_and_exit("Message about non-member registration not found even though member was not specified.\n$output");
+}
+
+success();
+
+
 #################
 # End the test successfully
 qx(rm artificial_input);
