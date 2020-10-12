@@ -49,7 +49,7 @@ $registration_info_string = implode(",", array("first_name", base64_encode($name
                                                "last_name", base64_encode($name_info[1]),
                                                "club_name", base64_encode("NEOC"),  // Should NOT be hardcoded
                                                "si_stick", base64_encode($si_stick),
-                                               "email_address", base64_encode(""),
+                                               "email_address", base64_encode(get_member_email($member_id, $matching_info)),
                                                "cell_phone", base64_encode(""),
                                                "car_info", base64_encode(""),
                                                "member_id", base64_encode($member_id),
