@@ -204,7 +204,7 @@ success();
 
 my($time_now) = time();
 my($saved_member_id_string) = "31:${time_now},314:${time_now}";
-$COOKIE{"member_ids"} = $saved_member_id_string;
+$COOKIE{"UnitTestPlayground-member_ids"} = $saved_member_id_string;
 
 hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/competition_register.php";
@@ -235,7 +235,7 @@ success();
 my($time_now) = time();
 my($time_earlier) = time() - (86400 * 30 * 5);
 my($saved_member_id_string) = "31:${time_now},314:${time_earlier}";
-$COOKIE{"member_ids"} = $saved_member_id_string;
+$COOKIE{"UnitTestPlayground-member_ids"} = $saved_member_id_string;
 
 hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/competition_register.php";
@@ -266,7 +266,7 @@ success();
 my($time_now) = time();
 my($time_earlier) = time() - (86400 * 30 * 5);
 my($saved_member_id_string) = "31:${time_earlier},314:${time_earlier}";
-$COOKIE{"member_ids"} = $saved_member_id_string;
+$COOKIE{"UnitTestPlayground-member_ids"} = $saved_member_id_string;
 
 hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/competition_register.php";

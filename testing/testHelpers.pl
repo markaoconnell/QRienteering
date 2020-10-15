@@ -104,6 +104,20 @@ sub remove_email_properties {
   unlink($email_props_path);
 }
 
+sub set_club_name {
+  my($key, $club_name) = @_;
+  my($club_name_file) = get_base_path($key) . "/club_name";
+  open(CLUB_NAME_FILE, ">$club_name_file");
+  print CLUB_NAME_FILE "$club_name";
+  close (CLUB_NAME_FILE);
+}
+
+sub unset_club_name {
+  my($key) = @_;
+  my($club_name_file) = get_base_path($key) . "/club_name";
+  unlink($club_name_file);
+}
+
 my(%keys);
 sub create_key_file {
   $keys{"UnitTestPlayground"} = "TestingDirectory";

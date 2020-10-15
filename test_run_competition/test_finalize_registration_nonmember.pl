@@ -75,7 +75,7 @@ sub compare_hashes {
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -84,6 +84,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"
 my($info_hash_ref) = get_specified_info($1);
 my(%expected_hash) = qw(first_name Mark last_name OConnell club_name QOC si_stick 32768 email_address mark@mkoconnell.com
                         cell_phone 5086148225 car_info ChevyBoltEV3470 is_member no);
+$expected_hash{"member_id"} = "";
 
 my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
 
@@ -101,7 +102,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -110,6 +111,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"
 my($info_hash_ref) = get_specified_info($1);
 my(%expected_hash) = qw(first_name Isabelle last_name Davenport club_name NEOC si_stick 32768 email_address mark@mkoconnell.com
                         cell_phone 5086148225 car_info ChevyBoltEV3470 is_member no);
+$expected_hash{"member_id"} = "";
 
 my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
 
@@ -127,7 +129,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid si_stick/) {
@@ -145,7 +147,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /please go back and enter a valid first name/) {
@@ -164,7 +166,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /please go back and enter a valid last name/) {
@@ -182,7 +184,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid si_stick/) {
@@ -192,48 +194,6 @@ if ($output !~ /Invalid si_stick/) {
 success();
 
 
-###########
-# Test 7 - Initial non-member information all good
-# 
-%TEST_INFO = qw(Testname TestNonMemberAllIsGood);
-%GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson si_stick 1234);
-%COOKIE = ();  # empty hash
-
-hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
-$output = qx($cmd);
-
-if ($output !~ /type=checkbox name="waiver_signed"/) {
-  error_and_exit("Did not detect find waiver signed checkbox.\n$output");
-}
-
-if ($output !~ /input type="submit" value="Choose course"/) {
-  error_and_exit("Did not detect submit button to choose a course.\n$output");
-}
-
-success();
-
-
-###########
-# Test 8 - Initial non-member information all good, no si stick
-# 
-%TEST_INFO = qw(Testname TestNonMemberAllIsGood);
-%GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson);
-%COOKIE = ();  # empty hash
-
-hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member.php";
-$output = qx($cmd);
-
-if ($output !~ /type=checkbox name="waiver_signed"/) {
-  error_and_exit("Did not detect find waiver signed checkbox.\n$output");
-}
-
-if ($output !~ /input type="submit" value="Choose course"/) {
-  error_and_exit("Did not detect submit button to choose a course.\n$output");
-}
-
-success();
 
 
 ###########
@@ -244,7 +204,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid \(empty\) first name/) {
@@ -261,7 +221,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid \(empty\) last name/) {
@@ -280,7 +240,7 @@ $GET{"si_stick"} = "";
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -289,6 +249,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"
 my($info_hash_ref) = get_specified_info($1);
 my(%expected_hash) = qw(first_name Freddie last_name Mercury club_name DVOC email_address mark@mkoconnell.com
                         cell_phone 5086148225 car_info ChevyBoltEV3470 is_member no);
+$expected_hash{"member_id"} = "";
 $expected_hash{"si_stick"} = "";
 
 my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
@@ -312,7 +273,7 @@ $GET{"car_info"} = "";
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
 if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
@@ -321,6 +282,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"
 my($info_hash_ref) = get_specified_info($1);
 my(%expected_hash) = qw(first_name Queen last_name Elizabeth is_member no);
 $expected_hash{"si_stick"} = "";
+$expected_hash{"member_id"} = "";
 $expected_hash{"club_name"} = "";
 $expected_hash{"email_address"} = "";
 $expected_hash{"cell_phone"} = "";
@@ -343,7 +305,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/non_member_with_safety_info.php";
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
 if ($output !~ /The waiver must be acknowledged/) {

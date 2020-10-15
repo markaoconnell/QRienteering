@@ -26,10 +26,12 @@ $error_string = "";
 $success_string = "";
 
 $printable_name = get_full_name($member_id, $matching_info);
+$email_address = get_member_email($member_id, $matching_info);
 $success_string .= "<p>Welcome {$printable_name}.\n";
 $success_string .= <<<END_OF_FORM
-<form action="./finalize_member_registration.php">
+<form action="./add_safety_info.php">
 <input type=hidden name="member_id" value="{$member_id}"/>
+<input type=hidden name="member_email" value="{$email_address}"/>
 <input type=hidden name="key" value="{$key}"/>
 <p> How are you orienteering today? <br>
 <p> Using Si Stick <input type=radio name="using_stick" value="yes" checked /> <input type=text name="si_stick_number" value="{$si_stick}" readonly/>

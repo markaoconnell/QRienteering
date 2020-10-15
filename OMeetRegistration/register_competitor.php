@@ -90,13 +90,13 @@ if (!$error) {
         // Format will be member_id:timestamp_of_last_registration,member_id:timestamp_of_last_registration,...
         // 3 month timeout
         $time_cutoff = $current_time - (86400 * 90);
-        $member_ids = array_map(function ($elt) { return (explode(":", $elt)); }, explode(",", $_COOKIE["member_ids"]));
+        $member_ids = array_map(function ($elt) { return (explode(":", $elt)); }, explode(",", $_COOKIE["{$key}-member_ids"]));
         $member_ids_hash = array();
         array_map(function ($elt) use (&$member_ids_hash, $time_cutoff)
                      { if ($elt[1] > $time_cutoff) { $member_ids_hash[$elt[0]] = $elt[1]; } }, $member_ids);
         $member_ids_hash[$registration_info["member_id"]] = $current_time;
         $member_cookie = implode(",", array_map (function ($elt) use ($member_ids_hash) { return($elt . ":" . $member_ids_hash[$elt]); }, array_keys($member_ids_hash)));
-        setcookie("member_ids", $member_cookie, $current_time + 86400 * 120, $cookie_path);
+        setcookie("{$key}-member_ids", $member_cookie, $current_time + 86400 * 120, $cookie_path);
       }
     }
     

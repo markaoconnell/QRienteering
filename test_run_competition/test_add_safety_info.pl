@@ -71,26 +71,27 @@ sub compare_hashes {
 # Test 1 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberUsingDefaultStick);
-%GET = qw(key UnitTestPlayground member_id 31 using_stick yes si_stick_number 3959473);
+%GET = qw(key UnitTestPlayground member_id 31 using_stick yes si_stick_number 3959473 member_email karen@mkoconnell.com);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
-  error_and_exit("Redirect URL not found.\n$output");
+if ($output !~ /type=hidden name="waiver_signed" value="signed"/) {
+  error_and_exit("Waiver signed hidden input not found.\n$output");
 }
-my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC si_stick 3959473 member_id 31 is_member yes);
-$expected_hash{"email_address"} = "";
-$expected_hash{"cell_phone"} = "";
-$expected_hash{"car_info"} = "";
 
-my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
+if ($output !~ /type=hidden name="member_id" value="31"/) {
+  error_and_exit("Hidden input member_id not found.\n$output");
+}
 
-if ($error_string ne "") {
-  error_and_exit("Registration information is wrong:\n$1\n$error_string");
+if ($output !~ /type=hidden name="si_stick" value="3959473"/) {
+  error_and_exit("Hidden input si_stick not found.\n$output");
+}
+
+if ($output !~ /input type="text" name="email" value="karen\@mkoconnell.com"/) {
+  error_and_exit("Presupplied email address not found.\n$output");
 }
 
 success();
@@ -104,22 +105,23 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
-  error_and_exit("Redirect URL not found.\n$output");
+if ($output !~ /type=hidden name="waiver_signed" value="signed"/) {
+  error_and_exit("Waiver signed hidden input not found.\n$output");
 }
-my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC si_stick 141421 member_id 31 is_member yes);
-$expected_hash{"email_address"} = "";
-$expected_hash{"cell_phone"} = "";
-$expected_hash{"car_info"} = "";
 
-my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
+if ($output !~ /type=hidden name="member_id" value="31"/) {
+  error_and_exit("Hidden input member_id not found.\n$output");
+}
 
-if ($error_string ne "") {
-  error_and_exit("Registration information is wrong:\n$1\n$error_string");
+if ($output !~ /type=hidden name="si_stick" value="141421"/) {
+  error_and_exit("Hidden input si_stick not found.\n$output");
+}
+
+if ($output !~ /input type="text" name="email"  >/) {
+  error_and_exit("Presupplied email address found.\n$output");
 }
 
 success();
@@ -132,23 +134,23 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
-  error_and_exit("Redirect URL not found.\n$output");
+if ($output !~ /type=hidden name="waiver_signed" value="signed"/) {
+  error_and_exit("Waiver signed hidden input not found.\n$output");
 }
-my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC member_id 31 is_member yes);
-$expected_hash{"email_address"} = "";
-$expected_hash{"cell_phone"} = "";
-$expected_hash{"car_info"} = "";
-$expected_hash{"si_stick"} = "";
 
-my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
+if ($output !~ /type=hidden name="member_id" value="31"/) {
+  error_and_exit("Hidden input member_id not found.\n$output");
+}
 
-if ($error_string ne "") {
-  error_and_exit("Registration information is wrong:\n$1\n$error_string");
+if ($output !~ /type=hidden name="si_stick" value=""/) {
+  error_and_exit("Hidden input si_stick incorrectly has a value.\n$output");
+}
+
+if ($output !~ /input type="text" name="email"  >/) {
+  error_and_exit("Presupplied email address found.\n$output");
 }
 
 success();
@@ -161,23 +163,24 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
-  error_and_exit("Redirect URL not found.\n$output");
+
+if ($output !~ /type=hidden name="waiver_signed" value="signed"/) {
+  error_and_exit("Waiver signed hidden input not found.\n$output");
 }
-my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Larry last_name Berrill club_name NEOC member_id 41 is_member yes);
-$expected_hash{"email_address"} = "";
-$expected_hash{"cell_phone"} = "";
-$expected_hash{"car_info"} = "";
-$expected_hash{"si_stick"} = "";
 
-my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
+if ($output !~ /type=hidden name="member_id" value="41"/) {
+  error_and_exit("Hidden input member_id not found.\n$output");
+}
 
-if ($error_string ne "") {
-  error_and_exit("Registration information is wrong:\n$1\n$error_string");
+if ($output !~ /type=hidden name="si_stick" value=""/) {
+  error_and_exit("Empty si_stick entry not found.\n$output");
+}
+
+if ($output !~ /input type="text" name="email"  >/) {
+  error_and_exit("Presupplied email address found.\n$output");
 }
 
 success();
@@ -192,23 +195,26 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
-  error_and_exit("Redirect URL not found.\n$output");
-}
-my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Peter last_name Amram club_name NEOC is_member yes member_id 171 si_stick 314159);
-$expected_hash{"email_address"} = "";
-$expected_hash{"cell_phone"} = "";
-$expected_hash{"car_info"} = "";
 
-my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
-
-if ($error_string ne "") {
-  error_and_exit("Registration information is wrong:\n$1\n$error_string");
+if ($output !~ /type=hidden name="waiver_signed" value="signed"/) {
+  error_and_exit("Waiver signed hidden input not found.\n$output");
 }
+
+if ($output !~ /type=hidden name="member_id" value="171"/) {
+  error_and_exit("Hidden input member_id not found.\n$output");
+}
+
+if ($output !~ /type=hidden name="si_stick" value="314159"/) {
+  error_and_exit("Empty si_stick entry not found.\n$output");
+}
+
+if ($output !~ /input type="text" name="email"  >/) {
+  error_and_exit("Presupplied email address found.\n$output");
+}
+
 
 success();
 
@@ -222,10 +228,10 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
-if ($output !~ /Yes specified for SI stick usage but invalid SI stick number found/) {
+if ($output !~ /Invalid si_stick "14xx21", only numbers allowed.  Please go back and re-enter./) {
   error_and_exit("Bad stick error message not found.\n$output");
 }
 
@@ -241,7 +247,7 @@ $GET{"si_stick_number"} = "";
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
 if ($output !~ /Yes specified for SI stick usage but no SI stick number found/) {
@@ -259,10 +265,10 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
-if ($output !~ /No member id specified/) {
+if ($output !~ /please go back and enter a valid first name/) {
   error_and_exit("Bad error message: \"No member id\" not found.\n$output");
 }
 
@@ -276,7 +282,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
 if ($output !~ /Invalid value \"maybe\" for SI stick usage/) {
@@ -293,7 +299,7 @@ success();
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
 if ($output !~ /Yes specified for SI stick usage but no SI stick number found/) {
@@ -303,23 +309,6 @@ if ($output !~ /Yes specified for SI stick usage but no SI stick number found/) 
 success();
 
 
-
-###########
-# Test 11 - Failed member registration - bad id
-# 
-%TEST_INFO = qw(Testname TestMemberUsingBadId);
-%GET = qw(key UnitTestPlayground member_id 17100 using_stick yes si_stick_number 314159);
-%COOKIE = ();  # empty hash
-
-hashes_to_artificial_file();
-$cmd = "php ../OMeetWithMemberList/finalize_member_registration.php";
-$output = qx($cmd);
-
-if ($output !~ /No such member id 17100 found/) {
-  error_and_exit("Redirect URL not found.\n$output");
-}
-
-success();
 
 
 #################

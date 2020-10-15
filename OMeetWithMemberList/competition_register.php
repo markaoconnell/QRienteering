@@ -6,15 +6,15 @@ ck_testing();
 
 echo get_web_page_header(true, false, true);
 
-$member_cookie_found = false;
-if (isset($_COOKIE["member_ids"])) {
-  // Format will be member_id:timestamp_of_last_registration,member_id:timestamp_of_last_registration,...
-  $member_cookie_found = true;
-}
-
 $key = $_GET["key"];
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
+}
+
+$member_cookie_found = false;
+if (isset($_COOKIE["{$key}-member_ids"])) {
+  // Format will be member_id:timestamp_of_last_registration,member_id:timestamp_of_last_registration,...
+  $member_cookie_found = true;
 }
 
 $current_time = time();
@@ -25,7 +25,7 @@ if ($is_member_registration) {
   if ($member_cookie_found) {
     $matching_info = read_names_info(get_members_path($key, ".."), get_nicknames_path($key, ".."));
     $time_cutoff = $current_time - (86400 * 90);  // 3 month window
-    $member_ids = array_map(function ($elt) { return (explode(":", $elt)); }, explode(",", $_COOKIE["member_ids"]));
+    $member_ids = array_map(function ($elt) { return (explode(":", $elt)); }, explode(",", $_COOKIE["{$key}-member_ids"]));
     $member_ids = array_filter($member_ids, function ($member_entry) use ($time_cutoff) { return ($member_entry[1] > $time_cutoff); });
 
     
@@ -63,7 +63,7 @@ if ($is_member_registration) {
 else {
 ?>
   <p class="title"><u>Non-NEOC club member registration:</u>
-  <form action="./non_member.php">
+  <form action="./add_safety_info.php">
   <p>What is your name?<br>
   <p>First name 
   <input type="text" name="competitor_first_name"><br>
