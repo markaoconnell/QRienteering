@@ -36,7 +36,7 @@ $success_string .= <<<END_OF_FORM
 <p> How are you orienteering today? <br>
 <p> Using Si Stick <input type=radio name="using_stick" value="yes" checked /> <input type=text name="si_stick_number" value="{$si_stick}" readonly/>
 <p> Using QR codes <input type=radio name="using_stick" value="no" />
-<p><input type="submit" value="Choose course"/>
+<p><input type="submit" value="Fill in safety information"/>
 <p>If you are using a different SI stick, go back and register by name rather than by SI stick.
 <p>If your name is wrong, go back and re-register.
 </form>

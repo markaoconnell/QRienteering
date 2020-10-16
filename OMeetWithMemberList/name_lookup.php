@@ -59,7 +59,7 @@ else if (count($possible_member_ids) == 1) {
 <p> Using Si Stick <input type=radio name="using_stick" value="yes" {$yes_checked_by_default} /> <input type=text name="si_stick_number" value="{$si_stick}" />
 <p> Using QR codes <input type=radio name="using_stick" value="no" {$no_checked_by_default}/>
 <input type="hidden" name="key" value="{$key}">
-<p><input type="submit" value="Choose course"/>
+<p><input type="submit" value="Fill in safety information"/>
 </form>
 END_OF_FORM;
 }
