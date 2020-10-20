@@ -107,6 +107,13 @@ foreach (array_keys($all_controls) as $one_control) {
                         "\" value=\"{$url_prefix}/OMeet/reach_control.php?control={$one_control}\">Control {$one_control}\n";
 }
 echo "</ul>\n";
+echo "<li><strong>Result QR codes</strong> (non-resuable across events)\n";
+echo "<ul>\n";
+echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("View results") .
+                          "\" value=\"{$url_prefix}/OMeet/view_results.php?{$add_key_string}&{$add_event_string}\">View results of the event\n";
+echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Competitors still running") .
+                          "\" value=\"{$url_prefix}/OMeet/on_course.php?{$add_key_string}&{$add_event_string}\">View competitors still on the course\n";
+echo "</ul>\n";
 echo "</ul>\n";
 ?>
 <p>
