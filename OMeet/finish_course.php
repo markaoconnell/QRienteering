@@ -91,6 +91,7 @@ else {
 // print_r($control_list);
 $error_string = "";
 $result_filename = "";
+$suppress_email = false;
 
 if (!file_exists("${controls_found_path}/start")) {
   error_and_exit("<p>Course " . ltrim($course, "0..9-") . " not yet started.\n<br>Please scan the start QR code to start a course.\n");
@@ -153,6 +154,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
 }
 else {
   $error_string .= "<p>Second scan of finish?  Finish time not updated.\n";
+  $suppress_email = true;
   $course_started_at = file_get_contents("{$controls_found_path}/start");
   $course_finished_at = file_get_contents("{$controls_found_path}/finish");
   $time_taken = $course_finished_at - $course_started_at;
@@ -197,7 +199,7 @@ if (file_exists("{$competitor_path}/registration_info")) {
   $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
   $email_properties = get_email_properties(get_base_path($key, ".."));
   //print_r($email_properties);
-  $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]);
+  $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]) && !$suppress_email;
   if (($registration_info["email_address"] != "") && $email_enabled) {
     // See if this looks like a valid email
     $email_addr = $registration_info["email_address"];
