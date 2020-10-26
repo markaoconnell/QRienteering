@@ -65,7 +65,7 @@ $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$
 
 if (file_exists("${competitor_path}/si_stick")) {
   $competitor_name = file_get_contents("{$competitor_path}/name");
-  error_and_exit("<p>{$competitor_name} on course {$course} registered with si stick, should not scan QR codes.\n");
+  error_and_exit("<p>{$competitor_name} on course {$course} registered with si unit, should not scan QR codes.\n");
 }
 
 $autostart_msg = "";

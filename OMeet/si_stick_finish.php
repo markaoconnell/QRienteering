@@ -66,7 +66,7 @@ function record_finish_by_si_stick($event, $key, $si_results_string) {
     }
   }
 
-  $return_info["error"] = "No registered competitor found with si_stick \"{$si_stick}\"";
+  $return_info["error"] = "No registered competitor found with SI unit \"{$si_stick}\"";
   return($return_info);
 }
 
@@ -76,7 +76,7 @@ function validate_and_save_results($event, $key, $competitor, $si_stick, $start_
   $competitor_path = get_competitor_path($competitor, $event, $key, "..");
   if (!file_exists($competitor_path) || file_exists("{$competitor_path}/controls_found/start") || ($si_stick != file_get_contents("{$competitor_path}/si_stick"))) {
     // Houston, we have a problem
-    return ("Competitor {$competitor} does not seem to match stick {$si_stick}");
+    return ("Competitor {$competitor} does not seem to match SI unit {$si_stick}");
   }
 
   $course = file_get_contents("{$competitor_path}/course");

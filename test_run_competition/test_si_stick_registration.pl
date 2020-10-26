@@ -78,7 +78,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/stick_lookup.php";
 $output = qx($cmd);
 
-if ($output !~ /No member with SI stick "271828" found/) {
+if ($output !~ /No member with SI unit "271828" found/) {
   error_and_exit("Found non-existing stick 271828.\n$output");
 }
 
@@ -95,7 +95,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/stick_lookup.php";
 $output = qx($cmd);
 
-if ($output !~ /Unspecified SI stick number/) {
+if ($output !~ /Unspecified SI unit number/) {
   error_and_exit("Failed to recognize that no SI stick was specified.\n$output");
 }
 

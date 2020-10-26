@@ -18,17 +18,17 @@ if (!key_is_valid($key)) {
 
 if ($is_member) {
   if (!isset($_GET["using_stick"])) {
-    error_and_exit("No value found for SI stick usage - error in scripting?  Please restart registration.\n");
+    error_and_exit("No value found for SI unit usage - error in scripting?  Please restart registration.\n");
   }
   
   $using_stick_value = $_GET["using_stick"];
   if (($using_stick_value != "yes") && ($using_stick_value != "no")) {
-    error_and_exit("Invalid value \"{$using_stick_value}\" for SI stick usage.  Please restart registration.\n");
+    error_and_exit("Invalid value \"{$using_stick_value}\" for SI unit usage.  Please restart registration.\n");
   }
   
   if ($using_stick_value == "yes") {
     if (!isset($_GET["si_stick_number"])) {
-      error_and_exit("Yes specified for SI stick usage but no SI stick number found.  Please restart registration.\n");
+      error_and_exit("Yes specified for SI unit usage but no SI unit number found.  Please restart registration.\n");
     }
     $si_stick = $_GET["si_stick_number"];
   }
@@ -51,7 +51,7 @@ else {
 
 if ($si_stick != "") {
   if (!preg_match("/^[0-9]+$/", $si_stick)) {
-    error_and_exit("Invalid si_stick \"{$si_stick}\", only numbers allowed.  Please go back and re-enter.\n");
+    error_and_exit("Invalid si unit id \"{$si_stick}\", only numbers allowed.  Please go back and re-enter.\n");
   }
 }
 
@@ -96,10 +96,10 @@ else {
 <p>In case there is any question if you have (or have not) safely returned, we need a way to contact you to verify your safety.
 <p>This information is maintained while you are on the course and destroyed when you finish the course.
 
-<br><p>(Best option) Your cell phone number, or a parent's, spouse's, etc.<br>
-<input type="text" name="cell_number"><br>
+<br><p>(Best option) Your cell phone number, or a parent/guardian's, spouse's, etc.<br>
+<input type="text" size=50 name="cell_number"><br>
 <br><p>What car (make/model/plate) did you come in (we can check the lot to see if you've left)?<br>
-<input type="text" name="car_info"><br>
+<input type="text" size=50 name="car_info"><br>
 
 <p>
 <?php
@@ -112,7 +112,7 @@ if ($is_member) {
 }
 
 echo "<br><p>(Optional) If you would like results emailed to you, please supply a valid email address<br>\n";
-echo "<input type=\"text\" name=\"email\" {$presupplied_value} ><br><br>\n";
+echo "<input type=\"text\" size=50 name=\"email\" {$presupplied_value} ><br><br>\n";
 ?>
 
 <input type="submit" value="Choose course">

@@ -38,7 +38,7 @@ else {
 }
 
 if (file_exists("{$competitor_path}/si_stick")) {
-  error_and_exit("<p>ERROR: {$competitor_name} registered for {$event_fullname} with si_stick, should not scan start QR code.");
+  error_and_exit("<p>ERROR: {$competitor_name} registered for {$event_fullname} with SI unit, should not scan start QR code.");
 }
 
 if (file_exists("${controls_found_path}/start")) {

@@ -58,7 +58,7 @@ if ($last_name == "") {
 
 if ($si_stick != "") {
   if (!preg_match("/^[0-9]+$/", $si_stick)) {
-    error_and_exit("Invalid si_stick \"{$si_stick}\", only numbers allowed.  Please go back and re-enter.\n");
+    error_and_exit("Invalid SI unit id \"{$si_stick}\", only numbers allowed.  Please go back and re-enter.\n");
   }
 }
 

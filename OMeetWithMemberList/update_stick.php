@@ -35,7 +35,7 @@ else {
 
 $output_string = "";
 if (!$new_stick_provided) {
-  $output_string = "<p>Update Si Stick for {$competitor_name}<p>Enter \"none\" to remove the current si stick.\n";
+  $output_string = "<p>Update Si unit for {$competitor_name}<p>Enter \"none\" to remove the current si unit.\n";
   $output_string .= "<form action=./update_stick.php method=put>\n";
   $output_string .= "<input type=text name=new_stick value=\"{$competitor_stick}\">\n";
   $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
@@ -44,7 +44,7 @@ if (!$new_stick_provided) {
   $output_string .= "<input type=submit name=submit>\n</form>\n";
 }
 else {
-  $output_string = "<p>Updating Si Stick for {$competitor_name}\n";
+  $output_string = "<p>Updating Si unit for {$competitor_name}\n";
   if ($new_stick != "none") {
     file_put_contents("{$competitor_path}/si_stick", $new_stick);
   }
@@ -54,7 +54,7 @@ else {
     }
   }
 
-  $output_string .= "<p>Updated stick from \"{$competitor_stick}\" to \"{$new_stick}\"\n";
+  $output_string .= "<p>Updated SI unit from \"{$competitor_stick}\" to \"{$new_stick}\"\n";
 }
 
 

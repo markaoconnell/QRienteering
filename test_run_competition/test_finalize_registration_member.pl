@@ -197,8 +197,8 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
-if ($output !~ /Invalid si_stick "14xx21", only numbers allowed.  Please go back and re-enter/) {
-  error_and_exit("Bad stick error message not found.\n$output");
+if ($output !~ /Invalid SI unit id "14xx21", only numbers allowed.  Please go back and re-enter/) {
+  error_and_exit("Bad si unit id error message not found.\n$output");
 }
 
 success();

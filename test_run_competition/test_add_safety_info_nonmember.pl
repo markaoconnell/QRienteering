@@ -51,7 +51,7 @@ if ($output !~ /type=hidden name="club_name" value=""/) {
   error_and_exit("Hidden empty input club not found.\n$output");
 }
 
-if ($output !~ /input type="text" name="email"  >/) {
+if ($output !~ /input type="text" size=50 name="email"  >/) {
   error_and_exit("Presupplied email address not found.\n$output");
 }
 
@@ -93,7 +93,7 @@ if ($output !~ /type=hidden name="club_name" value="CSU"/) {
   error_and_exit("Hidden input club not found.\n$output");
 }
 
-if ($output !~ /input type="text" name="email"  >/) {
+if ($output !~ /input type="text" size=50 name="email"  >/) {
   error_and_exit("Presupplied email address not found.\n$output");
 }
 
@@ -151,8 +151,8 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
-if ($output !~ /Invalid si_stick "14xx21", only numbers allowed.  Please go back and re-enter./) {
-  error_and_exit("Bad stick error message not found.\n$output");
+if ($output !~ /Invalid si unit id "14xx21", only numbers allowed.  Please go back and re-enter./) {
+  error_and_exit("Bad si unit id error message not found.\n$output");
 }
 
 success();

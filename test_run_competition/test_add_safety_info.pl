@@ -90,7 +90,7 @@ if ($output !~ /type=hidden name="si_stick" value="3959473"/) {
   error_and_exit("Hidden input si_stick not found.\n$output");
 }
 
-if ($output !~ /input type="text" name="email" value="karen\@mkoconnell.com"/) {
+if ($output !~ /input type="text" size=50 name="email" value="karen\@mkoconnell.com"/) {
   error_and_exit("Presupplied email address not found.\n$output");
 }
 
@@ -120,7 +120,7 @@ if ($output !~ /type=hidden name="si_stick" value="141421"/) {
   error_and_exit("Hidden input si_stick not found.\n$output");
 }
 
-if ($output !~ /input type="text" name="email"  >/) {
+if ($output !~ /input type="text" size=50 name="email"  >/) {
   error_and_exit("Presupplied email address found.\n$output");
 }
 
@@ -149,7 +149,7 @@ if ($output !~ /type=hidden name="si_stick" value=""/) {
   error_and_exit("Hidden input si_stick incorrectly has a value.\n$output");
 }
 
-if ($output !~ /input type="text" name="email"  >/) {
+if ($output !~ /input type="text" size=50 name="email"  >/) {
   error_and_exit("Presupplied email address found.\n$output");
 }
 
@@ -179,7 +179,7 @@ if ($output !~ /type=hidden name="si_stick" value=""/) {
   error_and_exit("Empty si_stick entry not found.\n$output");
 }
 
-if ($output !~ /input type="text" name="email"  >/) {
+if ($output !~ /input type="text" size=50 name="email"  >/) {
   error_and_exit("Presupplied email address found.\n$output");
 }
 
@@ -211,7 +211,7 @@ if ($output !~ /type=hidden name="si_stick" value="314159"/) {
   error_and_exit("Empty si_stick entry not found.\n$output");
 }
 
-if ($output !~ /input type="text" name="email"  >/) {
+if ($output !~ /input type="text" size=50 name="email"  >/) {
   error_and_exit("Presupplied email address found.\n$output");
 }
 
@@ -231,7 +231,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
-if ($output !~ /Invalid si_stick "14xx21", only numbers allowed.  Please go back and re-enter./) {
+if ($output !~ /Invalid si unit id "14xx21", only numbers allowed.  Please go back and re-enter./) {
   error_and_exit("Bad stick error message not found.\n$output");
 }
 
@@ -250,7 +250,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
-if ($output !~ /Yes specified for SI stick usage but no SI stick number found/) {
+if ($output !~ /Yes specified for SI unit usage but no SI unit number found/) {
   error_and_exit("Bad stick error message not found.\n$output");
 }
 
@@ -285,7 +285,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
-if ($output !~ /Invalid value \"maybe\" for SI stick usage/) {
+if ($output !~ /Invalid value \"maybe\" for SI unit usage/) {
   error_and_exit("Bad stick error message not found.\n$output");
 }
 
@@ -302,8 +302,8 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/add_safety_info.php";
 $output = qx($cmd);
 
-if ($output !~ /Yes specified for SI stick usage but no SI stick number found/) {
-  error_and_exit("Bad stick error message not found.\n$output");
+if ($output !~ /Yes specified for SI unit usage but no SI unit number found/) {
+  error_and_exit("Bad SI unit error message not found.\n$output");
 }
 
 success();

@@ -132,7 +132,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
-if ($output !~ /Invalid si_stick/) {
+if ($output !~ /Invalid SI unit id/) {
   error_and_exit("Did not detect poor si_stick.\n$output");
 }
 
@@ -187,8 +187,8 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
-if ($output !~ /Invalid si_stick/) {
-  error_and_exit("Did not detect poorly formatted si stick.\n$output");
+if ($output !~ /Invalid SI unit id/) {
+  error_and_exit("Did not detect poorly formatted si unit id.\n$output");
 }
 
 success();

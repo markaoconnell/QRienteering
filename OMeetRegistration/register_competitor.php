@@ -124,7 +124,7 @@ echo $body_string;
 
 if (!$error) {
   if ($using_si_stick) {
-    echo "<p>To start the course, clear and check your SI stick, then proceed to the start control with your SI stick.\n";
+    echo "<p>To start the course, clear and check your SI unit, then proceed to the start control with your SI unit.\n";
   }
   else {
     echo "<p>To start the course, please proceed to start and scan the start QR code there or click the \"Start course\" button below to start now.\n";

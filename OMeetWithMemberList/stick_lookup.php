@@ -12,14 +12,14 @@ if (!key_is_valid($key)) {
 $matching_info = read_names_info(get_members_path($key, ".."), get_nicknames_path($key, ".."));
 
 if (!isset($_GET["si_stick"])) {
-  error_and_exit("Unspecified SI stick number, please hit back and retry.\n");
+  error_and_exit("Unspecified SI unit number, please hit back and retry.\n");
 }
 
 $si_stick = $_GET["si_stick"];
 
 $member_id = get_by_si_stick($si_stick, $matching_info);
 if ($member_id == "") {
-  error_and_exit("No member with SI stick \"{$si_stick}\" found, please hit back and retry.\n");
+  error_and_exit("No member with SI unit \"{$si_stick}\" found, please hit back and retry.\n");
 }
 
 $error_string = "";
@@ -34,10 +34,10 @@ $success_string .= <<<END_OF_FORM
 <input type=hidden name="member_email" value="{$email_address}"/>
 <input type=hidden name="key" value="{$key}"/>
 <p> How are you orienteering today? <br>
-<p> Using Si Stick <input type=radio name="using_stick" value="yes" checked /> <input type=text name="si_stick_number" value="{$si_stick}" readonly/>
+<p> Using Si unit <input type=radio name="using_stick" value="yes" checked /> <input type=text name="si_stick_number" value="{$si_stick}" readonly/>
 <p> Using QR codes <input type=radio name="using_stick" value="no" />
 <p><input type="submit" value="Fill in safety information"/>
-<p>If you are using a different SI stick, go back and register by name rather than by SI stick.
+<p>If you are using a different SI unit, go back and register by name rather than by SI unit.
 <p>If your name is wrong, go back and re-register.
 </form>
 END_OF_FORM;

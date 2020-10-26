@@ -25,7 +25,7 @@ ck_testing();
 // echo "<p>\n";
 if (isset($_GET["si_stick_finish"])) {
   if (!isset($_GET["event"]) || ($_GET["event"] == "")) {
-    error_and_exit("ERROR: Cannot find competitor for registered stick {$finish_info["si_stick"]}: No event set.\n");
+    error_and_exit("ERROR: Cannot find competitor for registered SI unit {$finish_info["si_stick"]}: No event set.\n");
   }
 
   $event = $_GET["event"];
@@ -34,7 +34,7 @@ if (isset($_GET["si_stick_finish"])) {
   $finish_info = record_finish_by_si_stick($event, $key, $si_results_string);
 
   if ($finish_info["error"] != "") {
-    error_and_exit("ERROR: Cannot find competitor for registered stick {$finish_info["si_stick"]}: {$finish_info["error"]}\n");
+    error_and_exit("ERROR: Cannot find competitor for registered SI unit {$finish_info["si_stick"]}: {$finish_info["error"]}\n");
   }
 
   $course = $finish_info["course"];
@@ -70,7 +70,7 @@ if (!file_exists($competitor_path) || !file_exists("{$courses_path}/{$course}/co
 }
 
 if (file_exists("{$competitor_path}/si_stick") && !isset($_GET["si_stick_finish"])) {
-  error_and_exit("<p>ERROR: If using si stick, do not scan the finish QR code, use si stick to finish instead.\n");
+  error_and_exit("<p>ERROR: If using SI unit, do not scan the finish QR code, use the SI unit to finish instead.\n");
 }
 
 $control_list = read_controls("${courses_path}/${course}/controls.txt");

@@ -53,10 +53,10 @@ if ($is_member_registration) {
   </form>
   
   <form action="./stick_lookup.php">
-  <br><p><p>Lookup by Si Stick:
+  <br><p><p>Lookup by Si Unit number:
   <input type="text" name="si_stick"><br>
   <input type="hidden" name="key" <?php echo "value=\"{$key}\""; ?> >
-  <input type="submit" value="SI stick lookup">
+  <input type="submit" value="SI unit lookup">
   </form>
 <?php
 }
@@ -71,7 +71,7 @@ else {
   <input type="text" name="competitor_last_name"><br>
   <br><p>What is your orienteering club affiliation (if any)?<br>
   <input type="text" name="club_name"><br>
-  <br><p>If you are using a SI stick today, please enter the number here<br>
+  <br><p>If you are using a SI unit today, please enter the number here<br>
   <input type="text" name="si_stick"><br>
   <input type="hidden" name="key" <?php echo "value=\"{$key}\""; ?> >
   <br><br>
