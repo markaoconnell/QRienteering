@@ -174,7 +174,8 @@ function set_error_background() {
 function get_error_info_string() {
   $extra_error_info = <<<END_OF_ERROR_INFO
 <br><p>This is a BYOM (Bring Your Own Map) Orienteering control.  For more information on orienteering, 
-type "orienteering new england" into Google to learn about the sport and to find events in your area.
+visit <a href="https://newenglandorienteering.org/">https://newenglandorienteering.org/</a>
+to learn about the sport and to find events in your area.
 If this is hanging in the woods, please leave it alone so as not to ruin an existing orienteering course that
 others may be currently enjoying.
 END_OF_ERROR_INFO;

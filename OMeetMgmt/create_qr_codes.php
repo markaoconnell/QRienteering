@@ -53,7 +53,9 @@ if ($_POST["style"] == "html") {
     $base64_image_data = base64_encode(file_get_contents($temp_image_file));
     unlink($temp_image_file);
     
-    echo "<tr><td>\n<p style=\"font-size: 500%;\">$qr_code_name<br>\n<img src=\"data:image/png;base64,\n$base64_image_data\">\n{$html_page_break}\n</td></tr>\n";
+    echo "<tr><td style=\"text-align:center\">\n<p style=\"font-size: 500%;\">$qr_code_name<br>\n<img src=\"data:image/png;base64,\n$base64_image_data\">\n";
+    echo "<p style=\"font-size: 100%;\"><br>Please do not remove this control.<br>Visit newenglandorienteering.org (or scan the QR code) for more information.\n";
+    echo "{$html_page_break}\n</td></tr>\n";
   }
   echo "</table>\n";
   echo get_web_page_footer();
