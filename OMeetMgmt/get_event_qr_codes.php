@@ -102,7 +102,9 @@ echo "<li><strong>On-course QR codes</strong> (resuable across events/courses)\n
 echo "<ul>\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Start") . "\" value=\"{$url_prefix}/OMeet/start_course.php\">Start\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Finish") . "\" value=\"{$url_prefix}/OMeet/finish_course.php\">Finish\n";
-foreach (array_keys($all_controls) as $one_control) {
+$sorted_control_list = array_keys($all_controls);
+sort($sorted_control_list);
+foreach ($sorted_control_list as $one_control) {
   echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Control {$one_control}") .
                         "\" value=\"{$url_prefix}/OMeet/reach_control.php?control={$one_control}\">Control {$one_control}\n";
 }

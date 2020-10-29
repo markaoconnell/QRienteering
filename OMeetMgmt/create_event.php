@@ -113,26 +113,24 @@ if (isset($_POST["submit"])) {
       }
 
       echo "<p>Created event successfully {$event_fullname} with " . count($course_array) . " courses:<ul><li>" . implode("<li>", $course_names_array) . "</ul>\n";
-      if (isset($_SERVER["HTTPS"])) {
-        $proto = "https://";
-      }
-      else {
-        $proto = "http://";
-      }
+//      if (isset($_SERVER["HTTPS"])) {
+//        $proto = "https://";
+//      }
+//      else {
+//        $proto = "http://";
+//      }
+//
+//      $url_prefix = $proto . $_SERVER["SERVER_NAME"] . dirname(dirname($_SERVER["REQUEST_URI"]));
+//      while (substr($url_prefix, -1) == "/") {
+//        $url_prefix = substr($url_prefix, 0, -1);
+//      }
 
-      $url_prefix = $proto . $_SERVER["SERVER_NAME"] . dirname(dirname($_SERVER["REQUEST_URI"]));
-      while (substr($url_prefix, -1) == "/") {
-        $url_prefix = substr($url_prefix, 0, -1);
-      }
-
-      $registration_link = $url_prefix . "/OMeetRegistration/register.php" . "?key={$key}";
       //echo "<p>Server URI is: " . $_SERVER["REQUEST_URI"] . "\n";
       //echo "<p>Server URI dirname is: " . dirname($_SERVER["REQUEST_URI"]) . "\n";
       //echo "<p>Server URI dirname and rel path is: " . dirname($_SERVER["REQUEST_URI"]) . "/../OMeetRegistration/register.php" . "\n";
       //echo "<p>Service URI after realpath is " . dirname(dirname($_SERVER["REQUEST_URI"])) . "/OMeetRegistration/register.php" . "\n";
       //echo "<p>Server name is " . $_SERVER["SERVER_NAME"] . "\n";
-      echo "<p>Paths to register are:<p><ul><li>Event specific registration: {$registration_link}&event=${event}</li>\n";
-      echo "<li>General registration: {$registration_link}</li></ul><p>\n";
+      echo "<p>Return to the <a href=\"./manage_events.php?key={$key}\">event management page</a> to print the QR codes, get registration links, etc.\n";
       $event_created = true;
     }
   }
