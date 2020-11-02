@@ -97,6 +97,7 @@ $open_event_result_links = array_map(name_to_results_link, $open_event_list);
 $qrcode_links = array_map(name_to_get_qrcodes_link, $open_event_list);
 $closed_event_result_links = array_map(name_to_results_link, $closed_event_list);
 $closed_event_winsplits_links = array_map(name_to_winsplits_link, $closed_event_list);
+$open_event_winsplits_links = array_map(name_to_winsplits_link, $open_event_list);
 
 
 echo get_web_page_header(true, false, false);
@@ -140,6 +141,7 @@ echo get_web_page_header(true, false, false);
     <li> Winsplit files
       <ul>
       <?php echo implode("\n", $closed_event_winsplits_links); ?>
+      <?php echo implode("\n", $open_event_winsplits_links); ?>
       </ul>
   </ul>
 
