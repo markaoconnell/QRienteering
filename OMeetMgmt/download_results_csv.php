@@ -57,7 +57,13 @@ foreach ($course_list as $one_course) {
     $si_stick = "124816";  // Improve this
     $csv_array = array();
     $csv_array[] = $start_number;
-    $csv_array[] = $si_stick + $start_number;
+    if (isset($this_result["si_stick"])) {
+      $this_si_stick = $this_result["si_stick"];
+    }
+    else {
+      $this_si_stick = $si_stick + $start_number;
+    }
+    $csv_array[] = $this_si_stick;
     $csv_array[] = ""; // Database ID
     $csv_array[] = "\"{$last_name}\"";  // Surname
     $csv_array[] = "\"{$first_name}\"";  // First name
