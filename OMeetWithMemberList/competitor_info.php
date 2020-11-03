@@ -100,7 +100,7 @@ foreach ($competitor_list as $competitor) {
   }
 }
 
-$results_string = "\n<table><tr><th>Course</th><th>Competitor</th><th>Status</th><th>Si Stick</th><th>Info</th></tr>\n";
+$results_string = "\n<table><tr><th>Course</th><th>Competitor</th><th>Status</th><th>Si Unit</th><th>Info</th></tr>\n";
 $results_string .= implode("\n", $competitor_outputs);
 $results_sting .= "\n</table>\n";
 

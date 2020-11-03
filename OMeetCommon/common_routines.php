@@ -91,6 +91,18 @@ function csv_formatted_time($time_in_seconds) {
 }
 
 
+// Return a string with the elapsed time in seconds formatted for easy parsing
+function format_time_as_minutes_since_midnight($unix_timestamp) {
+  $hours_mins_secs = strftime("%T", $unix_timestamp);
+  $time_pieces = explode(":", $hours_mins_secs);
+
+  $mins = ($time_pieces[0] * 60) + $time_pieces[1];
+  $secs = $time_pieces[2];
+
+  return sprintf("%4d:%02d", $mins, $secs);
+}
+
+
 // Am I running on a mobile device?
 function is_mobile () {
   return is_numeric(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), "mobile"));
@@ -162,7 +174,8 @@ function set_error_background() {
 function get_error_info_string() {
   $extra_error_info = <<<END_OF_ERROR_INFO
 <br><p>This is a BYOM (Bring Your Own Map) Orienteering control.  For more information on orienteering, 
-type "orienteering new england" into Google to learn about the sport and to find events in your area.
+visit <a href="https://newenglandorienteering.org/">https://newenglandorienteering.org/</a>
+to learn about the sport and to find events in your area.
 If this is hanging in the woods, please leave it alone so as not to ruin an existing orienteering course that
 others may be currently enjoying.
 END_OF_ERROR_INFO;
@@ -226,9 +239,12 @@ function show_results($event, $key, $course, $show_points, $max_points, $path_to
     $points_header = "";
   }
 
-  $result_string .= "<table border=1><tr><th>Name</th><th>Time</th>{$points_header}</tr>\n";
+  $finish_place = 0;
+
+  $result_string .= "<table border=1><tr><th>Place</th><th>Name</th><th>Time</th>{$points_header}</tr>\n";
   $dnfs = "";
   foreach ($results_list as $this_result) {
+    $finish_place++;
     $result_pieces = explode(",", $this_result);
     $competitor_path = get_competitor_path($result_pieces[2], $event, $key, $path_to_top);
     $competitor_name = file_get_contents("${competitor_path}/name");
@@ -240,11 +256,11 @@ function show_results($event, $key, $course, $show_points, $max_points, $path_to
     }
 
     if (!file_exists("./${competitor_path}/dnf")) {
-      $result_string .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&key={$key}&entry=${this_result}\">${competitor_name}</a></td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
+      $result_string .= "<tr><td>{$finish_place}</td><td><a href=\"./show_splits?course=${course}&event=${event}&key={$key}&entry=${this_result}\">${competitor_name}</a></td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
     }
     else {
       // For a scoreO course, there are no DNFs, so $points_value should always be "", but show it just in case
-      $dnfs .= "<tr><td><a href=\"./show_splits?course=${course}&event=${event}&key={$key}&entry=${this_result}\">${competitor_name}</a></td><td>DNF</td>{$points_value}</tr>\n";
+      $dnfs .= "<tr><td>{$finish_place}</td><td><a href=\"./show_splits?course=${course}&event=${event}&key={$key}&entry=${this_result}\">${competitor_name}</a></td><td>DNF</td>{$points_value}</tr>\n";
     }
   }
   $result_string .= "${dnfs}</table>\n<p><p><p>";
@@ -285,6 +301,45 @@ function get_csv_results($event, $key, $course, $show_points, $max_points, $path
     }
   }
   return($result_string);
+}
+
+// Get the results for a course as an array
+function get_results_as_array($event, $key, $course, $show_points, $max_points, $path_to_top) {
+  $result_array = array();
+  $readable_course_name = ltrim($course, "0..9-");
+
+  // No results yet - .csv is empty
+  $results_path = get_results_path($event, $key, $path_to_top);
+  if (!is_dir("{$results_path}/{$course}")) {
+    return($result_array);
+  }
+  
+  $results_list = scandir("${results_path}/{$course}");
+  $results_list = array_diff($results_list, array(".", ".."));
+
+  foreach ($results_list as $this_result) {
+    $result_pieces = explode(",", $this_result);
+    $competitor_path = get_competitor_path($result_pieces[2], $event, $key, $path_to_top);
+    $competitor_name = file_get_contents("${competitor_path}/name");
+    if ($show_points) {
+      $points_value = $max_points - $result_pieces[0];
+    }
+    else {
+      $points_value = 0;
+    }
+
+    $competitor_result_array = array();
+    $competitor_result_array["competitor_id"] = $result_pieces[2];
+    $competitor_result_array["competitor_name"] = $competitor_name;
+    $competitor_result_array["time"] = csv_formatted_time($result_pieces[1]);
+    $competitor_result_array["dnf"] = file_exists("{$competitor_path}/dnf");
+    if (file_exists("{$competitor_path}/si_stick")) {
+      $competitor_result_array["si_stick"] = file_get_contents("{$competitor_path}/si_stick");
+    }
+    $competitor_result_array["scoreo_points"] = $points_value;
+    $result_array[] = $competitor_result_array;
+  }
+  return($result_array);
 }
 
 function get_all_course_result_links($event, $key, $path_to_top) {
@@ -394,34 +449,34 @@ function key_to_path($key) {
 }
 
 function get_courses_path($event, $key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}/Courses");
+  return("../OMeetData/" . key_to_path($key) . "/{$event}/Courses");
 }
 
 function get_competitor_directory($event, $key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}/Competitors");
+  return("../OMeetData/" . key_to_path($key) . "/{$event}/Competitors");
 }
 
 function get_competitor_path($competitor, $event, $key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}/Competitors/{$competitor}");
+  return("../OMeetData/" . key_to_path($key) . "/{$event}/Competitors/{$competitor}");
 }
 
 function get_results_path($event, $key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}/Results");
+  return("../OMeetData/" . key_to_path($key) . "/{$event}/Results");
 }
 
 function get_event_path($event, $key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/{$event}");
+  return("../OMeetData/" . key_to_path($key) . "/{$event}");
 }
 
 function get_base_path($key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key));
+  return("../OMeetData/" . key_to_path($key));
 }
 
 function get_members_path($key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/members.csv");
+  return("../OMeetData/" . key_to_path($key) . "/members.csv");
 }
 
 function get_nicknames_path($key, $path_to_top) {
-  return($path_to_top . "/OMeetData/" . key_to_path($key) . "/nicknames.csv");
+  return("../OMeetData/" . key_to_path($key) . "/nicknames.csv");
 }
 ?>

@@ -87,6 +87,37 @@ sub get_score_course_properties {
   return(%props_hash);
 }
 
+sub set_email_properties {
+  my($key) = @_;
+  my($email_props_path) = get_base_path($key) . "/email_properties.txt";
+  open(EMAIL_PROPS_FILE, ">$email_props_path");
+  print EMAIL_PROPS_FILE "from: markandkaren" . "@" . "mkoconnell.com\n";
+  print EMAIL_PROPS_FILE "reply-to: markandkaren" . "@" . "mkoconnell.com\n";
+  print EMAIL_PROPS_FILE "subject: Results of NEOC Orienteering meet\n";
+  print EMAIL_PROPS_FILE "extra-info: <p>Learn more about NEOC at <a href=\"www.newenglandorienteering.org\">our website</a>.\n";
+  close(EMAIL_PROPS_FILE);
+}
+
+sub remove_email_properties {
+  my($key) = @_;
+  my($email_props_path) = get_base_path($key) . "/email_properties.txt";
+  unlink($email_props_path);
+}
+
+sub set_club_name {
+  my($key, $club_name) = @_;
+  my($club_name_file) = get_base_path($key) . "/club_name";
+  open(CLUB_NAME_FILE, ">$club_name_file");
+  print CLUB_NAME_FILE "$club_name";
+  close (CLUB_NAME_FILE);
+}
+
+sub unset_club_name {
+  my($key) = @_;
+  my($club_name_file) = get_base_path($key) . "/club_name";
+  unlink($club_name_file);
+}
+
 my(%keys);
 sub create_key_file {
   $keys{"UnitTestPlayground"} = "TestingDirectory";

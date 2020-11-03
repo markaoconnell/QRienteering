@@ -2,11 +2,11 @@
 
 $MAX_CHECK_DISTANCE = 3;
 
-// member_id;first;last;si_stick
+// member_id;first;last;si_stick;email;
 // Read in the members together with si_stick, if they have one
 // Results
 // Hash from si_stick -> member
-// Hash from member-> hash(first -> , last ->, full_name ->, si_stick->)
+// Hash from member-> hash(first -> , last ->, full_name ->, si_stick->, email->)
 // Hash from last -> member list
 // Hash from full_name -> member_id (assumes unique names amongst the membership)
 // Hash of equivalent nicknames
@@ -33,7 +33,8 @@ function read_names_info($member_file, $nicknames_file) {
         $member_hash[$pieces[0]] = array("first" => $pieces[1],
                                          "last" => $pieces[2],
                                          "full_name" => "{$pieces[1]} {$pieces[2]}",
-                                         "si_stick"=> $pieces[3]);
+                                         "si_stick"=> $pieces[3],
+					 "email" => $pieces[4]);
         $last_name_hash[strtolower($pieces[2])][] = $pieces[0]; 
         $full_name_hash[$lower_case_full_name] = $pieces[0];
       }
@@ -65,6 +66,10 @@ function get_full_name($member_id, $matching_info) {
 
 function get_member_name_info($member_id, $matching_info) {
   return(array($matching_info["members_hash"][$member_id]["first"], $matching_info["members_hash"][$member_id]["last"]));
+}
+
+function get_member_email($member_id, $matching_info) {
+  return($matching_info["members_hash"][$member_id]["email"]);
 }
 
 function get_si_stick($member_id, $matching_info) {

@@ -54,7 +54,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeet/start_course.php";
 $output = qx($cmd);
 
-if ($output !~ /ERROR: ${COMPETITOR_FIRST_NAME} ${COMPETITOR_LAST_NAME} registered for .* with si_stick, should not scan start QR code/) {
+if ($output !~ /ERROR: ${COMPETITOR_FIRST_NAME} ${COMPETITOR_LAST_NAME} registered for .* with SI unit, should not scan start QR code/) {
   error_and_exit("Web page output wrong, bad registration error not found.\n$output");
 }
 
@@ -77,7 +77,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeet/reach_control.php";
 $output = qx($cmd);
 
-if ($output !~ /registered with si stick, should not scan QR code/) {
+if ($output !~ /registered with si unit, should not scan QR code/) {
   error_and_exit("Web page output wrong, should receive QR scanning error.\n$output");
 }
 
@@ -138,7 +138,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeet/finish_course.php";
 $output = qx($cmd);
 
-if ($output !~ /ERROR: If using si stick, do not scan the finish QR code, use si stick to finish instead/) {
+if ($output !~ /ERROR: If using SI unit, do not scan the finish QR code, use the SI unit to finish instead/) {
   error_and_exit("Web page output wrong, should receive error about scanning QR code.\n$output");
 }
 

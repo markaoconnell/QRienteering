@@ -1,6 +1,7 @@
 <?php
 require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/course_properties.php';
+require '../OMeetCommon/generate_splits_output.php';
 require 'si_stick_finish.php';
 
 ck_testing();
@@ -24,7 +25,7 @@ ck_testing();
 // echo "<p>\n";
 if (isset($_GET["si_stick_finish"])) {
   if (!isset($_GET["event"]) || ($_GET["event"] == "")) {
-    error_and_exit("ERROR: Cannot find competitor for registered stick {$finish_info["si_stick"]}: No event set.\n");
+    error_and_exit("ERROR: Cannot find competitor for registered SI unit {$finish_info["si_stick"]}: No event set.\n");
   }
 
   $event = $_GET["event"];
@@ -33,7 +34,7 @@ if (isset($_GET["si_stick_finish"])) {
   $finish_info = record_finish_by_si_stick($event, $key, $si_results_string);
 
   if ($finish_info["error"] != "") {
-    error_and_exit("ERROR: Cannot find competitor for registered stick {$finish_info["si_stick"]}: {$finish_info["error"]}\n");
+    error_and_exit("ERROR: Cannot find competitor for registered SI unit {$finish_info["si_stick"]}: {$finish_info["error"]}\n");
   }
 
   $course = $finish_info["course"];
@@ -69,7 +70,7 @@ if (!file_exists($competitor_path) || !file_exists("{$courses_path}/{$course}/co
 }
 
 if (file_exists("{$competitor_path}/si_stick") && !isset($_GET["si_stick_finish"])) {
-  error_and_exit("<p>ERROR: If using si stick, do not scan the finish QR code, use si stick to finish instead.\n");
+  error_and_exit("<p>ERROR: If using SI unit, do not scan the finish QR code, use the SI unit to finish instead.\n");
 }
 
 $control_list = read_controls("${courses_path}/${course}/controls.txt");
@@ -89,6 +90,8 @@ else {
 //echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
 $error_string = "";
+$result_filename = "";
+$suppress_email = false;
 
 if (!file_exists("${controls_found_path}/start")) {
   error_and_exit("<p>Course " . ltrim($course, "0..9-") . " not yet started.\n<br>Please scan the start QR code to start a course.\n");
@@ -151,6 +154,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
 }
 else {
   $error_string .= "<p>Second scan of finish?  Finish time not updated.\n";
+  $suppress_email = true;
   $course_started_at = file_get_contents("{$controls_found_path}/start");
   $course_finished_at = file_get_contents("{$controls_found_path}/finish");
   $time_taken = $course_finished_at - $course_started_at;
@@ -193,26 +197,49 @@ echo get_all_course_result_links($event, $key, "..");
 
 if (file_exists("{$competitor_path}/registration_info")) {
   $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
-  if ($registration_info["email_address"] != "") {
+  $email_properties = get_email_properties(get_base_path($key, ".."));
+  //print_r($email_properties);
+  $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]) && !$suppress_email;
+  if (($registration_info["email_address"] != "") && $email_enabled) {
     // See if this looks like a valid email
     $email_addr = $registration_info["email_address"];
     if (preg_match("/^[a-zA-z0-9_.\-]+@[a-zA-Z0-9_.\-]+/", $email_addr)) {
       $headers = array();
-      $headers[] = "From: markandkaren@mkoconnell.com";
-      $headers[] = "Reply-To: markandkaren@mkoconnell.com";
+      $headers[] = "From: " . $email_properties["from"];
+      $headers[] = "Reply-To: ". $email_properties["reply-to"];
       $headers[] = "MIME-Version: 1.0";
       $headers[] = "Content-type: text/html; charset=iso-8859-1";
 
       $header_string = implode("\r\n", $headers);
 
       $course_description = file_get_contents(get_event_path($event, $key, "..") . "/description");
+      $email_extra_info_file = get_email_extra_info_file(get_base_path($key, ".."));
+      if (file_exists($email_extra_info_file)) {
+        $extra_info = implode("\r\n", file($email_extra_info_file));
+      }
+      else {
+        $extra_info = "";
+      }
       $body_string = "<html><body>\r\n" .
                      "<p>Orienteering results for\r\n{$course_description}\r\n" .
                      wordwrap("{$results_string}\r\n", 70, "\r\n") . 
-                     wordwrap(get_email_course_result_links($event, $key, ".."), 70, "\r\n") . "\r\n</body></html>";
+                     wordwrap(get_email_course_result_links($event, $key, ".."), 70, "\r\n");
+
+      if (isset($email_properties["include-splits"]) && ($result_filename != "")) {
+        $splits_output = get_splits_output($competitor_id, $event, $key, $result_filename);
+        $body_string .= wordwrap("<p><p>{$splits_output}\r\n", 70, "\r\n") . "\r\n</body></html>";
+      }
+
+      $body_string .= wordwrap("<p><p>{$extra_info}\r\n", 70, "\r\n") . "\r\n</body></html>";
       
       //echo "<p>Mail: Attempting mail send to {$email_addr} with results.\n";
-      $email_send_result = mail($email_addr, "Orienteering Results", $body_string, $header_string);
+      if (isset($email_properties["subject"])) {
+        $subject = $email_properties["subject"];
+      }
+      else {
+        $subject = "Orienteering Results";
+      }
+      $email_send_result = mail($email_addr, $subject, $body_string, $header_string);
 
       if ($email_send_result) {
         echo "<p>Mail: Sent results to {$email_addr}.\n";

@@ -86,10 +86,17 @@ if (!$error) {
         $using_si_stick = true;
       }
 
-      if ($registration_info["is_member"] == "yes") {
-        // Two month timeout for the cookie about the member's name, should generally be sufficient
-        setcookie("member_first_name", $registration_info["first_name"], $current_time + 86400 * 60, $cookie_path);
-        setcookie("member_last_name", $registration_info["last_name"], $current_time + 86400 * 60, $cookie_path);
+      if (($registration_info["is_member"] == "yes") && ($registration_info["member_id"] != "")) {
+        // Format will be member_id:timestamp_of_last_registration,member_id:timestamp_of_last_registration,...
+        // 3 month timeout
+        $time_cutoff = $current_time - (86400 * 90);
+        $member_ids = array_map(function ($elt) { return (explode(":", $elt)); }, explode(",", $_COOKIE["{$key}-member_ids"]));
+        $member_ids_hash = array();
+        array_map(function ($elt) use (&$member_ids_hash, $time_cutoff)
+                     { if ($elt[1] > $time_cutoff) { $member_ids_hash[$elt[0]] = $elt[1]; } }, $member_ids);
+        $member_ids_hash[$registration_info["member_id"]] = $current_time;
+        $member_cookie = implode(",", array_map (function ($elt) use ($member_ids_hash) { return($elt . ":" . $member_ids_hash[$elt]); }, array_keys($member_ids_hash)));
+        setcookie("{$key}-member_ids", $member_cookie, $current_time + 86400 * 120, $cookie_path);
       }
     }
     
@@ -117,7 +124,7 @@ echo $body_string;
 
 if (!$error) {
   if ($using_si_stick) {
-    echo "<p>To start the course, clear and check your SI stick, then proceed to the start control with your SI stick.\n";
+    echo "<p>To start the course, clear and check your SI unit, then proceed to the start control with your SI unit.\n";
   }
   else {
     echo "<p>To start the course, please proceed to start and scan the start QR code there or click the \"Start course\" button below to start now.\n";

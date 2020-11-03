@@ -190,6 +190,8 @@ if ($initializations{"or_path"} ne "") {
   $or_path = $initializations{"or_path"};
 }
 
+my($replay_si_stick) = 0;
+
 while ($ARGV[0] =~ /^-/) {
   if ($ARGV[0] eq "-e") {
     $event = $ARGV[1];
@@ -213,6 +215,10 @@ while ($ARGV[0] =~ /^-/) {
   }
   elsif ($ARGV[0] eq "-t") {
     $testing_run = 1;
+    shift;
+  }
+  elsif ($ARGV[0] eq "-r") {
+    $replay_si_stick = 1;
     shift;
   }
   else {
@@ -265,6 +271,14 @@ print "Using OR event $or_event_number\n" if ($verbose);
 
 @result_files = ("$or_path/$or_event_number/results.csv", "$or_path/$or_event_number/resultslog.csv");
 
+my($si_stick_to_replay);
+my($si_stick_to_replay_found) = 0;
+if ($replay_si_stick) {
+  print "Replay which si stick?\n";
+  $si_stick_to_replay = <STDIN>;
+  chomp($si_stick_to_replay);
+}
+
 my($loop_count) = 0;
 while (1) {
   read_results();
@@ -300,29 +314,37 @@ while (1) {
     my($web_site_string) = encode_base64($qr_result_string);
     $web_site_string =~ s/\n//g;
     $web_site_string =~ s/=/%3D/g;
-    $output = make_url_call($FINISH_COURSE, "event=$event&key=$event_key&si_stick_finish=$web_site_string");
-
     my($si_stick, $start_time) = split(";", $key);
-	print "\nResults for si_stick ${si_stick}:\n";
-    if ($output =~ /(Cannot find.*)/) {
-      print "$1\n";
-    }
+    if (!$replay_si_stick || ($si_stick eq $si_stick_to_replay)) {
+      $output = make_url_call($FINISH_COURSE, "event=$event&key=$event_key&si_stick_finish=$web_site_string");
   
-    if ($output =~ /(Results for:.*)<p>/) {
-      print "$1\n";
-    }
+      print "\nResults for si_stick ${si_stick}:\n";
+      if ($output =~ /(Cannot find.*)/) {
+        print "$1\n";
+      }
+    
+      if ($output =~ /(Results for:.*)<p>/) {
+        print "$1\n";
+      }
+  
+      if ($output =~ /(Second scan.*)/) {
+        print "$1\n";
+      }
+  
+      $results_by_stick{$key} = $new_results_by_stick{$key};
 
-    if ($output =~ /(Second scan.*)/) {
-      print "$1\n";
+      $si_stick_to_replay_found = 1 if ($replay_si_stick);
     }
-
-    $results_by_stick{$key} = $new_results_by_stick{$key};
   }
 
   %new_results_by_stick = ();
 
-  last if ($testing_run);  # For testing, no need to wait for more results
+  last if ($testing_run || $replay_si_stick);  # For testing, no need to wait for more results
 
   sleep(3);
   $loop_count++;
+}
+
+if ($replay_si_stick && !$si_stick_to_replay_found) {
+  print "\nERROR: No results found for SI stick $si_stick_to_replay.\n";
 }

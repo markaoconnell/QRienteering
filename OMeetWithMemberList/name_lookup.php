@@ -27,6 +27,7 @@ if (!isset($_GET["member_id"])) {
 }
 else {
   $possible_member_ids = array($_GET["member_id"]);
+
   if (get_full_name($possible_member_ids[0], $matching_info) == "") {
     error_and_exit("No such member id {$_GET["member_id"]} found, please retry or ask for assistance.\n");
   }
@@ -40,6 +41,7 @@ if (count($possible_member_ids) == 0) {
 else if (count($possible_member_ids) == 1) {
   $printable_name = get_full_name($possible_member_ids[0], $matching_info);
   $si_stick = get_si_stick($possible_member_ids[0], $matching_info);
+  $email_address = get_member_email($possible_member_ids[0], $matching_info);
   $success_string .= "<p>Welcome {$printable_name}.\n";
   if ($si_stick != "") {
     $yes_checked_by_default = "checked";
@@ -51,12 +53,13 @@ else if (count($possible_member_ids) == 1) {
   }
   $success_string .= "<p>How are you orienteering today?";
   $success_string .= <<<END_OF_FORM
-<form action="./finalize_member_registration.php">
+<form action="./add_safety_info.php">
 <input type=hidden name="member_id" value="{$possible_member_ids[0]}"/>
-<p> Using Si Stick <input type=radio name="using_stick" value="yes" {$yes_checked_by_default} /> <input type=text name="si_stick_number" value="{$si_stick}" />
+<input type=hidden name="member_email" value="{$email_address}"/>
+<p> Using Si unit <input type=radio name="using_stick" value="yes" {$yes_checked_by_default} /> <input type=text name="si_stick_number" value="{$si_stick}" />
 <p> Using QR codes <input type=radio name="using_stick" value="no" {$no_checked_by_default}/>
 <input type="hidden" name="key" value="{$key}">
-<p><input type="submit" value="Choose course"/>
+<p><input type="submit" value="Fill in safety information"/>
 </form>
 END_OF_FORM;
 }
@@ -76,7 +79,7 @@ echo get_web_page_header(true, false, true);
 
 echo $success_string;
 
-echo "<a href=\"./competition_register.php?key={$key}\">Go back and retry</a>\n";
+echo "<a href=\"./competition_register.php?key={$key}&member=1\">Start over and re-enter information</a>\n";
 
 echo get_web_page_footer();
 ?>

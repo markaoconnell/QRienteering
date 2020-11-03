@@ -18,7 +18,8 @@ function name_to_registration_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
   return ("<li>{$event_fullname}<ul><li><a href={$base_path_for_links}/OMeetRegistration/register.php?event=${event_id}&key={$key}>BYOM Registration</a>" .
-                                   "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}>Meet Registration</a></ul>\n");
+                                   "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}&member=1>Member meet Registration</a>" .
+                                   "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}>Non-member meet Registration</a></ul>\n");
 }
 
 function name_to_results_link($event_id) {
@@ -27,6 +28,31 @@ function name_to_results_link($event_id) {
   return ("<li><a href={$base_path_for_links}/OMeet/view_results.php?event={$event_id}&key={$key}>Results for {$event_fullname}</a>" . 
           "<ul><li><a href={$base_path_for_links}/OMeet/on_course.php?event={$event_id}&key={$key}>still on course</a>" . 
               "<li><a href={$base_path_for_links}/OMeetWithMemberList/competitor_info.php?event={$event_id}&key={$key}>Meet Director view of competitors</a></ul>\n");
+}
+
+function name_to_add_course_link($event_id) {
+  global $base_path, $key, $base_path_for_links;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/add_course_to_event.php?event={$event_id}&key={$key}>Add new course to {$event_fullname}</a>" . 
+          "<a href={$base_path_for_links}/OMeetMgmt/create_event.php?clone_event={$event_id}&key={$key}> (create a copy of this event)</a>");
+}
+
+function name_to_clone_course_link($event_id) {
+  global $base_path, $key, $base_path_for_links;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/create_event.php?clone_event={$event_id}&key={$key}> Create a copy of {$event_fullname}</a>");
+}
+
+function name_to_winsplits_link($event_id) {
+  global $base_path, $key, $base_path_for_links;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/download_results_csv.php?event={$event_id}&key={$key}> Download winsplits csv for {$event_fullname}</a>");
+}
+
+function name_to_get_qrcodes_link($event_id) {
+  global $base_path, $key, $base_path_for_links;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/get_event_qr_codes.php?event={$event_id}&key={$key}> Get QR codes for {$event_fullname}</a>");
 }
 
 $key = $_GET["key"];
@@ -65,8 +91,13 @@ $event_list = scandir($base_path);
 $open_event_list = array_filter($event_list, is_event_open);
 $closed_event_list = array_filter($event_list, is_event_recently_closed);
 $open_event_links = array_map(name_to_registration_link, $open_event_list);
+$add_course_links = array_map(name_to_add_course_link, $open_event_list);
+$add_course_links2 = array_map(name_to_clone_course_link, $closed_event_list);
 $open_event_result_links = array_map(name_to_results_link, $open_event_list);
+$qrcode_links = array_map(name_to_get_qrcodes_link, $open_event_list);
 $closed_event_result_links = array_map(name_to_results_link, $closed_event_list);
+$closed_event_winsplits_links = array_map(name_to_winsplits_link, $closed_event_list);
+$open_event_winsplits_links = array_map(name_to_winsplits_link, $open_event_list);
 
 
 echo get_web_page_header(true, false, false);
@@ -76,10 +107,23 @@ echo get_web_page_header(true, false, false);
 <p>
 <ol>
 <li> <a href=<?php echo "./create_event.php?key={$key}"; ?>>Create a new event</a>
+<?php
+  if (count($open_event_list) > 0) {
+    echo "<ul>" .  implode("\n", $add_course_links) . "</ul>\n";
+  }
+  if (count($closed_event_list) > 0) {
+    echo "<ul>" .  implode("\n", $add_course_links2) . "</ul>\n";
+  }
+?>
 
 <li> Get a registration link: 
 <ul>
 <?php echo implode("\n", $open_event_links); ?>
+</ul>
+
+<li> Get QR codes
+<ul>
+<?php echo implode("\n", $qrcode_links); ?>
 </ul>
 
 <li> <a href=<?php echo "./mass_start.php?key={$key}"; ?>>Mass start an event</a>
@@ -93,6 +137,11 @@ echo get_web_page_header(true, false, false);
     <li> Recently closed events
       <ul>
       <?php echo implode("\n", $closed_event_result_links); ?>
+      </ul>
+    <li> Winsplit files
+      <ul>
+      <?php echo implode("\n", $closed_event_winsplits_links); ?>
+      <?php echo implode("\n", $open_event_winsplits_links); ?>
       </ul>
   </ul>
 
