@@ -51,6 +51,30 @@ sub remove_one_entrant {
     error_and_exit("Did not see competitor name ${name_of_competitor_to_remove} in removal list.\n$output");
   }
 
+  my($removed_competitor_path) = get_base_path($GET{"key"}) . "/" . $GET{"event"} . "/removed_competitors/" . $_[0];
+  if (! -d $removed_competitor_path) {
+    error_and_exit("Removed competitor entry $removed_competitor_path not found.");
+  }
+
+  return;
+}
+
+sub remove_all_entrants {
+  %GET = qw(key UnitTestPlayground);
+  $GET{"Remove-all"} = 1;
+  $GET{"event"} = $event_id;
+  %COOKIE = ();  # empty hash
+  
+  hashes_to_artificial_file();
+
+  my($cmd) = "php ../OMeetMgmt/remove_from_event.php";
+  my($output);
+  $output = qx($cmd);
+
+  if ($output !~ /finish marker/) {
+    error_and_exit("Did not see finish marker indicating removed completed runner.\n$output");
+  }
+
   return;
 }
 
@@ -209,7 +233,7 @@ success();
 # 0 results
 
 # Competitor 1 starts and gets two controls
-%TEST_INFO = qw(Testname TestThreeStartersAtEvent);
+%TEST_INFO = qw(Testname TestThreeStartersAtRemoveAnother);
 %COOKIE = qw(key UnitTestPlayground course 01-Yellow);
 $COOKIE{"event"} = $event_id;
 $COOKIE{"competitor_id"} = $competitor_1_id;
@@ -284,7 +308,7 @@ success();
 # Competitor 2 finds 3 controls
 # Competitor 4 starts
 # Competitor 6 starts
-%TEST_INFO = qw(Testname OneFinisherThreeMoreStarters);
+%TEST_INFO = qw(Testname OneFinisherTwoMoreStartersNoRemoves);
 
 # Competitor 1 finds two more controls
 %COOKIE = qw(key UnitTestPlayground course 01-Yellow);
@@ -394,7 +418,7 @@ success();
 # Competitor 2 DNFs
 # Competitor 4 finds 2 controls and DNFs
 # Competitor 6 finds another control and finishes
-%TEST_INFO = qw(Testname AllFinishWithTwoDNFs);
+%TEST_INFO = qw(Testname AllFinishWithTwoDNFsRemoveOneDNF);
 
 
 # Competitor 6 finds a control
@@ -461,6 +485,25 @@ if (($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1</a></td><td>[0-9 s
 
 check_on_course(0);
 
+remove_one_entrant($competitor_4_id, $COMPETITOR_4);
+
+#########
+# Validate results
+my($output) = check_results(3);
+my($no_newline_output) = $output;
+$no_newline_output =~ s/\n//g;
+
+if (($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1</a></td><td>[0-9 smh:]+</td>#) ||
+    ($no_newline_output !~ m#,$competitor_2_id">$COMPETITOR_2</a></td><td>DNF</td>#) ||
+    ($no_newline_output =~ m#,$competitor_3_id">$COMPETITOR_3</a></td><td>[0-9 smh:]+</td>#) ||
+    ($no_newline_output =~ m#,$competitor_5_id">$COMPETITOR_5</a></td><td>[0-9 smh:]+</td><td>100</td>#) ||
+    ($no_newline_output !~ m#,$competitor_6_id">$COMPETITOR_6</a></td><td>[0-9 smh:]+</td><td>70</td>#) ||
+    ($no_newline_output =~ m#,$competitor_4_id">$COMPETITOR_4</a></td><td>DNF</td>#)) {
+  error_and_exit("View result output wrong for 1 or more competitors.\n$output");
+}
+
+check_on_course(0);
+
 success();
 
 
@@ -473,7 +516,6 @@ success();
 my(%expected_number_splits);
 $expected_number_splits{$competitor_1_id} = 5;
 $expected_number_splits{$competitor_2_id} = 3;
-$expected_number_splits{$competitor_4_id} = 2;
 $expected_number_splits{$competitor_6_id} = 2;
 
 my($results_path) = get_base_path("UnitTestPlayground") . "/${event_id}/Results/*";
@@ -490,6 +532,57 @@ for $result_file (@results_files) {
 }
 
 success();
+
+
+#################
+#Test 6 - remove all entrants
+
+%TEST_INFO = qw(Testname RemoveAllEntrants);
+
+remove_all_entrants();
+
+my($results_path) = get_base_path("UnitTestPlayground") . "/${event_id}/Results/*";
+my(@results_files) = qx(ls -1 $results_path);
+chomp(@results_files);
+
+@results_files = grep(!/$event_id/, @results_files);
+@results_files = grep(!/^$/, @results_files);
+
+if (scalar(@results_files) != 0) {
+  error_and_exit("Incorrectly found result files after removing all: " . join(", ", @results_files) . "\n");
+}
+
+my($removed_competitors_path) = get_base_path("UnitTestPlayground") . "/${event_id}/removed_competitors";
+my(@removed_competitors_list) = qx(ls -1 $removed_competitors_path);
+chomp(@removed_competitors_list);
+
+@removed_competitors_list = grep(!/$event_id/, @removed_competitors_list);
+@removed_competitors_list = grep(!/^$/, @removed_competitors_list);
+
+if (scalar(@removed_competitors_list) != 6) {
+  error_and_exit("Wrong number of removed competitors after removing all: " . join(", ", @removed_competitors_list) . "\n");
+}
+
+#########
+# Validate results
+my($output) = check_results(0);
+my($no_newline_output) = $output;
+$no_newline_output =~ s/\n//g;
+
+if (($no_newline_output =~ m#,$competitor_1_id">$COMPETITOR_1</a></td><td>[0-9 smh:]+</td>#) ||
+    ($no_newline_output =~ m#,$competitor_2_id">$COMPETITOR_2</a></td><td>DNF</td>#) ||
+    ($no_newline_output =~ m#,$competitor_3_id">$COMPETITOR_3</a></td><td>[0-9 smh:]+</td>#) ||
+    ($no_newline_output =~ m#,$competitor_5_id">$COMPETITOR_5</a></td><td>[0-9 smh:]+</td><td>100</td>#) ||
+    ($no_newline_output =~ m#,$competitor_6_id">$COMPETITOR_6</a></td><td>[0-9 smh:]+</td><td>70</td>#) ||
+    ($no_newline_output =~ m#,$competitor_4_id">$COMPETITOR_4</a></td><td>DNF</td>#)) {
+  error_and_exit("View result output wrong for 1 or more competitors.\n$output");
+}
+
+check_on_course(0);
+
+success();
+
+
 
 ############
 # Cleanup
