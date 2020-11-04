@@ -14,6 +14,7 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
   $competitor_name = file_get_contents("{$competitor_base_path}/{$competitor_id}/name");
   $competitor_course = ltrim(file_get_contents("{$competitor_base_path}/{$competitor_id}/course"), "0..9-");
 
+  $competitor_string .= "<td><input type=checkbox name=\"Remove-{$competitor_id}\" value=\"{$competitor_id}\"></td>";
   $competitor_string .= "<td>{$competitor_course}</td>";
   $competitor_string .= "<td>{$competitor_name}";
   if ($include_competitor_id) {
@@ -22,7 +23,7 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
   $competitor_string .= "</td><td>{$status}</td><td><a href=\"./update_stick.php?key={$key}&event={$event}&competitor={$competitor_id}\">$si_stick</a></td>";
   if (count($registration_info) > 0) {
     $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = {$registration_info[$key]}"); }, array_keys($registration_info));
-    $competitor_string .= "<td>" . implode("<br>", $registration_info_strings)  . "</td>";
+    $competitor_string .= "<td>" . implode(", ", $registration_info_strings)  . "</td>";
   }
   else {
     $competitor_string .= "<td></td>";
@@ -44,6 +45,7 @@ else {
 $event = $_GET["event"];
 $key = $_GET["key"];
 $include_competitor_id = ($_GET["include_competitor_id"] != "");
+$include_finishers = ($_GET["include_finishers"] != "");
 
 if (($event == "") || (!key_is_valid($key))) {
   error_and_exit("Empty event \"{$event}\" or bad location key \"{$key}\", is this an unauthorized link?\n");
@@ -68,7 +70,7 @@ $current_time = time();
 $competitor_outputs = array();
 foreach ($competitor_list as $competitor) {
   $course = file_get_contents("${competitor_directory}/${competitor}/course");
-  if (!file_exists("${competitor_directory}/${competitor}/controls_found/finish")) {
+  if (!file_exists("${competitor_directory}/${competitor}/controls_found/finish") || $include_finishers) {
       if (file_exists("{$competitor_directory}/{$competitor}/registration_info")) {
         $registration_info = parse_registration_info(file_get_contents("{$competitor_directory}/{$competitor}/registration_info"));
       }
@@ -83,7 +85,9 @@ foreach ($competitor_list as $competitor) {
         $si_stick = "none";
       }
 
-    if (!file_exists("${competitor_directory}/${competitor}/controls_found/start")) {
+    # The start time for an si_stick user is not a good indicator of how old the entry is, so always use
+    # the registration time for si_stick users
+    if (!file_exists("${competitor_directory}/${competitor}/controls_found/start") || ($si_stick != "none")) {
       $file_info = stat("{$competitor_directory}/{$competitor}");
       // Weed out people who's registration time is too old (one day in seconds)
       if (($current_time - $file_info["mtime"]) < $TIME_LIMIT) {
@@ -100,9 +104,11 @@ foreach ($competitor_list as $competitor) {
   }
 }
 
-$results_string = "\n<table><tr><th>Course</th><th>Competitor</th><th>Status</th><th>Si Unit</th><th>Info</th></tr>\n";
+$results_string = "<form action=\"../OMeetMgmt/remove_from_event.php\">\n<input type=hidden name=\"key\" value=\"${key}\">\n";
+$results_string .= "<input type=hidden name=\"event\" value=\"${event}\">\n";
+$results_string .= "\n<table><tr><th><input type=submit value=\"Remove\"></th><th>Course</th><th>Competitor</th><th>Status</th><th>Si Unit</th><th>Info</th></tr>\n";
 $results_string .= implode("\n", $competitor_outputs);
-$results_sting .= "\n</table>\n";
+$results_string .= "\n</table>\n</form>\n";
 
 
 
