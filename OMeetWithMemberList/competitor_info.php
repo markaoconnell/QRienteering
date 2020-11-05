@@ -22,7 +22,9 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
   }
   $competitor_string .= "</td><td>{$status}</td><td><a href=\"./update_stick.php?key={$key}&event={$event}&competitor={$competitor_id}\">$si_stick</a></td>";
   if (count($registration_info) > 0) {
-    $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = {$registration_info[$key]}"); }, array_keys($registration_info));
+    $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = {$registration_info[$key]}"); },
+                                                                                                                array_diff(array_keys($registration_info),
+                                                                                                                           array("first_name", "last_name")));
     $competitor_string .= "<td>" . implode(", ", $registration_info_strings)  . "</td>";
   }
   else {
@@ -71,19 +73,32 @@ $competitor_outputs = array();
 foreach ($competitor_list as $competitor) {
   $course = file_get_contents("${competitor_directory}/${competitor}/course");
   if (!file_exists("${competitor_directory}/${competitor}/controls_found/finish") || $include_finishers) {
-      if (file_exists("{$competitor_directory}/{$competitor}/registration_info")) {
-        $registration_info = parse_registration_info(file_get_contents("{$competitor_directory}/{$competitor}/registration_info"));
-      }
-      else {
-        $registration_info = array();
-      }
+    if (file_exists("{$competitor_directory}/{$competitor}/registration_info")) {
+      $registration_info = parse_registration_info(file_get_contents("{$competitor_directory}/{$competitor}/registration_info"));
+    }
+    else {
+      $registration_info = array();
+    }
 
-      if (file_exists("{$competitor_directory}/{$competitor}/si_stick")) {
-        $si_stick = file_get_contents("{$competitor_directory}/{$competitor}/si_stick");
-      }
-      else {
-        $si_stick = "none";
-      }
+    if (file_exists("{$competitor_directory}/{$competitor}/si_stick")) {
+      $si_stick = file_get_contents("{$competitor_directory}/{$competitor}/si_stick");
+    }
+    else {
+      $si_stick = "none";
+    }
+    
+    if (file_exists("${competitor_directory}/${competitor}/controls_found/finish")) {
+      $status = "finished";
+    }
+    else if (file_exists("{$competitor_directory}/${competitor}/controls_found/start")) {
+      $status = "on course";
+    }
+    else if (file_exists("{$competitor_directory}/{$competitor}/si_stick")) {
+      $status = "registered";
+    }
+    else {
+      $status = "not started";
+    }
 
     # The start time for an si_stick user is not a good indicator of how old the entry is, so always use
     # the registration time for si_stick users
@@ -91,14 +106,14 @@ foreach ($competitor_list as $competitor) {
       $file_info = stat("{$competitor_directory}/{$competitor}");
       // Weed out people who's registration time is too old (one day in seconds)
       if (($current_time - $file_info["mtime"]) < $TIME_LIMIT) {
-        $competitor_outputs[] = get_competitor_info($competitor_directory, $competitor, "unstarted", $registration_info, $si_stick);
+        $competitor_outputs[] = get_competitor_info($competitor_directory, $competitor, $status, $registration_info, $si_stick);
       }
     }
     else {
       $start_time = file_get_contents("{$competitor_directory}/${competitor}/controls_found/start");
       // Weed out people who started more than one day ago
       if (($current_time - $start_time) < $TIME_LIMIT) {
-        $competitor_outputs[] = get_competitor_info($competitor_directory, $competitor, "on course", $registration_info, $si_stick);
+        $competitor_outputs[] = get_competitor_info($competitor_directory, $competitor, $status, $registration_info, $si_stick);
       }
     }
   }

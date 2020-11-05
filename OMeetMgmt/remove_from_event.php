@@ -47,28 +47,39 @@ if (!file_exists($removed_competitor_path)) {
 $competitor_outputs = array();
 $output_array = array();
 foreach ($competitor_list as $competitor) {
-  $course = file_get_contents("${competitor_directory}/${competitor}/course");
-  $competitor_name = file_get_contents("${competitor_directory}/${competitor}/name");
-  $entry_output = "{$competitor_name} from {$course}";
-  if (file_exists("${competitor_directory}/${competitor}/controls_found/finish")) {
-    # Remove the completed entry
-    $results_path = get_results_path($event, $key, "..") . "/{$course}";
-    $results_listing = scandir($results_path);
-    $results_listing = array_diff($results_listing, array(".", ".."));
-
-    $competitor_id_len = strlen($competitor);
-    foreach ($results_listing as $this_result) {
-      if (substr($this_result, 0 - $competitor_id_len - 1) == ",{$competitor}") {
-        # remove this entry
-        unlink("{$results_path}/{$this_result}");
-        $entry_output .= ", finish marker {$this_result}";
-        break;
-      }
+  if (!is_dir("{$competitor_directory}/{$competitor}")) {
+    if (is_dir("{$removed_competitor_path}/{$competitor}")) {
+      $removed_competitor_name = file_get_contents("{$removed_competitor_path}/{$competitor}/name");
+      $output_array[] = "{$removed_competitor_name} was already removed.";
+    }
+    else {
+      $output_array[] = "Unknown competitor {$competitor}, manually removed?";
     }
   }
-
-  $output_array[] = $entry_output;
-  rename("{$competitor_directory}/{$competitor}", "{$removed_competitor_path}/{$competitor}");
+  else {
+    $course = file_get_contents("{$competitor_directory}/{$competitor}/course");
+    $competitor_name = file_get_contents("{$competitor_directory}/{$competitor}/name");
+    $entry_output = "{$competitor_name} from {$course}";
+    if (file_exists("{$competitor_directory}/{$competitor}/controls_found/finish")) {
+      # Remove the completed entry
+      $results_path = get_results_path($event, $key, "..") . "/{$course}";
+      $results_listing = scandir($results_path);
+      $results_listing = array_diff($results_listing, array(".", ".."));
+  
+      $competitor_id_len = strlen($competitor);
+      foreach ($results_listing as $this_result) {
+        if (substr($this_result, 0 - $competitor_id_len - 1) == ",{$competitor}") {
+          # remove this entry
+          unlink("{$results_path}/{$this_result}");
+          $entry_output .= ", finish marker {$this_result}";
+          break;
+        }
+      }
+    }
+  
+    $output_array[] = $entry_output;
+    rename("{$competitor_directory}/{$competitor}", "{$removed_competitor_path}/{$competitor}");
+  }
 }
 
 $event_description = file_get_contents(get_event_path($event, $key, "..") . "/description");
