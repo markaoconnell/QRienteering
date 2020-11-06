@@ -220,11 +220,11 @@ function get_input_form_style_header() {
 
 
 // Show the results for a course
-function show_results($event, $key, $course, $show_points, $max_points, $path_to_top) {
+function show_results($event, $key, $course, $show_points, $max_points, $path_to_top = "..") {
   $result_string = "";
   $result_string .= "<p>Results on " . ltrim($course, "0..9-") . "\n";
 
-  $results_path = get_results_path($event, $key, $path_to_top);
+  $results_path = get_results_path($event, $key);
   if (!is_dir("{$results_path}/${course}")) {
     $result_string .= "<p>No Results yet<p><p><p>\n";
     return($result_string);
@@ -246,7 +246,7 @@ function show_results($event, $key, $course, $show_points, $max_points, $path_to
   foreach ($results_list as $this_result) {
     $finish_place++;
     $result_pieces = explode(",", $this_result);
-    $competitor_path = get_competitor_path($result_pieces[2], $event, $key, $path_to_top);
+    $competitor_path = get_competitor_path($result_pieces[2], $event, $key);
     $competitor_name = file_get_contents("${competitor_path}/name");
     if ($show_points) {
       $points_value = "<td>" . ($max_points - $result_pieces[0]) . "</td>";
@@ -268,12 +268,12 @@ function show_results($event, $key, $course, $show_points, $max_points, $path_to
 }
 
 // Show the results for a course as a csv
-function get_csv_results($event, $key, $course, $show_points, $max_points, $path_to_top) {
+function get_csv_results($event, $key, $course, $show_points, $max_points, $path_to_top = "..") {
   $result_string = "";
   $readable_course_name = ltrim($course, "0..9-");
 
   // No results yet - .csv is empty
-  $results_path = get_results_path($event, $key, $path_to_top);
+  $results_path = get_results_path($event, $key);
   if (!is_dir("{$results_path}/{$course}")) {
     return("");
   }
@@ -284,7 +284,7 @@ function get_csv_results($event, $key, $course, $show_points, $max_points, $path
   $dnfs = "";
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);
-    $competitor_path = get_competitor_path($result_pieces[2], $event, $key, $path_to_top);
+    $competitor_path = get_competitor_path($result_pieces[2], $event, $key);
     $competitor_name = file_get_contents("${competitor_path}/name");
     if ($show_points) {
       $points_value = $max_points - $result_pieces[0];
@@ -304,12 +304,12 @@ function get_csv_results($event, $key, $course, $show_points, $max_points, $path
 }
 
 // Get the results for a course as an array
-function get_results_as_array($event, $key, $course, $show_points, $max_points, $path_to_top) {
+function get_results_as_array($event, $key, $course, $show_points, $max_points, $path_to_top = "..") {
   $result_array = array();
   $readable_course_name = ltrim($course, "0..9-");
 
   // No results yet - .csv is empty
-  $results_path = get_results_path($event, $key, $path_to_top);
+  $results_path = get_results_path($event, $key);
   if (!is_dir("{$results_path}/{$course}")) {
     return($result_array);
   }
@@ -319,7 +319,7 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
 
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);
-    $competitor_path = get_competitor_path($result_pieces[2], $event, $key, $path_to_top);
+    $competitor_path = get_competitor_path($result_pieces[2], $event, $key);
     $competitor_name = file_get_contents("${competitor_path}/name");
     if ($show_points) {
       $points_value = $max_points - $result_pieces[0];
@@ -342,8 +342,8 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
   return($result_array);
 }
 
-function get_all_course_result_links($event, $key, $path_to_top) {
-  $course_list = scandir(get_courses_path($event, $key, $path_to_top));
+function get_all_course_result_links($event, $key, $path_to_top = "..") {
+  $course_list = scandir(get_courses_path($event, $key));
   $course_list = array_diff($course_list, array(".", ".."));
 
   $links_string = "<p>Show results for ";
@@ -355,7 +355,7 @@ function get_all_course_result_links($event, $key, $path_to_top) {
   return($links_string);
 }
 
-function get_email_course_result_links($event, $key, $path_to_top) {
+function get_email_course_result_links($event, $key, $path_to_top = "..") {
   if (isset($_SERVER["HTTPS"])) {
     $proto = "https://";
   }
@@ -364,7 +364,7 @@ function get_email_course_result_links($event, $key, $path_to_top) {
   }
   $base_path_for_links = $proto . $_SERVER["SERVER_NAME"] . dirname(dirname($_SERVER["REQUEST_URI"]));
 
-  $course_list = scandir(get_courses_path($event, $key, $path_to_top));
+  $course_list = scandir(get_courses_path($event, $key));
   $course_list = array_diff($course_list, array(".", ".."));
 
   $links_string = "<p>Show results for ";
@@ -448,35 +448,35 @@ function key_to_path($key) {
   return "";
 }
 
-function get_courses_path($event, $key, $path_to_top) {
+function get_courses_path($event, $key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key) . "/{$event}/Courses");
 }
 
-function get_competitor_directory($event, $key, $path_to_top) {
+function get_competitor_directory($event, $key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key) . "/{$event}/Competitors");
 }
 
-function get_competitor_path($competitor, $event, $key, $path_to_top) {
+function get_competitor_path($competitor, $event, $key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key) . "/{$event}/Competitors/{$competitor}");
 }
 
-function get_results_path($event, $key, $path_to_top) {
+function get_results_path($event, $key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key) . "/{$event}/Results");
 }
 
-function get_event_path($event, $key, $path_to_top) {
+function get_event_path($event, $key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key) . "/{$event}");
 }
 
-function get_base_path($key, $path_to_top) {
+function get_base_path($key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key));
 }
 
-function get_members_path($key, $path_to_top) {
+function get_members_path($key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key) . "/members.csv");
 }
 
-function get_nicknames_path($key, $path_to_top) {
+function get_nicknames_path($key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key) . "/nicknames.csv");
 }
 ?>

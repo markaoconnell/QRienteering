@@ -129,7 +129,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
 }
 
 
-function get_splits_as_array($competitor_id, $event, $key) {
+function get_splits_as_array($competitor_id, $event, $key, $include_all = 'false') {
 
   $splits_array = array();
   $control_times_array = array();
@@ -166,6 +166,12 @@ function get_splits_as_array($competitor_id, $event, $key) {
   $controls_done = scandir("./{$controls_found_path}");
   $controls_done = array_diff($controls_done, array(".", "..", "start", "finish")); // Remove the annoying . and .. entries
   $number_controls_found = count($controls_done);
+
+  if ($include_all && file_exists("{$competitor_path}/extra")) {
+    $extra_controls = file("{$competitor_path}/extra", FILE_IGNORE_NEW_LINES);
+    $controls_done = array_merge($controls_done, $extra_controls);
+    sort($controls_done);
+  }
   
   //echo "Controls done is: <p>";
   //print_r($controls_done);
@@ -193,7 +199,13 @@ function get_splits_as_array($competitor_id, $event, $key) {
     $prior_control_time = $time_at_control[$i];
     $i++;
   }
-  $finish_time = file_get_contents("{$controls_found_path}/finish");
+  if (file_exists("{$controls_found_path}/finish")) {
+    $finish_time = file_get_contents("{$controls_found_path}/finish");
+  }
+  else {
+    $finish_time = -1;
+  }
+
   $splits_array["finish"] = $finish_time;
   $splits_array["controls"] = $control_times_array;
   
