@@ -9,7 +9,7 @@ function non_empty($string_value) {
 }
 
 function get_competitor_info($competitor_base_path, $competitor_id, $status, $registration_info, $si_stick) {
-  global $include_competitor_id, $key, $event; 
+  global $include_competitor_id, $include_date, $key, $event; 
   $competitor_string = "<tr>";
   $competitor_name = file_get_contents("{$competitor_base_path}/{$competitor_id}/name");
   $competitor_course = ltrim(file_get_contents("{$competitor_base_path}/{$competitor_id}/course"), "0..9-");
@@ -20,6 +20,10 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
   if ($include_competitor_id) {
     $competitor_string .= " ({$competitor_id})";
   }
+  if ($include_date) {
+    $competitor_string .= "<br>(" . strftime("%a - %d", stat("{$competitor_base_path}/{$competitor_id}/name")["mtime"]) . ")";
+  }
+ 
   $competitor_string .= "</td><td>{$status}</td><td><a href=\"./update_stick.php?key={$key}&event={$event}&competitor={$competitor_id}\">$si_stick</a></td>";
   if (count($registration_info) > 0) {
     $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = {$registration_info[$key]}"); },
@@ -47,6 +51,7 @@ else {
 $event = $_GET["event"];
 $key = $_GET["key"];
 $include_competitor_id = ($_GET["include_competitor_id"] != "");
+$include_date = ($_GET["include_date"] != "");
 $include_finishers = ($_GET["include_finishers"] != "");
 
 if (($event == "") || (!key_is_valid($key))) {

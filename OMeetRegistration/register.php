@@ -96,10 +96,11 @@ echo "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
 
 echo "<br><p>Select a course:<br>\n";
 foreach ($courses_array as $course_name) {
-  echo "<input type=\"radio\" name=\"course\" value=\"" . $course_name . "\">" . ltrim($course_name, "0..9-") . " <br>\n";
+  echo "<p><input type=\"radio\" name=\"course\" value=\"" . $course_name . "\">" . ltrim($course_name, "0..9-") . " <br>\n";
+//  echo "<option value=\"{$course_name}\">" . ltrim($course_name, "0..9-") . "</option>\n";
 }
 
-echo "<input type=\"submit\" value=\"Submit\">\n";
+echo "<p><input type=\"submit\" value=\"Submit\">\n";
 echo "</form>";
 
 echo "<p><a href=\"../OMeet/view_results?event={$event}&key={$key}\">View results</a>";

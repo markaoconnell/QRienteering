@@ -210,7 +210,8 @@ function get_paragraph_style_header() {
 // get input form style elements
 function get_input_form_style_header() {
   if (is_mobile()) {
-    return "<style>input {\nfont-size: 110%;s\n}\ninput[type=submit] {\nheight : 85%;\n}\ninput[type=radio]\n{\ntransform:scale(2)\n}\n" .
+    return "<style>input {\nfont-size: 110%;\n}\ninput[type=submit] {\nheight : 85%;\n}\ninput[type=radio]\n{\ntransform:scale(2)\n}\n" .
+           "optgroup {\nfont-size: 20px;\n}\n" .
            "input[type=checkbox]\n{\ntransform:scale(3)\n}\n</style>\n";
   }
   else {
