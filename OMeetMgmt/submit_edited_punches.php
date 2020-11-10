@@ -20,11 +20,16 @@ if ($competitor == "") {
   error_and_exit("<p>ERROR: Competitor not specified, no results can be shown.\n");
 }
 
-$competitor_path = get_competitor_path($competitor, $event, $key);
 $courses_path = get_courses_path($event, $key);
-if (!file_exists($courses_path) || !is_dir($competitor_path)) {
+if (!file_exists($courses_path)) {
   error_and_exit("<p>ERROR: No such event found {$event} (or bad location key {$key}).\n");
 }
+
+$competitor_path = get_competitor_path($competitor, $event, $key);
+if (!is_dir($competitor_path)) {
+  error_and_exit("<p>ERROR: No such competitor found {$competitor} (possibly already edited or removed?).\n");
+}
+
 
 $competitor_name = file_get_contents("{$competitor_path}/name");
 $course = file_get_contents("{$competitor_path}/course");
@@ -85,7 +90,7 @@ for ($new_punch_iterator = 0; $new_punch_iterator < count($new_punch_array); $ne
 if ($_GET["additional"] != "") {
   if (preg_match("/^[0-9]+,[0-9]+$/", $_GET["additional"])) {
     $additional_pieces = explode(",", $_GET["additional"]);
-    $final_punch_array[$new_punch_iterator] = array("timestamp" => $additional_pieces[0] + $start_time, "control_id" => $additional_pieces[1]);
+    $final_punch_array[$new_punch_iterator] = array("timestamp" => $additional_pieces[1] + $start_time, "control_id" => $additional_pieces[0]);
   }
   else {
     $error_string .= "<p>Additional control ignored, incorrectly formatted, was: {$_GET["additional"]}, should be timestamp,control, all numeric.\n";
@@ -93,10 +98,10 @@ if ($_GET["additional"] != "") {
 }
 
 
-$final_punch_entries = array_map(function ($elt) { return ("{$elt["timestamp"]},{$elt["control_id"]}"); }, $final_punch_array);
+$final_punch_entries = array_map(function ($elt) { return (sprintf("%010d,%d", $elt["timestamp"], $elt["control_id"])); }, $final_punch_array);
 sort($final_punch_entries);
 
-$output_string = "<p>Punches for {$competitor_name} on " . ltrim($course, "0..9-") . "\n";
+$output_string = "<p>New punches for {$competitor_name} on " . ltrim($course, "0..9-") . "\n";
 
 $output_string .= "<p>Start at: {$start_time}\n";
 $output_string .= "<ul>\n<li>\n";
@@ -110,58 +115,149 @@ if ($error_string != "") {
 
 
 // ###########################################
-// Input information is all valid, save the competitor information
-if (0) {
+// New punch information all seems ok, save the competitor information
+// Save it as a new competitor (a clone of this one) for safety
+// Let the user delete this competitor after making sure all is ok.
+if ($error_string == "") {
   // Generate the competitor_id and make sure it is truly unique
+  $new_competitor_name = "{$competitor_name} (*)";
   $tries = 0;
   while ($tries < 5) {
-    $competitor_id = uniqid();
-    $competitor_path = get_competitor_path($competitor_id, $event, $key, "..");
-    mkdir ($competitor_path, 0777);
-    $competitor_file = fopen($competitor_path . "/name", "x");
-    if ($competitor_file !== false) {
+    $new_competitor_id = uniqid();
+    $new_competitor_path = get_competitor_path($new_competitor_id, $event, $key, "..");
+    mkdir ($new_competitor_path, 0777);
+    $new_competitor_file = fopen($new_competitor_path . "/name", "x");
+    if ($new_competitor_file !== false) {
       break;
     }
     $tries++;
   }
 
   if ($tries === 5) {
-    $body_string .= "ERROR Cannot register " . $competitor_name . " with id: " . $competitor_id . "\n";
+    $output_string .= "ERROR Cannot register " . $new_competitor_name . " with id: " . $new_competitor_id . "\n";
     $error = true;
   }
   else {
-    $body_string .= "<p>Registration complete: " . $competitor_name . " on " . ltrim($course, "0..9-");
-
-    $cookie_path = dirname(dirname($_SERVER["REQUEST_URI"]));
+    $output_string .= "<p>New entry created: " . $new_competitor_name . " on " . ltrim($course, "0..9-");
 
     // Save the information about the competitor
-    fwrite($competitor_file, $competitor_name);
-    fclose($competitor_file);
-    file_put_contents($competitor_path . "/course", $course);
-    mkdir("./{$competitor_path}/controls_found");
+    fwrite($new_competitor_file, $new_competitor_name);
+    fclose($new_competitor_file);
+    file_put_contents("{$new_competitor_path}/course", $course);
+    mkdir("./{$new_competitor_path}/controls_found");
 
-    $current_time = time();
-
-    if ($registration_info_supplied) {
-      file_put_contents("{$competitor_path}/registration_info", $raw_registration_info);
-      if ($registration_info["si_stick"] != "") {
-        file_put_contents("{$competitor_path}/si_stick", $registration_info["si_stick"]);
-        $using_si_stick = true;
-      }
-
-      if (($registration_info["is_member"] == "yes") && ($registration_info["member_id"] != "")) {
-        // Format will be member_id:timestamp_of_last_registration,member_id:timestamp_of_last_registration,...
-        // 3 month timeout
-        $time_cutoff = $current_time - (86400 * 90);
-        $member_ids = array_map(function ($elt) { return (explode(":", $elt)); }, explode(",", $_COOKIE["{$key}-member_ids"]));
-        $member_ids_hash = array();
-        array_map(function ($elt) use (&$member_ids_hash, $time_cutoff)
-                     { if ($elt[1] > $time_cutoff) { $member_ids_hash[$elt[0]] = $elt[1]; } }, $member_ids);
-        $member_ids_hash[$registration_info["member_id"]] = $current_time;
-        $member_cookie = implode(",", array_map (function ($elt) use ($member_ids_hash) { return($elt . ":" . $member_ids_hash[$elt]); }, array_keys($member_ids_hash)));
-        setcookie("{$key}-member_ids", $member_cookie, $current_time + 86400 * 120, $cookie_path);
+    if (file_exists("{$competitor_path}/registration_info")) {
+      $raw_registration_info = file_get_contents("{$competitor_path}/registration_info");
+      file_put_contents("{$new_competitor_path}/registration_info", $raw_registration_info);
+      if (file_exists("{$competitor_path}/si_stick")) {
+        $si_stick = file_get_contents("{$competitor_path}/si_stick");
+        file_put_contents("{$new_competitor_path}/si_stick", $si_stick);
       }
     }
+
+    global $TYPE_FIELD, $SCORE_O_COURSE;
+
+    $error_string = "";
+    $result_filename = "";
+
+    $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
+    $controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
+                                          array_map(function ($element) { return $element[1]; }, $control_list));
+  
+    $results_path = get_results_path($event, $key, "..");
+    $course_properties = get_course_properties("{$courses_path}/{$course}");
+    $is_score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+    if ($is_score_course) {
+      $max_score = $course_properties[$MAX_SCORE_FIELD];
+    }
+    else {
+      // For a non-ScoreO, each control is 1 point
+      $max_score = count($control_list);
+    }
+  
+    $extra_controls_string = "";
+    $next_control_number = 0;
+    $controls_done = array();
+    // Save the punches in the controls_found directory
+    // Check to see that they are valid along the way
+    foreach ($final_punch_entries as $edited_punch) {
+      $control_pieces = explode(",", $edited_punch);
+      $control_is_valid = false;
+  
+      if ($is_score_course) {
+         if (isset($controls_points_hash[$control_pieces[1]])) {
+           $control_is_valid = true;
+         }
+      }
+      else if ($control_list[$next_control_number][0] == $control_pieces[1]) {
+        $control_is_valid = true;
+        $next_control_number++;
+      }
+  
+      if ($control_is_valid) {
+        // Save the control in the expected format
+        file_put_contents("{$new_competitor_path}/controls_found/{$edited_punch}", "");
+        $controls_done[] = $edited_punch;
+      }
+      else {
+        $extra_controls_string .= "{$edited_punch}\n";
+      }
+    }
+  
+    if ($extra_controls_string != "") {
+      file_put_contents("{$new_competitor_path}/extra", $extra_controls_string);
+    }
+  
+    file_put_contents("{$new_competitor_path}/controls_found/start", $start_time);
+    file_put_contents("{$new_competitor_path}/controls_found/finish", $finish_time);
+    $time_taken = $finish_time - $start_time;
+
+
+    // Check the punches - is the course complete?
+    // If a scoreO, what is the score?
+  
+    // Just pluck off the controls found (ignore the timestamp for now
+    $controls_found = array_map(function ($item) { return (explode(",", $item)[1]); }, $controls_done);
+    $dnf_string = "";
+
+    // For each control, look up its point value in the associative array and sum the total points
+    // TODO: Must de-dup the controls found - Don't doublecount the points!!
+    if ($is_score_course) {
+      $unique_controls = array_unique($controls_found);
+      //$total_score = calculate_score($unique_controls, $controls_points_hash);
+      $total_score = array_reduce($unique_controls, function ($carry, $elt) use ($controls_points_hash) { return($carry + $controls_points_hash[$elt]); }, 0);
+      // Reduce the total_score if over time
+      if (($course_properties[$LIMIT_FIELD] > 0) && ($time_taken > $course_properties[$LIMIT_FIELD])) {
+        $time_over = $time_taken - $course_properties[$LIMIT_FIELD];
+        $minutes_over = floor(($time_over + 59) / 60);
+        $penalty = $minutes_over * $course_properties[$PENALTY_FIELD];
+
+        $output_string .= "<p>Exceeded time limit of " . formatted_time($course_properties[$LIMIT_FIELD]) . " by " . formatted_time($time_over) . "\n" .
+                           "<p>Penalty is {$course_properties[$PENALTY_FIELD]} pts/minute, total penalty of $penalty points.\n" .
+                           "<p>Control score was $total_score -> " . ($total_score - $penalty) . " after penalty.\n";
+
+        $total_score -= $penalty;
+      }
+    }
+    else {
+      $total_score = count($controls_found);
+      $number_controls_found = $next_control_number;
+
+      // With the edited punches, was the course completed?
+      $number_controls_on_course = count($control_list);
+      // echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found][0] . "--\n";
+      if ($number_controls_found != $number_controls_on_course) {
+        $output_string .= "<p>Not all controls found, found ${number_controls_found} controls, expected ${number_controls_on_course} controls.\n";
+        file_put_contents("{$new_competitor_path}/dnf", $error_string, FILE_APPEND);
+        $dnf_string = " - DNF";
+      }
+    }
+
+    $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $new_competitor_id);
+    file_put_contents("{$results_path}/${course}/${result_filename}", "");
+
+    $readable_course_name = ltrim($course, "0..9-");
+    $output_string .= "<p class=\"title\">Results for: {$new_competitor_name}, course complete ({$readable_course_name}{$dnf_string}), time taken " . formatted_time($time_taken) . "<p><p>";
   }
 }
 

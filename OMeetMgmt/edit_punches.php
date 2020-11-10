@@ -20,10 +20,14 @@ if ($competitor == "") {
   error_and_exit("<p>ERROR: Competitor not specified, no results can be shown.\n");
 }
 
-$competitor_path = get_competitor_path($competitor, $event, $key);
 $courses_path = get_courses_path($event, $key);
-if (!file_exists($courses_path) || !is_dir($competitor_path)) {
+if (!file_exists($courses_path)) {
   error_and_exit("<p>ERROR: No such event found {$event} (or bad location key {$key}).\n");
+}
+
+$competitor_path = get_competitor_path($competitor, $event, $key);
+if (!is_dir($competitor_path)) {
+  error_and_exit("<p>ERROR: No such competitor found {$competitor} (possibly already removed or edited?).\n");
 }
 
 $splits_array = get_splits_as_array($competitor, $event, $key, true);

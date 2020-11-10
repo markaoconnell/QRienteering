@@ -25,6 +25,8 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
   }
  
   $competitor_string .= "</td><td>{$status}</td><td><a href=\"./update_stick.php?key={$key}&event={$event}&competitor={$competitor_id}\">$si_stick</a></td>";
+  $competitor_string .= "<td><a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}\">show</a> / ";
+  $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}&allow_editing=1\">edit</a></td>";
   if (count($registration_info) > 0) {
     $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = {$registration_info[$key]}"); },
                                                                                                                 array_diff(array_keys($registration_info),
@@ -126,7 +128,8 @@ foreach ($competitor_list as $competitor) {
 
 $results_string = "<form action=\"../OMeetMgmt/remove_from_event.php\">\n<input type=hidden name=\"key\" value=\"${key}\">\n";
 $results_string .= "<input type=hidden name=\"event\" value=\"${event}\">\n";
-$results_string .= "\n<table><tr><th><input type=submit value=\"Remove\"></th><th>Course</th><th>Competitor</th><th>Status</th><th>Si Unit</th><th>Info</th></tr>\n";
+$results_string .= "\n<table><tr><th><input type=submit value=\"Remove\"></th><th>Course</th><th>Competitor</th><th>Status</th><th>Si Unit</th>" .
+                                "<th>Punches</th><th>Info</th></tr>\n";
 $results_string .= implode("\n", $competitor_outputs);
 $results_string .= "\n</table>\n</form>\n";
 
