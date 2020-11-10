@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/course_properties.php';
 
 ck_testing();
 
@@ -89,7 +90,7 @@ if ($registration_info_supplied) {
 }
 else {
   echo "<br><p>What is your name?<br>\n";
-  echo "<input type=\"text\" name=\"competitor_name\"><br>\n";
+  echo "<input type=\"text\" size=30 name=\"competitor_name\"><br>\n";
 }
 echo "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
 echo "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
@@ -99,6 +100,16 @@ foreach ($courses_array as $course_name) {
   echo "<p><input type=\"radio\" name=\"course\" value=\"" . $course_name . "\">" . ltrim($course_name, "0..9-") . " <br>\n";
 //  echo "<option value=\"{$course_name}\">" . ltrim($course_name, "0..9-") . "</option>\n";
 }
+
+if (!$registration_info_supplied) {
+  $email_properties = get_email_properties(get_base_path($key, ".."));
+  $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]);
+  if ($email_enabled) {
+    echo "<br><p>If you would like your results emailed to you, please supply a valid email (optional):<br>\n";
+    echo "<input type=\"text\" size=50 name=\"email_address\"><br>\n";
+  }
+}
+
 
 echo "<p><input type=\"submit\" value=\"Submit\">\n";
 echo "</form>";

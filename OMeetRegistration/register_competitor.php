@@ -99,6 +99,11 @@ if (!$error) {
         setcookie("{$key}-member_ids", $member_cookie, $current_time + 86400 * 120, $cookie_path);
       }
     }
+    else if ($_GET["email_address"] != "") {
+      $just_email_registration_info = implode(",", array("email_address", base64_encode($_GET["email_address"]),
+                                                         "BYOM", base64_encode("yes")));
+      file_put_contents("{$competitor_path}/registration_info", $just_email_registration_info);
+    }
     
     if (!$using_si_stick) {
       // Set the cookies with the name, course, next control
