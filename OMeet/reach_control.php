@@ -256,7 +256,7 @@ else {
         $skip_controls_form .= "<input type=hidden name=\"competitor_id\" value=\"{$competitor_id}\">\n";
         $skip_controls_form .= "<input type=hidden name=\"course\" value=\"{$course}\">\n";
         $skip_controls_form .= "<input type=hidden name=\"skipped_controls\" value=\"{$skipped_controls_csv}\">\n";
-        $skip_controls_form .= "<input type=hidden name=\"prior_skipped_controls\" value=\"{$_COOKIE["{$compeittor_id}_skipped_controls"]}\">\n";
+        $skip_controls_form .= "<input type=hidden name=\"prior_skipped_controls\" value=\"{$_COOKIE["{$competitor_id}_skipped_controls"]}\">\n";
         $skip_controls_form .= "<input type=submit value=\"Skip controls: {$printable_skipped_controls_csv}\">\n";
         $skip_controls_form .= "</form>\n";
       }
@@ -324,7 +324,7 @@ else {
   set_error_background();
 }
 
-echo get_web_page_header(true, false, false);
+echo get_web_page_header(true, false, true);
 
 if ($error_string == "") {
   echo $success_msg;
