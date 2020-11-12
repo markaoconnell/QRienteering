@@ -120,7 +120,7 @@ if ($error_string != "") {
 // Let the user delete this competitor after making sure all is ok.
 if ($error_string == "") {
   // Generate the competitor_id and make sure it is truly unique
-  $new_competitor_name = "{$competitor_name} (*)";
+  $new_competitor_name = "{$competitor_name}";
   $tries = 0;
   while ($tries < 5) {
     $new_competitor_id = uniqid();
@@ -258,6 +258,12 @@ if ($error_string == "") {
 
     $readable_course_name = ltrim($course, "0..9-");
     $output_string .= "<p class=\"title\">Results for: {$new_competitor_name}, course complete ({$readable_course_name}{$dnf_string}), time taken " . formatted_time($time_taken) . "<p><p>";
+
+    // Update the existing competitor name as having been overridden by the edits
+    if (substr($competitor_name, -4) != " (*)") {
+      $updated_competitor_name = "{$competitor_name} (*)";
+      file_put_contents("{$competitor_path}/name", $updated_competitor_name);
+    }
   }
 }
 

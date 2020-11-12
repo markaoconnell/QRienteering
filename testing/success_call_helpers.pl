@@ -93,6 +93,83 @@ sub reach_control_ok {
   delete($test_info_ref->{"subroutine"});
 }
 
+###########
+sub reach_control_with_skip {
+  my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+
+  $competitor_id = $cookie_ref->{"competitor_id"};
+  $test_info_ref->{"subroutine"} = "reach_control";
+
+  $path = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Competitors/$competitor_id";
+  my($course) = $cookie_ref->{"course"};
+  $course =~ s/^[0-9]+-//;
+
+  hashes_to_artificial_file();
+  $cmd = "php ../OMeet/reach_control.php";
+  $output = qx($cmd);
+
+  my($control) = $get_ref->{"control"};
+  if ($control eq "") {
+    # When testing with passing the control via mumble, also pass the control
+    # via the test info rather than base64 decoding the mumble and getting it
+    # from there.
+    $control = $test_info_ref->{"control"};
+  }
+  my($control_num_for_print_string) = $control_num_on_course + 1;
+  
+  if ($output !~ /Correct!  Reached $control, control #$control_num_for_print_string/) {
+    error_and_exit("Web page output wrong, correct control string not found.\n$output");
+  }
+  
+  #print $output;
+  
+  my(@controls_found) = check_directory_contents("$path/controls_found", qw(start));
+
+  if (grep (/NOTFOUND/, @controls_found) || grep (!/^[0-9]+,[0-9a-f]+$/)) {
+    error_and_exit("$path/controls_found holds incorrect items, " .
+                   "\n\tFound: " . join("--", @controls_found));
+  }
+
+  my(@skipped_controls);
+  @skipped_controls = split(",", $cookie_ref->{"${competitor_id}_skipped_controls"});
+  #print "Found " . join("--", @skipped_controls) . " skipped controls from cookie.\n";
+
+  # controls_found is prior controls found, plus the number of skipped controls, plus this one (which goes into extra)
+  if (($#controls_found + scalar(@skipped_controls) + 1) != $control_num_on_course) {
+    my(%dedupe_hash);
+    map { my($timestamp, $control) = split(",", $_); $dedupe_hash{$control} = 1; } @controls_found;
+    my(@deduped_controls_found) = keys(%dedupe_hash);
+ 
+    # For a ScoreO course, adding a duplicate control can sometimes show up as an extra entry, so check the de-duped version
+    if ($#deduped_controls_found != $control_num_on_course) {
+      error_and_exit("$path/controls_found hold wrong number of controls, found $#controls_found + " . scalar(@skipped_controls) .
+                     " + 1, expected $control_num_on_course,\n\tFound: " . join("--", @controls_found));
+    }
+  }
+
+  my(@extra_controls_array);
+  @extra_controls_array = file_get_contents("$path/extra");
+
+  my($time_at_control);
+  if ($extra_controls_array[$#extra_controls_array] !~ m#^([0-9]+),$control$#) {
+    error_and_exit("Last control found: " . $extra_controls_array[$#extra_controls_array] . " does not match expected control: $control.\n");
+  }
+  $time_at_control = $1;
+  
+  # With a skipped control, extra should be there
+  @directory_contents = check_directory_contents($path, qw(name course controls_found extra));
+  if (grep(/NOTFOUND/, @directory_contents) || grep(/finish/, @directory_contents) || grep(/dnf/, @directory_contents)) {
+    error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
+  }
+  
+  $time_now = time();
+  if (($time_now - $time_at_control) > 5) {
+    error_and_exit("Control file wrong, " . $extra_controls_array[$#extra_controls_array] . " has time $time_at_control vs time_now of $time_now.");
+  }
+
+  delete($test_info_ref->{"subroutine"});
+}
+
 ############
 sub reach_control_successfully {
   my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;

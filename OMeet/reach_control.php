@@ -8,20 +8,61 @@ $event = $_COOKIE["event"];
 $key = $_COOKIE["key"];
 $control_id = $_GET["control"];
 $competitor_id = $_COOKIE["competitor_id"];
+$course = $_COOKIE["course"];
+$time_now = time();
+$skip_adding_control_as_extra = false;
 
 if (($event == "") || ($competitor_id == "")) {
   error_and_exit("<p>ERROR: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?" . get_error_info_string());
 }
 
+if ($_GET["skipped_controls"] != "") {
+  $get_key = $_GET["key"];
+  $get_event = $_GET["event"];
+  $get_control_id = $_GET["control"];
+  $get_competitor_id = $_GET["competitor_id"];
+  $get_course = $_GET["course"];
+  $get_skipped_controls = $_GET["skipped_controls"];
+  $get_prior_skipped_controls = $_GET["prior_skipped_controls"];
+
+  // Validate the parameters - guard against a later replay
+  // The control_id test is kind of pointless, as the control_id always comes in via a GET and never the cookies
+  // but the symmetry of all the tests is nice and the pointless test is harmless
+  if (($key != $get_key) || ($event != $get_event) || ($get_control_id != $control_id) || ($get_course != $course) ||
+      ($get_competitor_id != $competitor_id)) {
+    error_and_exit("<p>ERROR: Possible replay of skip controls page, one of key: {$key}, event: {$event}, competitor {$competitor} doesn't match.\n");
+  }
+
+  if ($get_prior_skipped_controls != $_COOKIE["{$competitor_id}_skipped_controls"]) {
+    error_and_exit("<p>ERROR: Possible replay of skip controls page, skip control list mismatch:<ul>\n" .
+                   "<li>Was: {$get_prior_skipped_controls}\n" .
+                   "<li>Now: {$_COOKIE["{$competitor_id}_skipped_controls"]}\n</ul>\n");
+  }
+
+  if ($get_prior_skipped_controls == "") {
+    $_COOKIE["${competitor_id}_skipped_controls"] = $get_skipped_controls;
+  }
+  else {
+    $_COOKIE["{$competitor_id}_skipped_controls"] = "{$_COOKIE["{$competitor_id}_skipped_controls"]},{$get_skipped_controls}";
+  }
+  setcookie("{$competitor_id}_skipped_controls", $_COOKIE["{$competitor_id}_skipped_controls"], $time_now + 3600 * 6);
+  $skip_adding_control_as_extra = true;
+}
+
 $error_string = "";
 $success_msg = "";
+$skip_controls_form = "";
 
 // Do an internal redirect, encoding the competitor_id and control - this is to prevent later
 // replays when this device is potentially redoing the course
 // A redo of the course will generate a new competitor_id, which will then be detected
 if (!file_exists(get_event_path($event, $key, "..") . "/no_redirects") && ($_GET["mumble"] == "")) {
   $current_time = time();
-  $redirect_encoded_info = base64_encode("{$control_id},{$competitor_id},{$current_time}");
+  $extra_mumble_field = "";
+  if ($skip_adding_control_as_extra) {
+    $extra_mumble_field = ",redo";
+  }
+  $redirect_encoded_info = base64_encode("{$control_id},{$competitor_id},{$current_time}{$extra_mumble_field}");
   echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=./reach_control.php?mumble=${redirect_encoded_info}\" /></head></html>";
   return;
 }
@@ -31,6 +72,7 @@ if ($_GET["mumble"] != "") {
   $control_id = $pieces[0];
   $encoded_competitor_id = $pieces[1];
   $time_of_page_access = $pieces[2];
+  $skip_adding_control_as_extra = ($pieces[3] == "redo");
 
   if ($encoded_competitor_id != $competitor_id) {
     error_and_exit("<p>ERROR: Competitor mismatch, possible replay of earlier scan?\n");
@@ -44,7 +86,6 @@ if ($_GET["mumble"] != "") {
 
 // Get the submitted info
 // echo "<p>\n";
-$course = $_COOKIE["course"];
 
 $competitor_path = get_competitor_path($competitor_id, $event, $key, "..");
 $courses_path = get_courses_path($event, $key, "..");
@@ -86,7 +127,6 @@ if (file_exists("${controls_found_path}/finish")) {
 $controls_done = scandir("./${controls_found_path}");
 $controls_done = array_diff($controls_done, array(".", "..", "start", "finish")); // Remove the annoying . and .. entries
 $start_time = file_get_contents("./{$controls_found_path}/start");
-$time_now = time();
 $time_on_course = $time_now - $start_time;
 $extra_info_msg = "";
 $append_finish_message = false;
@@ -106,13 +146,13 @@ if ($score_course) {
   }
 
   if ($found_control) {
-    $control_found_filename = "{$controls_found_path}/" . strval($time_now) . ",{$control_id}";
+    $control_found_filename = "{$controls_found_path}/" . sprintf("%010d", $time_now) . ",{$control_id}";
     file_put_contents($control_found_filename, "");
     $success_msg = "<p>Reached {$control_id} on " . ltrim($course, "0..9-") . ", earned {$points_for_control} points.\n";
   }
   else {
     $error_string .= "<p>Found wrong control, control {$control_id} not on course " . ltrim($course, "0..9-") . "\n";
-    $extra_control_string = strval($time_now) . ",{$control_id}\n";
+    $extra_control_string = sprintf("%010d", $time_now) . ",{$control_id}\n";
     file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
   }
 
@@ -145,6 +185,12 @@ else {
   // Handle a linear (non-score) course
   // Are we at the right control?
   $number_controls_found = count($controls_done);
+  $has_skipped_controls = false;
+  if (isset($_COOKIE["{$competitor_id}_skipped_controls"])) {
+    $number_controls_found += count(explode(",", $_COOKIE["{$competitor_id}_skipped_controls"]));
+    $has_skipped_controls = true;
+  }
+
   $prior_control_repeat = false;
   // echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found][0] . "--\n";
   if ($number_controls_found >= count($control_list)) {
@@ -154,7 +200,7 @@ else {
     if ($control_id != $control_list[count($control_list) - 1][0]) {
       $error_string .= "<p>Found wrong control: {$control_id}, course " . ltrim($course, "0..9-") . ", control #" . ($number_controls_found + 1) .
                           ", expected to finish course.\n";
-      $extra_control_string = strval($time_now) . ",{$control_id}\n";
+      $extra_control_string = sprintf("%010d", $time_now) . ",{$control_id}\n";
       file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
     }
     else {
@@ -175,9 +221,39 @@ else {
     if ($control_id != $prior_control) {
       $error_string .= "<p>Found wrong control: {$control_id}, course " . ltrim($course, "0..9-") . ", control #" . ($number_controls_found + 1) .
                           ", expected control " . $control_list[$number_controls_found][0] . "\n";
-      $extra_control_string = strval($time_now) . ",{$control_id}\n";
+      $extra_control_string = sprintf("%010d", $time_now) . ",{$control_id}\n";
       file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
       // echo "<p>This looks like it also wasn't the prior control\n";
+
+      // Check to see if this control appears later
+      // if so, give an option to skip ahead
+      $possible_controls_to_skip = array();
+      $control_is_on_course = false;
+      for ($index = $number_controls_found; $index < count($control_list); $index++) {
+        if ($control_list[$index][0] == $control_id) {
+          $control_is_on_course = true;
+          break;
+        }
+        else {
+          $possible_controls_to_skip[] = "skip-{$control_list[$index][0]}";
+        }
+      }
+
+      // if $control_is_on_course is true, then there should ALWAYS be at least
+      // one entry in $possible_controls_to_skip, but doublecheck for safety
+      if ($control_is_on_course && (count($possible_controls_to_skip) > 0)) {
+        $skipped_controls_csv = implode(",", $possible_controls_to_skip);
+        $skip_controls_form = "<p><form action=./reach_control.php>\n";
+        $skip_controls_form .= "<input type=hidden name=\"key\" value=\"{$key}\">\n";
+        $skip_controls_form .= "<input type=hidden name=\"event\" value=\"{$event}\">\n";
+        $skip_controls_form .= "<input type=hidden name=\"control\" value=\"{$control_id}\">\n";
+        $skip_controls_form .= "<input type=hidden name=\"competitor_id\" value=\"{$competitor_id}\">\n";
+        $skip_controls_form .= "<input type=hidden name=\"course\" value=\"{$course}\">\n";
+        $skip_controls_form .= "<input type=hidden name=\"skipped_controls\" value=\"{$skipped_controls_csv}\">\n";
+        $skip_controls_form .= "<input type=hidden name=\"prior_skipped_controls\" value=\"{$_COOKIE["{$compeittor_id}_skipped_controls"]}\">\n";
+        $skip_controls_form .= "<input type=submit value=\"Skip controls: {$skipped_controls_csv}\">\n";
+        $skip_controls_form .= "</form>\n";
+      }
     }
     else {
       // echo"<p>This looks like a rescan of the prior control.\n";
@@ -196,8 +272,19 @@ else {
     }
   }
   else {
-    $control_found_filename = "{$controls_found_path}/" . strval($time_now) . ",{$control_id}";
-    file_put_contents($control_found_filename, "");
+    $control_entry = sprintf("%010d", $time_now) . ",{$control_id}";
+    if ($has_skipped_controls) {
+      // Count this as a skipped control
+      $new_cookie_entry = "{$_COOKIE["{$competitor_id}_skipped_controls"]},ok-{$control_id}";
+      setcookie("{$competitor_id}_skipped_controls", $new_cookie_entry, $time_now + 3600 * 6);
+      if (!$skip_adding_control_as_extra) {
+        file_put_contents("{$competitor_path}/extra", "${control_entry}\n", FILE_APPEND);
+      }
+    }
+    else {
+      $control_found_filename = "{$controls_found_path}/{$control_entry}";
+      file_put_contents($control_found_filename, "");
+    }
     $remaining_controls = count($control_list) - $number_controls_found - 1;
     if ($remaining_controls <= 0) {
       $next_control = "Finish";
@@ -242,6 +329,10 @@ else {
 
 if ($autostart_msg != "") {
   echo $autostart_msg;
+}
+
+if ($skip_controls_form != "") {
+  echo $skip_controls_form;
 }
 
 echo "<br><p>Time on course is: " . formatted_time($time_on_course) . "\n";

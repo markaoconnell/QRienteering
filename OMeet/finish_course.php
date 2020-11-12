@@ -23,6 +23,11 @@ ck_testing();
 
 // Get the submitted info
 // echo "<p>\n";
+$has_skipped_controls = false;
+$number_controls_skipped = 0;
+$controls_skipped_array = array();
+$controls_ok_array = array();
+
 if (isset($_GET["si_stick_finish"])) {
   if (!isset($_GET["event"]) || ($_GET["event"] == "")) {
     error_and_exit("ERROR: Cannot find competitor for registered SI unit {$finish_info["si_stick"]}: No event set.\n");
@@ -47,6 +52,17 @@ else {
   $event = $_COOKIE["event"];
   $key = $_COOKIE["key"];
   $finish_time = time();
+
+  if (isset($_COOKIE["{$competitor_id}_skipped_controls"])) {
+    $controls_skipped_raw_array = explode(",", $_COOKIE["{$competitor_id}_skipped_controls"]);
+    $controls_skipped_array = array_filter($controls_skipped_raw_array, function ($elt) { return (explode("-", $elt)[0] == "skip"); });
+    $controls_ok_array = array_filter($controls_skipped_raw_array, function ($elt) { return (explode("-", $elt)[0] == "ok"); });
+    if ((count($controls_ok_array) + count($controls_skipped_array)) != count($controls_skipped_raw_array)) {
+      // Not sure what to do here
+      // In testing would at least like to see this
+    }
+    $has_skipped_controls = true;
+  }
 }
 
 $now = $finish_time;
@@ -110,7 +126,15 @@ if (!file_exists("{$controls_found_path}/finish")) {
     $number_controls_on_course = count($control_list);
     // echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found][0] . "--\n";
     if ($number_controls_found != $number_controls_on_course) {
-        $error_string .= "<p>Not all controls found, found ${number_controls_found} controls, expected ${number_controls_on_course} controls.\n";
+        if ($has_skipped_controls) {
+          $found_controls = $number_controls_found + count($controls_ok_array);
+          $skipped_controls_string = implode(", ", array_map(function ($elt) { return (explode("-", $elt)[1]); }, $controls_skipped_array));
+          $error_string .= "<p>Not all controls found, found {$found_controls} controls (skipped {$skipped_controls_string}), " .
+                                                                                        "expected ${number_controls_on_course} controls.\n";
+        }
+        else {
+          $error_string .= "<p>Not all controls found, found ${number_controls_found} controls, expected ${number_controls_on_course} controls.\n";
+        }
         file_put_contents("{$competitor_path}/dnf", $error_string, FILE_APPEND);
     }
   }
@@ -147,6 +171,9 @@ if (!file_exists("{$controls_found_path}/finish")) {
   }
   else {
     $total_score = count($controls_found);
+    if ($has_skipped_controls) {
+      $total_score += count($controls_ok_array);
+    }
   }
 
   $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $competitor_id);
@@ -164,6 +191,7 @@ else {
 // Clear the cookies, ready for another course registration
 // Set them as expired a day ago
 setcookie("competitor_id", $competitor_id, $now - 86400);
+setcookie("{$competitor_id}_skipped_controls", "", $now - 86400);
 setcookie("course", $course, $now - 86400);
 setcookie("next_control", "start", $now - 86400);
 setcookie("key", $key, $now - 86400);
