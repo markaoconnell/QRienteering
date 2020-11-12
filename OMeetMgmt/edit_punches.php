@@ -101,7 +101,7 @@ foreach ($controls_found as $this_control) {
   $control_id = $this_control["control_id"];
 
   // The runner may have missed this control - let it be edited
-  if (isset($missed_controls_positions_hash[$control_num_on_course])) {
+  while (isset($missed_controls_positions_hash[$control_num_on_course]) && ($control_num_on_course < count($control_list))) {
     $output_string .= "<tr><td>" . ($control_num_on_course + 1) . "</td><td>" . $control_list[$control_num_on_course][0] . "</td>";
     $output_string .="<td>-</td>";  // No time at the control - it wasn't visited
     if ($allow_editing) {
@@ -115,6 +115,7 @@ foreach ($controls_found as $this_control) {
 
     // Only print the editing position once - there may be multiple wrong controls in a row
     unset($missed_controls_positions_hash[$control_num_on_course]);
+    $control_num_on_course++;
   }
 
   // is the punched control on the course at all?
