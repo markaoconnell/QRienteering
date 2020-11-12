@@ -235,15 +235,21 @@ else {
           break;
         }
         else {
-          $possible_controls_to_skip[] = "skip-{$control_list[$index][0]}";
+          $possible_controls_to_skip[] = "{$control_list[$index][0]}";
         }
       }
 
       // if $control_is_on_course is true, then there should ALWAYS be at least
       // one entry in $possible_controls_to_skip, but doublecheck for safety
       if ($control_is_on_course && (count($possible_controls_to_skip) > 0)) {
-        $skipped_controls_csv = implode(",", $possible_controls_to_skip);
-        $skip_controls_form = "<p><form action=./reach_control.php>\n";
+        $skipped_controls_csv = implode(",", array_map( function ($elt) { return ("skip-{$elt}"); }, $possible_controls_to_skip));
+        $printable_skipped_controls_csv = implode(", ", $possible_controls_to_skip);
+        $skip_controls_form = "<p>You are at a later control on the course - " .
+                                      "would you like to skip the missed controls (will be a DNF?) " .
+                                      "or continue to try and find all the controls?\n" .
+                               "<p>Click on the button below to skip the missed controls, " .
+                                      "do nothing (or close this page) to continue to look for all the controls.\n";
+        $skip_controls_form .= "<p><form action=./reach_control.php>\n";
         $skip_controls_form .= "<input type=hidden name=\"key\" value=\"{$key}\">\n";
         $skip_controls_form .= "<input type=hidden name=\"event\" value=\"{$event}\">\n";
         $skip_controls_form .= "<input type=hidden name=\"control\" value=\"{$control_id}\">\n";
@@ -251,7 +257,7 @@ else {
         $skip_controls_form .= "<input type=hidden name=\"course\" value=\"{$course}\">\n";
         $skip_controls_form .= "<input type=hidden name=\"skipped_controls\" value=\"{$skipped_controls_csv}\">\n";
         $skip_controls_form .= "<input type=hidden name=\"prior_skipped_controls\" value=\"{$_COOKIE["{$compeittor_id}_skipped_controls"]}\">\n";
-        $skip_controls_form .= "<input type=submit value=\"Skip controls: {$skipped_controls_csv}\">\n";
+        $skip_controls_form .= "<input type=submit value=\"Skip controls: {$printable_skipped_controls_csv}\">\n";
         $skip_controls_form .= "</form>\n";
       }
     }

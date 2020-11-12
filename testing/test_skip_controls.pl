@@ -83,10 +83,14 @@ if (grep(/NOTFOUND/, @directory_contents) || grep(/finish/, @directory_contents)
   error_and_exit("More files exist in $controls_found_path than expected: " . join("--", @directory_contents));
 }
 
-if ($output !~ /input type=submit value="Skip controls: skip-203,skip-204/) {
-  error_and_exit("Did not see form for skipping the controls.\n$output");
+if ($output !~ /input type=submit value="Skip controls: 203, 204/) {
+  error_and_exit("Did not see form (button) for skipping the controls.\n$output");
 }
 
+if ($output !~ /input type=hidden name="skipped_controls" value="skip-203,skip-204"/) {
+  error_and_exit("Did not see form (skipped_controls) for skipping the controls.\n$output");
+}
+ 
 success();
 
 
