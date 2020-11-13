@@ -135,7 +135,7 @@ $time_limit_string .= "</ul>\n";
 $time_limit_string .= "<input type=hidden name=\"key\" value=\"${key}\">\n";
 $time_limit_string .= "<input type=hidden name=\"event\" value=\"${event}\">\n";
 $time_limit_string .= "<p>Include finished competitors? <input type=checkbox name=\"include_finishers\" value=\"1\"" . ($include_finishers ? " checked " : "")  . ">\n";
-$time_limit_string .= "<p><input type=submit value=\"Change time restriction\"></form>\n";
+$time_limit_string .= "<p><input type=submit value=\"Change filter\"></form>\n";
 
 
 $results_string = "<form action=\"../OMeetMgmt/remove_from_event.php\">\n<input type=hidden name=\"key\" value=\"${key}\">\n";
