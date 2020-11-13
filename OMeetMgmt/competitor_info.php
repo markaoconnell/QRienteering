@@ -128,13 +128,13 @@ foreach ($competitor_list as $competitor) {
 
 $time_limit_string = "<form action=./competitor_info.php>\n";
 $time_limit_string .= "<p>Show competitors registered within the past:\n";
-$time_limit_string .= "<ul><li><input type=radio name=TIME_LIMIT value=86400 checked> 1 day\n";
-$time_limit_string .= "<li><input type=radio name=TIME_LIMIT value=604800> 1 week\n";
-$time_limit_string .= "<li><input type=radio name=TIME_LIMIT value=2678400> 1 month\n";
+$time_limit_string .= "<ul><li><input type=radio name=TIME_LIMIT value=86400 " . (($TIME_LIMIT == 86400) ? " checked " : "") . "> 1 day\n";
+$time_limit_string .= "<li><input type=radio name=TIME_LIMIT value=604800 " . (($TIME_LIMIT == 604800) ? " checked " : "") . "> 1 week\n";
+$time_limit_string .= "<li><input type=radio name=TIME_LIMIT value=2678400 " . (($TIME_LIMIT == 2678400) ? " checked " : "") . "> 1 month\n";
 $time_limit_string .= "</ul>\n";
 $time_limit_string .= "<input type=hidden name=\"key\" value=\"${key}\">\n";
 $time_limit_string .= "<input type=hidden name=\"event\" value=\"${event}\">\n";
-$time_limit_string .= "<p>Include finished competitors? <input type=checkbox name=\"include_finishers\" value=\"1\">\n";
+$time_limit_string .= "<p>Include finished competitors? <input type=checkbox name=\"include_finishers\" value=\"1\"" . ($include_finishers ? " checked " : "")  . ">\n";
 $time_limit_string .= "<p><input type=submit value=\"Change time restriction\"></form>\n";
 
 
