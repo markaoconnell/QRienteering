@@ -254,7 +254,19 @@ if (file_exists("{$competitor_path}/registration_info")) {
                      wordwrap(get_email_course_result_links($event, $key, ".."), 70, "\r\n");
 
       if (isset($email_properties["include-splits"]) && ($result_filename != "")) {
-        $splits_output = get_splits_output($competitor_id, $event, $key, $result_filename);
+        if (file_exists("{$competitor_path}/dnf")) {
+          $output_array = get_splits_dnf($competitor_id, $event, $key);
+          if ($output_array["output"] != "") {
+            $splits_output = $output_array["output"];
+          }
+
+          if ($output_array["error"] != "") {
+            $splits_output .= $output_array["error"];
+          }
+        }
+        else {
+          $splits_output = get_splits_output($competitor_id, $event, $key, $result_filename);
+        }
         $body_string .= wordwrap("<p><p>{$splits_output}\r\n", 70, "\r\n") . "\r\n</body></html>";
       }
 
