@@ -127,7 +127,7 @@ sub check_splits {
     $output = qx($cmd);
 
     my($actual_split_rows);
-    $actual_split_rows = () = $output =~ /(<tr><td>)/g;
+    $actual_split_rows = () = $output =~ /(<td>\d\d:\d\d:\d\d)/g;
 
     if ($actual_split_rows != ($expected_splits_ref->{$result_competitor} + 2)) {
       error_and_exit("Wrong rows in splits file for $result_competitor, $actual_split_rows vs expected " .

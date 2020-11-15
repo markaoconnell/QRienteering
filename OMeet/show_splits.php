@@ -26,7 +26,20 @@ if (!is_dir($competitor_path)) {
   error_and_exit("Cannot find competitor \"{$competitor_id}\" for {$event} and {$key}, please check that this is an authorized link.\n");
 }
 
-$splits_output = get_splits_output($competitor_id, $event, $key, $time_and_competitor);
+$splits_output = "";
+if (file_exists("{$competitor_path}/dnf")) {
+  $output_array = get_splits_dnf($competitor_id, $event, $key);
+  if ($output_array["output"] != "") {
+    $splits_output = $output_array["output"];
+  }
+
+  if ($output_array["error"] != "") {
+    $splits_output .= $output_array["error"];
+  }
+}
+else {
+  $splits_output = get_splits_output($competitor_id, $event, $key, $time_and_competitor);
+}
 
 echo get_web_page_header(true, true, false);
 
