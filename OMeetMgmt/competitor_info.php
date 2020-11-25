@@ -73,6 +73,8 @@ $courses_path = get_courses_path($event, $key, "..");
 $courses_array = scandir($courses_path);
 $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
 
+$event_name = file_get_contents(get_event_path($event, $key) . "/description");
+
 $current_time = time();
 
 
@@ -138,7 +140,8 @@ $time_limit_string .= "<p>Include finished competitors? <input type=checkbox nam
 $time_limit_string .= "<p><input type=submit value=\"Change filter\"></form>\n";
 
 
-$results_string = "<form action=\"../OMeetMgmt/remove_from_event.php\">\n<input type=hidden name=\"key\" value=\"${key}\">\n";
+$results_string = "<p>Competitors for {$event_name}<p><p>\n";
+$results_string .= "<form action=\"../OMeetMgmt/remove_from_event.php\">\n<input type=hidden name=\"key\" value=\"${key}\">\n";
 $results_string .= "<input type=hidden name=\"event\" value=\"${event}\">\n";
 $results_string .= "\n<table><tr><th><input type=submit value=\"Remove\"></th><th>Course</th><th>Competitor</th><th>Status</th><th>Si Unit</th>" .
                                 "<th>Punches</th><th>Info</th></tr>\n";

@@ -11,6 +11,7 @@ $event = $_GET["event"];
 $key = $_GET["key"];
 $competitor = $_GET["competitor"];
 $allow_editing = isset($_GET["allow_editing"]);
+$start_time_adjustment = $_GET["start_time_adjustment"];
 
 if ($event == "") {
   error_and_exit("<p>ERROR: Event not specified, no results can be shown.\n");
@@ -33,8 +34,7 @@ if (!is_dir($competitor_path)) {
 
 $competitor_name = file_get_contents("{$competitor_path}/name");
 $course = file_get_contents("{$competitor_path}/course");
-$start_time = file_get_contents("{$competitor_path}/controls_found/start");
-$finish_time = file_get_contents("{$competitor_path}/controls_found/finish");
+$start_time = file_get_contents("{$competitor_path}/controls_found/start") + $start_time_adjustment;
 
 // Get the list of the new timestamps
 $submitted_punches_array = array();
@@ -100,6 +100,19 @@ if ($_GET["additional"] != "") {
 
 $final_punch_entries = array_map(function ($elt) { return (sprintf("%010d,%d", $elt["timestamp"], $elt["control_id"])); }, $final_punch_array);
 sort($final_punch_entries);
+
+//$finish_time = file_get_contents("{$competitor_path}/controls_found/finish");
+$finish_time = 0;
+$finish_offset = $_GET["finish_offset"];
+if (preg_match("/^\+[0-9]+$/", $finish_offset)) {
+  // Time is relative to the last entry
+  $final_entry = end($final_punch_entries);
+  $final_control_pieces = explode(",", $final_entry);
+  $finish_time = $finish_offset + $final_control_pieces[0];
+}
+else if (preg_match("/^[0-9]+$/", $finish_offset)) {
+   $finish_time = $finish_offset + $start_time;
+}
 
 $output_string = "<p>New punches for {$competitor_name} on " . ltrim($course, "0..9-") . "\n";
 

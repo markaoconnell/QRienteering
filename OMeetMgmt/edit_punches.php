@@ -32,6 +32,23 @@ if (!is_dir($competitor_path)) {
 
 $splits_array = get_splits_as_array($competitor, $event, $key, true);
 
+$start_time = $splits_array["start"];
+if (isset($_GET["new_start_time"])) {
+  $new_start_hms = explode(":", $_GET["new_start_time"]);
+  if (($new_start_hms[0] < 0) || ($new_start_hms[0] > 23) || ($new_start_hms[1] < 0) || ($new_start_hms[1] > 59)
+                                                          || ($new_start_hms[2] < 0) || ($new_start_hms[2] > 59)) {
+    error_and_exit("<p>ERROR: $new_start_time is malformatted, should be hh:mm:ss\n");
+  }
+  $localtime_array = localtime($start_time, true);
+  $new_start_time = mktime($new_start_hms[0], $new_start_hms[1], $new_start_hms[2],
+                           $localtime_array["tm_mon"] + 1, $localtime_array["tm_mday"], $localtime_array["tm_year"] + 1900);
+
+  $start_time_adjustment = $new_start_time - $start_time;
+}
+else {
+  $start_time_adjustment = 0;
+}
+
 $competitor_name = file_get_contents("{$competitor_path}/name");
 
 $course = file_get_contents("{$competitor_path}/course");
@@ -81,6 +98,14 @@ $error_string = "";
   
 $output_string = "<p>Punches for {$competitor_name} on " . ltrim($course, "0..9-") . ($score_course ? " (ScoreO)" : "") . "\n";
 if ($allow_editing) {
+  $output_string .= "<p><form action=./edit_punches.php>\n";
+  $output_string .= "Current start time: <input type=text name=new_start_time value=\"" . strftime("%T", $start_time + $start_time_adjustment) . "\">\n";
+  $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
+  $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";
+  $output_string .= "<input type=hidden name=competitor value=\"{$competitor}\">\n";
+  $output_string .= "<input type=hidden name=allow_editing value=\"1\">\n";
+  $output_string .= "<input type=submit value=\"Edit start time\">\n";
+  $output_string .= "</form>\n";
   $output_string .= "<p>Instructions:\n<ul>\n";
   $output_string .= "<li>Enter the time (in seconds) for a control that is listed to add that control as punched.\n";
   $output_string .= "<li>Enter the time preceded by a + (e.g. \"+123\") to add that many seconds to the prior time.\n";
@@ -90,6 +115,10 @@ if ($allow_editing) {
   $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
   $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";
   $output_string .= "<input type=hidden name=competitor value=\"{$competitor}\">\n";
+  $output_string .= "<input type=hidden name=start_time_adjustment value=\"{$start_time_adjustment}\">\n";
+}
+else {
+  $output_string .= "<p>Current start time: " . strftime("%T", $start_time + $start_time_adjustment) . "\n";
 }
 
 $output_string .= "<p><table><tr><th>&nbsp&nbsp#&nbsp&nbsp</th><th>Control</th><th>Actual time</th><th>Relative time<br>(seconds)</th></tr>\n";
@@ -123,10 +152,11 @@ foreach ($controls_found as $this_control) {
     $output_string .= "<tr><td>" . implode(",", array_map(function ($elt) { return ($elt + 1); }, $controls_hash[$control_id])) . "</td><td>" . $control_id . "</td>";
     $output_string .="<td>" . strftime("%T", $this_control["raw_time"]) . "</td>";
     if ($allow_editing) {
-      $output_string .= "<td><input type=text name=\"Control-{$control_id}-{$control_unique_counter}\" value=\"" . $this_control["cumulative_time"] . "\"></td></tr>\n";
+      $output_string .= "<td><input type=text name=\"Control-{$control_id}-{$control_unique_counter}\" value=\"" .
+                                                      ($this_control["cumulative_time"] - $start_time_adjustment) . "\"></td></tr>\n";
     }
     else {
-      $output_string .= "<td>" . $this_control["cumulative_time"] . "</td></tr>\n";
+      $output_string .= "<td>" . ($this_control["cumulative_time"] - $start_time_adjustment) . "</td></tr>\n";
     }
 
     $control_num_on_course++;
@@ -135,10 +165,11 @@ foreach ($controls_found as $this_control) {
     $output_string .= "<tr><td>-</td><td>" . $control_id . "</td>";
     $output_string .="<td>" . strftime("%T", $this_control["raw_time"]) . "</td>";
     if ($allow_editing) {
-      $output_string .= "<td><input type=text name=\"Control-{$control_id}-{$control_unique_counter}\" value=\"" . $this_control["cumulative_time"] . "\"></td></tr>\n";
+      $output_string .= "<td><input type=text name=\"Control-{$control_id}-{$control_unique_counter}\" value=\"" .
+                                                     ($this_control["cumulative_time"] - $start_time_adjustment) . "\"></td></tr>\n";
     }
     else {
-      $output_string .= "<td>" . $this_control["cumulative_time"] . "</td></tr>\n";
+      $output_string .= "<td>" . ($this_control["cumulative_time"] - $start_time_adjustment) . "</td></tr>\n";
     }
   }
 }
@@ -162,8 +193,13 @@ for ( ; $control_num_on_course < count($control_list); $control_num_on_course++)
 $output_string .= "</table>\n";
   
 if ($splits_array["finish"] != -1) {
-  $finish_time = $splits_array["finish"] - $splits_array["start"];
-  $output_string .= "<p>Finish at $finish_time (seconds).\n";
+  $finish_time = $splits_array["finish"] - $start_time - $start_time_adjustment;
+  if ($allow_editing) {
+    $output_string .= "<p>Finish at <input type=text name=\"finish_offset\" value=\"{$finish_time}\"> (seconds).\n";
+  }
+  else {
+    $output_string .= "<p>Finish at $finish_time (seconds).\n";
+  }
 }
 else {
   $output_string .= "<p>Not yet finished.\n";
