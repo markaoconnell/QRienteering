@@ -68,8 +68,8 @@ foreach ($competitor_list as $competitor) {
 $outstanding_entrants = false;
 $results_string = "";
 if ($found_registered_not_started) {
-  $results_string .= "<p>Registered but not started\n";
-  $results_string .= "<table><tr><th>Name</th><th>Course</th></tr>\n";
+  $results_string .= "<p>Registered competitors\n";
+  $results_string .= "<table><tr><th>Name</th><th>Course</th><th>Status</th></tr>\n";
   foreach (array_keys($not_started) as $course) {
     if (count($not_started[$course]) > 0) {
       $outstanding_entrants = true;
@@ -78,7 +78,13 @@ if ($found_registered_not_started) {
         if ($include_competitor_id) {
           $competitor_name .= " ({$competitor})";
         }
-        $results_string .= "<tr><td>${competitor_name}</td><td>" . ltrim($course, "0..9-") . "</td></tr>";
+        if (file_exists("{$competitor_directory}/{$competitor}/si_stick")) {
+          $status_field = "si runner";
+        }
+        else {
+          $status_field = "not started";
+        }
+        $results_string .= "<tr><td>${competitor_name}</td><td>" . ltrim($course, "0..9-") . "</td><td>{$status_field}</td></tr>";
       }
     }
   }

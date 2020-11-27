@@ -129,7 +129,129 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
 }
 
 
-function get_splits_as_array($competitor_id, $event, $key) {
+function get_splits_dnf($competitor, $event, $key) {
+
+  $error_string = "";
+  $output_string = "";
+
+  $courses_path = get_courses_path($event, $key);
+  if (!file_exists($courses_path)) {
+    return (array("error" => "<p>ERROR: No such event found {$event} (or bad location key {$key}).\n"));
+  }
+  
+  $competitor_path = get_competitor_path($competitor, $event, $key);
+  if (!is_dir($competitor_path)) {
+    return (array("error" => "<p>ERROR: No such competitor found {$competitor} (possibly already removed or edited?).\n"));
+  }
+  
+  $splits_array = get_splits_as_array($competitor, $event, $key, true);
+  
+  $competitor_name = file_get_contents("{$competitor_path}/name");
+  
+  $course = file_get_contents("{$competitor_path}/course");
+  $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
+  
+  $course_properties = get_course_properties("{$courses_path}/{$course}");
+  $number_controls = count($control_list);
+  $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+  if ($score_course) {
+    $error_string = "<p>Score course marked as DNF - should not be possible";
+  }
+  
+  
+  // For each of the controls on the course, create a hash from the control number
+  // to its possible offset into the course.  Normally each control would only have one
+  // possible offset, except for things like butterfly courses, motalas, relays, etc.
+  $controls_hash = array();
+  for ($control_number = 0; $control_number < count($control_list); $control_number++) {
+    $this_control_id = $control_list[$control_number][0];
+    if (!isset($controls_hash[$this_control_id])) {
+      $controls_hash[$this_control_id] = array($control_number);
+    }
+    else {
+      $controls_hash[$this_control_id][] = $control_number;
+    }
+  }
+  
+  $controls_found = $splits_array["controls"];
+  // What control ids appear in the list of controls to find but not the list of controls actually found?
+  $missed_control_ids = array_diff(array_keys($controls_hash), array_map(function ($elt) { return ($elt["control_id"]); }, $controls_found));
+  
+  // For the missing controls, get their position within the course (i.e. control 301 wasn't punched, it is the 5th control)
+  $missed_control_positions_array = array_map(function ($elt) use ($controls_hash) { return ($controls_hash[$elt]); }, $missed_control_ids);
+  
+  // Because a missing control on a butterfly course may appear in multiple places, flatten the list into a hash
+  // so entry 5 in the $missed_controls_positions_hash means that the control at position 5 may have been missed
+  $missed_controls_positions_hash = array();
+  foreach ($missed_control_positions_array as $possible_missed_positions) {
+    foreach ($possible_missed_positions as $missed_position) {
+      $missed_controls_positions_hash[$missed_position] = 1;
+    }
+  }
+  
+    
+  $output_string = "<p class=\"title\">Splits for {$competitor_name} on " . ltrim($course, "0..9-") . ($score_course ? " (ScoreO)" : "") . "\n";
+  $output_string .= "<p><table><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of day</th></tr>\n";
+  $output_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . strftime("%T (%a - %d)", $splits_array["start"]) . "</td></tr>\n";
+  
+  $control_num_on_course = 0;
+  $control_unique_counter = 0;
+  foreach ($controls_found as $this_control) {
+    $control_unique_counter++;
+    $control_id = $this_control["control_id"];
+  
+    // The runner may have missed this control - let it be edited
+    while (isset($missed_controls_positions_hash[$control_num_on_course]) && ($control_num_on_course < count($control_list))) {
+      $output_string .= "<tr><td>" . ($control_num_on_course + 1) . "</td><td>" . $control_list[$control_num_on_course][0] . "</td>";
+      $output_string .="<td>-</td><td>-</td><td>-</td></tr>\n"; // No time at the control - it wasn't visited
+  
+      $control_unique_counter++;
+  
+      // Only print the editing position once - there may be multiple wrong controls in a row
+      unset($missed_controls_positions_hash[$control_num_on_course]);
+      $control_num_on_course++;
+    }
+  
+    // is the punched control on the course at all?
+    if (isset($controls_hash[$control_id])) {
+      // For a butterfly course, the control may appear at multiple places - show them all
+      $output_string .= "<tr><td>" . implode(",", array_map(function ($elt) { return ($elt + 1); }, $controls_hash[$control_id])) .
+                                                                                      "</td><td>" . $control_id . "</td>";
+      $output_string .= "<td>" . formatted_time($this_control["split_time"]) . "</td>\n";
+      $output_string .= "<td>" . formatted_time($this_control["cumulative_time"]) . "</td>\n";
+      $output_string .="<td>" . strftime("%T", $this_control["raw_time"]) . "</td></tr>\n";
+  
+      $control_num_on_course++;
+   }
+   else {
+      $output_string .= "<tr><td>-</td><td>" . $control_id . "</td>";
+      $output_string .= "<td>" . formatted_time($this_control["split_time"]) . "</td>\n";
+      $output_string .= "<td>" . formatted_time($this_control["cumulative_time"]) . "</td>\n";
+      $output_string .="<td>" . strftime("%T", $this_control["raw_time"]) . "</td></tr>\n";
+    }
+  }
+  
+  // Handle unpunched controls at the end
+  for ( ; $control_num_on_course < count($control_list); $control_num_on_course++) {
+    $control_unique_counter++;
+    if (isset($missed_controls_positions_hash[$control_num_on_course])) {
+      $output_string .= "<tr><td>" . ($control_num_on_course + 1) . "</td><td>" . $control_list[$control_num_on_course][0] . "</td>";
+      $output_string .="<td>-</td><td>-</td><td>-</td></tr>\n"; // No time at the control - it wasn't visited
+      unset($missed_controls_positions_hash[$control_num_on_course]);
+    }
+  }
+  
+  $output_string .= "<tr><td>Finish</td><td></td><td></td><td></td><td>" . strftime("%T (%a - %d)", $splits_array["finish"]) . "</td></tr>\n";
+  $output_string .= "</table>\n";
+    
+  $finish_time = $splits_array["finish"] - $splits_array["start"];
+  $output_string .= "<p>Total Time: " . formatted_time($finish_time) . "\n";
+
+  return (array("error" => $error_string, "output" => $output_string));
+}
+
+
+function get_splits_as_array($competitor_id, $event, $key, $include_all = 'false') {
 
   $splits_array = array();
   $control_times_array = array();
@@ -166,6 +288,12 @@ function get_splits_as_array($competitor_id, $event, $key) {
   $controls_done = scandir("./{$controls_found_path}");
   $controls_done = array_diff($controls_done, array(".", "..", "start", "finish")); // Remove the annoying . and .. entries
   $number_controls_found = count($controls_done);
+
+  if ($include_all && file_exists("{$competitor_path}/extra")) {
+    $extra_controls = file("{$competitor_path}/extra", FILE_IGNORE_NEW_LINES);
+    $controls_done = array_merge($controls_done, $extra_controls);
+    sort($controls_done);
+  }
   
   //echo "Controls done is: <p>";
   //print_r($controls_done);
@@ -193,7 +321,13 @@ function get_splits_as_array($competitor_id, $event, $key) {
     $prior_control_time = $time_at_control[$i];
     $i++;
   }
-  $finish_time = file_get_contents("{$controls_found_path}/finish");
+  if (file_exists("{$controls_found_path}/finish")) {
+    $finish_time = file_get_contents("{$controls_found_path}/finish");
+  }
+  else {
+    $finish_time = -1;
+  }
+
   $splits_array["finish"] = $finish_time;
   $splits_array["controls"] = $control_times_array;
   

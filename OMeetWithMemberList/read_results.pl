@@ -19,6 +19,8 @@ my($FINISH_COURSE) = "OMeet/finish_course.php";
 my($REGISTER_COURSE) = "OMeetRegistration/register.php";
 my($MANAGE_EVENTS) = "OMeetMgmt/manage_events.php";
 
+my($TWELVE_HOURS_IN_SECONDS) = (12 * 3600);
+
 
 sub read_ini_file {
   my(%ini_file_contents);
@@ -299,11 +301,22 @@ while (1) {
     my($start, $finish) = ($controls[0], $controls[1]);
     my($start_timestamp) = get_timestamp($start);
     my($finish_timestamp) = get_timestamp($finish);
+    # Some old si cards only store 12 hour time, which will wrap to 0 if the competitor
+    # starts before noon and finishes after noon.  Look for that and fix it.
+    my($old_si_stick_detected) = 0;
+    if (($finish_timestamp < $start_timestamp) && ($start_timestamp < $TWELVE_HOURS_IN_SECONDS)) {
+      $finish_timestamp += $TWELVE_HOURS_IN_SECONDS;
+      $old_si_stick_detected = 1;
+    }
+
     my($i);
     my(@qr_controls) = ();
     for ($i = 2; $i < @controls; $i += 2) {
       my($control, $or_time) = ($controls[$i], $controls[$i + 1]);
       my($control_timestamp) = get_timestamp($or_time);
+      if ($old_si_stick_detected && ($control_timestamp < $start_timestamp)) {
+        $control_timestamp += $TWELVE_HOURS_IN_SECONDS;
+      }
       push(@qr_controls, "${control}:${control_timestamp}");
     }
 
