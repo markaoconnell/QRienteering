@@ -172,13 +172,19 @@ function set_error_background() {
 
 
 function get_error_info_string() {
-  $extra_error_info = <<<END_OF_ERROR_INFO
+  $error_file = get_error_msg_file();
+  if (file_exists($error_file)) {
+    $extra_error_info = file_get_contents($error_file);
+  }
+  else {
+    $extra_error_info = <<<END_OF_ERROR_INFO
 <br><p>This is a BYOM (Bring Your Own Map) Orienteering control.  For more information on orienteering, 
 visit <a href="https://newenglandorienteering.org/">https://newenglandorienteering.org/</a>
 to learn about the sport and to find events in your area.
 If this is hanging in the woods, please leave it alone so as not to ruin an existing orienteering course that
 others may be currently enjoying.
 END_OF_ERROR_INFO;
+  }
   return ($extra_error_info);
 }
 
@@ -483,5 +489,9 @@ function get_nicknames_path($key, $path_to_top = "..") {
 
 function get_qr_code_html_footer_file($key) {
   return("../OMeetData/" . key_to_path($key) . "/qr_code_footer.html");
+}
+
+function get_error_msg_file() {
+  return("../site_error_msg.txt");
 }
 ?>
