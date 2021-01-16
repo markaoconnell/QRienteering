@@ -480,4 +480,8 @@ function get_members_path($key, $path_to_top = "..") {
 function get_nicknames_path($key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key) . "/nicknames.csv");
 }
+
+function get_qr_code_html_footer_file($key) {
+  return("../OMeetData/" . key_to_path($key) . "/qr_code_footer.html");
+}
 ?>

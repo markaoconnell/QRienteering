@@ -83,6 +83,8 @@ $add_event_string = "event={$event}";
 </form>
 
 <form action="./create_qr_codes.php" method=post enctype="multipart/form-data" >
+<input type=hidden name=key value="<?php echo $key; ?>">
+<input type=hidden name=event value="<?php echo $event; ?>">
 <p><p>
 <?php
 echo "<ul>\n";

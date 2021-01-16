@@ -6,22 +6,22 @@ ck_testing();
 
 
 
-//$key = $_POST["key"];
-//if (!key_is_valid($key)) {
-//  error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
-//}
-//
-//if (!is_dir(get_base_path($key, ".."))) {
-//  error_and_exit("No event directory found, please contact administrator to create \"{$base_path}\"");
-//}
-//
-//$event = $_POST["event"];
-//
-//$existing_event_path = get_event_path($event, $key, "..");
-//if (!is_dir($existing_event_path)) {
-//  error_and_exit("Event not found, is \"{$key}\" and \"{$event}\" a valid pair?\n");
-//}
-//
+$key = $_POST["key"];
+if (!key_is_valid($key)) {
+  error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
+}
+
+if (!is_dir(get_base_path($key, ".."))) {
+  error_and_exit("No event directory found, please contact administrator to create \"{$base_path}\"");
+}
+
+$event = $_POST["event"];
+
+$existing_event_path = get_event_path($event, $key, "..");
+if (!is_dir($existing_event_path)) {
+  error_and_exit("Event not found, is \"{$key}\" and \"{$event}\" a valid pair?\n");
+}
+
 //$existing_event_name = file_get_contents("{$existing_event_path}/description");
 
 $qr_code_files = array();
@@ -46,6 +46,13 @@ foreach (array_keys($_POST) as $posted_item) {
 if ($_POST["style"] == "html") {
   $html_page_break = "<p style=\"page-break-after: always;\">&nbsp;</p>\n" .
                      "<p style=\"page-break-before: always;\">&nbsp;</p>";
+
+  $qr_code_html_footer_file = get_qr_code_html_footer_file($key);
+  $qr_code_footer = "";
+  if (file_exists($qr_code_html_footer_file)) {
+    $qr_code_footer = file_get_contents($qr_code_html_footer_file);
+  }
+
   echo get_web_page_header(true, false, false);
   echo "<table>\n";
   foreach (array_keys($qr_code_files) as $qr_code_name) {
@@ -54,7 +61,12 @@ if ($_POST["style"] == "html") {
     unlink($temp_image_file);
     
     echo "<tr><td style=\"text-align:center\">\n<p style=\"font-size: 500%;\">$qr_code_name<br>\n<img src=\"data:image/png;base64,\n$base64_image_data\">\n";
-    echo "<p style=\"font-size: 100%;\"><br>Please do not remove this control.<br>Visit newenglandorienteering.org (or scan the QR code) for more information.\n";
+    if ($qr_code_footer != "") {
+      echo "<p style=\"font-size: 100%;\"><br>{$qr_code_footer}\n";
+    }
+    else {
+      echo "<p style=\"font-size: 100%;\"><br>Please do not remove this control, it is in use for an active orienteering event.\n";
+    }
     echo "{$html_page_break}\n</td></tr>\n";
   }
   echo "</table>\n";
