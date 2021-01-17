@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 import sys, getopt
+import os
+import subprocess
 import re
 
 #
@@ -69,7 +71,8 @@ def read_ini_file():
   with open("./read_results.ini", "r") as INI_FILE:
     for file_line in INI_FILE:
       file_line = file_line.strip()
-      #print("Found " + file_line + " in the ini file.")
+      if (debug):
+        print("Found " + file_line + " in the ini file.")
       file_line = re.sub(r'#.*$', "", file_line)
       if (file_line == ""):
         continue  # Ignore empty lines (just a comment perhaps?)
@@ -82,7 +85,8 @@ def read_ini_file():
         print("Extra elements on line " + file_line + ", ignoring the extras.")
 
       ini_file_contents[split_elements[0]] = split_elements[1]
-      #print ("The value of " + split_elements[0] + " is " + split_elements[1] + "")
+      if (verbose or debug):
+        print ("The value of " + split_elements[0] + " is " + split_elements[1] + "")
 
   return ini_file_contents
 
@@ -133,8 +137,87 @@ def read_ini_file():
 #
 #  return ("", "");
 #}
+
+def get_event(event_key):
+  #output = make_url_call(MANAGE_EVENTS, "key=" + event_key + "&recent_event_timeout=12h")
+  output = make_url_call(MANAGE_EVENTS, "key=" + event_key + "&recent_event_timeout=120d")
+  event_matches_list = re.findall(r"view_results.php\?.*</a>", output)
+
+  if (debug):
+    print "Found " + str(len(event_matches_list)) + " events from the website."
+
+  if (len(event_matches_list) == 0):
+    if (verbose or debug):
+      print "No currently open (actively ongoing) events found."
+    return("", "")
+  elif (len(event_matches_list) == 1):
+    match = re.search(r"(event-[0-9a-f]+).*>Results for (.*)<", event_matches_list[0])
+    if (match):
+      if (verbose or debug):
+        print "Found single matching event (" + m.group(1) + ") named " + m.group(2) + "."
+      return m.group(1,2)
+    else:
+      if (verbose or debug):
+        print "No currently open (actively ongoing) events found."
+
+      if (debug):
+        print "ERROR: Found single event match " + event_matches_list[0] + " but cannot determine event or readable name."
+
+      return ("","")
+  else:
+#    my(@event_ids) = map { /(event-[0-9a-f]*)/; $1 } @event_matches;
+#    my(@event_names) = map { />Results for (.*)</; $1 } @event_matches;
+#    print "Please choose the event:\n";
+#    my($i);
+#    for ($i = 0; $i < scalar(@event_names); $i++) {
+#      printf "%2d: %s %s\n", $i + 1, $event_names[$i], ($verbose ? "(" . $event_ids[$i] . ")" : "");
+#    }
 #
-#
+#    my($input);
+#    while (1) {
+#      print "\nYour choice: ";
+#      $input = <STDIN>;
+#      chomp($input);
+#      if (($input !~ /^[0-9]+$/) || ($input <= 0) || ($input > scalar(@event_names))) {
+#        print "Your choice \"$input\" is not valid, please try again.\n";
+#      }
+#      else {
+#        last;
+#      }
+#    }
+#    
+#    return ($event_ids[$input - 1], $event_names[$input - 1]);
+
+     event_ids = map(lambda event_possible_match: re.search(r"(event-[0-9a-f]+)", event_possible_match).group(1), event_matches_list)
+     event_names = map(lambda event_possible_match: re.search(r">Results for ([^<]*)<", event_possible_match).group(1), event_matches_list)
+
+     print event_ids
+     print event_names
+
+     print "Please choose the event: "
+     while 1:
+       for i in range(len(event_ids)):
+         print "{:2d}: {:s} {:s}".format(i + 1, event_names[i], ("(" + event_ids[i] + ")") if verbose else "")
+
+       user_input = raw_input("Your choice: ")
+       if (debug):
+         print "Read {} from keyboard, type is {}.".format(user_input, type(user_input))
+       user_input = user_input.strip()
+
+       try:
+         user_input_as_num = int(user_input)
+       except ValueError:
+         user_input_as_num = 0
+
+       if ((re.match("^[0-9]+$", user_input) == None) or (user_input_as_num == 0) or (user_input_as_num > len(event_ids))):
+         print "\n\nYour choice \"{}\" is not valid, please try again.".format(user_input)
+       else:
+         break
+
+     return(event_ids[user_input_as_num - 1], event_names[user_input_as_num - 1])
+
+  return ("","")
+
 ## Need to handle a reused stick - use stick-raw_start as the key???
 #sub read_results {
 #
@@ -205,7 +288,24 @@ def read_ini_file():
 #
 #  return ($output);
 #}
-#
+
+def make_url_call(php_script_to_call, params):
+  if (testing_run and os.path.isfile(php_script_to_call)):
+    pass
+  else:
+    cmd = "curl -s \"" + url + "/" + php_script_to_call + "?" + params + "\""
+
+  if (debug):
+    print "Running " + cmd
+
+  output = subprocess.check_output(cmd, shell=True)
+  if (debug):
+    print "Command output is: " + output
+
+  return output
+
+
+
 ##89898989;-:-:--:--:--;-:-:--:--:--;-:-:19:34:14;-:-:19:34:43;101;-:-:19:34:23;102;-:-:19:34:36;103;-:-:19:34:38;104;-:-:19:34:40;105;-:-:19:34:41;
 #
 #$| = 1; # try using unbuffered IO so that we can see the output
@@ -263,11 +363,20 @@ for opt, arg in opts:
   elif opt == "-r":
     replay_si_stick = 1
 
-#if ($event_key eq "") {
-#  print "Usage: $0 -e <eventName> -k <eventKey> [ -u <url> ]\n\t-k option required on command line or .ini file (key).\n";
-#  exit 1;
-#}
-#
+if (event_key == ""):
+  usage()
+  sys.exit(1)
+
+if (event == ""):
+  result_tuple = get_event(event_key)
+  event_name = result_tuple[1]
+  event = result_tuple[0]
+  print "Processing results for event " + event_name + " (" + event + ")."
+
+if ((event == "") or (event_key == "")):
+  usage()
+  sys.exit(1)
+  
 #if ($event eq "") {
 #  ($event, $event_name) = get_event($event_key);
 #  print "Processing results for event $event_name ($event).\n";
