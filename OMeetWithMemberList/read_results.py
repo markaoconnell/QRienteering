@@ -151,11 +151,11 @@ def get_event(event_key):
       print "No currently open (actively ongoing) events found."
     return("", "")
   elif (len(event_matches_list) == 1):
-    match = re.search(r"(event-[0-9a-f]+).*>Results for (.*)<", event_matches_list[0])
+    match = re.search(r"(event-[0-9a-f]+).*>Results for (.*?)<", event_matches_list[0])
     if (match):
       if (verbose or debug):
-        print "Found single matching event (" + m.group(1) + ") named " + m.group(2) + "."
-      return m.group(1,2)
+        print "Found single matching event (" + match.group(1) + ") named " + match.group(2) + "."
+      return match.group(1,2)
     else:
       if (verbose or debug):
         print "No currently open (actively ongoing) events found."
@@ -189,7 +189,7 @@ def get_event(event_key):
 #    return ($event_ids[$input - 1], $event_names[$input - 1]);
 
      event_ids = map(lambda event_possible_match: re.search(r"(event-[0-9a-f]+)", event_possible_match).group(1), event_matches_list)
-     event_names = map(lambda event_possible_match: re.search(r">Results for ([^<]*)<", event_possible_match).group(1), event_matches_list)
+     event_names = map(lambda event_possible_match: re.search(r">Results for (.*?)<", event_possible_match).group(1), event_matches_list)
 
      print event_ids
      print event_names
