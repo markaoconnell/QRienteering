@@ -197,57 +197,57 @@ if ($output !~ /Processing results for event UnitTesting/) {
 success();
 
 
-###########
-# Test 8 - Use a bad or_path
-# 
-%TEST_INFO = qw(Testname TestReadResultsBadOrPath);
-%INI_FILE = qw(key UnitTestPlayground testing_run 1 verbose 1 or_path ./no_such_dir_is_there extra_field_1 dummy1 extra_field_2 dummy2);
-
-$output = run_read_results("");
-
-if (($output =~ /event-deadbeef/) || ($output =~ /event-abcdef/)) {
-  error_and_exit("Did not expect to event list.\n$output");
-}
-
-if ($output =~ /Awaiting new results/) {
-  error_and_exit("Incorrectly saw message about awaiting results.\n$output");
-}
-
-if ($output !~ m#ERROR: No such directory "./no_such_dir_is_there"#) {
-  error_and_exit("Expected to see message that UnitTesting event was auto-chosen.\n$output");
-}
-
-success();
-
-
-###########
-# Test 9 - Create some fake OR results from prior events
-# 
-%TEST_INFO = qw(Testname TestReadResultsMultipleOREvents);
-%INI_FILE = qw(key UnitTestPlayground testing_run 1 verbose 1 or_path ./or_path_for_testing);
-
-mkdir("./or_path_for_testing/1");
-touch_file("./or_path_for_testing/1/results.csv");
-mkdir("./or_path_for_testing/2");
-touch_file("./or_path_for_testing/2/results.csv");
-mkdir("./or_path_for_testing/3");
-touch_file("./or_path_for_testing/3/results.csv");
-
-$output = run_read_results("");
-
-if (($output =~ /event-deadbeef/) || ($output =~ /event-abcdef/)) {
-  error_and_exit("Did not expect to event list.\n$output");
-}
-
-if ($output !~ /Awaiting new results/) {
-  error_and_exit("Did not see message about awaiting results.\n$output");
-}
-
-if ($output !~ /Using OR event 3/) {
-  error_and_exit("Did not see message that the 3rd OR event is being used.\n$output");
-}
-
-success();
+############
+## Test 8 - Use a bad or_path
+## 
+#%TEST_INFO = qw(Testname TestReadResultsBadOrPath);
+#%INI_FILE = qw(key UnitTestPlayground testing_run 1 verbose 1 or_path ./no_such_dir_is_there extra_field_1 dummy1 extra_field_2 dummy2);
+#
+#$output = run_read_results("");
+#
+#if (($output =~ /event-deadbeef/) || ($output =~ /event-abcdef/)) {
+#  error_and_exit("Did not expect to event list.\n$output");
+#}
+#
+#if ($output =~ /Awaiting new results/) {
+#  error_and_exit("Incorrectly saw message about awaiting results.\n$output");
+#}
+#
+#if ($output !~ m#ERROR: No such directory "./no_such_dir_is_there"#) {
+#  error_and_exit("Expected to see message that UnitTesting event was auto-chosen.\n$output");
+#}
+#
+#success();
+#
+#
+############
+## Test 9 - Create some fake OR results from prior events
+## 
+#%TEST_INFO = qw(Testname TestReadResultsMultipleOREvents);
+#%INI_FILE = qw(key UnitTestPlayground testing_run 1 verbose 1 or_path ./or_path_for_testing);
+#
+#mkdir("./or_path_for_testing/1");
+#touch_file("./or_path_for_testing/1/results.csv");
+#mkdir("./or_path_for_testing/2");
+#touch_file("./or_path_for_testing/2/results.csv");
+#mkdir("./or_path_for_testing/3");
+#touch_file("./or_path_for_testing/3/results.csv");
+#
+#$output = run_read_results("");
+#
+#if (($output =~ /event-deadbeef/) || ($output =~ /event-abcdef/)) {
+#  error_and_exit("Did not expect to event list.\n$output");
+#}
+#
+#if ($output !~ /Awaiting new results/) {
+#  error_and_exit("Did not see message about awaiting results.\n$output");
+#}
+#
+#if ($output !~ /Using OR event 3/) {
+#  error_and_exit("Did not see message that the 3rd OR event is being used.\n$output");
+#}
+#
+#success();
 
 
 
