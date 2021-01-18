@@ -32,6 +32,12 @@ MANAGE_EVENTS = "OMeetMgmt/manage_events.php"
 
 TWELVE_HOURS_IN_SECONDS = (12 * 3600)
 
+# Keys for the si_stick dict (should really convert this to a named tuple)
+SI_STICK_KEY = r"si_stick"
+SI_START_KEY = r"start_timestamp"
+SI_FINISH_KEY = r"finish_timestamp"
+SI_CONTROLS_KEY = r"qr_controls"
+
 def usage():
   print("Usage: " + sys.argv[0])
   print("Usage: " + sys.argv[0] + " [-e event] [-k key] [-u url_of_QR_web_site] [-dvrt]")
@@ -42,6 +48,18 @@ def usage():
   print("\t-v:\tVerbose - show extra information about the workings of the program (sometimes useful)")
   print("\t-r:\tReplay a si stick - useful for a competitor who misregistered")
   print("\t-t:\tTesting run - only use in test environments")
+
+
+############################################################
+def string_to_boolean(string_to_convert):
+  if (isinstance(string_to_convert, str)):
+    return  not ((string_to_convert == "0") or (string_to_convert.lower() == "false") or (string_to_convert.lower() == "no"))
+  elif (isinstance(string_to_convert, int)):
+    return string_to_convert != 0
+  elif (isinstance(string_to_convert, (list, tuple, dict))):
+    return len(string_to_convert) != 0
+  else:
+    return False
 
 
 ############################################################
@@ -129,35 +147,88 @@ def get_event(event_key):
 
   return ("","")
 
+
+###############################################################
+def upload_results(event_key, event, qr_result_string):
+  web_site_string = base64.standard_b64encode(qr_result_string)
+  web_site_string = re.sub("\n", "", web_site_string)
+  web_site_string = re.sub(r"=", "%3D", web_site_string)
+
+  output = make_url_call(FINISH_COURSE, "event={}&key={}&si_stick_finish={}".format(event, event_key, web_site_string))
+
+  results = []
+  match = re.search("(Cannot find.*)", output)
+  if (match != None):
+    results.append(match.group(1))
+
+  match = re.search("(Results for:.*)", output)
+  if (match != None):
+    results.append(match.group(1))
+
+  match = re.search("(Second scan.*)", output)
+  if (match != None):
+    results.append(match.group(1))
+
+  return results
+
+###############################################################
+def replay_stick_results(event_key, event, stick_to_replay):
+# logline format is:
+#   2108369;1200,start:1200,finish:1600,101,1210,102,1260,104,1350,106,1480,110,1568
+# So the si stick matches at the start of the line, adding the semicolon to eliminate partial matches
+  found_stick = False
+  stick_at_log_start = "{};".format(stick_to_replay)
+  with open("{}-results.log".format(event), "r") as LOGFILE:
+    for result_line in LOGFILE:
+      if debug:
+        print ("Checking {}.".format(result_line))
+
+      if (result_line.startswith(stick_at_log_start)):
+        if debug:
+          print("Found match with {}.".format(stick_at_log_start))
+
+        found_stick = True
+        web_results = upload_results(event_key, event, result_line.strip())  # Remove the trailing newline
+        print "\n".join(web_results)
+
+
+  if not found_stick:
+    print("ERROR: No results found for SI stick {}.".format(stick_to_replay));
+
+
+
+
+###############################################################
+
 fake_entries = []
-fake_entries.append({r"si_stick" : 2108369, r"start_timestamp" : 200, r"finish_timestamp" : 600, r"qr_controls" : ["101", "210", "102", "260", "104", "350", "106", "480", "110", "568"]})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : None})
-fake_entries.append({r"si_stick" : 2108369, r"start_timestamp" : 1200, r"finish_timestamp" : 1600, r"qr_controls" : ["101", "1210", "102", "1260", "104", "1350", "106", "1480", "110", "1568"]})
+fake_entries.append({SI_STICK_KEY : 2108369, SI_START_KEY : 200, SI_FINISH_KEY : 600, SI_CONTROLS_KEY : ["101", "210", "102", "260", "104", "350", "106", "480", "110", "568"]})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : 2108369, SI_START_KEY : 1200, SI_FINISH_KEY : 1600, SI_CONTROLS_KEY : ["101", "1210", "102", "1260", "104", "1350", "106", "1480", "110", "1568"]})
 def read_results():
   if len(fake_entries) > 0:
     return fake_entries.pop()
   else:
-    return {r"si_stick" : None}
+    return {SI_STICK_KEY : None}
 
 
 
@@ -205,6 +276,7 @@ def read_results():
 #  return($timestamp);
 #}
 
+##################################################################
 def make_url_call(php_script_to_call, params):
   if (testing_run and os.path.isfile("../" + php_script_to_call)):
     param_pair_list = re.split("&", params)
@@ -230,12 +302,10 @@ def make_url_call(php_script_to_call, params):
 
   return output
 
+######################################################
 
 
 ##89898989;-:-:--:--:--;-:-:--:--:--;-:-:19:34:14;-:-:19:34:43;101;-:-:19:34:23;102;-:-:19:34:36;103;-:-:19:34:38;104;-:-:19:34:40;105;-:-:19:34:41;
-#
-#$| = 1; # try using unbuffered IO so that we can see the output
-#my(%initializations) = read_ini_file();
 initializations = read_ini_file()
 
 event = ""
@@ -249,14 +319,14 @@ if ("key" in initializations):
 if ("url" in initializations):
   url = initializations["url"]
 
-if ("debug" in initializations):
-  debug = initializations["debug"]
+if ("debug" in initializations) and not debug:
+  debug = string_to_boolean(initializations["debug"])
 
-if ("verbose" in initializations):
-  verbose = initializations["verbose"]
+if ("verbose" in initializations) and not verbose:
+  verbose = string_to_boolean(initializations["verbose"])
 
 if ("testing_run" in initializations):
-  testing_run = initializations["testing_run"]
+  testing_run = string_to_boolean(initializations["testing_run"])
 
 if ("or_path" in initializations):
   or_path = initializations["or_path"]
@@ -293,6 +363,12 @@ for opt, arg in opts:
     usage()
     sys.exit(1)
 
+if debug:
+  print("Debug is enabled.")
+
+if verbose:
+  print("Verbose is enabled.")
+
 if (event_key == ""):
   usage()
   sys.exit(1)
@@ -313,21 +389,16 @@ if ((re.search("No such event found {}".format(event), output) != None) or (re.s
   print("Event {} not found, please check if event {} and key {} are valid.".format(event, event, event_key))
   sys.exit(1)
 
-#my($si_stick_to_replay);
-#my($si_stick_to_replay_found) = 0;
-#if ($replay_si_stick) {
-#  print "Replay which si stick?\n";
-#  $si_stick_to_replay = <STDIN>;
-#  chomp($si_stick_to_replay);
-#}
 
-si_stick_to_replay = ""
 if (replay_si_stick):
   si_stick_to_replay = raw_input("Enter the si stick to replay: ")
   si_stick_to_replay = si_stick_to_replay.strip()
   if (si_stick_to_replay == ""):
     print "ERROR: Must enter si stick when using the -r option, re-run program to try again."
     sys.exit(1)
+  else:
+    replay_stick_results(event_key, event, si_stick_to_replay)
+    sys.exit(0)
 
 
 loop_count = 0
@@ -338,84 +409,31 @@ while True:
     sys.stdout.write("Awaiting new results at: {:2d}:{:2d}:{:2d}\r".format(time_tuple.tm_hour, time_tuple.tm_min, time_tuple.tm_sec))
     sys.stdout.flush()
 
-  if si_stick_entry["si_stick"] != None:
+  if si_stick_entry[SI_STICK_KEY] != None:
     if verbose:
-      print("\nFound new key: {}".format(si_stick_entry["si_stick"]))
+      print("\nFound new key: {}".format(si_stick_entry[SI_STICK_KEY]))
     else:
       print()
 
-    upload_entry_list = [ "{:d};{:d}".format(si_stick_entry["si_stick"], si_stick_entry["start_timestamp"]) ]
-    upload_entry_list.append("start:{:d}".format(si_stick_entry["start_timestamp"]))
-    upload_entry_list.append("finish:{:d}".format(si_stick_entry["finish_timestamp"]))
-    upload_entry_list.extend(si_stick_entry["qr_controls"])
+    upload_entry_list = [ "{:d};{:d}".format(si_stick_entry[SI_STICK_KEY], si_stick_entry[SI_START_KEY]) ]
+    upload_entry_list.append("start:{:d}".format(si_stick_entry[SI_START_KEY]))
+    upload_entry_list.append("finish:{:d}".format(si_stick_entry[SI_FINISH_KEY]))
+    upload_entry_list.extend(si_stick_entry[SI_CONTROLS_KEY])
     qr_result_string = ",".join(upload_entry_list)
     if verbose:
-      print "Got results {} for si_stick {}.".format(qr_result_string, si_stick_entry["si_stick"])
+      print "Got results {} for si_stick {}.".format(qr_result_string, si_stick_entry[SI_STICK_KEY])
 
     with open("{}-results.log".format(event), "a") as LOGFILE:
       LOGFILE.write(qr_result_string + "\n")
 
-    web_site_string = base64.standard_b64encode(qr_result_string)
-    web_site_string = re.sub("\n", "", web_site_string)
-    web_site_string = re.sub(r"=", "%3D", web_site_string)
-
-    output = make_url_call(FINISH_COURSE, "event={}&key={}&si_stick_finish={}".format(event, event_key, web_site_string))
-
-    match = re.search("(Cannot find.*)", output)
-    if (match != None):
-      print match.group(1)
-
-    match = re.search("(Results for:.*)", output)
-    if (match != None):
-      print match.group(1)
-
-    match = re.search("(Second scan.*)", output)
-    if (match != None):
-      print match.group(1)
-
+    results = upload_results(event_key, event, qr_result_string)
+    print "\n".join(results)
 
   if testing_run:
     break   # While testing, no need to wait for more results
 
   time.sleep(3)
   loop_count += 1
-
-#    print "Got results for ${key}: ${qr_result_string}\n" if ($verbose);
-#    # Base64 encode for upload to the website
-#    #print "$qr_result_string\n";
-#    my($web_site_string) = encode_base64($qr_result_string);
-#    $web_site_string =~ s/\n//g;
-#    $web_site_string =~ s/=/%3D/g;
-#    my($si_stick, $start_time) = split(";", $key);
-#    if (!$replay_si_stick || ($si_stick eq $si_stick_to_replay)) {
-#      $output = make_url_call($FINISH_COURSE, "event=$event&key=$event_key&si_stick_finish=$web_site_string");
-#  
-#      print "\nResults for si_stick ${si_stick}:\n";
-#      if ($output =~ /(Cannot find.*)/) {
-#        print "$1\n";
-#      }
-#    
-#      if ($output =~ /(Results for:.*)<p>/) {
-#        print "$1\n";
-#      }
-#  
-#      if ($output =~ /(Second scan.*)/) {
-#        print "$1\n";
-#      }
-#  
-#      $results_by_stick{$key} = $new_results_by_stick{$key};
-#
-#      $si_stick_to_replay_found = 1 if ($replay_si_stick);
-#    }
-#  }
-#
-#  %new_results_by_stick = ();
-#
-#  last if ($testing_run || $replay_si_stick);  # For testing, no need to wait for more results
-#
-#  sleep(3);
-#  $loop_count++;
-#}
 
 
 
