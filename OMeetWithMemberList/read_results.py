@@ -22,11 +22,6 @@ debug = 0
 testing_run = 0
 url = "http://www.mkoconnell.com/OMeet/not_there"
 
-#my($VIEW_RESULTS) = "OMeet/view_results.php";
-#my($FINISH_COURSE) = "OMeet/finish_course.php";
-#my($REGISTER_COURSE) = "OMeetRegistration/register.php";
-#my($MANAGE_EVENTS) = "OMeetMgmt/manage_events.php";
-
 # URLs for the web site
 VIEW_RESULTS = "OMeet/view_results.php"
 FINISH_COURSE = "OMeet/finish_course.php"
@@ -36,35 +31,18 @@ MANAGE_EVENTS = "OMeetMgmt/manage_events.php"
 TWELVE_HOURS_IN_SECONDS = (12 * 3600)
 
 def usage():
-  print "Usage: " + sys.argv[0]
-  print "Usage: " + sys.argv[0] + " [-e event] [-k key] [-u url_of_QR_web_site] [-dvrt]"
-  print "\t-e:\tEvent identifier"
-  print "\t-k:\tKey for the series (from the administrator)"
-  print "\t-u:\tURL for the web site where the results are posted"
-  print "\t-d:\tDebug - show extra debugging information (not normally useful)"
-  print "\t-v:\tVerbose - show extra information about the workings of the program (sometimes useful)"
-  print "\t-r:\tReplay a si stick - useful for a competitor who misregistered"
-  print "\t-t:\tTesting run - only use in test environments"
+  print("Usage: " + sys.argv[0])
+  print("Usage: " + sys.argv[0] + " [-e event] [-k key] [-u url_of_QR_web_site] [-dvrt]")
+  print("\t-e:\tEvent identifier")
+  print("\t-k:\tKey for the series (from the administrator)")
+  print("\t-u:\tURL for the web site where the results are posted")
+  print("\t-d:\tDebug - show extra debugging information (not normally useful)")
+  print("\t-v:\tVerbose - show extra information about the workings of the program (sometimes useful)")
+  print("\t-r:\tReplay a si stick - useful for a competitor who misregistered")
+  print("\t-t:\tTesting run - only use in test environments")
 
 
-#sub read_ini_file {
-#  my(%ini_file_contents);
-#
-#  open(INI_FILE, "<./read_results.ini");
-#  while (<INI_FILE>) {
-#    chomp;
-#    s/^[ \t]*//;  # Remove leading whitespace
-#    s/#.*//;   # Remove comments
-#    next if (/^$/);  # Skip blank lines (skip if was just a comment)
-#    my($key, $value) = split("[ \t=]+");
-#    $ini_file_contents{$key} = $value; 
-#    #print "Initialization: $key => $value.\n";
-#  }
-#
-#  close(INI_FILE);
-#  return(%ini_file_contents);
-#}
-
+############################################################
 def read_ini_file():
   ini_file_contents = {}
 
@@ -91,117 +69,48 @@ def read_ini_file():
   return ini_file_contents
 
 
-#sub get_event {
-#  my($event_key) = @_;
-#
-#  # Check to see if this is a testing run
-#
-#  my($output);
-#  $output = make_url_call($MANAGE_EVENTS, "key=$event_key&recent_event_timeout=12h");
-#
-#  my(@event_matches) = ($output =~ m#(view_results.php?.*?>.*?<)/a>#g);
-#
-#  if (scalar(@event_matches) == 0) {
-#    print "Found zero matching events.\n" if ($verbose);
-#    return("", "");
-#  }
-#  elsif (scalar(@event_matches) == 1) {
-#    $event_matches[0] =~ /(event-[0-9a-f]*).*>Results for (.*)</;
-#    print "Found single matching event ($1) named $2.\n" if ($verbose);
-#    return($1, $2);
-#  }
-#  else {
-#    my(@event_ids) = map { /(event-[0-9a-f]*)/; $1 } @event_matches;
-#    my(@event_names) = map { />Results for (.*)</; $1 } @event_matches;
-#    print "Please choose the event:\n";
-#    my($i);
-#    for ($i = 0; $i < scalar(@event_names); $i++) {
-#      printf "%2d: %s %s\n", $i + 1, $event_names[$i], ($verbose ? "(" . $event_ids[$i] . ")" : "");
-#    }
-#
-#    my($input);
-#    while (1) {
-#      print "\nYour choice: ";
-#      $input = <STDIN>;
-#      chomp($input);
-#      if (($input !~ /^[0-9]+$/) || ($input <= 0) || ($input > scalar(@event_names))) {
-#        print "Your choice \"$input\" is not valid, please try again.\n";
-#      }
-#      else {
-#        last;
-#      }
-#    }
-#    
-#    return ($event_ids[$input - 1], $event_names[$input - 1]);
-#  }
-#
-#  return ("", "");
-#}
-
+############################################################################
 def get_event(event_key):
   #output = make_url_call(MANAGE_EVENTS, "key=" + event_key + "&recent_event_timeout=12h")
   output = make_url_call(MANAGE_EVENTS, "key=" + event_key + "&recent_event_timeout=120d")
   event_matches_list = re.findall(r"view_results.php\?.*</a>", output)
 
   if (debug):
-    print "Found " + str(len(event_matches_list)) + " events from the website."
+    print("Found " + str(len(event_matches_list)) + " events from the website.")
 
   if (len(event_matches_list) == 0):
     if (verbose or debug):
-      print "No currently open (actively ongoing) events found."
+      print("No currently open (actively ongoing) events found.")
     return("", "")
   elif (len(event_matches_list) == 1):
     match = re.search(r"(event-[0-9a-f]+).*>Results for (.*?)<", event_matches_list[0])
     if (match):
       if (verbose or debug):
-        print "Found single matching event (" + match.group(1) + ") named " + match.group(2) + "."
+        print("Found single matching event (" + match.group(1) + ") named " + match.group(2) + ".")
       return match.group(1,2)
     else:
       if (verbose or debug):
-        print "No currently open (actively ongoing) events found."
+        print("No currently open (actively ongoing) events found.")
 
       if (debug):
-        print "ERROR: Found single event match " + event_matches_list[0] + " but cannot determine event or readable name."
+        print("ERROR: Found single event match " + event_matches_list[0] + " but cannot determine event or readable name.")
 
       return ("","")
   else:
-#    my(@event_ids) = map { /(event-[0-9a-f]*)/; $1 } @event_matches;
-#    my(@event_names) = map { />Results for (.*)</; $1 } @event_matches;
-#    print "Please choose the event:\n";
-#    my($i);
-#    for ($i = 0; $i < scalar(@event_names); $i++) {
-#      printf "%2d: %s %s\n", $i + 1, $event_names[$i], ($verbose ? "(" . $event_ids[$i] . ")" : "");
-#    }
-#
-#    my($input);
-#    while (1) {
-#      print "\nYour choice: ";
-#      $input = <STDIN>;
-#      chomp($input);
-#      if (($input !~ /^[0-9]+$/) || ($input <= 0) || ($input > scalar(@event_names))) {
-#        print "Your choice \"$input\" is not valid, please try again.\n";
-#      }
-#      else {
-#        last;
-#      }
-#    }
-#    
-#    return ($event_ids[$input - 1], $event_names[$input - 1]);
-
      event_ids = map(lambda event_possible_match: re.search(r"(event-[0-9a-f]+)", event_possible_match).group(1), event_matches_list)
      event_names = map(lambda event_possible_match: re.search(r">Results for (.*?)<", event_possible_match).group(1), event_matches_list)
 
-     print event_ids
-     print event_names
+     print(event_ids)
+     print(event_names)
 
-     print "Please choose the event: "
+     print("Please choose the event: ")
      while 1:
        for i in range(len(event_ids)):
-         print "{:2d}: {:s} {:s}".format(i + 1, event_names[i], ("(" + event_ids[i] + ")") if verbose else "")
+         print("{:2d}: {:s} {:s}".format(i + 1, event_names[i], ("(" + event_ids[i] + ")") if verbose else ""))
 
        user_input = raw_input("Your choice: ")
        if (debug):
-         print "Read {} from keyboard, type is {}.".format(user_input, type(user_input))
+         print("Read {} from keyboard, type is {}.".format(user_input, type(user_input)))
        user_input = user_input.strip()
 
        try:
@@ -210,7 +119,7 @@ def get_event(event_key):
          user_input_as_num = 0
 
        if ((re.match("^[0-9]+$", user_input) == None) or (user_input_as_num == 0) or (user_input_as_num > len(event_ids))):
-         print "\n\nYour choice \"{}\" is not valid, please try again.".format(user_input)
+         print("\n\nYour choice \"{}\" is not valid, please try again.".format(user_input))
        else:
          break
 
@@ -290,17 +199,27 @@ def get_event(event_key):
 #}
 
 def make_url_call(php_script_to_call, params):
-  if (testing_run and os.path.isfile(php_script_to_call)):
-    pass
+  if (testing_run and os.path.isfile("../" + php_script_to_call)):
+    param_pair_list = re.split("&", params)
+    param_kv_list = map(lambda param_pair: re.split("=", param_pair), param_pair_list)
+    artificial_get_line_list = map(lambda param_kv: "GET {} {}".format(param_kv[0], param_kv[1]), param_kv_list)
+    artificial_get_file_content = "\n".join(artificial_get_line_list)
+    with open("./artificial_input", "w") as output_file:
+      output_file.write(artificial_get_file_content)
+    cmd = "php ../{}".format(php_script_to_call)
   else:
-    cmd = "curl -s \"" + url + "/" + php_script_to_call + "?" + params + "\""
+    cmd = "curl -s \"{}/{}?{}\"".format(url, php_script_to_call, params)
 
   if (debug):
-    print "Running " + cmd
+    print("Running " + cmd)
 
-  output = subprocess.check_output(cmd, shell=True)
+  try:
+    output = subprocess.check_output(cmd, shell=True)
+  except subprocess.CalledProcessError as cpe:
+    output = cpe.output
+
   if (debug):
-    print "Command output is: " + output
+    print("Command output is: " + output)
 
   return output
 
@@ -333,14 +252,14 @@ if ("testing_run" in initializations):
   testing_run = initializations["testing_run"]
 
 if ("or_path" in initializations):
-  or_path = initialization["or_path"]
+  or_path = initializations["or_path"]
 
 replay_si_stick = 0
 
 try:
   opts, args = getopt.getopt(sys.argv[1:], "e:k:u:dvtrh")
 except getopt.GetoptError:
-  print "Parse error on command line."
+  print("Parse error on command line.")
   usage()
   sys.exit(2)
 #print "Found program arguments: ", opts
@@ -371,32 +290,19 @@ if (event == ""):
   result_tuple = get_event(event_key)
   event_name = result_tuple[1]
   event = result_tuple[0]
-  print "Processing results for event " + event_name + " (" + event + ")."
+  print("Processing results for event " + event_name + " (" + event + ").")
 
 if ((event == "") or (event_key == "")):
   usage()
   sys.exit(1)
   
-#if ($event eq "") {
-#  ($event, $event_name) = get_event($event_key);
-#  print "Processing results for event $event_name ($event).\n";
-#}
-#
-#if (($event eq "")  || ($event_key eq "")) {
-#  print "Usage: $0 -e <eventName> -k <eventKey> [ -u <url> ]\n\t-e option required.\n";
-#  exit 1;
-#}
-#
 ## Ensure that the event specified is valid
-#my($output);
-#$output = make_url_call($VIEW_RESULTS, "event=$event&key=$event_key");
-#if (($output =~ /No such event found $event/) || ($output !~ /Show results for/)) {
-#  print "Event $event not found, please check if event $event and key $event_key are valid.\n";
-#  exit 1;
-#}
-##print $output;
-#
-#
+output = make_url_call(VIEW_RESULTS, "event={}&key={}".format(event, event_key));
+if ((re.search("No such event found {}".format(event), output) == None) or (re.search(r"Show results for", output) == None)):
+  print("Event {} not found, please check if event {} and key {} are valid.".format(event, event, event_key))
+  sys.exit(1)
+
+
 ## Find the OR event to manage - it should be the last event
 ## The or_path variable should point to a valid directory
 #if (! -d $or_path) {
