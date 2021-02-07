@@ -37,6 +37,6 @@ print("The end time is {:d}.".format(card_data['finish']))
 print("The check time is {:d} - why do I want this?".format(card_data['check']))
 print("The punch list is {}.".format(card_data['punches']))  # list of (station,time) tuples
 
-string_of_punches = ";".join(map(lambda punch: ",".join(str(punch[0]), str(punch[1])), card_data['punches']))
+string_of_punches = ";".join(map(lambda punch: ",".join(punch), card_data['punches']))
 print("The reformatted punch list is {}.".format(string_of_punches))
 
