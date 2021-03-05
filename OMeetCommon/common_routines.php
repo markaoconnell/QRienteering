@@ -263,11 +263,11 @@ function show_results($event, $key, $course, $show_points, $max_points, $path_to
     }
 
     if (!file_exists("./${competitor_path}/dnf")) {
-      $result_string .= "<tr><td>{$finish_place}</td><td><a href=\"./show_splits?course=${course}&event=${event}&key={$key}&entry=${this_result}\">${competitor_name}</a></td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
+      $result_string .= "<tr><td>{$finish_place}</td><td><a href=\"./show_splits.php?course=${course}&event=${event}&key={$key}&entry=${this_result}\">${competitor_name}</a></td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
     }
     else {
       // For a scoreO course, there are no DNFs, so $points_value should always be "", but show it just in case
-      $dnfs .= "<tr><td>{$finish_place}</td><td><a href=\"./show_splits?course=${course}&event=${event}&key={$key}&entry=${this_result}\">${competitor_name}</a></td><td>DNF</td>{$points_value}</tr>\n";
+      $dnfs .= "<tr><td>{$finish_place}</td><td><a href=\"./show_splits.php?course=${course}&event=${event}&key={$key}&entry=${this_result}\">${competitor_name}</a></td><td>DNF</td>{$points_value}</tr>\n";
     }
   }
   $result_string .= "${dnfs}</table>\n<p><p><p>";
