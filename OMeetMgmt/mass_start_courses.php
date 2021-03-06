@@ -16,6 +16,8 @@ if (!key_is_valid($key)) {
   error_and_exit("Unknown management key \"$key\", are you using an authorized link?\n");
 }
 
+set_timezone($key);
+
 $courses_to_start = explode(",", $_GET["courses_to_start"]);
 //echo "event is \"${event}\"<p>";
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";

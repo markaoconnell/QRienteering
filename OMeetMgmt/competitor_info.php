@@ -64,6 +64,8 @@ if (!file_exists(get_event_path($event, $key, ".."))) {
   error_and_exit("No such event \"{$event}\", is this an authorized link?\n");
 }
 
+set_timezone($key);
+
 $results_string = "";
 $competitor_directory = get_competitor_directory($event, $key, "..");
 $competitor_list = scandir("${competitor_directory}");

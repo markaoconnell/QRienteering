@@ -25,6 +25,8 @@ if (($event == "") || (!key_is_valid($key))) {
   error_and_exit("Empty event \"{$event}\" or bad location key \"{$key}\", is this an unauthorized link?\n");
 }
 
+set_timezone($key);
+
 $results_string = "";
 $competitor_directory = get_competitor_directory($event, $key, "..");
 $competitor_list = scandir("${competitor_directory}");

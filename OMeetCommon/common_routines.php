@@ -494,4 +494,23 @@ function get_qr_code_html_footer_file($key) {
 function get_error_msg_file() {
   return("../site_error_msg.txt");
 }
+
+function set_timezone($key) {
+  $timezone = "America/New_York";   // Something has to be a default
+  $default_timezone = "America/New_York";   // Something has to be a default
+
+  if (file_exists("../OMeetData/" . key_to_path($key) . "/timezone.txt")) {
+    $timezone = file_get_contents("../OMeetData/" . key_to_path($key) . "/timezone.txt");
+  } 
+  else if (file_exists("../timezone.txt")) {
+    $timezone = file_get_contents("../timezone.txt");
+  }
+
+  if (!date_default_timezone_set($timezone)) {
+    date_default_timezone_set($default_timezone);
+  }
+
+  return;
+}
+
 ?>

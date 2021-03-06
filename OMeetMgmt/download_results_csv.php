@@ -20,6 +20,8 @@ if (!file_exists($courses_path)) {
   error_and_exit("<p>ERROR: No such event found {$event} (or bad location key {$key}).\n");
 }
 
+set_timezone($key);
+
 // Do the header line
 // Oddity #1: WinSplits doesn't seem happy if this line is not there, I don't know why
 $output = "Stno;SI card;Database Id;Surname;First name;YB;S;Block;nc;Start;Finish;Time;Classifier;Club no.;Cl.name;City;Nat;Cl. no.;Short;Long;Num1;Num2;Num3;Text1;Text2;Text3;Adr. name;Street;Line2;Zip;City;Phone;Fax;EMail;Id/Club;Rented;Start fee;Paid;Course no.;Course;km;m;Course controls;Pl;Start punch;Finish punch;Control1;Punch1;Control2;Punch2;Control3;Punch3;Control4;Punch4;Control5;Punch5;Control6;Punch6;Control7;Punch7;Control8;Punch8;Control9;Punch9;Control10;Punch10;(may be more) ...\n";

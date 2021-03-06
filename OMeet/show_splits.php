@@ -16,6 +16,8 @@ if (($event == "") || (!key_is_valid($key))) {
   error_and_exit("Empty event \"{$event}\" or bad location key \"{$key}\", is this an unauthorized link?\n");
 }
 
+set_timezone($key);
+
 $result_pieces = explode(",", $time_and_competitor);
 $competitor_id = $result_pieces[2];
 

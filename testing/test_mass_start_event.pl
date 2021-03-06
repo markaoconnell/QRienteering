@@ -51,6 +51,7 @@ create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
 my($event_id) = $TEST_INFO{"event_id"};
 set_no_redirects_for_event($event_id, "UnitTestPlayground");
 set_email_properties("UnitTestPlayground");
+set_default_timezone("UnitTestPlayground", "UTC");
 
 
 

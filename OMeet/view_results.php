@@ -21,6 +21,8 @@ if (!file_exists($courses_path)) {
   error_and_exit("<p>ERROR: No such event found {$event} (or bad location key {$key}).\n");
 }
 
+set_timezone($key);
+
 $results_string = "";
 if ($download_csv) {
   $results_string = "<pre>\n";

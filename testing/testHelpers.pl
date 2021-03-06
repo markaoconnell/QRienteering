@@ -104,6 +104,15 @@ sub remove_email_properties {
   unlink($email_props_path);
 }
 
+sub set_default_timezone {
+  my($key, $default_timezone) = @_;
+  my($timezone_file) = get_base_path($key) . "/timezone.txt";
+  # print "Creating file ${timezone_file} with contents ${default_timezone}.\n";
+  open(TIMEZONE_FILE, ">$timezone_file");
+  print TIMEZONE_FILE "$default_timezone";
+  close (TIMEZONE_FILE);
+}
+
 sub set_club_name {
   my($key, $club_name) = @_;
   my($club_name_file) = get_base_path($key) . "/club_name";

@@ -75,6 +75,8 @@ if (!key_is_valid($key)) {
   error_and_exit("Bad location key \"{$key}\", is this an unauthorized link?\n");
 }
 
+set_timezone($key);
+
 
 $competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
 $controls_found_path = "{$competitor_path}/controls_found";
