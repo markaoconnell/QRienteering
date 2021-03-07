@@ -28,7 +28,7 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
   $competitor_string .= "<td><a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}\">show</a> / ";
   $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}&allow_editing=1\">edit</a></td>";
   if (count($registration_info) > 0) {
-    $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = {$registration_info[$key]}"); },
+    $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = " . htmlentities($registration_info[$key])); },
                                                                                                                 array_diff(array_keys($registration_info),
                                                                                                                            array("first_name", "last_name")));
     $competitor_string .= "<td>" . implode(", ", $registration_info_strings)  . "</td>";

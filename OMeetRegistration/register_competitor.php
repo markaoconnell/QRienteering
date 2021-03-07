@@ -5,7 +5,9 @@ ck_testing();
 
 // Get the submitted info
 // echo "<p>\n";
-$competitor_name = $_GET["competitor_name"];
+
+// Make sure any funky HTML sequeneces in the name are escaped
+$competitor_name = htmlentities($_GET["competitor_name"]);
 $course = $_GET["course"];
 
 if (isset($_GET["registration_info"])) {

@@ -232,7 +232,8 @@ if (file_exists("{$competitor_path}/registration_info")) {
   $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]) && !$suppress_email;
   if (($registration_info["email_address"] != "") && $email_enabled) {
     // See if this looks like a valid email
-    $email_addr = $registration_info["email_address"];
+    // Make sure to escape anything that could be a funky html character
+    $email_addr = htmlentities($registration_info["email_address"]);
     if (preg_match("/^[a-zA-z0-9_.\-]+@[a-zA-Z0-9_.\-]+/", $email_addr)) {
       $headers = array();
       $headers[] = "From: " . $email_properties["from"];
