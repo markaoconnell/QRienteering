@@ -44,9 +44,11 @@ The format of the keys file is:
 
 e.g.
 
-> NEOC_Testing,NEOC_Test_area,123456
-> NEOC_Spring2021,NEOC_BYOM_Spring2021_Meets,unused
-> ScoutOrienteeringMeritBadge,MeritBadge_courses,unused
+```
+NEOC_Testing,NEOC_Test_area,123456
+NEOC_Spring2021,NEOC_BYOM_Spring2021_Meets,unused
+ScoutOrienteeringMeritBadge,MeritBadge_courses,unused
+```
 
 This file must be present with at least one line to use the software.  The key must be used on the manage_events.php, e.g.
 
@@ -82,14 +84,16 @@ When running a meet with a pre-defined list of club members, this is the club na
 
 ##### email_properties.txt
 This file contains information used to send splits by email (if desired).  If not present, then no emails will be sent.  Format is:
-> \# Email properties file
-> \# Format is property : value
-> \# Lines beginning with # are ignored
-> \# valid properties are from, reply-to (both required), subject (optional), include-splits (optional)
-> from : markandkaren@mkoconnell.com
-> reply-to : mark@mkoconnell.com
-> subject : NEOC Orienteering Meet Results
-> include-splits : 1
+```
+\# Email properties file
+\# Format is property : value
+\# Lines beginning with # are ignored
+\# valid properties are from, reply-to (both required), subject (optional), include-splits (optional)
+from : markandkaren@mkoconnell.com
+reply-to : mark@mkoconnell.com
+subject : NEOC Orienteering Meet Results
+include-splits : 1
+```
 
 ##### email_extra_info.txt
 This file contains additional HTML which will be appended at the end of the email, normally to indicate the club's web site or upcoming event schedule.
