@@ -10,6 +10,7 @@ Normally these should be put directory specific to this software, e.g. QR_code_o
 - OMeetMgmt
 - OMeetRegistration
 - OMeetWithMemberList
+
 In addition, you should create an empty directory **OMeetData** in this same directory.
 OMeetData will hold all the information about the various orienteering courses, the results, etc.  This directory must be accessible / writeable by the software,
 but does not need to be otherwise accessible to users of the web site.
@@ -37,15 +38,22 @@ Top level (peer of OMeet, OMeetMgmt, and other directories)
 The keys file is what controls the multi-tenant nature of this software.  Each specific key should be associated with a distinct "user" of the software, such that each such "user"
 has a directory in OMeetData where events and results specific to that user of the software - thus each "user" operates completely distinctly and independently from any other "user".
 "User" could be an individual, a club (e.g. NEOC, BOK, CSU, etc), a series run by a club (e.g. CSU_Park_Series or NEOC_Winter_Trainings), a testing area (e.g. NEOC_Test), or whatever.
+
 The format of the keys file is:
-> <key>,<directory in OMeetData>,<password (currently unused)
+> externally visible key,directory in OMeetData,password (currently unused)
+
 e.g.
+
 > NEOC_Testing,NEOC_Test_area,123456
 > NEOC_Spring2021,NEOC_BYOM_Spring2021_Meets,unused
 > ScoutOrienteeringMeritBadge,MeritBadge_courses,unused
+
 This file must be present with at least one line to use the software.  The key must be used on the manage_events.php, e.g.
-> <site>/<install_directory>/OMeetMgmt/manage_events.php?key=NEOC_Testing
+
+> `site`/`install_directory`/OMeetMgmt/manage_events.php?key=NEOC_Testing
+
 So if the software is installed on www.myorienteeringsite.com under OrienteeringEvents, the link would be:
+
 > http://www.myorienteeringsite.com/OrienteeringEvents/OMeetMgmt/manage_events.php?key=NEOC_Testing
 
 ##### site_error_msg.txt
@@ -74,10 +82,10 @@ When running a meet with a pre-defined list of club members, this is the club na
 
 ##### email_properties.txt
 This file contains information used to send splits by email (if desired).  If not present, then no emails will be sent.  Format is:
-> # Email properties file
-> # Format is property : value
-> # Lines beginning with # are ignored
-> # valid properties are from, reply-to (both required), subject (optional), include-splits (optional)
+> \# Email properties file
+> \# Format is property : value
+> \# Lines beginning with # are ignored
+> \# valid properties are from, reply-to (both required), subject (optional), include-splits (optional)
 > from : markandkaren@mkoconnell.com
 > reply-to : mark@mkoconnell.com
 > subject : NEOC Orienteering Meet Results
