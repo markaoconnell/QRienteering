@@ -85,13 +85,13 @@ When running a meet with a pre-defined list of club members, this is the club na
 ##### email_properties.txt
 This file contains information used to send splits by email (if desired).  If not present, then no emails will be sent.  Format is:
 ```
-\# Email properties file
-\# Format is property : value
-\# Lines beginning with # are ignored
-\# valid properties are from, reply-to (both required), subject (optional), include-splits (optional)
-from : markandkaren@mkoconnell.com
-reply-to : mark@mkoconnell.com
-subject : NEOC Orienteering Meet Results
+# Email properties file
+# Format is property : value
+# Lines beginning with # are ignored
+# valid properties are from, reply-to (both required), subject (optional), include-splits (optional)
+from : myemailaddress@myserver.com
+reply-to : myreplyaddress@myserver.com
+subject : Orienteering Meet Results
 include-splits : 1
 ```
 
