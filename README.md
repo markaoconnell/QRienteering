@@ -4,17 +4,17 @@ This is a set of software to create, run, and manage orienteering events where e
 the participant as "proof" that the control was visited.
 
 ### Why is this worthwhile?
- - This allows meets to be set up and run with minimal cost - all that is needed is to print the QR codes and hang them (in the woods, in a park, on streets, etc)
- - Full electronic timing is provided - splits are immediately available when the participant finishes, absolute time at each control is available
+- This allows meets to be set up and run with minimal cost - all that is needed is to print the QR codes and hang them (in the woods, in a park, on streets, etc)
+- Full electronic timing is provided - splits are immediately available when the participant finishes, absolute time at each control is available
   - No need to purchase any expensive equipment in order to put on a simple meet
- - Support for ScoreO format is available as well as normal (linear) courses
- - Integration with SI unit timing is available, but takes a little more setup
- - For clubs with defined members, there is an option for an optimized registration process which can recognize club members (see the `members.csv` file later)
+- Support for ScoreO format is available as well as normal (linear) courses
+- Integration with SI unit timing is available, but takes a little more setup
+- For clubs with defined members, there is an option for an optimized registration process which can recognize club members (see the `members.csv` file later)
 
 ### What are the disadvantages?
- - Participants are required to have a smartphone which can scan QR codes, the smartphone must be able to access the web site, and there must be data connectivity at start, finish,
+- Participants are required to have a smartphone which can scan QR codes, the smartphone must be able to access the web site, and there must be data connectivity at start, finish,
 and at all controls
- - The smartphone must accept cookies
+- The smartphone must accept cookies
 
 ### How do I use this?
 The normal way to start is via the manage_events.php page, for which you should get a link from whoever has installed this software.  This is the one page from which most everything will be run.
@@ -28,23 +28,23 @@ e.g.:
 
 The manage_events.php will show a menu like this:
 1. Create a new event
-  1. Add new course to Auburndale Newton March 28, 2021 (create a copy of this event)
+    1. Add new course to Auburndale Newton March 28, 2021 (create a copy of this event)
 1. Get a registration link:
-  1. Auburndale Newton March 28, 2021
-    1. BYOM Registration
-    1. Member meet Registration
-    1. Non-member meet Registration
+    1. Auburndale Newton March 28, 2021
+        1. BYOM Registration
+        1. Member meet Registration
+        1. Non-member meet Registration
 1. Get QR codes
-  1. Get QR codes for Auburndale Newton March 28, 2021
+    1. Get QR codes for Auburndale Newton March 28, 2021
 1. Mass start an event
 1. View recent results:
-  1. Current events
-    1. Results for Auburndale Newton March 28, 2021
-      1. still on course
-      1. Meet Director view of competitors
-  1. Recently closed events
+    1. Current events
+        1. Results for Auburndale Newton March 28, 2021
+            1. still on course
+            1. Meet Director view of competitors
+    1. Recently closed events
 1. Winsplit files
-  1. Download winsplits csv for Auburndale Newton March 28, 2021
+    1. Download winsplits csv for Auburndale Newton March 28, 2021
 1. Finish an event
 
 #### Normal event flow
@@ -56,7 +56,7 @@ The manage_events.php will show a menu like this:
 1. Use the `View recent results` to see how the particpants are doing.  The `Results for xxx` link shows completed participants.  The `still on course` shows participants
 who are still on the courses and the last control that they visited.  The `Meet Director view of competitors` allows the meet director to remove invalid entrants, to modify
 the split times of participants, to see a full list of punched controls for a competitor still on the course, and more.
-  1. Note that the overall results and the `still on course` pages are available to ALL particpants (these are readonly), while the Meet Director view is more restricted.
+    1. Note that the overall results and the `still on course` pages are available to ALL particpants (these are readonly), while the Meet Director view is more restricted.
 1. When done, use the `Finish an event` link to mark the event as complete.  This will prevent further registrations for the event, but if there are still competitors on
 the course, it will not interfere with their ability to complete the course.
 1. If desired, download the splits file via `Winsplit files` and upload to winsplits, routegadget, or other orienteering sites.
