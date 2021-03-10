@@ -16,7 +16,7 @@ the participant as "proof" that the control was visited.
 and at all controls
 - The smartphone must accept cookies
 
-### How do I use this?
+## How do I use this?
 The normal way to start is via the manage_events.php page, for which you should get a link from whoever has installed this software.  This is the one page from which most everything will be run.
 The link will be of the form
 
@@ -28,7 +28,8 @@ e.g.:
 
 The manage_events.php will show a menu like this:
 1. Create a new event
-    1. Add new course to Auburndale Newton March 28, 2021 (create a copy of this event)
+1. Manipulate an existing event
+    1. Add new course to Auburndale Newton March 28, 2021 -- (create a copy of this event)
 1. Get a registration link:
     1. Auburndale Newton March 28, 2021
         1. BYOM Registration
@@ -89,7 +90,6 @@ These files / directories are in the github repo but do not need to be installed
 - This is the file you are looking at and is only needed to to understand what this software does
    - README.md
 
-## How do I use this?
 ## How can I configure this?
 
 ### What are the configuration files:

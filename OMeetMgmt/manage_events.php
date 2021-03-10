@@ -34,8 +34,8 @@ function name_to_results_link($event_id) {
 function name_to_add_course_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
-  return ("<li><a href={$base_path_for_links}/OMeetMgmt/add_course_to_event.php?event={$event_id}&key={$key}>Add new course to {$event_fullname}</a>" . 
-          "<a href={$base_path_for_links}/OMeetMgmt/create_event.php?clone_event={$event_id}&key={$key}> (create a copy of this event)</a>");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/add_course_to_event.php?event={$event_id}&key={$key}>Add new course to {$event_fullname}</a> -- (" . 
+          "<a href={$base_path_for_links}/OMeetMgmt/create_event.php?clone_event={$event_id}&key={$key}>create a copy of this event</a>)");
 }
 
 function name_to_clone_course_link($event_id) {
@@ -108,6 +108,7 @@ echo get_web_page_header(true, false, false);
 <p>
 <ol>
 <li> <a href=<?php echo "./create_event.php?key={$key}"; ?>>Create a new event</a>
+<li> Manipulate existing events
 <?php
   if (count($open_event_list) > 0) {
     echo "<ul>" .  implode("\n", $add_course_links) . "</ul>\n";
