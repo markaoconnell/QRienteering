@@ -114,8 +114,8 @@ if (!$registration_info_supplied) {
 echo "<p><input type=\"submit\" value=\"Submit\">\n";
 echo "</form>";
 
-echo "<p><a href=\"../OMeet/view_results?event={$event}&key={$key}\">View results</a>";
-echo "<p><a href=\"../OMeet/on_course?event={$event}&key={$key}\">Out on course</a><p>";
+echo "<p><a href=\"../OMeet/view_results.php?event={$event}&key={$key}\">View results</a>";
+echo "<p><a href=\"../OMeet/on_course.php?event={$event}&key={$key}\">Out on course</a><p>";
 
 
 echo get_web_page_footer();
