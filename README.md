@@ -167,7 +167,42 @@ This file contains additional HTML which will be appended at the end of the emai
 This file contains additional HTML which will link to a waiver that members must accept to register for a meet.
 
 ##### members.csv
+This file contains a list of members in the club, to be used to streamline registration for members when running an in-person meet.
+The format is:
+`id;FirstName;LastName;Si Unit;email;`
+
+e.g.
+```
+141421;Mark;Okie;314159;testing@gmail.com;
+271828;Karrie;Contrary;65536;no_such_email@msn.com;
+30125;Just;Beginning;;;
+```
+
+Of these fields, the id, FirstName, and LastName are required, the Si Unit and email are optional.
+
+The id field is just a number which is specific to the individual club member, and this number should be consistent throughout the season (it is used to identify the member in some
+cookies, so changing this number will confuse the member registration system.)  Other than being unique and being an integer, there are no restrictions on this number - the numbers do not need
+to be in sequence, there can be gaps, it is not necessary that the numbers begin at 1, etc.
+
 ##### nicknames.csv
+This file contains a list of names which are considered "identical" for the purposes of name lookups for member registration at an in-person meet.
+The format is:
+`name;equivalent name;equivalent name;...`
+
+e.g.
+
+```
+James;Jim;Jimmy;
+Patrice;Patricia;Patty;Patti;
+Andrew;Andy;
+Susan;Sue;Suzanne;
+Elizabeth;Beth;Liz;Lizzy;
+```
+
+This is used during the name matching algorithm, so that if the member name in the members.csv is "James Smith", entering "Jim Smith" will count as an exact match, as the names "James" and "Jim"
+are considered to be identical.
+
+The order of the names on each line makes no difference.
 
 ##### non_member_waiver
 This file contains additional HTML which will link to a waiver that non-members must accept to register for a meet.
