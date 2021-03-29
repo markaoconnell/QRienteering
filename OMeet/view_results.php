@@ -22,6 +22,7 @@ if (!file_exists($courses_path)) {
 }
 
 set_timezone($key);
+$event_name = file_get_contents(get_event_path($event, $key) . "/description");
 
 $results_string = "";
 if ($download_csv) {
@@ -61,6 +62,7 @@ $results_string .= get_all_course_result_links($event, $key, "..");
 
 
 echo get_web_page_header(true, true, false);
+echo "<p>Results for: <strong>{$event_name}</strong>\n";
 
 echo $results_string;
 

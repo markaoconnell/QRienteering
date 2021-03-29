@@ -26,6 +26,7 @@ if (($event == "") || (!key_is_valid($key))) {
 }
 
 set_timezone($key);
+$event_name = file_get_contents(get_event_path($event, $key) . "/description");
 
 $results_string = "";
 $competitor_directory = get_competitor_directory($event, $key, "..");
@@ -157,6 +158,8 @@ foreach (array_keys($on_course) as $course) {
 }
 
 echo get_web_page_header(true, true, false);
+
+echo "<p>Competitors not yet finished for: <strong>{$event_name}</strong><br>\n";
 
 if ($outstanding_entrants) {
   echo $results_string;

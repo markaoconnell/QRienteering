@@ -123,6 +123,7 @@ function get_web_page_header($paragraph_style, $table_style, $form_style) {
  http-equiv="content-type">
   <title>Orienteering Event Management</title>
   <meta content="Mark O'Connell" name="author">
+  <style>body{padding-left:1.5em;}</style>
 END_OF_HEADERS;
 
   if ($bg_color != "") {
@@ -215,10 +216,11 @@ function get_paragraph_style_header() {
 
 // get input form style elements
 function get_input_form_style_header() {
-  if (is_mobile()) {
-    return "<style>input {\nfont-size: 110%;\n}\ninput[type=submit] {\nheight : 85%;\n}\ninput[type=radio]\n{\ntransform:scale(2)\n}\n" .
+  if (is_mobile()) {	// JP 3-11-21
+    return "<style>input {\nfont-size: 110%;\n}\ninput[type=submit] {\nheight : 110%;background-color:#ffff33;\n}\n" .
+    	   "input[type=radio]\n{\ntransform:scale(4);margin:0 0.8em;\n}\n" .
            "optgroup {\nfont-size: 20px;\n}\n" .
-           "input[type=checkbox]\n{\ntransform:scale(3)\n}\n</style>\n";
+           "input[type=checkbox]\n{\ntransform:scale(4)\n}\n</style>\n";
   }
   else {
     return "";
