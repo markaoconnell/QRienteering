@@ -6,6 +6,9 @@ import subprocess
 import re
 import time
 import base64
+if not 'NO_SI_READER_IMPORT' in os.environ:
+  from sireader import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
+from datetime import datetime
 
 #
 #use strict;
@@ -40,10 +43,11 @@ SI_CONTROLS_KEY = r"qr_controls"
 
 def usage():
   print("Usage: " + sys.argv[0])
-  print("Usage: " + sys.argv[0] + " [-e event] [-k key] [-u url_of_QR_web_site] [-dvrt]")
+  print("Usage: " + sys.argv[0] + " [-e event] [-k key] [-u url_of_QR_web_site] [-s serial port for si download station] [-dvrt]")
   print("\t-e:\tEvent identifier")
   print("\t-k:\tKey for the series (from the administrator)")
   print("\t-u:\tURL for the web site where the results are posted")
+  print("\t-s:\tSerial port where the si download station should be accessed")
   print("\t-d:\tDebug - show extra debugging information (not normally useful)")
   print("\t-v:\tVerbose - show extra information about the workings of the program (sometimes useful)")
   print("\t-r:\tReplay a si stick - useful for a competitor who misregistered")
@@ -91,8 +95,8 @@ def read_ini_file():
 
 ############################################################################
 def get_event(event_key):
-  #output = make_url_call(MANAGE_EVENTS, "key=" + event_key + "&recent_event_timeout=12h")
-  output = make_url_call(MANAGE_EVENTS, "key=" + event_key + "&recent_event_timeout=120d")
+  output = make_url_call(MANAGE_EVENTS, "key=" + event_key + "&recent_event_timeout=12h")
+  #output = make_url_call(MANAGE_EVENTS, "key=" + event_key + "&recent_event_timeout=120d")
   event_matches_list = re.findall(r"view_results.php\?.*</a>", output)
 
   if (debug):
@@ -120,8 +124,9 @@ def get_event(event_key):
      event_ids = map(lambda event_possible_match: re.search(r"(event-[0-9a-f]+)", event_possible_match).group(1), event_matches_list)
      event_names = map(lambda event_possible_match: re.search(r">Results for (.*?)<", event_possible_match).group(1), event_matches_list)
 
-     print(event_ids)
-     print(event_names)
+     if debug:
+       print(event_ids)
+       print(event_names)
 
      print("Please choose the event: ")
      while True:
@@ -174,7 +179,7 @@ def upload_results(event_key, event, qr_result_string):
 ###############################################################
 def replay_stick_results(event_key, event, stick_to_replay):
 # logline format is:
-#   2108369;1200,start:1200,finish:1600,101,1210,102,1260,104,1350,106,1480,110,1568
+#   2108369;1200,start:1200,finish:1600,101:1210,102:1260,104:1350,106:1480,110:1568
 # So the si stick matches at the start of the line, adding the semicolon to eliminate partial matches
   found_stick = False
   stick_at_log_start = "{};".format(stick_to_replay)
@@ -193,7 +198,7 @@ def replay_stick_results(event_key, event, stick_to_replay):
 
 
   if not found_stick:
-    print("ERROR: No results found for SI stick {}.".format(stick_to_replay));
+    print("ERROR: No results found for SI stick {}.".format(stick_to_replay))
 
 
 
@@ -201,7 +206,7 @@ def replay_stick_results(event_key, event, stick_to_replay):
 ###############################################################
 
 fake_entries = []
-fake_entries.append({SI_STICK_KEY : 2108369, SI_START_KEY : 200, SI_FINISH_KEY : 600, SI_CONTROLS_KEY : ["101", "210", "102", "260", "104", "350", "106", "480", "110", "568"]})
+fake_entries.append({SI_STICK_KEY : 2108369, SI_START_KEY : 200, SI_FINISH_KEY : 600, SI_CONTROLS_KEY : ["101:210", "102:260", "104:350", "106:480", "110:568"]})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
@@ -223,13 +228,97 @@ fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : 2108369, SI_START_KEY : 1200, SI_FINISH_KEY : 1600, SI_CONTROLS_KEY : ["101", "1210", "102", "1260", "104", "1350", "106", "1480", "110", "1568"]})
-def read_results():
+fake_entries.append({SI_STICK_KEY : 2108369, SI_START_KEY : 1200, SI_FINISH_KEY : 1600, SI_CONTROLS_KEY : ["101:1210", "102:1260", "104:1350", "106:1480", "110:1568"]})
+def read_fake_results():
   if len(fake_entries) > 0:
     return fake_entries.pop()
   else:
     return {SI_STICK_KEY : None}
 
+###############################################################
+def get_24hour_timestamp(punch_time):
+# Take a datetime object, from reading the si card, and convert to seconds since midnight
+  #print "Datetime object looks like: {}".format(dir(punch_time))
+  #return (datetime.timestamp(punch_time))
+  return ((punch_time.hour * 3600) + (punch_time.minute * 60) + punch_time.second)
+  
+
+###############################################################
+def get_sireader(serial_port_name, verbose):
+#SIReader only supports the so called "Extended Protocol" mode. If your
+#base station is not in this mode you have to change the protocol mode
+#first::
+#
+#  # change to extended protocol mode
+#  si.set_extended_protocol()
+#
+#To use a SportIdent base station for card readout::
+
+
+# connect to base station, the station is automatically detected,
+# if this does not work, give the path to the port as an argument
+# see the pyserial documentation for further information.
+  try:
+    if (serial_port_name != ""):
+      si = SIReaderReadout(port=serial_port_name)
+    else:
+      si = SIReaderReadout()
+  except SIReaderException as sire:
+    si = None
+    if verbose:
+      print "Cannot find si download station, reason: {}".format(sire)
+
+  return si
+
+#################################################################
+def read_results(si_reader):
+# wait for a card to be inserted into the reader
+  if not si_reader.poll_sicard():
+    return({SI_STICK_KEY : None})
+
+# some properties are now set
+  card_number = si_reader.sicard
+  card_type = si_reader.cardtype
+
+# read out card data
+  card_data = si_reader.read_sicard()
+
+# beep
+  si_reader.ack_sicard()
+  
+# Wait for the card to be removed from the reader
+  while not si_reader.poll_sicard():
+    time.sleep(1)
+
+# Convert to the format expected by the rest of the program
+# Check for old sticks which only use 12 hour time, which have some trouble if
+# the event starts before noon and ends after noon
+  start_timestamp = get_24hour_timestamp(card_data['start'])
+  finish_timestamp = get_24hour_timestamp(card_data['finish'])
+  array_of_punches = []
+  if ((finish_timestamp < start_timestamp) and (start_timestamp < TWELVE_HOURS_IN_SECONDS)):
+    # Anomaly detected!  Adjust any timestamp less than the start forward by 12 hours
+    # First convert the tuples of datetime objects to just a value in seconds
+    # Then adjust the appropriate entries (those less than the start timestamp) by 12 hours
+    # Then format it as : separated string items
+    #
+    # Update: I think the sireader code already handles this situation, so I don't think this case
+    # will ever occur.  Leaving this in, just in case though.
+    finish_timestamp += TWELVE_HOURS_IN_SECONDS
+    orig_punches = []
+    new_punches = []
+    orig_punches = map(lambda punch: (punch[0], get_24hour_timestamp(punch[1])), card_data['punches'])
+    new_punches = map(lambda punch: (punch[0], punch[1] + TWELVE_HOURS_IN_SECONDS if (punch[1] < start_timestamp) else punch[1]), orig_punches)
+    array_of_punches = map(lambda punch: "{}:{}".format(str(punch[0]), str(punch[1])), new_punches)
+    print "Old card detected and handled!"
+  else:
+    array_of_punches = map(lambda punch: "{}:{}".format(str(punch[0]), str(get_24hour_timestamp(punch[1]))), card_data['punches'])
+
+  #print "Here is the array of punches {}.".format(array_of_punches)
+
+  entry_to_return = {SI_STICK_KEY : card_number, SI_START_KEY : start_timestamp, SI_FINISH_KEY : finish_timestamp, SI_CONTROLS_KEY : array_of_punches}
+  
+  return(entry_to_return)
 
 
 
@@ -311,7 +400,7 @@ initializations = read_ini_file()
 event = ""
 event_name = ""
 event_key = ""
-or_path = ""
+serial_port = ""
 
 if ("key" in initializations):
   event_key = initializations["key"]
@@ -328,13 +417,13 @@ if ("verbose" in initializations) and not verbose:
 if ("testing_run" in initializations):
   testing_run = string_to_boolean(initializations["testing_run"])
 
-if ("or_path" in initializations):
-  or_path = initializations["or_path"]
+if ("serial_port" in initializations):
+  serial_port = initializations["serial_port"]
 
 replay_si_stick = 0
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], "e:k:u:dvtrh")
+  opts, args = getopt.getopt(sys.argv[1:], "e:k:u:s:dvtrh")
 except getopt.GetoptError:
   print("Parse error on command line.")
   usage()
@@ -350,6 +439,8 @@ for opt, arg in opts:
     event_key = arg
   elif opt == "-u":
     url = arg
+  elif opt == "-s":
+    serial_port = arg
   elif opt == "-d":
     debug = 1
   elif opt == "-v":
@@ -359,7 +450,7 @@ for opt, arg in opts:
   elif opt == "-r":
     replay_si_stick = 1
   else:
-    print "ERROR: Unknown option {}.".format(opt)
+    print ("ERROR: Unknown option {}.".format(opt))
     usage()
     sys.exit(1)
 
@@ -401,19 +492,33 @@ if (replay_si_stick):
     sys.exit(0)
 
 
+if not testing_run:
+  si_reader = get_sireader(serial_port, verbose)
+  if (si_reader == None):
+    print "ERROR: Cannot find si download station, is it plugged in?"
+    if (serial_port != ""):
+      print "\tAttempted to read from {}".format(serial_port)
+    sys.exit(1)
+else:
+  si_reader = None
+
 loop_count = 0
 while True:
-  si_stick_entry = read_results()
-  if ((loop_count % 20) == 0):
+  if not testing_run:
+    si_stick_entry = read_results(si_reader)
+  else:
+    si_stick_entry = { SI_STICK_KEY : None }
+
+  if ((loop_count % 60) == 0):
     time_tuple = time.localtime(None)
-    sys.stdout.write("Awaiting new results at: {:2d}:{:2d}:{:2d}\r".format(time_tuple.tm_hour, time_tuple.tm_min, time_tuple.tm_sec))
+    sys.stdout.write("Awaiting new results at: {:02d}:{:02d}:{:02d}\r".format(time_tuple.tm_hour, time_tuple.tm_min, time_tuple.tm_sec))
     sys.stdout.flush()
 
   if si_stick_entry[SI_STICK_KEY] != None:
     if verbose:
       print("\nFound new key: {}".format(si_stick_entry[SI_STICK_KEY]))
     else:
-      print()
+      print("\n")
 
     upload_entry_list = [ "{:d};{:d}".format(si_stick_entry[SI_STICK_KEY], si_stick_entry[SI_START_KEY]) ]
     upload_entry_list.append("start:{:d}".format(si_stick_entry[SI_START_KEY]))
@@ -432,7 +537,7 @@ while True:
   if testing_run:
     break   # While testing, no need to wait for more results
 
-  time.sleep(3)
+  time.sleep(1)
   loop_count += 1
 
 

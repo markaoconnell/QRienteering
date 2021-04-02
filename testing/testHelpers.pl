@@ -115,17 +115,53 @@ sub set_default_timezone {
 
 sub set_club_name {
   my($key, $club_name) = @_;
-  my($club_name_file) = get_base_path($key) . "/club_name";
-  open(CLUB_NAME_FILE, ">$club_name_file");
-  print CLUB_NAME_FILE "$club_name";
-  close (CLUB_NAME_FILE);
+  my(%member_props);
+  %member_props = get_member_properties();
+  $member_props{"club_name"} = $club_name;
+  set_member_properties($key, %member_props);
 }
 
 sub unset_club_name {
   my($key) = @_;
-  my($club_name_file) = get_base_path($key) . "/club_name";
-  unlink($club_name_file);
+  my(%member_props);
+  %member_props = get_member_properties();
+  delete $member_props{"club_name"};
+  set_member_properties($key, %member_props);
 }
+
+sub get_member_properties {
+  my($key) = @_;
+  my($member_properties_path) = get_base_path($key) . "/member_properties.txt";
+
+  open(MEMBER_PROPS_FILE, "<$member_properties_path");
+  my(@property_lines);
+  @property_lines = <MEMBER_PROPS_FILE>;
+  close(MEMBER_PROPS_FILE);
+
+  my(%properties);
+  chomp(@property_lines);
+  map { my($prop_key, $prop_value) = split(" : "); $properties{$prop_key} = $prop_value; } @property_lines;
+
+  return(%properties);
+}
+
+sub set_member_properties {
+  my($key, %properties) = @_;
+  my($member_properties_path) = get_base_path($key) . "/member_properties.txt";
+  open(MEMBER_PROPS_FILE, ">$member_properties_path");
+  my($prop_key);
+  foreach $prop_key (keys(%properties)) {
+    print MEMBER_PROPS_FILE "${prop_key} : $properties{$prop_key}\n";
+  }
+  close(MEMBER_PROPS_FILE);
+}
+
+sub remove_member_properties {
+  my($key) = @_;
+  my($member_props_path) = get_base_path($key) . "/member_properties.txt";
+  unlink($member_props_path);
+}
+
 
 my(%keys);
 sub create_key_file {

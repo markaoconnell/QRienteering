@@ -1,11 +1,15 @@
 #!/bin/sh
 
-php test_name_matcher.php
-if [ -f failure ]
-then
-  echo ERROR: possible test failure?  Failure file present.
-  exit 1
-fi
+for i in test_*.php
+do
+  echo Running tests in ${i}
+  php ${i}
+  if [ -f failure ]
+  then
+    echo ERROR: possible test failure?  Failure file present.
+    exit 1
+  fi
+done
 
 for i in test_*.pl
 do

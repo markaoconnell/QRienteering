@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/course_properties.php';
 require 'name_matcher.php';
 
 ck_testing();
@@ -19,11 +20,13 @@ if (isset($_COOKIE["{$key}-member_ids"])) {
 
 $current_time = time();
 $is_member_registration = isset($_GET["member"]);
+$member_properties = get_member_properties(get_base_path($key));
+$club_name = get_club_name($key, $member_properties);
 
 if ($is_member_registration) {
   $radio_button_string = "";
   if ($member_cookie_found) {
-    $matching_info = read_names_info(get_members_path($key, ".."), get_nicknames_path($key, ".."));
+    $matching_info = read_names_info(get_members_path($key, $member_properties), get_nicknames_path($key, $member_properties));
     $time_cutoff = $current_time - (86400 * 90);  // 3 month window
     $member_ids = array_map(function ($elt) { return (explode(":", $elt)); }, explode(",", $_COOKIE["{$key}-member_ids"]));
     $member_ids = array_filter($member_ids, function ($member_entry) use ($time_cutoff) { return ($member_entry[1] > $time_cutoff); });
@@ -40,7 +43,7 @@ if ($is_member_registration) {
     }
   }
 ?>
-  <p class="title"><u>NEOC club member registration:</u>
+  <p class="title"><u><?php echo $club_name ?> club member registration:</u>
   <form action="./name_lookup.php">
   <?php if ($radio_button_string != "") { echo "{$radio_button_string}<p><p>\n"; } ?>
   <p>Lookup by member name:
@@ -62,7 +65,7 @@ if ($is_member_registration) {
 }
 else {
 ?>
-  <p class="title"><u>Non-NEOC club member registration:</u>
+  <p class="title"><u>Non-<?php echo $club_name ?> club member registration:</u>
   <form action="./add_safety_info.php">
   <p>What is your name?<br>
   <p>First name 

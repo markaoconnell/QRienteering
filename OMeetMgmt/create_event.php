@@ -235,7 +235,7 @@ if (0) {
 <p><p>
 <input type=checkbox name="verbose" value="true">Show verbose output (useful only if course creation is failing)
 <p><p>
-<input name="submit" type="submit">
+<input name="submit" type="submit" value="Create event">
 </form>
 
 <?php

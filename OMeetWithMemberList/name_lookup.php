@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/course_properties.php';
 require 'name_matcher.php';
 
 ck_testing();
@@ -8,8 +9,9 @@ $key = $_GET["key"];
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
-
-$matching_info = read_names_info(get_members_path($key, ".."), get_nicknames_path($key, ".."));
+ 
+$member_properties = get_member_properties(get_base_path($key));
+$matching_info = read_names_info(get_members_path($key, $member_properties), get_nicknames_path($key, $member_properties));
 
 if (!isset($_GET["member_id"])) {
   if (!isset($_GET["competitor_first_name"]) || ($_GET["competitor_first_name"] == "")) {

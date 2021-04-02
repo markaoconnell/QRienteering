@@ -32,6 +32,14 @@ function get_email_properties($base_path) {
   return(array());
 }
 
+function get_member_properties($base_path) {
+  if (file_exists("{$base_path}/member_properties.txt")) {
+    return(get_properties("{$base_path}/member_properties.txt", true));
+  }
+
+  return(array());
+}
+
 function get_email_extra_info_file($base_path) {
   return("{$base_path}/email_extra_info.txt");
 }

@@ -9,3 +9,8 @@ then
 else
   echo No directory found ${testing_directory}, no cleanup appears to be needed.
 fi
+
+if [ -f "./failure" ]
+then
+  rm -f ./failure
+fi

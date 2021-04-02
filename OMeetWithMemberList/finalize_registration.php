@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/course_properties.php';
 require 'name_matcher.php';
 
 ck_testing();
@@ -12,7 +13,8 @@ if (!key_is_valid($key)) {
 $is_member = isset($_GET["member_id"]);
 
 if ($is_member) {
-  $matching_info = read_names_info(get_members_path($key, ".."), get_nicknames_path($key, ".."));
+  $member_properties = get_member_properties(get_base_path($key));
+  $matching_info = read_names_info(get_members_path($key, $member_properties), get_nicknames_path($key, $member_properties));
   
   if (!isset($_GET["member_id"])) {
     error_and_exit("No member id specified, please restart registration.\n");
@@ -27,13 +29,7 @@ if ($is_member) {
   $name_info = get_member_name_info($member_id, $matching_info);
   $first_name = $name_info[0];
   $last_name = $name_info[1];
-  $club_name_path = get_base_path($key, "..") . "/club_name";
-  if (file_exists($club_name_path)) {
-    $club_name = file_get_contents($club_name_path);
-  }
-  else {
-    $club_name = "NEOC";  // Should not be hardcoded
-  }
+  $club_name = get_club_name($key, $member_properties);
 }
 else {
   $first_name = $_GET["competitor_first_name"];

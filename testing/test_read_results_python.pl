@@ -45,7 +45,7 @@ sub run_read_results {
   my($cmd_line_params) = @_;
   make_ini_file();
 
-  my($cmd) = "echo 1 | python ../OMeetWithMemberList/read_results.py $cmd_line_params";
+  my($cmd) = "echo 1 | NO_SI_READER_IMPORT=1 python ../OMeetWithMemberList/read_results.py $cmd_line_params";
   print "Running $cmd\n";
   my($output);
   $output = qx($cmd);

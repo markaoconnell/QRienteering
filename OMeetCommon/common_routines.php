@@ -481,12 +481,37 @@ function get_base_path($key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key));
 }
 
-function get_members_path($key, $path_to_top = "..") {
-  return("../OMeetData/" . key_to_path($key) . "/members.csv");
+function get_members_path($key, $member_properties) {
+  if (isset($member_properties['member_list_file'])) {
+    return("../OMeetData/" . key_to_path($key) . "/{$member_properties['member_list_file']}");
+  }
+  else if (isset($member_properties['member_list_path'])) {
+    return($member_properties['member_list_path']);
+  }
+  else {
+    return("../OMeetData/" . key_to_path($key) . "/members.csv");
+  }
 }
 
-function get_nicknames_path($key, $path_to_top = "..") {
-  return("../OMeetData/" . key_to_path($key) . "/nicknames.csv");
+function get_nicknames_path($key, $member_properties) {
+  if (isset($member_properties['nickname_list_file'])) {
+    return("../OMeetData/" . key_to_path($key) . "/{$member_properties['nickname_list_file']}");
+  }
+  else if (isset($member_properties['nickname_list_path'])) {
+    return($member_properties['nickname_list_path']);
+  }
+  else {
+    return("../OMeetData/" . key_to_path($key) . "/nicknames.csv");
+  }
+}
+
+function get_club_name($key, $member_properties) {
+  if (isset($member_properties['club_name'])) {
+    return($member_properties['club_name']);
+  }
+  else {
+    return("NEOC");
+  }
 }
 
 function get_qr_code_html_footer_file($key) {
