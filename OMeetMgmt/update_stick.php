@@ -41,7 +41,7 @@ if (!$new_stick_provided) {
   $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
   $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";
   $output_string .= "<input type=hidden name=competitor value=\"{$competitor_id}\">\n";
-  $output_string .= "<input type=submit name=submit>\n</form>\n";
+  $output_string .= "<input type=submit name=submit value=\"Update si unit number\">\n</form>\n";
 }
 else {
   $output_string = "<p>Updating Si unit for {$competitor_name}\n";
