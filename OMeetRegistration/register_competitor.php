@@ -101,10 +101,18 @@ if (!$error) {
         setcookie("{$key}-member_ids", $member_cookie, $current_time + 86400 * 120, $cookie_path);
       }
     }
-    else if ($_GET["email_address"] != "") {
-      $just_email_registration_info = implode(",", array("email_address", base64_encode($_GET["email_address"]),
-                                                         "BYOM", base64_encode("yes")));
-      file_put_contents("{$competitor_path}/registration_info", $just_email_registration_info);
+    else {
+      # This is a BYOM registration
+      # Save some cookies to optimize the next BYOM registration on this device
+      # Save the information for 30 days
+      if ($_GET["email_address"] != "") {
+        $just_email_registration_info = implode(",", array("email_address", base64_encode($_GET["email_address"]),
+                                                           "BYOM", base64_encode("yes")));
+        file_put_contents("{$competitor_path}/registration_info", $just_email_registration_info);
+      }
+
+      $byom_registration_cookie = base64_encode($competitor_name) . "," . base64_encode($_GET["email_address"]);
+      setcookie("byom_registration_info", $byom_registration_cookie, $current_time + (86400 * 30), $cookie_path);
     }
     
     if (!$using_si_stick) {

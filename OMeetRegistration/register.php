@@ -32,13 +32,22 @@ function name_to_link($event_id) {
 
 echo "<p>\n";
 
+$default_name = "";
+$default_email = "";
 if (isset($_GET["registration_info"])) {
   $registration_info_supplied = true;
   $raw_registration_info = $_GET["registration_info"];
   $registration_info = parse_registration_info($raw_registration_info);
 }
 else {
+  // See if there is a cookie about the byom registration remembered on the phone
   $registration_info_supplied = false;
+  $byom_registration_info = $_COOKIE["byom_registration_info"];
+  if ($byom_registration_info != "") {
+    $byom_registration_pieces = explode(",", $byom_registration_info);
+    $default_name = base64_decode($byom_registration_pieces[0]);
+    $default_email = base64_decode($byom_registration_pieces[1]);
+  }
 }
 
 $key = $_GET["key"];
@@ -90,7 +99,7 @@ if ($registration_info_supplied) {
 }
 else {
   echo "<br><p>What is your name?<br>\n";
-  echo "<input type=\"text\" size=30 name=\"competitor_name\"><br>\n";
+  echo "<input type=\"text\" size=30 name=\"competitor_name\" value=\"{$default_name}\"><br>\n";
 }
 echo "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
 echo "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
@@ -106,7 +115,7 @@ if (!$registration_info_supplied) {
   $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]);
   if ($email_enabled) {
     echo "<br><p>If you would like your results emailed to you, please supply a valid email (optional):<br>\n";
-    echo "<input type=\"text\" size=50 name=\"email_address\"><br>\n";
+    echo "<input type=\"text\" size=50 name=\"email_address\" value=\"{$default_email}\"><br>\n";
   }
 }
 
