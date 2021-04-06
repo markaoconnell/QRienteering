@@ -9,28 +9,22 @@ import base64
 if not 'NO_SI_READER_IMPORT' in os.environ:
   from sireader import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
 from datetime import datetime
+from base64 import b64encode
+import urllib
 
-#
-#use strict;
-#use MIME::Base64;
-#
-#
-#my(@result_files);
-#
-#my(%results_by_stick) = qw();
-#my(%new_results_by_stick) = qw();
-#
 
 # Initialize a few helpful constants
 verbose = 0
 debug = 0
 testing_run = 0
 url = "http://www.mkoconnell.com/OMeet/not_there"
+club_name = "NEOC"
 
 # URLs for the web site
 VIEW_RESULTS = "OMeet/view_results.php"
 FINISH_COURSE = "OMeet/finish_course.php"
 REGISTER_COURSE = "OMeetRegistration/register.php"
+REGISTER_COMPETITOR = "OMeetRegistration/register_competitor.php"
 MANAGE_EVENTS = "OMeetMgmt/manage_events.php"
 SI_LOOKUP = "OMeetWithMemberList/stick_lookup.php"
 
@@ -367,48 +361,7 @@ def read_results(si_reader):
 
 
 
-## Need to handle a reused stick - use stick-raw_start as the key???
-#sub read_results {
-#
-#  my($result_file);
-#  foreach $result_file (@result_files) {
-##	print "Opening $result_file to read results.\n" if ($debug);
-#    open(INFILE, "<$result_file");
-#    my(@result_lines) = <INFILE>;
-#    close(INFILE);
-#
-##    print "Read " . scalar(@result_lines) . " lines from $result_file.\n";
-#  
-#    chomp(@result_lines);
-#
-#    my($result_line);
-#    foreach $result_line (@result_lines) {
-#      $result_line =~ s/\r//g;
-#      my($stick, $raw_start, $raw_clear, @controls) = split(";", $result_line);
-#
-#      my($hash_key) = "${stick};" . get_timestamp($controls[0]);
-#
-#      if (!defined($results_by_stick{$hash_key})) {
-#        $new_results_by_stick{$hash_key} = \@controls;
-#      }
-#    }
-#  }
-#
-#}
-#
-#sub get_timestamp {
-#  my($or_time) = @_;
-#  my($week, $day, $hour, $minute, $second) = split(":", $or_time);
-#  my($timestamp) = 0;
-#
-#  $timestamp += ($hour * 3600) if ($hour ne "--");
-#  $timestamp += ($minute * 60) if ($minute ne "--");
-#  $timestamp += $second if ($second ne "--");
-#
-##  print "Converted ${or_time} to ${timestamp}.\n";
-#
-#  return($timestamp);
-#}
+
 
 ##################################################################
 def make_url_call(php_script_to_call, params):
@@ -465,9 +418,12 @@ if ("testing_run" in initializations):
 if ("serial_port" in initializations):
   serial_port = initializations["serial_port"]
 
+if ("club_name" in initializations):
+  club_name = initializations["club_name"]
+
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], "e:k:u:s:dvtrh")
+  opts, args = getopt.getopt(sys.argv[1:], "e:k:u:s:c:dvtrh")
 except getopt.GetoptError:
   print("Parse error on command line.")
   usage()
@@ -485,6 +441,8 @@ for opt, arg in opts:
     url = arg
   elif opt == "-s":
     serial_port = arg
+  elif opt == "-c":
+    club_name = arg
   elif opt == "-d":
     debug = 1
   elif opt == "-v":
@@ -573,7 +531,30 @@ while True:
       elif len(matches) > 1:
         print ("Too many matches for {}: {}, please retry.".format(course_prefix, ", ".join(map(lambda ct: ct[1], matches))))
       else:
-        print ("{} registered on {}.".format(results[0], matches[0][1]))
+        registration_list = ["first_name", b64encode(results[0]),
+                             "last_name", b64encode(""),
+                             "club_name", b64encode(club_name),
+                             "si_stick", b64encode(str(si_stick_entry[SI_STICK_KEY])),
+                             "email_address", b64encode(results[2]),
+                             "safety_info", b64encode("On file"),
+                             "registration", b64encode("Optimized registration"),
+                             "member_id", b64encode(results[1]),
+                             "is_member", b64encode("yes") ]
+
+        registration_params = "key={}&event={}&course={}&registration_info={}&competitor_name={}"\
+                               .format(event_key, event, urllib.quote(matches[0][0]), ",".join(registration_list), urllib.quote(results[0]))
+        if debug: print("Attempting to register {} with params {}.".format(results[0], registration_params))
+        
+        output = make_url_call(REGISTER_COMPETITOR, registration_params)
+        if debug: print ("Results of web call {}.".format(output))
+              
+        match = re.search("<p>Registration complete:", output, re.MULTILINE)
+        if (match != None):
+          print ("{} successfully registered on {}.".format(results[0], matches[0][1]))
+
+        match = re.search("ERROR.*$", output, re.MULTILINE)
+        if match != None:
+          print("Unsuccessful registration, please retry via a browser\nDetails: {}.".format(match.group(1)))
 	  
  
 
@@ -582,6 +563,3 @@ while True:
 
   time.sleep(1)
   loop_count += 1
-
-
-
