@@ -2,6 +2,18 @@
 require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/course_properties.php';
 
+function is_event($filename) {
+  global $base_path;
+  return ((substr($filename, 0, 6) == "event-") && is_dir("${base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
+}
+
+function name_to_link($event_id) {
+  global $key, $base_path;
+
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li><a href=./view_results.php?event={$event_id}&key={$key}>{$event_fullname}</a>\n");
+}
+
 ck_testing();
 
 // Get the submitted info
@@ -12,8 +24,35 @@ $key = $_GET["key"];
 $download_csv_flag = $_GET["download_csv"];
 $download_csv = ($download_csv_flag != "");
 
+
+if (!key_is_valid($key)) {
+  error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
+}
+$base_path = get_base_path($key, "..");
+
 if ($event == "") {
-  error_and_exit("<p>ERROR: Event not specified, no results can be shown.\n");
+  // No event specified - show a list
+  // If there is only one, then auto-choose it
+  $event_list = scandir($base_path);
+  $event_list = array_filter($event_list, is_event);
+  if (count($event_list) == 1) {
+    $event = basename(current($event_list));
+  }
+  else if (count($event_list) > 1) {
+
+    echo get_web_page_header(true, true, false);
+    $event_output_array = array_map(name_to_link, $event_list);
+    echo "<p>Choose your event:<p>\n<ul>\n" . implode("\n", $event_output_array) . "</ul>";
+    echo get_web_page_footer();
+
+    return;
+  }
+  else {
+    echo get_web_page_header(true, true, false);
+    echo "<p>No available events.\n";
+    echo get_web_page_footer();
+    return;
+  }
 }
 
 $courses_path = get_courses_path($event, $key, "..");
