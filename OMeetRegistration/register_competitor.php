@@ -29,6 +29,11 @@ if (!is_dir(get_event_path($event, $key, "..")) || !file_exists(get_event_path($
   error_and_exit("Unknown event \"{$event}\" (" . get_base_path($event, $key, "..") . "), are you using an authorized link?\n");
 }
 
+if ($_COOKIE["testing_cookie_support"] != "can this be read?") {
+  error_and_exit("Registration failing, this phone / device must support cookies for QRienteering to work properly.\n" .
+                 "<p>Proper cookie support not being detected.");
+}
+
 $courses_array = scandir(get_courses_path($event, $key, ".."));
 $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
 // print_r($courses_array);

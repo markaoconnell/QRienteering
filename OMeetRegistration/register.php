@@ -4,6 +4,14 @@ require '../OMeetCommon/course_properties.php';
 
 ck_testing();
 
+// Try setting a cookie here and then reading it later during registration.
+// If this doesn't work, then something is wrong with the cookie support on the
+// phone or device and the rest of control scanning won't work either
+// But at least we can show a good error message early
+// One hour timeout should be plenty to just complete registration
+$cookie_path = dirname(dirname($_SERVER["REQUEST_URI"]));
+setcookie("testing_cookie_support", "can this be read?", time() + 3600, $cookie_path);
+
 echo get_web_page_header(true, false, true);
 
 

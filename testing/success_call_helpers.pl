@@ -202,6 +202,7 @@ sub register_successfully {
   my($get_ref, $cookie_ref, $test_info_ref) = @_;
 
   $test_info_ref->{"subroutine"} = "register_successfully";
+  $cookie_ref->{"testing_cookie_support"} = "can--space--this--space--be--space--read?";
   hashes_to_artificial_file();
   $cmd = "php ../OMeetRegistration/register_competitor.php";
   $output = qx($cmd);
@@ -265,6 +266,7 @@ sub register_member_successfully {
   $test_info_ref->{"subroutine"} = "register_member_successfully";
   my($raw_registration_info) = hash_to_registration_info_string($registration_info_ref);
   $get_ref->{"registration_info"} = $raw_registration_info;
+  $cookie_ref->{"testing_cookie_support"} = "can--space--this--space--be--space--read?";
   hashes_to_artificial_file();
   $cmd = "php ../OMeetRegistration/register_competitor.php";
   $output = qx($cmd);
