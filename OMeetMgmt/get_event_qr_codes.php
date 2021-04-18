@@ -31,6 +31,7 @@ if (!is_dir($existing_event_path)) {
 }
 
 $checked_by_default = "";
+$registration_links_checked = "checked";
 if (isset($_GET["select-all"])) {
   $checked_by_default = "checked";
   $select_button_label = "Deselect all";
@@ -40,6 +41,10 @@ else {
   $checked_by_default = "";
   $select_button_label = "Select all";
   $select_button_name = "select-all";
+
+  if (isset($_GET["deselect-all"])) {
+    $registration_links_checked = "";
+  }
 }
 
 $existing_event_name = file_get_contents("{$existing_event_path}/description");
@@ -47,7 +52,6 @@ $path_to_courses = get_courses_path($event, $key, "..");
 $current_courses = scandir($path_to_courses);
 $current_courses = array_diff($current_courses, array(".", ".."));
 
-$existing_event_description_string = "";
 $all_controls = array();
 foreach ($current_courses as $this_course) {
   $control_list = read_controls("{$path_to_courses}/{$this_course}/controls.txt");
@@ -88,10 +92,15 @@ $add_event_string = "event={$event}";
 <p><p>
 <?php
 echo "<ul>\n";
-echo "<li><strong>Non-reusable registration</strong> (for non-organized meet events (Bring Your Own Map))\n";
+echo "<li><strong>Event specific registration</strong> (for non-organized meet events (Bring Your Own Map))\n";
 echo "<ul>" .
-        "<li><input type=checkbox checked name=\"qr-" . base64_encode("BYOM registration") .
-                          "\" value=\"{$url_prefix}/OMeetRegistration/register.php?{$add_key_string}&{$add_event_string}\">BYOM registration" .
+        "<li><input type=checkbox {$registration_links_checked} name=\"qr-" . base64_encode("{$existing_event_name} registration") .
+                          "\" value=\"{$url_prefix}/OMeetRegistration/register.php?{$add_key_string}&{$add_event_string}\">Event specific ({$existing_event_name}) BYOM registration" .
+     "</ul>\n";
+echo "<li><strong>Reusable registration</strong> (Bring Your Own Map - may prompt to choose event)\n";
+echo "<ul>" .
+        "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Registration") .
+                          "\" value=\"{$url_prefix}/OMeetRegistration/register.php?{$add_key_string}\">Generic BYOM registration" .
      "</ul>\n";
 echo "<li><strong>Registration QR codes</strong> (for ogranized meets, reusable at different venues)\n";
 echo "<ul>\n";
@@ -113,10 +122,17 @@ foreach ($sorted_control_list as $one_control) {
 echo "</ul>\n";
 echo "<li><strong>Result QR codes</strong> (non-resuable across events)\n";
 echo "<ul>\n";
+echo "<li><input type=checkbox {$registration_links_checked} name=\"qr-" . base64_encode("{$existing_event_name} results") .
+                          "\" value=\"{$url_prefix}/OMeet/view_results.php?{$add_key_string}&{$add_event_string}\">View results of {$existing_event_name}\n";
+echo "<li><input type=checkbox {$registration_links_checked} name=\"qr-" . base64_encode("{$existing_event_name}: currently on course") .
+                          "\" value=\"{$url_prefix}/OMeet/on_course.php?{$add_key_string}&{$add_event_string}\">View competitors still running for {$existing_event_name}\n";
+echo "</ul>\n";
+echo "<li><strong>Reusable Result QR codes</strong>\n";
+echo "<ul>\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("View results") .
-                          "\" value=\"{$url_prefix}/OMeet/view_results.php?{$add_key_string}&{$add_event_string}\">View results of the event\n";
+                          "\" value=\"{$url_prefix}/OMeet/view_results.php?{$add_key_string}\">View results of open events (reusable)\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Competitors still running") .
-                          "\" value=\"{$url_prefix}/OMeet/on_course.php?{$add_key_string}&{$add_event_string}\">View competitors still on the course\n";
+                          "\" value=\"{$url_prefix}/OMeet/on_course.php?{$add_key_string}\">View competitors still running for any open event (reusable)\n";
 echo "</ul>\n";
 echo "</ul>\n";
 ?>
