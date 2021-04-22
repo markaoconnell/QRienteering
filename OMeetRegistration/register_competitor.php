@@ -78,8 +78,17 @@ if (!$error) {
 
     $cookie_path = dirname(dirname($_SERVER["REQUEST_URI"]));
 
+    $saved_competitor_name = $competitor_name;
+    $i = 0;
+    while (isset($_GET["extra-{$i}"])) {
+      if ($_GET["extra-{$i}"] != "") {
+        $saved_competitor_name .= " - " . htmlentities($_GET["extra-{$i}"]);
+      }
+      $i++;
+    }
+
     // Save the information about the competitor
-    fwrite($competitor_file, $competitor_name);
+    fwrite($competitor_file, $saved_competitor_name);
     fclose($competitor_file);
     file_put_contents($competitor_path . "/course", $course);
     mkdir("./{$competitor_path}/controls_found");

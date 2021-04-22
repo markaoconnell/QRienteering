@@ -514,6 +514,25 @@ function get_club_name($key, $member_properties) {
   }
 }
 
+function get_extra_prompts_file($key) {
+  return("../OMeetData/" . key_to_path($key) . "/extra_prompts.txt");
+}
+
+// Get the extra prompts, if any
+// Lines beginning with a # are ignored as comments
+// Otherwise each prompt is listed on a separate line
+function get_extra_prompts($key) {
+  $additional_prompts_file = get_extra_prompts_file($key);
+  if (file_exists($additional_prompts_file)) {
+    $additional_prompts = file($additional_prompts_file);
+    $filtered_prompts = array_filter($additional_prompts, function ($line) { return (ltrim($line)[0] != "#"); });
+    return(array_values($filtered_prompts));
+  }
+
+  // No additional prompts
+  return (array());
+}
+
 function get_qr_code_html_footer_file($key) {
   return("../OMeetData/" . key_to_path($key) . "/qr_code_footer.html");
 }
