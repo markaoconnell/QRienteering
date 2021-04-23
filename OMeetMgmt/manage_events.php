@@ -38,6 +38,12 @@ function name_to_add_course_link($event_id) {
           "<a href={$base_path_for_links}/OMeetMgmt/create_event.php?clone_event={$event_id}&key={$key}>create a copy of this event</a>)");
 }
 
+function name_to_remove_course_link($event_id) {
+  global $base_path, $key, $base_path_for_links;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/remove_course_from_event.php?event={$event_id}&key={$key}>Remove course from {$event_fullname} (or undo prior removal)</a>\n");
+}
+
 function name_to_clone_course_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
@@ -94,6 +100,7 @@ $closed_event_list = array_filter($event_list, is_event_recently_closed);
 $open_event_links = array_map(name_to_registration_link, $open_event_list);
 $add_course_links = array_map(name_to_add_course_link, $open_event_list);
 $add_course_links2 = array_map(name_to_clone_course_link, $closed_event_list);
+$remove_course_links = array_map(name_to_remove_course_link, $open_event_list);
 $open_event_result_links = array_map(name_to_results_link, $open_event_list);
 $qrcode_links = array_map(name_to_get_qrcodes_link, $open_event_list);
 $closed_event_result_links = array_map(name_to_results_link, $closed_event_list);
@@ -115,6 +122,9 @@ echo get_web_page_header(true, false, false);
   }
   if (count($closed_event_list) > 0) {
     echo "<ul>" .  implode("\n", $add_course_links2) . "</ul>\n";
+  }
+  if (count($open_event_list) > 0) {
+    echo "<ul><li>Remove courses\n<ul>\n" .  implode("\n", $remove_course_links) . "</ul></ul>\n";
   }
 ?>
 
