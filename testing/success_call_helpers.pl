@@ -916,4 +916,46 @@ sub create_event_fail {
 
 
 
+###########
+# Remove the course from the list of available courses
+sub remove_course {
+  my($get_ref, $cookie_ref, $test_info_ref) = @_;
+
+  $test_info_ref->{"subroutine"} = "remove_course";
+  $get_ref->{"submit"} = "yes";
+  hashes_to_artificial_file();
+  $cmd = "php ../OMeetMgmt/remove_course_from_event.php";
+  my($output);
+  $output = qx($cmd);
+  
+  my($course) = "";
+  my($candidate_course_in_get);
+  foreach $candidate_course_in_get (keys(%{$get_ref})) {
+    if ($candidate_course_in_get =~ /^remove:(.*)/) {
+      $course = $1;
+#      print "Found course to remove ${course}\n";
+      last;
+    }
+  }
+
+  my($readable_course_name) = $course;
+  $readable_course_name =~ s/^[0-9]+-//;
+  
+  if ($output !~ /Course ${course} is no longer valid/) {
+    error_and_exit("Web page output wrong, course removal string not found.\n$output");
+  }
+  
+  #print $output;
+  
+  my($remove_marker_file);
+  $remove_marker_file = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Courses/" . $course . "/removed";
+  if (! -f "$remove_marker_file") {
+    error_and_exit("${remove_marker_file} does not exist.");
+  }
+  
+  delete($test_info_ref->{"subroutine"});
+}
+
+
+
 1;
