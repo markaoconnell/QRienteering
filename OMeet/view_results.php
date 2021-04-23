@@ -78,18 +78,20 @@ else {
 }
 
 foreach ($course_list as $one_course) {
-  $course_properties = get_course_properties("{$courses_path}/{$one_course}");
-  $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
-  $max_score = 0;
-  if ($score_course) {
-    $max_score = $course_properties[$MAX_SCORE_FIELD];
-  }
+  if (!file_exists("{$courses_path}/{$one_course}/removed") || isset($_GET["show_all_courses"])) {
+    $course_properties = get_course_properties("{$courses_path}/{$one_course}");
+    $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+    $max_score = 0;
+    if ($score_course) {
+      $max_score = $course_properties[$MAX_SCORE_FIELD];
+    }
   
-  if ($download_csv) {
-    $results_string .= get_csv_results($event, $key, $one_course, $score_course, $max_score, "..");
-  }
-  else {
-    $results_string .= show_results($event, $key, $one_course, $score_course, $max_score, "..");
+    if ($download_csv) {
+      $results_string .= get_csv_results($event, $key, $one_course, $score_course, $max_score, "..");
+    }
+    else {
+      $results_string .= show_results($event, $key, $one_course, $score_course, $max_score, "..");
+    }
   }
 }
 

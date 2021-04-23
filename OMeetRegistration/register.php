@@ -92,7 +92,8 @@ if (file_exists("{$base_path}/{$event}/done")) {
   error_and_exit("Event " . file_get_contents("{$base_path}/{$event}/description") . " has completed and registrations are no longer possible.\n");
 }
 
-$courses_array = scandir(get_courses_path($event, $key, ".."));
+$courses_path = get_courses_path($event, $key);
+$courses_array = scandir($courses_path);
 $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
 // print_r($courses_array);
 echo "<p>\n";
@@ -122,8 +123,9 @@ echo "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
 
 echo "<br><p>Select a course:<br>\n";
 foreach ($courses_array as $course_name) {
-  echo "<p><input type=\"radio\" name=\"course\" value=\"" . $course_name . "\">" . ltrim($course_name, "0..9-") . " <br>\n";
-//  echo "<option value=\"{$course_name}\">" . ltrim($course_name, "0..9-") . "</option>\n";
+  if (!file_exists("{$courses_path}/{$course_name}/removed")) {
+    echo "<p><input type=\"radio\" name=\"course\" value=\"" . $course_name . "\">" . ltrim($course_name, "0..9-") . " <br>\n";
+  }
 }
 
 if (!$registration_info_supplied) {

@@ -352,12 +352,15 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
 }
 
 function get_all_course_result_links($event, $key, $path_to_top = "..") {
-  $course_list = scandir(get_courses_path($event, $key));
+  $courses_path = get_courses_path($event, $key);
+  $course_list = scandir($courses_path);
   $course_list = array_diff($course_list, array(".", ".."));
 
   $links_string = "<p>Show results for ";
   foreach ($course_list as $one_course) {
-    $links_string .= "<a href=\"../OMeet/view_results.php?event=${event}&key={$key}&course=$one_course\">" . ltrim($one_course, "0..9-") . "</a> \n";
+    if (!file_exists("{$courses_path}/{$one_course}/removed")) {
+      $links_string .= "<a href=\"../OMeet/view_results.php?event=${event}&key={$key}&course=$one_course\">" . ltrim($one_course, "0..9-") . "</a> \n";
+    }
   }
   $links_string .= "<a href=\"../OMeet/view_results.php?event=${event}&key={$key}\">All</a> \n";
 
@@ -373,12 +376,15 @@ function get_email_course_result_links($event, $key, $path_to_top = "..") {
   }
   $base_path_for_links = $proto . $_SERVER["SERVER_NAME"] . dirname(dirname($_SERVER["REQUEST_URI"]));
 
-  $course_list = scandir(get_courses_path($event, $key));
+  $courses_path = get_courses_path($event, $key);
+  $course_list = scandir($courses_path);
   $course_list = array_diff($course_list, array(".", ".."));
 
   $links_string = "<p>Show results for ";
   foreach ($course_list as $one_course) {
-    $links_string .= "<a href=\"{$base_path_for_links}/OMeet/view_results.php?event=${event}&key={$key}&course=$one_course\">" . ltrim($one_course, "0..9-") . "</a> \n";
+    if (!file_exists("{$courses_path}/{$one_course}/removed")) {
+      $links_string .= "<a href=\"{$base_path_for_links}/OMeet/view_results.php?event=${event}&key={$key}&course=$one_course\">" . ltrim($one_course, "0..9-") . "</a> \n";
+    }
   }
   $links_string .= "<a href=\"{$base_path_for_links}/OMeet/view_results.php?event=${event}&key={$key}\">All</a> \n";
 
