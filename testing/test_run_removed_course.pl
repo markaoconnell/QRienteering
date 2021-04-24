@@ -57,6 +57,20 @@ $GET{"event"} = $event_id;
 
 remove_course(\%GET, \%COOKIE, \%TEST_INFO);
 
+# Validate the that the course no longer appears in the list of courses for registration
+my($output);
+my($cmd) = "php ../OMeetRegistration/register.php";
+hashes_to_artificial_file();
+$output = qx($cmd);
+
+if ($output =~ /00-White/) {
+  error_and_exit("Found White course for registration when it should have been removed.\n$output");
+}
+
+if ($output !~ /01-Yellow/) {
+  error_and_exit("Did not find Yellow course for registration.\n$output");
+}
+
 success();
 
 

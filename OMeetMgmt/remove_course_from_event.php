@@ -34,21 +34,22 @@ if (isset($_GET["submit"])) {
   foreach (array_keys($_GET) as $get_key) {
     $pieces = explode(":", $get_key);
     if ($pieces[0] == "remove") {
+      $readable_name = ltrim($pieces[1], "0..9-");
       if (!file_exists("{$courses_path}/{$pieces[1]}/removed")) {
         touch("{$courses_path}/{$pieces[1]}/removed");
-        $results_string .= "<p>Course {$pieces[1]} is no longer valid.\n";
+        $results_string .= "<p>Course {$readable_name} is no longer valid.\n";
       }
       else {
-        $results_string .= "<p>Course {$pieces[1]} was already marked invalid.\n";
+        $results_string .= "<p>Course {$readable_name} was already marked invalid.\n";
       }
     }
     else if ($pieces[0] == "readd") {
       if (file_exists("{$courses_path}/{$pieces[1]}/removed")) {
         unlink("{$courses_path}/{$pieces[1]}/removed");
-        $results_string .= "<p>Course {$pieces[1]} is valid again.\n";
+        $results_string .= "<p>Course {$readable_name} is valid again.\n";
       }
       else {
-        $results_string .= "<p>Course {$pieces[1]} was already valid.\n";
+        $results_string .= "<p>Course {$readable_name} was already valid.\n";
       }
     }
   }
