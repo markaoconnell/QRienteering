@@ -941,7 +941,7 @@ sub remove_course {
   my($readable_course_name) = $course;
   $readable_course_name =~ s/^[0-9]+-//;
   
-  if ($output !~ /Course ${course} is no longer valid/) {
+  if ($output !~ /Course ${readable_course_name} is no longer valid/) {
     error_and_exit("Web page output wrong, course removal string not found.\n$output");
   }
   

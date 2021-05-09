@@ -104,6 +104,8 @@ echo "<ul>" .
      "</ul>\n";
 echo "<li><strong>Registration QR codes</strong> (for ogranized meets, reusable at different venues)\n";
 echo "<ul>\n";
+echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Generic registration (prompts for member vs non-member)") .
+                          "\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?generic=1&{$add_key_string}\">Non member registration\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Non-Member registration") .
                           "\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?{$add_key_string}\">Non member registration\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Member registration") .

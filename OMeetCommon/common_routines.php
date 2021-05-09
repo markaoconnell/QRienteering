@@ -240,6 +240,10 @@ function show_results($event, $key, $course, $show_points, $max_points, $path_to
   }
   $results_list = scandir("{$results_path}/${course}");
   $results_list = array_diff($results_list, array(".", ".."));
+  if (count($results_list) == 0) {
+    $result_string .= "<p>No Results yet<p><p><p>\n";
+    return($result_string);
+  }
 
   if ($show_points) {
     $points_header = "<th>Points</th>";

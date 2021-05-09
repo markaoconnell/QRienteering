@@ -55,6 +55,7 @@ if ($event == "") {
   }
 }
 
+$results_path = get_results_path($event, $key);
 $courses_path = get_courses_path($event, $key, "..");
 if (!file_exists($courses_path)) {
   error_and_exit("<p>ERROR: No such event found {$event} (or bad location key {$key}).\n");
@@ -78,7 +79,20 @@ else {
 }
 
 foreach ($course_list as $one_course) {
-  if (!file_exists("{$courses_path}/{$one_course}/removed") || isset($_GET["show_all_courses"])) {
+  $show_course = true;
+  if (file_exists("{$courses_path}/{$one_course}/removed")) {
+    // Show a removed course if there are finishers
+    if (file_exists("{$results_path}/{$one_course}")) {
+      $results_list = scandir("{$results_path}/{$one_course}");
+      $results_list = array_diff($results_list, array(".", ".."));
+      $show_course = (count($results_list) > 0);
+    }
+    else {
+      $show_course = false;
+    }
+  }
+
+  if ($show_course || isset($_GET["show_all_courses"])) {
     $course_properties = get_course_properties("{$courses_path}/{$one_course}");
     $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
     $max_score = 0;

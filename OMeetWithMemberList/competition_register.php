@@ -19,7 +19,8 @@ if (isset($_COOKIE["{$key}-member_ids"])) {
 }
 
 $current_time = time();
-$is_member_registration = isset($_GET["member"]);
+$is_generic_registration = isset($_GET["generic"]);
+$is_member_registration = isset($_GET["member"]) && !$is_generic_registration;
 $member_properties = get_member_properties(get_base_path($key));
 $club_name = get_club_name($key, $member_properties);
 
@@ -61,6 +62,13 @@ if ($is_member_registration) {
   <input type="hidden" name="key" <?php echo "value=\"{$key}\""; ?> >
   <input type="submit" value="SI unit lookup">
   </form>
+<?php
+}
+elseif ($is_generic_registration) {
+?>
+  <p class="title"><u>Meet registration, click on the appropriate link</u>
+  <p><a href="./competition_register.php?member=1&key=<?php echo $key; ?>"><?php echo $club_name ?> club member</a>
+  <p><a href="./competition_register.php?key=<?php echo $key; ?>">Non-member (or member of other club)</a>
 <?php
 }
 else {
