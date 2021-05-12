@@ -7,14 +7,42 @@ echo get_web_page_header(true, false, false);
 
 $verbose = isset($_POST["verbose"]);
 $cloning_event = false;
+$uploaded_ppen_file = false;
 
 require '../OMeetCommon/course_properties.php';
 require '../OMeetMgmt/event_mgmt_common.php';
+require '../OMeetMgmt/from_ppen.php';
 
 $event_created = false;
 $found_error = false;
+$ppen_errors_found = "";
 
-if (isset($_POST["submit"])) {
+if (isset($_POST["uploadppen"])) {
+  $key = $_POST["key"];
+  if ($_FILES["upload_file"]["size"] > 0) {
+    $event_description_array = get_event_description($_FILES["upload_file"]["tmp_name"], $_POST["getemall"] == "true");
+    $uploaded_ppen_file = true;
+
+    $ppen_course_list = explode("\n", $event_description_array["description"]);
+
+    foreach ($ppen_course_list as $this_course) {
+      // There is sometimes a blank line - just ignore those
+      if (trim($this_course) == "") {
+        continue;
+      }
+
+      if (strpos($this_course, "--") === 0) {
+        continue;  // Lines beginning with -- are ignored as comments
+      }
+
+      $validation_results = validate_and_parse_course($this_course);
+
+      $extra_info = $validation_results[1];
+      $ppen_errors_found .= $extra_info[$ERRORS];
+    }
+  }
+}
+elseif (isset($_POST["submit"])) {
   echo "Name of event: " . $_POST["event_name"] . "\n<p>";
   $event_fullname = $_POST["event_name"];
   $key = $_POST["key"];
@@ -45,12 +73,7 @@ if (isset($_POST["submit"])) {
   //echo "<p>" . $_POST["course_description"];
   //echo "<p>And that's all she wrote\n";
 
-  if ($_FILES["upload_file"]["size"] > 0) {
-    $file_contents = file_get_contents($_FILES["upload_file"]["tmp_name"]);
-  }
-  else {
-    $file_contents = $_POST["course_description"];
-  }
+  $file_contents = $_POST["course_description"];
 
   $course_list = explode("\n", $file_contents);
   $num_courses=count($course_list);
@@ -191,15 +214,60 @@ else {
 if (!$event_created && !$found_error) {
 ?>
 <br>
+<p><p><p class="title"><u>Create a new event.</u><br>
 <form action=./create_event.php method=post enctype="multipart/form-data" >
-<p class="title">What is the name of the event?<br>
+<?php if (!$uploaded_ppen_file) { ?>
+<p><p>BETA<br>Upload the PurplePen file to auto-initialize the event.
+It is recommended to validate the information imported from PurplePen before
+finalizing the event creation, as this is still in Beta testing.
+<br>Purple Pen file to upload: <input name=upload_file type=file accept=".ppen">
+<br><p>
+<input type=checkbox name="getemall" value="true">Include a "GetEmAll" course?
+<br><p><input name="uploadppen" type="submit" value="Upload Purple Pen file">
+
+<?php } ?>
+
+<?php
+if ($uploaded_ppen_file) {
+  echo "<p><p class=\"title\"><u>Validate uploaded ppen courses</u><br>\n";
+  if ($ppen_errors_found != "") {
+    echo "<p>Please address the following issues:<br>\n{$ppen_errors_found}<br>\n";
+  }
+}
+else {
+  echo "<br><br><br><p><p><p><p class=\"title\"><u>Manual event creation.</u><br>\n";
+}
+?>
+
+<p><p><p class="title">What is the name of the event?<br>
 <p>
-<input name=event_name type=text size=80 <?php if ($cloning_event) { echo "value=\"Copy of {$existing_event_name}\""; } ?> >
+<input name=event_name type=text size=80
+<?php if ($cloning_event) { echo "value=\"Copy of {$existing_event_name}\""; } ?>
+<?php if ($uploaded_ppen_file) { echo "value=\"{$event_description_array["title"]}\""; } ?>
+>
 <br><br><br><p><p>
-<input type="hidden" name="MAX_FILE_SIZE" value="4096" />
+<input type="hidden" name="MAX_FILE_SIZE" value="1024000" />
 <input type="hidden" name="key" value="<?php echo $key ?>" />
 <p class="title">Enter course/control details for the event.
-<p>Format of the information: One course per line, comma separated.
+<br>
+<textarea name=course_description rows=10 cols=60>
+--Replace this with your course description--
+<?php
+  if ($cloning_event) {
+    echo $existing_event_description_string;
+  }
+  if ($uploaded_ppen_file) {
+    echo $event_description_array["description"];
+  }
+?>
+</textarea>
+<p><p>
+<input type=checkbox name="verbose" value="true">Show verbose output (useful only if course creation is failing)
+<p><p>
+<input name="submit" type="submit" value="Create event">
+</form>
+
+<br><p><p>Format of the information: One course per line, comma separated.
 <ul>
 <li>Normal Course: NameOfCourse,control,control,control,...
   <ul>
@@ -215,29 +283,7 @@ if (!$event_created && !$found_error) {
 <p>Note: It is normally a good idea to type this information into a Word Doc, or a Google doc, or
 someone else, then copy-and-paste it in below - makes it much easier if you have to re-enter due to a 
 mistake if you can just copy-and-paste it in again!
-<?php
-if (0) {
-?>
-<input name=upload_file type=file>
 <p>
-<br>
-<p class="title">Alternatively, enter the information directly here.
-<?php } ?>
-<p>
-<textarea name=course_description rows=10 cols=60>
---Replace this with your course description--
-<?php
-  if ($cloning_event) {
-    echo $existing_event_description_string;
-  }
-?>
-</textarea>
-<p><p>
-<input type=checkbox name="verbose" value="true">Show verbose output (useful only if course creation is failing)
-<p><p>
-<input name="submit" type="submit" value="Create event">
-</form>
-
 <?php
 }
 echo get_web_page_footer();
