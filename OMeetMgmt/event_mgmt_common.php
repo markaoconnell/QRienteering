@@ -130,8 +130,10 @@ function validate_and_parse_course($course_description) {
     $verbose_output_string .= "<p>Control list all seems to be correctly formatted and not too long.\n";
   }
   else {
-    $error_string .= "<p>ERROR: Control list contains either non-alphanumeric characters or too long.\n";
-    $error_string .= "<p>Checking results: " . join(",", $check_controls) . "\n";
+    $error_string .= "<p>ERROR: Control list for \"{$course_name}\" contains either non-alphanumeric characters or too long.\n";
+    $error_control_entries = array_filter($check_controls, function ($elt) { return ($elt == 0); });
+    $controls_with_an_error = array_map(function ($elt) use ($control_list) { return ($control_list[$elt]); }, array_keys($error_control_entries));
+    $error_string .= "<p>Incorrect controls: " . join(",", $controls_with_an_error) . "\n";
   }
 
   if (count($control_list) > $MAX_CONTROLS) {
