@@ -102,10 +102,10 @@ echo "<ul>" .
         "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Registration") .
                           "\" value=\"{$url_prefix}/OMeetRegistration/register.php?{$add_key_string}\">Generic BYOM registration" .
      "</ul>\n";
-echo "<li><strong>Registration QR codes</strong> (for ogranized meets, reusable at different venues)\n";
+echo "<li><strong>Registration QR codes</strong> (for organized meets, reusable at different venues)\n";
 echo "<ul>\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Generic registration (prompts for member vs non-member)") .
-                          "\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?generic=1&{$add_key_string}\">Non member registration\n";
+                          "\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?generic=1&{$add_key_string}\">Generic registration (prompts member/non-member)\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Non-Member registration") .
                           "\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?{$add_key_string}\">Non member registration\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Member registration") .
