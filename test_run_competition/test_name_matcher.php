@@ -46,7 +46,7 @@ $fake_members_string = <<<END_OF_MEMBERS_FILE
 324;Peter;Campbell;
 321;Victoria;Campbell;
 262;Xavier;Fradera;
-33;Lydia;OConnell;
+33;Lydia;O'Connell;
 32;Mark;OConnell;2108369;
 232;Mary;OConnell;141421;
 31;Karen;Yeowell;3959473
@@ -118,8 +118,8 @@ $si_hash = $matching_info["si_hash"];
 $nicknames_hash = $matching_info["nicknames_hash"];
 
 // Test a few known entries to make sure that things parsed correctly
-if (!isset($full_name_hash[strtolower("Lydia OConnell")])) {
-  error_and_exit("Missing name Lydia OConnell");
+if (!isset($full_name_hash[strtolower("Lydia O'Connell")])) {
+  error_and_exit("Missing name Lydia O'Connell");
 }
 if (!isset($full_name_hash[strtolower("Mark OConnell")])) {
   error_and_exit("Missing name Mark OConnell");
@@ -159,6 +159,8 @@ if (($members_hash["262"]["first"] != "Xavier") || ($members_hash["262"]["last"]
   error_and_exit("Member 262 is not Xavier Fradera, is " . $members_hash["262"]["first"] . " " . $members_hash["262"]["last"]);
 }
 
+//echo "Matches on oconnell: " . implode(",", find_best_match_by_distance("oconnell", array_keys($last_name_hash))) . "\n";
+//echo "Matches on o'connell: " . implode(",", find_best_match_by_distance("o'connell", array_keys($last_name_hash))) . "\n";
 
 check_name_match ($matching_info, "Mark", "OConnell", array(32));
 check_name_match ($matching_info, "Mark", "O'Connell", array(32));

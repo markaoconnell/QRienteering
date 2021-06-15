@@ -85,7 +85,13 @@ function find_best_match_by_distance($name_to_check, $list_of_names) {
 
   global $MAX_CHECK_DISTANCE;
 
+  // Always initialize this as full of empty arrays, makes finding
+  // the first one with a non-empty value easier
   $match_distances = array();
+  for ($i = 0; $i < $MAX_CHECK_DISTANCE; $i++) {
+    $match_distances[$i] = array();
+  }
+
   foreach ($list_of_names as $member_name) {
     $dist = levenshtein($name_to_check, $member_name);
     //echo "Distance from {$name_to_check} to {$member_name} is {$dist}\n";
@@ -95,12 +101,31 @@ function find_best_match_by_distance($name_to_check, $list_of_names) {
   }
 
   // return the best match - the list with the shortest distance
-  foreach ($match_distances as $name_list) {
-    //echo "Returning " . implode(",", $name_list) . " as best matches for {$name_to_check}\n";
-    return($name_list);
+  //echo "Found {$number_matches} matches for {$name_to_check}.\n";
+  for ($i = 0; $i < $MAX_CHECK_DISTANCE; $i++) {
+    if (isset($match_distances[$i]) && (count($match_distances[$i]) > 0)) {
+      //echo "Returning " . implode(",", $match_distances[$i]) . " as best matches for {$name_to_check}\n";
+      return($match_distances[$i]);
+    }
   }
 
   return(array());
+}
+
+function find_all_close_matches($name_to_check, $list_of_names) {
+
+  global $MAX_CHECK_DISTANCE;
+
+  $combined_matches = array();
+  foreach ($list_of_names as $member_name) {
+    $dist = levenshtein($name_to_check, $member_name);
+    //echo "Distance from {$name_to_check} to {$member_name} is {$dist}\n";
+    if ($dist < $MAX_CHECK_DISTANCE) {
+      $combined_matches[] = $member_name;
+    }
+  }
+
+  return($combined_matches);
 }
 
 function find_best_name_match ($matching_info, $first_name, $last_name) {
@@ -123,6 +148,7 @@ function find_best_name_match ($matching_info, $first_name, $last_name) {
   $last_name_matches = array();
   if (isset($last_name_hash[$last_name])) {
     $last_name_matches = array($last_name);
+    //echo "Found match for $last_name, hash returned: " . implode(",", $last_name_matches) . "\n";
   }
   else {
     $last_name_matches = find_best_match_by_distance($last_name, array_keys($last_name_hash));
@@ -137,10 +163,19 @@ function find_best_name_match ($matching_info, $first_name, $last_name) {
   if (count($last_name_matches) == 1) {
     // Is there an exact match on the full name?  If so, we're good
     // This catches a slight misspelling in the last name
-    if (isset($full_name_matches["{$first_name} {$last_name_matches[0]}"])) {
-      return (array($full_name_matches["{$first_name} {$last_name_matches[0]}"]));
+    if (isset($full_name_hash["{$first_name} {$last_name_matches[0]}"])) {
+      return (array($full_name_hash["{$first_name} {$last_name_matches[0]}"]));
     }
+    //echo "No match for {$first_name} {$last_name_matches[0]} -> {$full_name_hash["{$first_name} {$last_name_matches[0]}"]}\n";
   }
+
+  // There may be two members with very similar last names (OConnell vs O'Connell)
+  // And if Mark OConnell and Someone O'Connell are in the member list, and Mark O'Connell
+  // searches, then it will find only Someone O'Connell as the possible match and will fail.
+  // So if we are doing the full blown (slow) check, expand the search to all possible
+  // last names, even if there was an exact match.
+  $last_name_matches = find_all_close_matches($last_name, array_keys($last_name_hash));
+  //echo "No exact match for $last_name, possibilities are: " . implode(",", $last_name_matches) . "\n";
 
   # Do the full blown nickname check
   # For each possible member, get the list of nicknames associated
