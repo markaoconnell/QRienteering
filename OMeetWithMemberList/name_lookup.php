@@ -38,9 +38,7 @@ else {
 $error_string = "";
 $success_string = "";
 if (count($possible_member_ids) == 0) {
-  $fnl = implode(",", str_split($first_name_to_lookup));
-  $lnl = implode(",", str_split($last_name_to_lookup));
-  error_and_exit("No such member {$first_name_to_lookup} {$fnl} {$last_name_to_lookup} {$lnl} found, please retry or ask for assistance.\n");
+  error_and_exit("No such member {$first_name_to_lookup} {$last_name_to_lookup} found, please retry or ask for assistance.\n");
 }
 else if (count($possible_member_ids) == 1) {
   $printable_name = get_full_name($possible_member_ids[0], $matching_info);
