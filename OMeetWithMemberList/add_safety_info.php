@@ -31,6 +31,10 @@ if ($is_member) {
       error_and_exit("Yes specified for SI unit usage but no SI unit number found.  Please restart registration.\n");
     }
     $si_stick = $_GET["si_stick_number"];
+
+    if ($si_stick == "") {
+      error_and_exit("Yes specified for SI unit usage but SI unit number was blank.  Please restart registration.\n");
+    }
   }
 }
 else {

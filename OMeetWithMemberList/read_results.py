@@ -273,15 +273,24 @@ def get_sireader(serial_port_name, verbose):
 #################################################################
 def read_results(si_reader):
 # wait for a card to be inserted into the reader
-  if not si_reader.poll_sicard():
-    return({SI_STICK_KEY : None})
+  try:
+    if not si_reader.poll_sicard():
+      return({SI_STICK_KEY : None})
+  except SIReaderException as sire:
+    si_reader.ack_sicard()
+    print "Bad card download, error {}.".format(sire)
+    return ({SI_STICK_KEY : None})
 
 # some properties are now set
   card_number = si_reader.sicard
   card_type = si_reader.cardtype
 
 # read out card data
-  card_data = si_reader.read_sicard()
+  try:
+    card_data = si_reader.read_sicard()
+  except SIReaderException as sire:
+    print "Bad card ({}) download, error {}.".format(card_number, sire)
+    return({SI_STICK_KEY : None})
 
 # beep
   si_reader.ack_sicard()
@@ -293,8 +302,16 @@ def read_results(si_reader):
 # Convert to the format expected by the rest of the program
 # Check for old sticks which only use 12 hour time, which have some trouble if
 # the event starts before noon and ends after noon
-  start_timestamp = get_24hour_timestamp(card_data['start'])
-  finish_timestamp = get_24hour_timestamp(card_data['finish'])
+  if card_data['start'] != None:
+    start_timestamp = get_24hour_timestamp(card_data['start'])
+  else:
+     start_timestamp = 0
+
+  if card_data['finish'] != None:
+    finish_timestamp = get_24hour_timestamp(card_data['finish'])
+  else:
+    finish_timestamp = 0
+	
   array_of_punches = []
   if ((finish_timestamp < start_timestamp) and (start_timestamp < TWELVE_HOURS_IN_SECONDS)):
     # Anomaly detected!  Adjust any timestamp less than the start forward by 12 hours
@@ -401,6 +418,8 @@ event = ""
 event_name = ""
 event_key = ""
 serial_port = ""
+download_only = False
+event_found = False
 
 if ("key" in initializations):
   event_key = initializations["key"]
@@ -423,7 +442,7 @@ if ("serial_port" in initializations):
 replay_si_stick = 0
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], "e:k:u:s:dvtrh")
+  opts, args = getopt.getopt(sys.argv[1:], "e:k:u:s:dvjtrh")
 except getopt.GetoptError:
   print("Parse error on command line.")
   usage()
@@ -443,6 +462,8 @@ for opt, arg in opts:
     serial_port = arg
   elif opt == "-d":
     debug = 1
+  elif opt == "-j":
+    download_only = True
   elif opt == "-v":
     verbose = 1
   elif opt == "-t":
@@ -471,14 +492,21 @@ if (event == ""):
   print("Processing results for event {} ({}).".format(event_name, event))
 
 if ((event == "") or (event_key == "")):
-  usage()
-  sys.exit(1)
+  if download_only:
+    event="download_only"
+    event_found = False
+  else:
+    usage()
+    sys.exit(1)
+else:
+  event_found = True
   
 ## Ensure that the event specified is valid
-output = make_url_call(VIEW_RESULTS, "event={}&key={}".format(event, event_key))
-if ((re.search("No such event found {}".format(event), output) != None) or (re.search(r"Show results for", output) == None)):
-  print("Event {} not found, please check if event {} and key {} are valid.".format(event, event, event_key))
-  sys.exit(1)
+if event_found:
+  output = make_url_call(VIEW_RESULTS, "event={}&key={}".format(event, event_key))
+  if ((re.search("No such event found {}".format(event), output) != None) or (re.search(r"Show results for", output) == None)):
+    print("Event {} not found, please check if event {} and key {} are valid.".format(event, event, event_key))
+    sys.exit(1)
 
 
 if (replay_si_stick):
@@ -531,8 +559,15 @@ while True:
     with open("{}-results.log".format(event), "a") as LOGFILE:
       LOGFILE.write(qr_result_string + "\n")
 
-    results = upload_results(event_key, event, qr_result_string)
-    print "\n".join(results)
+    if event_found:
+      results = upload_results(event_key, event, qr_result_string)
+      print "\n".join(results)
+    else:
+      total_time = si_stick_entry[SI_FINISH_KEY] - si_stick_entry[SI_START_KEY]
+      hours = total_time / 3600
+      minutes = (total_time - (hours * 3600)) / 60
+      seconds = (total_time - (hours * 3600) - (minutes * 60))
+      print "Downloaded results for si_stick {}, time was {}h:{}m:{}s ({}).".format(si_stick_entry[SI_STICK_KEY], hours, minutes, seconds, total_time)
 
   if testing_run:
     break   # While testing, no need to wait for more results

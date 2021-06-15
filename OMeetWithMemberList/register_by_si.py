@@ -332,8 +332,14 @@ def read_results(si_reader):
 # Convert to the format expected by the rest of the program
 # Check for old sticks which only use 12 hour time, which have some trouble if
 # the event starts before noon and ends after noon
-  start_timestamp = get_24hour_timestamp(card_data['start'])
-  finish_timestamp = get_24hour_timestamp(card_data['finish'])
+  start_timestamp = 0
+  finish_timestamp  = 0
+  if card_data['start'] != None:
+    start_timestamp = get_24hour_timestamp(card_data['start'])
+
+  if card_data['finish'] != None:
+    finish_timestamp = get_24hour_timestamp(card_data['finish'])
+	
   array_of_punches = []
   if ((finish_timestamp < start_timestamp) and (start_timestamp < TWELVE_HOURS_IN_SECONDS)):
     # Anomaly detected!  Adjust any timestamp less than the start forward by 12 hours
@@ -470,7 +476,7 @@ if (event == ""):
   result_tuple = get_event(event_key)
   event_name = result_tuple[1]
   event = result_tuple[0]
-  print("Processing results for event {} ({}).".format(event_name, event))
+  print("Processing registrations for event {} ({}).".format(event_name, event))
 
 if ((event == "") or (event_key == "")):
   usage()
