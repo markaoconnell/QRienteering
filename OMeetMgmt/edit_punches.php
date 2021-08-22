@@ -30,6 +30,10 @@ if (!is_dir($competitor_path)) {
   error_and_exit("<p>ERROR: No such competitor found {$competitor} (possibly already removed or edited?).\n");
 }
 
+if (file_exists("{$competitor_path}/self_reported")) {
+  error_and_exit("<p>ERROR: Self reported result, no splits available to edit.\n");
+}
+
 set_timezone($key);
 
 $splits_array = get_splits_as_array($competitor, $event, $key, true);

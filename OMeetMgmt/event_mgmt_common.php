@@ -238,7 +238,6 @@ function create_course_in_event($course_info, $key, $event) {
   $prefix = sprintf("%02d", $this_course_number);
   mkdir("{$event_path}/Courses/{$prefix}-{$course_info[$NAME_FIELD]}");
   mkdir("{$event_path}/Results/{$prefix}-{$course_info[$NAME_FIELD]}");
-  $course_names_array[] = $course_array[$i][0];
   file_put_contents("${event_path}/Courses/{$prefix}-{$course_info[$NAME_FIELD]}/controls.txt", implode("\n", $course_info[$CONTROLS]));
 
   if ($course_info[$TYPE_FIELD] == $SCORE_O_COURSE) {

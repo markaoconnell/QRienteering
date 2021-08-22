@@ -15,6 +15,11 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
   $competitor_name = file_get_contents("{$competitor_path}/name");
   $controls_found_path = "{$competitor_path}/controls_found";
   $course = file_get_contents("{$competitor_path}/course");
+
+  if (file_exists("{$competitor_path}/self_reported")) {
+    return("No splits available for \"{$competitor_name}\" on {$course}, result was self-reported.\n");
+  }
+  
   
   $courses_path = get_courses_path($event, $key, "..");
   $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
@@ -151,6 +156,10 @@ function get_splits_dnf($competitor, $event, $key) {
   $course = file_get_contents("{$competitor_path}/course");
   $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
   
+  if (file_exists("{$competitor_path}/self_reported")) {
+    return (array("output" => "<p>No splits available for \"{$competitor_name}\" on {$course}, result was self-reported.\n"));
+  }
+  
   $course_properties = get_course_properties("{$courses_path}/{$course}");
   $number_controls = count($control_list);
   $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
@@ -258,7 +267,11 @@ function get_splits_as_array($competitor_id, $event, $key, $include_all = 'false
   $competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
   
   if (!is_dir($competitor_path)) {
-    return($splits_array());
+    return($splits_array);
+  }
+  
+  if (file_exists("{$competitor_path}/self_reported")) {
+    return($splits_array);
   }
   
   $controls_found_path = "{$competitor_path}/controls_found";
