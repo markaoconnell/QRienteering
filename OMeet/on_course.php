@@ -56,14 +56,14 @@ if ($event == "") {
 
 // Get the submitted info
 // echo "<p>\n";
-if ($_GET["TIME_LIMIT"] == "") {
+if (!isset($_GET["TIME_LIMIT"]) || ($_GET["TIME_LIMIT"] == "")) {
   $TIME_LIMIT = 86400;  // One day in seconds
 }
 else {
   $TIME_LIMIT = intval($_GET["TIME_LIMIT"]);
 }
 
-$include_competitor_id = ($_GET["include_competitor_id"] != "");
+$include_competitor_id = isset($_GET["include_competitor_id"]);
 
 if (($event == "") || (!key_is_valid($key))) {
   error_and_exit("Empty event \"{$event}\" or bad location key \"{$key}\", is this an unauthorized link?\n");
@@ -97,9 +97,12 @@ foreach ($competitor_list as $competitor) {
     if (!file_exists("${competitor_directory}/${competitor}/controls_found/start")) {
       $file_info = stat("{$competitor_directory}/{$competitor}");
       // Weed out people who's registration time is too old (one day in seconds)
-      if (($current_time - $file_info["mtime"]) < $TIME_LIMIT) {
-        $not_started[$course][] = $competitor;
-        $found_registered_not_started = true;
+      // or if they have self reported (they have no start time but really are done)
+      if (!file_exists("{$competitor_directory}/{$competitor}/self_reported")) {
+	if (($current_time - $file_info["mtime"]) < $TIME_LIMIT) {
+          $not_started[$course][] = $competitor;
+          $found_registered_not_started = true;
+	}
       }
     }
     else {

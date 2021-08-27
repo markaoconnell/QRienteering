@@ -95,7 +95,7 @@ echo "<input type=\"text\" size=30 name=\"reported_time\"><br>\n";
 echo "<p><input type=checkbox name=\"found_all\" checked> I found all the controls (if unchecked, will be a DNF)<br>\n";
 
 echo "<br><p>If a ScoreO, what was your score?.<br>\n";
-echo "<br>Note: Enter only sum of points for controls visited without regard to";
+echo "<br>Note: Enter only sum of points for controls visited without regard to ";
 echo "penalties for exceeding the time limit, time penalties will be automatically calculated and deducted.\n";
 echo "<input type=\"text\" size=30 name=\"scoreo_score\"><br>\n";
 

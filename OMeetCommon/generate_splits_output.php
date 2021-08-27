@@ -135,6 +135,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
 
 
 function get_splits_dnf($competitor, $event, $key) {
+  global $TYPE_FIELD, $SCORE_O_COURSE, $LIMIT_FIELD, $PENALTY_FIELD, $MAX_SCORE_FIELD;
 
   $error_string = "";
   $output_string = "";
@@ -261,6 +262,7 @@ function get_splits_dnf($competitor, $event, $key) {
 
 
 function get_splits_as_array($competitor_id, $event, $key, $include_all = 'false') {
+  global $TYPE_FIELD, $SCORE_O_COURSE, $LIMIT_FIELD, $PENALTY_FIELD, $MAX_SCORE_FIELD;
 
   $splits_array = array();
   $control_times_array = array();
