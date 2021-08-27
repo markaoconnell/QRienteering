@@ -71,7 +71,7 @@ if ($score_course) {
     error_and_exit("<p>ERROR: Course score \"{$scoreo_score}\" larger than course maximum: {$max_score}.\n");
   }
 
-  if (($course_properties[$LIMIT_FIELD] > 0) && ($time_for_results > $course_properties[$LIMIT_FIELD])) {
+  if (($course_properties[$LIMIT_FIELD] > 0) && ($time_for_results > $course_properties[$LIMIT_FIELD]) && ($reported_time != "none")) {
     $time_over = $time_for_results - $course_properties[$LIMIT_FIELD];
     $minutes_over = floor(($time_over + 59) / 60);
     $penalty = $minutes_over * $course_properties[$PENALTY_FIELD];
@@ -127,6 +127,10 @@ else {
   // Mark as a DNF if not all the controls were found
   if ($is_a_dnf) {
     file_put_contents("{$competitor_path}/dnf", "self reported DNF", FILE_APPEND);
+  }
+
+  if ($reported_time == "none") {
+    file_put_contents("{$competitor_path}/no_time", "no time given", FILE_APPEND);
   }
 
   // If this is the first result for the course, create the directory

@@ -272,6 +272,9 @@ function show_results($event, $key, $course, $show_points, $max_points, $path_to
       if (file_exists("./{$competitor_path}/dnf")) {
         $dnfs .= "<tr><td>{$finish_place}</td><td>${competitor_name}</td><td>DNF</td>{$points_value}</tr>\n";
       }
+      else if (file_exists("./{$competitor_path}/no_time")) {
+        $result_string .= "<tr><td>{$finish_place}</td><td>${competitor_name}</td><td>No time</td>{$points_value}</tr>\n";
+      }
       else {
         $result_string .= "<tr><td>{$finish_place}</td><td>${competitor_name}</td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
       }

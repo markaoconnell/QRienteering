@@ -16,7 +16,7 @@ if (($event == "") || ($competitor_id == "")) {
   error_and_exit("<p>ERROR: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?" . get_error_info_string());
 }
 
-if ($_GET["skipped_controls"] != "") {
+if (isset($_GET["skipped_controls"]) && ($_GET["skipped_controls"] != "")) {
   $get_key = $_GET["key"];
   $get_event = $_GET["event"];
   $get_control_id = $_GET["control"];
@@ -67,7 +67,7 @@ if (!file_exists(get_event_path($event, $key, "..") . "/no_redirects") && ($_GET
   return;
 }
 
-if ($_GET["mumble"] != "") {
+if (isset($_GET["mumble"]) && ($_GET["mumble"] != "")) {
   $pieces = explode(",", base64_decode($_GET["mumble"]));
   $control_id = $pieces[0];
   $encoded_competitor_id = $pieces[1];
