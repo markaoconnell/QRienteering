@@ -9,6 +9,7 @@ $course = $_COOKIE["course"];
 $competitor_id = $_COOKIE["competitor_id"];
 $event = $_COOKIE["event"];
 $key = $_COOKIE["key"];
+$error_string = "";
 
 if (($event == "") || ($competitor_id == "")) {
   error_and_exit("<p>ERROR: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?" . get_error_info_string());

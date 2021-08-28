@@ -43,11 +43,12 @@ SI_CONTROLS_KEY = r"qr_controls"
 
 def usage():
   print("Usage: " + sys.argv[0])
-  print("Usage: " + sys.argv[0] + " [-e event] [-k key] [-u url_of_QR_web_site] [-s serial port for si download station] [-dvrt]")
+  print("Usage: " + sys.argv[0] + " [-e event] [-k key] [-u url_of_QR_web_site] [-s serial port for si download station] [-djvrt]")
   print("\t-e:\tEvent identifier")
   print("\t-k:\tKey for the series (from the administrator)")
   print("\t-u:\tURL for the web site where the results are posted")
   print("\t-s:\tSerial port where the si download station should be accessed")
+  print("\t-j:\tRun in local mode - save si stick information to a local file for later replay (rarely useful)")
   print("\t-d:\tDebug - show extra debugging information (not normally useful)")
   print("\t-v:\tVerbose - show extra information about the workings of the program (sometimes useful)")
   print("\t-r:\tReplay a si stick - useful for a competitor who misregistered")
@@ -70,25 +71,28 @@ def string_to_boolean(string_to_convert):
 def read_ini_file():
   ini_file_contents = {}
 
-  with open("./read_results.ini", "r") as INI_FILE:
-    for file_line in INI_FILE:
-      file_line = file_line.strip()
-      if (debug):
-        print("Found " + file_line + " in the ini file.")
-      file_line = re.sub(r'#.*$', "", file_line)
-      if (file_line == ""):
-        continue  # Ignore empty lines (just a comment perhaps?)
-
-      split_elements = re.split(r'[ \t=]+', file_line)
-      if (len(split_elements) < 2):
-        print("ERROR: Too few elements on line " + file_line + ", skipping it.")
-        continue
-      elif (len(split_elements) > 2):
-        print("Extra elements on line " + file_line + ", ignoring the extras.")
-
-      ini_file_contents[split_elements[0]] = split_elements[1]
-      if (verbose or debug):
-        print ("The value of " + split_elements[0] + " is " + split_elements[1] + "")
+  try:
+    with open("./read_results.ini", "r") as INI_FILE:
+      for file_line in INI_FILE:
+        file_line = file_line.strip()
+        if (debug):
+          print("Found " + file_line + " in the ini file.")
+        file_line = re.sub(r'#.*$', "", file_line)
+        if (file_line == ""):
+          continue  # Ignore empty lines (just a comment perhaps?)
+  
+        split_elements = re.split(r'[ \t=]+', file_line)
+        if (len(split_elements) < 2):
+          print("ERROR: Too few elements on line " + file_line + ", skipping it.")
+          continue
+        elif (len(split_elements) > 2):
+          print("Extra elements on line " + file_line + ", ignoring the extras.")
+  
+        ini_file_contents[split_elements[0]] = split_elements[1]
+        if (verbose or debug):
+          print ("The value of " + split_elements[0] + " is " + split_elements[1] + "")
+  except IOError:
+    print("No read_results.ini file found (or not readable), continuing anyway.");
 
   return ini_file_contents
 

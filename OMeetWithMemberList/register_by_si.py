@@ -65,25 +65,28 @@ def string_to_boolean(string_to_convert):
 def read_ini_file():
   ini_file_contents = {}
 
-  with open("./read_results.ini", "r") as INI_FILE:
-    for file_line in INI_FILE:
-      file_line = file_line.strip()
-      if (debug):
-        print("Found " + file_line + " in the ini file.")
-      file_line = re.sub(r'#.*$', "", file_line)
-      if (file_line == ""):
-        continue  # Ignore empty lines (just a comment perhaps?)
-
-      split_elements = re.split(r'[ \t=]+', file_line)
-      if (len(split_elements) < 2):
-        print("ERROR: Too few elements on line " + file_line + ", skipping it.")
-        continue
-      elif (len(split_elements) > 2):
-        print("Extra elements on line " + file_line + ", ignoring the extras.")
-
-      ini_file_contents[split_elements[0]] = split_elements[1]
-      if (verbose or debug):
-        print ("The value of " + split_elements[0] + " is " + split_elements[1] + "")
+  try:
+    with open("./read_results.ini", "r") as INI_FILE:
+      for file_line in INI_FILE:
+        file_line = file_line.strip()
+        if (debug):
+          print("Found " + file_line + " in the ini file.")
+        file_line = re.sub(r'#.*$', "", file_line)
+        if (file_line == ""):
+          continue  # Ignore empty lines (just a comment perhaps?)
+  
+        split_elements = re.split(r'[ \t=]+', file_line)
+        if (len(split_elements) < 2):
+          print("ERROR: Too few elements on line " + file_line + ", skipping it.")
+          continue
+        elif (len(split_elements) > 2):
+          print("Extra elements on line " + file_line + ", ignoring the extras.")
+  
+        ini_file_contents[split_elements[0]] = split_elements[1]
+        if (verbose or debug):
+          print ("The value of " + split_elements[0] + " is " + split_elements[1] + "")
+  except IOError:
+    print("No file read_results.ini found (or not readable), continuing anyway")
 
   return ini_file_contents
 

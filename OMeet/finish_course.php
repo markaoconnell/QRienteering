@@ -38,7 +38,7 @@ if (isset($_GET["si_stick_finish"])) {
   $si_results_string = base64_decode($_GET["si_stick_finish"]);
   $finish_info = record_finish_by_si_stick($event, $key, $si_results_string);
 
-  if ($finish_info["error"] != "") {
+  if (isset($finish_info["error"]) && ($finish_info["error"] != "")) {
     error_and_exit("ERROR: Cannot find competitor for registered SI unit {$finish_info["si_stick"]}: {$finish_info["error"]}\n");
   }
 

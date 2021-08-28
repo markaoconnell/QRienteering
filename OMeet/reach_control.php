@@ -307,7 +307,7 @@ else {
   }
 
   if ($append_finish_message) {
-    $finish_msg .= "<p style=\"text-align:center; background: #faf60f; color: #2809db; padding: 25px;\">Remember to scan finish to indicate you are off the course</p>";
+    $finish_msg = "<p style=\"text-align:center; background: #faf60f; color: #2809db; padding: 25px;\">Remember to scan finish to indicate you are off the course</p>";
     if ($success_msg != "") {
       $success_msg .= $finish_msg;
     }
