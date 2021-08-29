@@ -566,12 +566,14 @@ while True:
     if event_found:
       results = upload_results(event_key, event, qr_result_string)
       print "\n".join(results)
+      sys.stdout.flush()
     else:
       total_time = si_stick_entry[SI_FINISH_KEY] - si_stick_entry[SI_START_KEY]
       hours = total_time / 3600
       minutes = (total_time - (hours * 3600)) / 60
       seconds = (total_time - (hours * 3600) - (minutes * 60))
       print "Downloaded results for si_stick {}, time was {}h:{}m:{}s ({}).".format(si_stick_entry[SI_STICK_KEY], hours, minutes, seconds, total_time)
+      sys.stdout.flush()
 
   if testing_run:
     break   # While testing, no need to wait for more results

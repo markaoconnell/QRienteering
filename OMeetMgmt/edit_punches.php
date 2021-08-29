@@ -40,15 +40,21 @@ $splits_array = get_splits_as_array($competitor, $event, $key, true);
 
 $start_time = $splits_array["start"];
 if (isset($_GET["new_start_time"])) {
-  $new_start_hms = explode(":", $_GET["new_start_time"]);
-  if (($new_start_hms[0] < 0) || ($new_start_hms[0] > 23) || ($new_start_hms[1] < 0) || ($new_start_hms[1] > 59)
-                                                          || ($new_start_hms[2] < 0) || ($new_start_hms[2] > 59)) {
-    error_and_exit("<p>ERROR: $new_start_time is malformatted, should be hh:mm:ss\n");
+  $entered_start_time = trim($_GET["new_start_time"]);
+  if (preg_match("/^abs:[0-9]+$/", $entered_start_time)) {
+    $pieces = explode(":", $entered_start_time);
+    $new_start_time = $pieces[1];
   }
-  $localtime_array = localtime($start_time, true);
-  $new_start_time = mktime($new_start_hms[0], $new_start_hms[1], $new_start_hms[2],
+  else {
+    $new_start_hms = explode(":", $_GET["new_start_time"]);
+    if (($new_start_hms[0] < 0) || ($new_start_hms[0] > 23) || ($new_start_hms[1] < 0) || ($new_start_hms[1] > 59)
+                                                            || ($new_start_hms[2] < 0) || ($new_start_hms[2] > 59)) {
+      error_and_exit("<p>ERROR: $new_start_time is malformatted, should be hh:mm:ss\n");
+    }
+    $localtime_array = localtime($start_time, true);
+    $new_start_time = mktime($new_start_hms[0], $new_start_hms[1], $new_start_hms[2],
                            $localtime_array["tm_mon"] + 1, $localtime_array["tm_mday"], $localtime_array["tm_year"] + 1900);
-
+  }
   $start_time_adjustment = $new_start_time - $start_time;
 }
 else {
@@ -106,6 +112,7 @@ $output_string = "<p>Punches for {$competitor_name} on " . ltrim($course, "0..9-
 if ($allow_editing) {
   $output_string .= "<p><form action=./edit_punches.php>\n";
   $output_string .= "Current start time: <input type=text name=new_start_time value=\"" . strftime("%T", $start_time + $start_time_adjustment) . "\">\n";
+  $output_string .= "<br>Enter time as hh:mm:ss or abs:value, where value is an aboslute time in seconds.\n";
   $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
   $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";
   $output_string .= "<input type=hidden name=competitor value=\"{$competitor}\">\n";
