@@ -45,7 +45,13 @@ foreach ($course_list as $one_course) {
   $results_array = get_results_as_array($event, $key, $one_course, $score_course, $max_score, "..");
   $place = 1;
   foreach ($results_array as $this_result) {
+    // If the splits array is empty, there is an error - most likely a self reported result with
+    // no splits available, so just skip it.
     $splits_array = get_splits_as_array($this_result["competitor_id"], $event, $key);
+    if (count($splits_array) == 0) {
+      continue;
+    }
+
     $first_space_pos = strpos($this_result["competitor_name"], " ");
     if ($first_space_pos !== false) {
       $first_name = substr($this_result["competitor_name"], 0, $first_space_pos);

@@ -38,7 +38,7 @@ if (isset($_GET["si_stick_finish"])) {
   $si_results_string = base64_decode($_GET["si_stick_finish"]);
   $finish_info = record_finish_by_si_stick($event, $key, $si_results_string);
 
-  if ($finish_info["error"] != "") {
+  if (isset($finish_info["error"]) && ($finish_info["error"] != "")) {
     error_and_exit("ERROR: Cannot find competitor for registered SI unit {$finish_info["si_stick"]}: {$finish_info["error"]}\n");
   }
 
@@ -52,6 +52,12 @@ else {
   $event = $_COOKIE["event"];
   $key = $_COOKIE["key"];
   $finish_time = time();
+  
+  if (($key == "") && redirect_to_secure_http_if_no_key_cookie() && !isset($_SERVER["HTTPS"])) {
+    echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=https://{$_SERVER["SERVER_NAME"]}{$_SERVER["REQUEST_URI"]}\" /></head></html>";
+    return;
+  }
+
 
   if (isset($_COOKIE["{$competitor_id}_skipped_controls"])) {
     $controls_skipped_raw_array = explode(",", $_COOKIE["{$competitor_id}_skipped_controls"]);

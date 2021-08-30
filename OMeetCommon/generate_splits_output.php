@@ -15,6 +15,11 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
   $competitor_name = file_get_contents("{$competitor_path}/name");
   $controls_found_path = "{$competitor_path}/controls_found";
   $course = file_get_contents("{$competitor_path}/course");
+
+  if (file_exists("{$competitor_path}/self_reported")) {
+    return("No splits available for \"{$competitor_name}\" on {$course}, result was self-reported.\n");
+  }
+  
   
   $courses_path = get_courses_path($event, $key, "..");
   $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
@@ -130,6 +135,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
 
 
 function get_splits_dnf($competitor, $event, $key) {
+  global $TYPE_FIELD, $SCORE_O_COURSE, $LIMIT_FIELD, $PENALTY_FIELD, $MAX_SCORE_FIELD;
 
   $error_string = "";
   $output_string = "";
@@ -150,6 +156,10 @@ function get_splits_dnf($competitor, $event, $key) {
   
   $course = file_get_contents("{$competitor_path}/course");
   $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
+  
+  if (file_exists("{$competitor_path}/self_reported")) {
+    return (array("output" => "<p>No splits available for \"{$competitor_name}\" on {$course}, result was self-reported.\n"));
+  }
   
   $course_properties = get_course_properties("{$courses_path}/{$course}");
   $number_controls = count($control_list);
@@ -252,13 +262,18 @@ function get_splits_dnf($competitor, $event, $key) {
 
 
 function get_splits_as_array($competitor_id, $event, $key, $include_all = 'false') {
+  global $TYPE_FIELD, $SCORE_O_COURSE, $LIMIT_FIELD, $PENALTY_FIELD, $MAX_SCORE_FIELD;
 
   $splits_array = array();
   $control_times_array = array();
   $competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
   
   if (!is_dir($competitor_path)) {
-    return($splits_array());
+    return($splits_array);
+  }
+  
+  if (file_exists("{$competitor_path}/self_reported")) {
+    return($splits_array);
   }
   
   $controls_found_path = "{$competitor_path}/controls_found";
