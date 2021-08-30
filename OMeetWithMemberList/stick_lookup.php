@@ -35,6 +35,7 @@ $success_string .= <<<END_OF_FORM
 <input type=hidden name="member_id" value="{$member_id}"/>
 <input type=hidden name="member_email" value="{$email_address}"/>
 <input type=hidden name="key" value="{$key}"/>
+<input type=hidden name="registered_si_stick" value="yes"/>
 <p> How are you orienteering today? <br>
 <p> Using Si unit <input type=radio name="using_stick" value="yes" checked /> <input type=text name="si_stick_number" value="{$si_stick}" readonly/>
 <p> Using QR codes <input type=radio name="using_stick" value="no" />
