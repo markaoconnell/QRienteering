@@ -26,9 +26,10 @@ function name_to_results_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
   return ("<li><a href={$base_path_for_links}/OMeet/view_results.php?event={$event_id}&key={$key}>Results for {$event_fullname}</a>" . 
-          "<ul><li><a href={$base_path_for_links}/OMeet/on_course.php?event={$event_id}&key={$key}>still on course</a>" . 
+          "<ul><li><a href={$base_path_for_links}/OMeet/on_course.php?event={$event_id}&key={$key}>Still on course</a>" . 
               "<li><a href={$base_path_for_links}/OMeetMgmt/competitor_info.php?event={$event_id}&key={$key}>" .
-                                                                                     "Meet Director view of competitors</a></ul>\n");
+	                                                                                        "Meet Director view of competitors</a>" .
+	      "<li><a href={$base_path_for_links}/OMeetRegistration/self_report_1.php?event={$event_id}&key={$key}>Self report a result</a></ul>\n");
 }
 
 function name_to_add_course_link($event_id) {
@@ -95,17 +96,17 @@ else {
 $recent_event_cutoff = time() - $recent_event_timeout;
 
 $event_list = scandir($base_path);
-$open_event_list = array_filter($event_list, is_event_open);
-$closed_event_list = array_filter($event_list, is_event_recently_closed);
-$open_event_links = array_map(name_to_registration_link, $open_event_list);
-$add_course_links = array_map(name_to_add_course_link, $open_event_list);
-$add_course_links2 = array_map(name_to_clone_course_link, $closed_event_list);
-$remove_course_links = array_map(name_to_remove_course_link, $open_event_list);
-$open_event_result_links = array_map(name_to_results_link, $open_event_list);
-$qrcode_links = array_map(name_to_get_qrcodes_link, $open_event_list);
-$closed_event_result_links = array_map(name_to_results_link, $closed_event_list);
-$closed_event_winsplits_links = array_map(name_to_winsplits_link, $closed_event_list);
-$open_event_winsplits_links = array_map(name_to_winsplits_link, $open_event_list);
+$open_event_list = array_filter($event_list, "is_event_open");
+$closed_event_list = array_filter($event_list, "is_event_recently_closed");
+$open_event_links = array_map("name_to_registration_link", $open_event_list);
+$add_course_links = array_map("name_to_add_course_link", $open_event_list);
+$add_course_links2 = array_map("name_to_clone_course_link", $closed_event_list);
+$remove_course_links = array_map("name_to_remove_course_link", $open_event_list);
+$open_event_result_links = array_map("name_to_results_link", $open_event_list);
+$qrcode_links = array_map("name_to_get_qrcodes_link", $open_event_list);
+$closed_event_result_links = array_map("name_to_results_link", $closed_event_list);
+$closed_event_winsplits_links = array_map("name_to_winsplits_link", $closed_event_list);
+$open_event_winsplits_links = array_map("name_to_winsplits_link", $open_event_list);
 
 
 echo get_web_page_header(true, false, false);

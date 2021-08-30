@@ -58,7 +58,7 @@ foreach ($current_courses as $this_course) {
   array_map(function ($elt) use (&$all_controls) { $all_controls[$elt[0]] = 1; }, $control_list);
   }
 
-if (isset($_SERVER["HTTPS"])) {
+if (use_secure_http_for_qr_codes()) {
   $proto = "https://";
 }
 else {
@@ -128,6 +128,8 @@ echo "<li><input type=checkbox {$registration_links_checked} name=\"qr-" . base6
                           "\" value=\"{$url_prefix}/OMeet/view_results.php?{$add_key_string}&{$add_event_string}\">View results of {$existing_event_name}\n";
 echo "<li><input type=checkbox {$registration_links_checked} name=\"qr-" . base64_encode("{$existing_event_name}: currently on course") .
                           "\" value=\"{$url_prefix}/OMeet/on_course.php?{$add_key_string}&{$add_event_string}\">View competitors still running for {$existing_event_name}\n";
+echo "<li><input type=checkbox {$registration_links_checked} name=\"qr-" . base64_encode("{$existing_event_name}: self report a result") .
+                          "\" value=\"{$url_prefix}/OMeetRegistration/self_report_1.php?{$add_key_string}&{$add_event_string}\">Self report a result for {$existing_event_name}\n";
 echo "</ul>\n";
 echo "<li><strong>Reusable Result QR codes</strong>\n";
 echo "<ul>\n";
@@ -135,6 +137,8 @@ echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode
                           "\" value=\"{$url_prefix}/OMeet/view_results.php?{$add_key_string}\">View results of open events (reusable)\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Competitors still running") .
                           "\" value=\"{$url_prefix}/OMeet/on_course.php?{$add_key_string}\">View competitors still running for any open event (reusable)\n";
+echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Self report a result") .
+                          "\" value=\"{$url_prefix}/OMeetRegistration/self_report_1.php?{$add_key_string}\">Self report a result (resuable)\n";
 echo "</ul>\n";
 echo "</ul>\n";
 ?>

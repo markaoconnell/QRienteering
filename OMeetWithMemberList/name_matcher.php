@@ -29,12 +29,14 @@ function read_names_info($member_file, $nicknames_file) {
 
       // Weed out duplicate names - assume someone accidentally joined twice
       $lower_case_full_name = strtolower("{$pieces[1]} {$pieces[2]}");
+      $si_stick = isset($pieces[3]) ? $pieces[3] : "";
+      $email_address = isset($pieces[4]) ? $pieces[4] : "";
       if (!isset($full_name_hash[$lower_case_full_name])) {
         $member_hash[$pieces[0]] = array("first" => $pieces[1],
                                          "last" => $pieces[2],
                                          "full_name" => "{$pieces[1]} {$pieces[2]}",
-                                         "si_stick"=> $pieces[3],
-					 "email" => $pieces[4]);
+                                         "si_stick"=> $si_stick,
+					 "email" => $email_address);
         $last_name_hash[strtolower($pieces[2])][] = $pieces[0]; 
         $full_name_hash[$lower_case_full_name] = $pieces[0];
       }
@@ -77,7 +79,8 @@ function get_si_stick($member_id, $matching_info) {
 }
 
 function get_by_si_stick($si_stick, $matching_info) {
-  return($matching_info["si_hash"][$si_stick]);
+  
+  return(isset($matching_info["si_hash"][$si_stick]) ? $matching_info["si_hash"][$si_stick] : "");
 }
 
 

@@ -83,7 +83,7 @@ if (!$error) {
   else {
     $body_string .= "<p>Registration complete: " . $competitor_name . " on " . ltrim($course, "0..9-");
 
-    $cookie_path = dirname(dirname($_SERVER["REQUEST_URI"]));
+    $cookie_path = isset($_SERVER["REQUEST_URI"]) ? dirname(dirname($_SERVER["REQUEST_URI"])) : "";
 
     $saved_competitor_name = $competitor_name;
     $i = 0;
@@ -109,7 +109,7 @@ if (!$error) {
         $using_si_stick = true;
       }
 
-      if (($registration_info["is_member"] == "yes") && ($registration_info["member_id"] != "")) {
+      if (($registration_info["is_member"] == "yes") && isset($registration_info["member_id"]) && ($registration_info["member_id"] != "")) {
         // Format will be member_id:timestamp_of_last_registration,member_id:timestamp_of_last_registration,...
         // 3 month timeout
         $time_cutoff = $current_time - (86400 * 90);
@@ -126,13 +126,14 @@ if (!$error) {
       # This is a BYOM registration
       # Save some cookies to optimize the next BYOM registration on this device
       # Save the information for 30 days
-      if ($_GET["email_address"] != "") {
+      $email_address_supplied = isset($_GET["email_address"]) ? $_GET["email_address"] : "";
+      if ($email_address_supplied != "") {
         $just_email_registration_info = implode(",", array("email_address", base64_encode($_GET["email_address"]),
                                                            "BYOM", base64_encode("yes")));
         file_put_contents("{$competitor_path}/registration_info", $just_email_registration_info);
       }
 
-      $byom_registration_cookie = base64_encode($competitor_name) . "," . base64_encode($_GET["email_address"]);
+      $byom_registration_cookie = base64_encode($competitor_name) . "," . base64_encode($email_address_supplied);
       setcookie("byom_registration_info", $byom_registration_cookie, $current_time + (86400 * 30), $cookie_path);
     }
     

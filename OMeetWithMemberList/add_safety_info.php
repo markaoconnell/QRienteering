@@ -16,6 +16,7 @@ if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
 
+$stick_override_msg = "";
 if ($is_member) {
   if (!isset($_GET["using_stick"])) {
     error_and_exit("No value found for SI unit usage - error in scripting?  Please restart registration.\n");
@@ -24,6 +25,14 @@ if ($is_member) {
   $using_stick_value = $_GET["using_stick"];
   if (($using_stick_value != "yes") && ($using_stick_value != "no")) {
     error_and_exit("Invalid value \"{$using_stick_value}\" for SI unit usage.  Please restart registration.\n");
+  }
+
+  if (isset($_GET["si_stick_number"]) && ($_GET["si_stick_number"] != "") && ($using_stick_value == "no")) {
+    $stick_override_msg = "<p class=title style=\"color:red;\"> <strong>SI unit number \"{$_GET["si_stick_number"]}\" entered but QR orienteering selected.\n";
+    $stick_override_msg .= "<br>Overriding and using SI unit orienteering.\n";
+    $stick_override_msg .= "<br>If this is wrong, please go back and restart registration and make sure that the SI unit field is blank.\n";
+    $stick_override_msg .= "</strong><br><br><br><br>\n";
+    $using_stick_value = "yes";
   }
   
   if ($using_stick_value == "yes") {
@@ -74,6 +83,11 @@ else {
 echo "<input type=hidden name=\"si_stick\" value=\"{$si_stick}\">\n";
 echo "<input type=hidden name=\"key\" value=\"{$key}\">\n";
 
+
+// Warn the user if they entered a SI unit number but selected QR code orienteering
+if ($stick_override_msg != "") {
+  echo $stick_override_msg;
+}
 
 $base_path = get_base_path($key, "..");
 if ($is_member) {

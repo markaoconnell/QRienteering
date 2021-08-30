@@ -12,6 +12,7 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
   global $include_competitor_id, $include_date, $key, $event; 
   $competitor_string = "<tr>";
   $competitor_name = file_get_contents("{$competitor_base_path}/{$competitor_id}/name");
+  $is_self_reported = file_exists("{$competitor_base_path}/{$competitor_id}/self_reported");
   $competitor_course = ltrim(file_get_contents("{$competitor_base_path}/{$competitor_id}/course"), "0..9-");
 
   $competitor_string .= "<td><input type=checkbox name=\"Remove-{$competitor_id}\" value=\"{$competitor_id}\"></td>";
@@ -25,8 +26,14 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
   }
  
   $competitor_string .= "</td><td>{$status}</td><td><a href=\"./update_stick.php?key={$key}&event={$event}&competitor={$competitor_id}\">$si_stick</a></td>";
-  $competitor_string .= "<td><a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}\">show</a> / ";
-  $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}&allow_editing=1\">edit</a></td>";
+  if (!$is_self_reported) {
+    $competitor_string .= "<td><a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}\">show</a> / ";
+    $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}&allow_editing=1\">edit</a></td>";
+  }
+  else {
+    $competitor_string .= "<td>No splits</td>";
+  }
+
   if (count($registration_info) > 0) {
     $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = " . htmlentities($registration_info[$key])); },
                                                                                                                 array_diff(array_keys($registration_info),
@@ -83,7 +90,10 @@ $current_time = time();
 $competitor_outputs = array();
 foreach ($competitor_list as $competitor) {
   $course = file_get_contents("${competitor_directory}/${competitor}/course");
-  if (!file_exists("${competitor_directory}/${competitor}/controls_found/finish") || $include_finishers) {
+  $is_self_reported = file_exists("{$competitor_directory}/{$competitor}/self_reported");
+  $finish_file_exists = file_exists("{$competitor_directory}/{$competitor}/controls_found/finish");
+  $has_finished = $finish_file_exists || $is_self_reported;
+  if (!$has_finished || $include_finishers) {
     if (file_exists("{$competitor_directory}/{$competitor}/registration_info")) {
       $registration_info = parse_registration_info(file_get_contents("{$competitor_directory}/{$competitor}/registration_info"));
     }
@@ -106,6 +116,9 @@ foreach ($competitor_list as $competitor) {
     }
     else if (file_exists("{$competitor_directory}/{$competitor}/si_stick")) {
       $status = "registered";
+    }
+    else if ($is_self_reported) {
+      $status = "self reported";
     }
     else {
       $status = "not started";

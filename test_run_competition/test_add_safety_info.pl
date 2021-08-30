@@ -129,7 +129,7 @@ success();
 ###########
 # Test 3 - Success member registration
 # 
-%TEST_INFO = qw(Testname TestMemberNotUsingStick);
+%TEST_INFO = qw(Testname TestMemberWithStickSpecifiedButSaysQRienteering);
 %GET = qw(key UnitTestPlayground member_id 31 using_stick no si_stick_number 141421);
 %COOKIE = ();  # empty hash
 
@@ -145,8 +145,45 @@ if ($output !~ /type=hidden name="member_id" value="31"/) {
   error_and_exit("Hidden input member_id not found.\n$output");
 }
 
+if ($output !~ /Overriding and using SI unit orienteering/)  {
+  error_and_exit("Override message should be present but was not.\n$output");
+}
+
+if ($output !~ /type=hidden name="si_stick" value="141421"/) {
+  error_and_exit("Hidden input si_stick should have the value 141421 but did not.\n$output");
+}
+
+if ($output !~ /input type="text" size=50 name="email"  >/) {
+  error_and_exit("Presupplied email address found.\n$output");
+}
+
+success();
+
+###########
+# Test 3a - Success member registration
+# 
+%TEST_INFO = qw(Testname TestMemberNotUsingStick);
+%GET = qw(key UnitTestPlayground member_id 31 using_stick no);
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
+$output = qx($cmd);
+
+if ($output !~ /type=hidden name="waiver_signed" value="signed"/) {
+  error_and_exit("Waiver signed hidden input not found.\n$output");
+}
+
+if ($output !~ /type=hidden name="member_id" value="31"/) {
+  error_and_exit("Hidden input member_id not found.\n$output");
+}
+
+if ($output =~ /Overriding and using SI unit orienteering/)  {
+  error_and_exit("Override message should not be present but was.\n$output");
+}
+
 if ($output !~ /type=hidden name="si_stick" value=""/) {
-  error_and_exit("Hidden input si_stick incorrectly has a value.\n$output");
+  error_and_exit("Hidden input si_stick should have a value.\n$output");
 }
 
 if ($output !~ /input type="text" size=50 name="email"  >/) {
@@ -158,8 +195,8 @@ success();
 ###########
 # Test 4 - Success member registration
 # 
-%TEST_INFO = qw(Testname TestMemberNotUsingStickBadStickNumber);
-%GET = qw(key UnitTestPlayground member_id 41 using_stick no si_stick_number 14xx21);
+%TEST_INFO = qw(Testname TestMemberNotUsingStick);
+%GET = qw(key UnitTestPlayground member_id 41 using_stick no);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();

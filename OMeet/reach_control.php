@@ -12,11 +12,16 @@ $course = $_COOKIE["course"];
 $time_now = time();
 $skip_adding_control_as_extra = false;
 
+if (($key == "") && redirect_to_secure_http_if_no_key_cookie() && !isset($_SERVER["HTTPS"])) {
+  echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=https://{$_SERVER["SERVER_NAME"]}{$_SERVER["REQUEST_URI"]}\" /></head></html>";
+  return;
+}
+
 if (($event == "") || ($competitor_id == "")) {
   error_and_exit("<p>ERROR: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?" . get_error_info_string());
 }
 
-if ($_GET["skipped_controls"] != "") {
+if (isset($_GET["skipped_controls"]) && ($_GET["skipped_controls"] != "")) {
   $get_key = $_GET["key"];
   $get_event = $_GET["event"];
   $get_control_id = $_GET["control"];
@@ -67,7 +72,7 @@ if (!file_exists(get_event_path($event, $key, "..") . "/no_redirects") && ($_GET
   return;
 }
 
-if ($_GET["mumble"] != "") {
+if (isset($_GET["mumble"]) && ($_GET["mumble"] != "")) {
   $pieces = explode(",", base64_decode($_GET["mumble"]));
   $control_id = $pieces[0];
   $encoded_competitor_id = $pieces[1];
@@ -307,7 +312,7 @@ else {
   }
 
   if ($append_finish_message) {
-    $finish_msg .= "<p style=\"text-align:center; background: #faf60f; color: #2809db; padding: 25px;\">Remember to scan finish to indicate you are off the course</p>";
+    $finish_msg = "<p style=\"text-align:center; background: #faf60f; color: #2809db; padding: 25px;\">Remember to scan finish to indicate you are off the course</p>";
     if ($success_msg != "") {
       $success_msg .= $finish_msg;
     }

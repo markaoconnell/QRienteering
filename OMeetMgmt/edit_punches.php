@@ -13,11 +13,11 @@ $competitor = $_GET["competitor"];
 $allow_editing = isset($_GET["allow_editing"]);
 
 if ($event == "") {
-  error_and_exit("<p>ERROR: Event not specified, no results can be shown.\n");
+  error_and_exit("<p>ERROR: Event not specified, cannot edit punches.\n");
 }
 
 if ($competitor == "") {
-  error_and_exit("<p>ERROR: Competitor not specified, no results can be shown.\n");
+  error_and_exit("<p>ERROR: Competitor not specified, cannot edit punches.\n");
 }
 
 $courses_path = get_courses_path($event, $key);
@@ -30,21 +30,35 @@ if (!is_dir($competitor_path)) {
   error_and_exit("<p>ERROR: No such competitor found {$competitor} (possibly already removed or edited?).\n");
 }
 
+if (file_exists("{$competitor_path}/self_reported")) {
+  error_and_exit("<p>ERROR: Self reported result, no splits available to edit.\n");
+}
+
 set_timezone($key);
 
 $splits_array = get_splits_as_array($competitor, $event, $key, true);
 
 $start_time = $splits_array["start"];
 if (isset($_GET["new_start_time"])) {
-  $new_start_hms = explode(":", $_GET["new_start_time"]);
-  if (($new_start_hms[0] < 0) || ($new_start_hms[0] > 23) || ($new_start_hms[1] < 0) || ($new_start_hms[1] > 59)
-                                                          || ($new_start_hms[2] < 0) || ($new_start_hms[2] > 59)) {
-    error_and_exit("<p>ERROR: $new_start_time is malformatted, should be hh:mm:ss\n");
+  $entered_start_time = trim($_GET["new_start_time"]);
+  if (($start_time == 0) && !preg_match("/^abs:[0-9]+$/", $entered_start_time)) {
+      error_and_exit("<p>ERROR: $entered_start_time is malformatted, should be abs:timestamp when start was not punched.\n");
   }
-  $localtime_array = localtime($start_time, true);
-  $new_start_time = mktime($new_start_hms[0], $new_start_hms[1], $new_start_hms[2],
-                           $localtime_array["tm_mon"] + 1, $localtime_array["tm_mday"], $localtime_array["tm_year"] + 1900);
 
+  if (preg_match("/^abs:[0-9]+$/", $entered_start_time)) {
+    $pieces = explode(":", $entered_start_time);
+    $new_start_time = $pieces[1];
+  }
+  else {
+    $new_start_hms = explode(":", $_GET["new_start_time"]);
+    if (($new_start_hms[0] < 0) || ($new_start_hms[0] > 23) || ($new_start_hms[1] < 0) || ($new_start_hms[1] > 59)
+                                                            || ($new_start_hms[2] < 0) || ($new_start_hms[2] > 59)) {
+      error_and_exit("<p>ERROR: $start_time is malformatted, should be hh:mm:ss\n");
+    }
+    $localtime_array = localtime($start_time, true);
+    $new_start_time = mktime($new_start_hms[0], $new_start_hms[1], $new_start_hms[2],
+                           $localtime_array["tm_mon"] + 1, $localtime_array["tm_mday"], $localtime_array["tm_year"] + 1900);
+  }
   $start_time_adjustment = $new_start_time - $start_time;
 }
 else {
@@ -102,6 +116,12 @@ $output_string = "<p>Punches for {$competitor_name} on " . ltrim($course, "0..9-
 if ($allow_editing) {
   $output_string .= "<p><form action=./edit_punches.php>\n";
   $output_string .= "Current start time: <input type=text name=new_start_time value=\"" . strftime("%T", $start_time + $start_time_adjustment) . "\">\n";
+  if ($start_time != 0) {
+    $output_string .= "<br>Enter time as hh:mm:ss or abs:value, where value is an absolute time in seconds.\n";
+  }
+  else {
+    $output_string .= "<br>Enter time as abs:value, where value is an absolute time in seconds.\n";
+  }
   $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
   $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";
   $output_string .= "<input type=hidden name=competitor value=\"{$competitor}\">\n";
