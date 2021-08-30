@@ -52,6 +52,12 @@ else {
   $event = $_COOKIE["event"];
   $key = $_COOKIE["key"];
   $finish_time = time();
+  
+  if (($key == "") && redirect_to_secure_http_if_no_key_cookie() && !isset($_SERVER["HTTPS"])) {
+    echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=https://{$_SERVER["SERVER_NAME"]}{$_SERVER["REQUEST_URI"]}\" /></head></html>";
+    return;
+  }
+
 
   if (isset($_COOKIE["{$competitor_id}_skipped_controls"])) {
     $controls_skipped_raw_array = explode(",", $_COOKIE["{$competitor_id}_skipped_controls"]);

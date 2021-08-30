@@ -71,30 +71,33 @@ $courses_array = array_diff($courses_array, array(".", "..")); // Remove the ann
 // print_r($courses_array);
 echo "<p>\n";
 
-echo "<p>Self-report a result for orienteering event: " . file_get_contents("{$base_path}/{$event}/description") . "\n<br>";
+echo "<p class=title>Self-report a result for orienteering event: " . file_get_contents("{$base_path}/{$event}/description") . "\n<br>";
 echo "<form action=\"./self_report_2.php\">\n";
 
-echo "<br><p>What is your name?<br>\n";
+echo "<br><p class=title>What is your name?</p><br>\n";
 echo "<input type=\"text\" size=30 name=\"competitor_name\" value=\"{$default_name}\"><br>\n";
 
 echo "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
 echo "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
 
-echo "<br><p>Select a course:<br>\n";
+echo "<hr>\n";
+echo "<br><p class=title>Select a course:</p><br>\n";
 foreach ($courses_array as $course_name) {
   if (!file_exists("{$courses_path}/{$course_name}/removed")) {
     echo "<p><input type=\"radio\" name=\"course\" value=\"" . $course_name . "\">" . ltrim($course_name, "0..9-") . " <br>\n";
   }
 }
 
-echo "<br><p>What was your time?<br>\n";
+echo "<hr>\n";
+echo "<br><p class=title>What was your time?</p><br>\n";
 echo "<br>Format is XXhXXmXXs, e.g. 1h32m48s, or 92m48s.<br>\n";
 echo "<br>Use \"none\" to report having done the course without reporting a time.<br>\n";
 echo "<input type=\"text\" size=30 name=\"reported_time\"><br>\n";
 
 echo "<p><input type=checkbox name=\"found_all\" checked> I found all the controls (if unchecked, will be a DNF)<br>\n";
 
-echo "<br><p>If a ScoreO, what was your score?.<br>\n";
+echo "<hr>\n";
+echo "<br><p>If a ScoreO, what was your score?</p><br>\n";
 echo "<br>Note: Enter only sum of points for controls visited without regard to ";
 echo "penalties for exceeding the time limit, time penalties will be automatically calculated and deducted.\n";
 echo "<input type=\"text\" size=30 name=\"scoreo_score\"><br>\n";

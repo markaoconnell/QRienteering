@@ -580,4 +580,12 @@ function set_timezone($key) {
   return;
 }
 
+function use_secure_http_for_qr_codes() {
+  return(file_exists("../secure_http"));
+}
+
+function redirect_to_secure_http_if_no_key_cookie() {
+  return(file_exists("../try_secure_http"));
+}
+
 ?>

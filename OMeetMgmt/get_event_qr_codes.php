@@ -58,7 +58,7 @@ foreach ($current_courses as $this_course) {
   array_map(function ($elt) use (&$all_controls) { $all_controls[$elt[0]] = 1; }, $control_list);
   }
 
-if (isset($_SERVER["HTTPS"])) {
+if (use_secure_http_for_qr_codes()) {
   $proto = "https://";
 }
 else {

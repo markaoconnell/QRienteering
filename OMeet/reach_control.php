@@ -12,6 +12,11 @@ $course = $_COOKIE["course"];
 $time_now = time();
 $skip_adding_control_as_extra = false;
 
+if (($key == "") && redirect_to_secure_http_if_no_key_cookie() && !isset($_SERVER["HTTPS"])) {
+  echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=https://{$_SERVER["SERVER_NAME"]}{$_SERVER["REQUEST_URI"]}\" /></head></html>";
+  return;
+}
+
 if (($event == "") || ($competitor_id == "")) {
   error_and_exit("<p>ERROR: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?" . get_error_info_string());
 }
