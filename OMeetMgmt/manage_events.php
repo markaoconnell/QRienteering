@@ -51,10 +51,11 @@ function name_to_clone_course_link($event_id) {
   return ("<li><a href={$base_path_for_links}/OMeetMgmt/create_event.php?clone_event={$event_id}&key={$key}> Create a copy of {$event_fullname}</a>");
 }
 
-function name_to_winsplits_link($event_id) {
+function name_to_download_links($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
-  return ("<li><a href={$base_path_for_links}/OMeetMgmt/download_results_csv.php?event={$event_id}&key={$key}> Download winsplits csv for {$event_fullname}</a>");
+  return ("<li>Download <a href={$base_path_for_links}/OMeetMgmt/download_results_csv.php?event={$event_id}&key={$key}> winsplits </a> / " .
+          "<a href={$base_path_for_links}/OMeetMgmt/download_results_iofxml.php?event={$event_id}&key={$key}> IOF XML 3.0 </a> results for {$event_fullname}");
 }
 
 function name_to_get_qrcodes_link($event_id) {
