@@ -356,6 +356,7 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
     $competitor_result_array["competitor_id"] = $result_pieces[2];
     $competitor_result_array["competitor_name"] = $competitor_name;
     $competitor_result_array["time"] = csv_formatted_time($result_pieces[1]);
+    $competitor_result_array["raw_time"] = $result_pieces[1];
     $competitor_result_array["dnf"] = file_exists("{$competitor_path}/dnf");
     if (file_exists("{$competitor_path}/si_stick")) {
       $competitor_result_array["si_stick"] = file_get_contents("{$competitor_path}/si_stick");
