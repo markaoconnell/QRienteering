@@ -10,6 +10,11 @@ if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
  
+$saved_registration_info = array();
+if (isset($_COOKIE["{$key}-safety_info"])) {
+  $saved_registration_info = parse_registration_info($_COOKIE["{$key}-safety_info"]);
+}
+
 $member_properties = get_member_properties(get_base_path($key));
 $matching_info = read_names_info(get_members_path($key, $member_properties), get_nicknames_path($key, $member_properties));
 
@@ -48,16 +53,25 @@ else if (count($possible_member_ids) == 1) {
   if ($si_stick != "") {
     $yes_checked_by_default = "checked";
     $no_checked_by_default = "";
+    $pass_registered_si_stick_entry = "<input type=hidden name=\"registered_si_stick\" value=\"yes\"/>\n";
+  }
+  else if (isset($saved_registration_info["si_stick"]) && ($saved_registration_info["si_stick"] != "")) {
+    $si_stick = $saved_registration_info["si_stick"];
+    $yes_checked_by_default = "checked";
+    $no_checked_by_default = "";
+    $pass_registered_si_stick_entry = "<input type=hidden name=\"registered_si_stick\" value=\"yes\"/>\n";
   }
   else {
     $yes_checked_by_default = "";
     $no_checked_by_default = "checked";
+    $pass_registered_si_stick_entry = "";
   }
   $success_string .= "<p>How are you orienteering today?";
   $success_string .= <<<END_OF_FORM
 <form action="./add_safety_info.php">
 <input type=hidden name="member_id" value="{$possible_member_ids[0]}"/>
 <input type=hidden name="member_email" value="{$email_address}"/>
+{$pass_registered_si_stick_entry}
 <p> Using Si unit <input type=radio name="using_stick" value="yes" {$yes_checked_by_default} /> <input type=text name="si_stick_number" value="{$si_stick}" />
 <p> Using QR codes <input type=radio name="using_stick" value="no" {$no_checked_by_default}/>
 <input type="hidden" name="key" value="{$key}">

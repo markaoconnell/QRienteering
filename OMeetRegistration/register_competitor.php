@@ -103,7 +103,9 @@ if (!$error) {
     $current_time = time();
 
     if ($registration_info_supplied) {
+      // Save the safety information for a few hours so it can be auto-filled if someone wants to go out on a second course
       file_put_contents("{$competitor_path}/registration_info", $raw_registration_info);
+      setcookie("{$key}-safety_info", $raw_registration_info, $current_time + 3600 * 4, $cookie_path);
       if ($registration_info["si_stick"] != "") {
         file_put_contents("{$competitor_path}/si_stick", $registration_info["si_stick"]);
         $using_si_stick = true;

@@ -5,6 +5,10 @@ require 'name_matcher.php';
 
 ck_testing();
 
+function find_get_key_or_empty_string($parameter_name) {
+  return(isset($_GET[$parameter_name]) ? $_GET[$parameter_name] : "");
+}
+
 $key = $_GET["key"];
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
@@ -32,15 +36,15 @@ if ($is_member) {
   $club_name = get_club_name($key, $member_properties);
 }
 else {
-  $first_name = $_GET["competitor_first_name"];
-  $last_name = $_GET["competitor_last_name"];
-  $club_name = $_GET["club_name"];
+  $first_name = find_get_key_or_empty_string("competitor_first_name");
+  $last_name = find_get_key_or_empty_string("competitor_last_name");
+  $club_name = find_get_key_or_empty_string("club_name");
 }
-$waiver_signed = $_GET["waiver_signed"];
-$car_info = $_GET["car_info"];
-$cell_phone = $_GET["cell_number"];
-$email_address = $_GET["email"];
-$si_stick = $_GET["si_stick"];
+$waiver_signed = find_get_key_or_empty_string("waiver_signed");
+$car_info = find_get_key_or_empty_string("car_info");
+$cell_phone = find_get_key_or_empty_string("cell_number");
+$email_address = find_get_key_or_empty_string("email");
+$si_stick = find_get_key_or_empty_string("si_stick");
 
 
 // Let's do some validations

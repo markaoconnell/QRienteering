@@ -16,6 +16,11 @@ if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
 
+$saved_registration_info = array();
+if (isset($_COOKIE["{$key}-safety_info"])) {
+  $saved_registration_info = parse_registration_info($_COOKIE["{$key}-safety_info"]);
+}
+
 $stick_override_msg = "";
 if ($is_member) {
   if (!isset($_GET["using_stick"])) {
@@ -27,7 +32,7 @@ if ($is_member) {
     error_and_exit("Invalid value \"{$using_stick_value}\" for SI unit usage.  Please restart registration.\n");
   }
 
-  if (isset($_GET["si_stick_number"]) && ($_GET["si_stick_number"] != "") && ($using_stick_value == "no")) {
+  if (isset($_GET["si_stick_number"]) && ($_GET["si_stick_number"] != "") && ($using_stick_value == "no") && !isset($_GET["registered_si_stick"])) {
     $stick_override_msg = "<p class=title style=\"color:red;\"> <strong>SI unit number \"{$_GET["si_stick_number"]}\" entered but QR orienteering selected.\n";
     $stick_override_msg .= "<br>Overriding and using SI unit orienteering.\n";
     $stick_override_msg .= "<br>If this is wrong, please go back and restart registration and make sure that the SI unit field is blank.\n";
@@ -108,6 +113,28 @@ else {
     echo "<p><strong><input type=checkbox name=\"waiver_signed\" value=\"signed\">  (Required) I am participating of my own accord and hold the organizers harmless for any injury sustained.</strong><br>\n";
   }
 }
+
+if (isset($saved_registration_info["cell_phone"])) {
+  $presupplied_cell_phone = "value=\"{$saved_registration_info["cell_phone"]}\"";
+}
+else {
+  $presupplied_cell_phone = "";
+}
+
+if (isset($saved_registration_info["car_info"])) {
+  $presupplied_car_info = "value=\"{$saved_registration_info["car_info"]}\"";
+}
+else {
+  $presupplied_car_info = "";
+}
+
+if (isset($saved_registration_info["email_address"]) && ($saved_registration_info["email_address"] != "")) {
+  $presupplied_email_address = "value=\"{$saved_registration_info["email_address"]}\"";
+}
+else {
+  $presupplied_email_address = "";
+}
+
 ?>
 
 <p>It is important that you scan finish at the end of your course so that we know you are safely off the course.
@@ -115,22 +142,23 @@ else {
 <p>This information is maintained while you are on the course and destroyed when you finish the course.
 
 <br><p>(Best option) Your cell phone number, or a parent/guardian's, spouse's, etc.<br>
-<input type="text" size=50 name="cell_number"><br>
+<input type="text" size=50 name="cell_number" <?php echo $presupplied_cell_phone; ?>><br>
 <br><p>What car (make/model/plate) did you come in (we can check the lot to see if you've left)?<br>
-<input type="text" size=50 name="car_info"><br>
+<input type="text" size=50 name="car_info" <?php echo $presupplied_car_info; ?>><br>
 
 <p>
 <?php
-$presupplied_value = "";
+// If the member has a registered email, use this rather than the last email entered
+// Since different members may register on the same phone
 if ($is_member) {
-  $member_email = $_GET["member_email"];
+  $member_email = isset($_GET["member_email"]) ? $_GET["member_email"] : "";
   if ($member_email != "") {
-    $presupplied_value = "value=\"{$member_email}\"";
+    $presupplied_email_address = "value=\"{$member_email}\"";
   }
 }
 
 echo "<br><p>(Optional) If you would like results emailed to you, please supply a valid email address<br>\n";
-echo "<input type=\"text\" size=50 name=\"email\" {$presupplied_value} ><br><br>\n";
+echo "<input type=\"text\" size=50 name=\"email\" {$presupplied_email_address} ><br><br>\n";
 ?>
 
 <input type="submit" value="Choose course">
