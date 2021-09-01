@@ -571,6 +571,26 @@ function use_secure_http_for_qr_codes() {
   return(file_exists("../secure_http"));
 }
 
+function get_secure_http_port_spec() {
+  if (file_exists("../secure_http_port")) {
+    $port_spec_file_lines = file("../secure_http_port", FILE_IGNORE_NEW_LINES);
+    return (":" . $port_spec_file_lines[0]);
+  }
+  else {
+    return ("");
+  }
+}
+
+function get_http_port_spec() {
+  if (file_exists("../http_port")) {
+    $port_spec_file_lines = file("../http_port", FILE_IGNORE_NEW_LINES);
+    return (":" . $port_spec_file_lines[0]);
+  }
+  else {
+    return ("");
+  }
+}
+
 function redirect_to_secure_http_if_no_key_cookie() {
   return(file_exists("../try_secure_http"));
 }
