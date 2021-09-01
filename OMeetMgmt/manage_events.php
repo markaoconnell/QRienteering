@@ -80,7 +80,7 @@ if (isset($_GET["server-path-override"])) {
   $base_path_for_links = $_GET["server-path-override"];
 }
 else {
-  if (use_secure_http_for_qr_codes()) {
+  if (isset($_SERVER["HTTPS"])) {
     $proto = "https://";
     $port = get_secure_http_port_spec();
   }

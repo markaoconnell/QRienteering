@@ -13,6 +13,19 @@ input[type=submit] {
     font-size: 12pt;
     margin-top: 10px;
 }
+@media (min-width: 600px) {
+  input[type=submit] {
+    background-color: deepskyblue;
+    color: white;
+    border: none;
+    border-radius: 18px;
+    padding: 10px;
+    box-sizing: border-box;
+    width: 20%;
+    font-size: 12pt;
+    margin-top: 10px;
+  }
+}
 @media (prefers-color-scheme: dark) {
     body {
         background-color: #333333;

@@ -60,11 +60,14 @@ foreach ($current_courses as $this_course) {
 
 if (use_secure_http_for_qr_codes()) {
   $proto = "https://";
+  $port = get_secure_http_port_spec();
 }
 else {
   $proto = "http://";
+  $port = get_http_port_spec();
 }
-$url_prefix = $proto . $_SERVER["SERVER_NAME"] . dirname(dirname($_SERVER["REQUEST_URI"]));
+
+$url_prefix = $proto . $_SERVER["SERVER_NAME"] . $port . dirname(dirname($_SERVER["REQUEST_URI"]));
 while (substr($url_prefix, -1) == "/") {
   $url_prefix = substr($url_prefix, 0, -1);
 }
