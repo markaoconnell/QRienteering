@@ -105,7 +105,8 @@ function format_time_as_minutes_since_midnight($unix_timestamp) {
 
 // Am I running on a mobile device?
 function is_mobile () {
-  return (isset($_SERVER['HTTP_USER_AGENT']) && is_numeric(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), "mobile")));
+	#  return (isset($_SERVER['HTTP_USER_AGENT']) && is_numeric(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), "mobile")));
+	return false;
 }
 
 
@@ -123,6 +124,7 @@ function get_web_page_header($paragraph_style, $table_style, $form_style) {
  http-equiv="content-type">
   <title>Orienteering Event Management</title>
   <meta content="Mark O'Connell" name="author">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>body{padding-left:1.5em;}</style>
 END_OF_HEADERS;
 
