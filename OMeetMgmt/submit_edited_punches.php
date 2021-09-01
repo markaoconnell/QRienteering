@@ -103,15 +103,22 @@ sort($final_punch_entries);
 
 //$finish_time = file_get_contents("{$competitor_path}/controls_found/finish");
 $finish_time = 0;
+// Get the time of the last control punched - the finish time must come after this
+$final_entry = end($final_punch_entries);
+$final_control_pieces = explode(",", $final_entry);
 $finish_offset = $_GET["finish_offset"];
 if (preg_match("/^\+[0-9]+$/", $finish_offset)) {
   // Time is relative to the last entry
-  $final_entry = end($final_punch_entries);
-  $final_control_pieces = explode(",", $final_entry);
   $finish_time = $finish_offset + $final_control_pieces[0];
 }
 else if (preg_match("/^[0-9]+$/", $finish_offset)) {
-   $finish_time = $finish_offset + $start_time;
+  $finish_time = $finish_offset + $start_time;
+  if ($finish_time <= $final_control_pieces[0]) {
+    error_and_exit("<p>ERROR: Adjusted finish time cannot come before last control punched - {$finish_time} vs last control punched at {$final_control_pieces[0]}\n");
+  }
+}
+else {
+  error_and_exit("<p>ERROR: Cannot determine finish time based on entered value of \"{$finish_offset}\".\n");
 }
 
 $output_string = "<p>New punches for {$competitor_name} on " . ltrim($course, "0..9-") . "\n";

@@ -41,24 +41,40 @@ $splits_array = get_splits_as_array($competitor, $event, $key, true);
 $start_time = $splits_array["start"];
 if (isset($_GET["new_start_time"])) {
   $entered_start_time = trim($_GET["new_start_time"]);
-  if (($start_time == 0) && !preg_match("/^abs:[0-9]+$/", $entered_start_time)) {
-      error_and_exit("<p>ERROR: $entered_start_time is malformatted, should be abs:timestamp when start was not punched.\n");
-  }
+  if (preg_match("/^-[0-9]+$/", $entered_start_time)) {
+    if (!isset($splits_array["controls"][0])) {
+      error_and_exit("<p>ERROR: Cannot use a negative time \"{$entered_start_time}\" when no controls have been punched.\n");
+    }
 
-  if (preg_match("/^abs:[0-9]+$/", $entered_start_time)) {
-    $pieces = explode(":", $entered_start_time);
-    $new_start_time = $pieces[1];
+    // Negative values are relative to the first control punched    
+    $new_start_time = $splits_array["controls"][0]["raw_time"] + $entered_start_time;
+    if ($new_start_time < 0) {
+      error_and_exit("<p>ERROR: Start time adjustment \"{$entered_start_time}\" too large, start time would be negative.\n<br>" .
+                     "Maximum negative adjustment is \"{$splits_array["controls"][0]["raw_time"]}\".\n");
+    }
   }
-  else {
+  else if (preg_match("/^[0-9]+$/", $entered_start_time)) {
+    // Absolute time in seconds
+    $new_start_time = $entered_start_time;
+  }
+  else if (preg_match("/^[0-9]+:[0-9]+:[0-9]+$/", $entered_start_time)) {
+    if ($start_time == 0) {
+        error_and_exit("<p>ERROR: \"{$entered_start_time}\" should be just a timestamp (positive or negative) when start was not punched.\n");
+    }
+
     $new_start_hms = explode(":", $_GET["new_start_time"]);
     if (($new_start_hms[0] < 0) || ($new_start_hms[0] > 23) || ($new_start_hms[1] < 0) || ($new_start_hms[1] > 59)
                                                             || ($new_start_hms[2] < 0) || ($new_start_hms[2] > 59)) {
-      error_and_exit("<p>ERROR: $start_time is malformatted, should be hh:mm:ss\n");
+      error_and_exit("<p>ERROR: \"{$entered_start_time}\" is malformatted, should be hh:mm:ss, hour between 0 and 23, minute and second between 0 and 60.\n");
     }
     $localtime_array = localtime($start_time, true);
     $new_start_time = mktime($new_start_hms[0], $new_start_hms[1], $new_start_hms[2],
                            $localtime_array["tm_mon"] + 1, $localtime_array["tm_mday"], $localtime_array["tm_year"] + 1900);
   }
+  else {
+    error_and_exit("<p>ERROR: Cannot parse start time \"{$entered_start_time}\", re-read format instructions for the time.\n");
+  }
+
   $start_time_adjustment = $new_start_time - $start_time;
 }
 else {
@@ -117,10 +133,10 @@ if ($allow_editing) {
   $output_string .= "<p><form action=./edit_punches.php>\n";
   $output_string .= "Current start time: <input type=text name=new_start_time value=\"" . strftime("%T", $start_time + $start_time_adjustment) . "\">\n";
   if ($start_time != 0) {
-    $output_string .= "<br>Enter time as hh:mm:ss or abs:value, where value is an absolute time in seconds.\n";
+    $output_string .= "<br>Enter time as hh:mm:ss or value, where value is an absolute time in seconds (if negative, then relative time to first control).<br>\n";
   }
   else {
-    $output_string .= "<br>Enter time as abs:value, where value is an absolute time in seconds.\n";
+    $output_string .= "<br>Enter time as value, where value is an absolute time in seconds (if negative, then relative time to first control).<br>\n";
   }
   $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
   $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";

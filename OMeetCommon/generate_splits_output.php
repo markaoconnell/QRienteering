@@ -265,7 +265,6 @@ function get_splits_as_array($competitor_id, $event, $key, $include_all = 'false
   global $TYPE_FIELD, $SCORE_O_COURSE, $LIMIT_FIELD, $PENALTY_FIELD, $MAX_SCORE_FIELD;
 
   $splits_array = array();
-  $control_times_array = array();
   $competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
   
   if (!is_dir($competitor_path)) {
@@ -316,6 +315,7 @@ function get_splits_as_array($competitor_id, $event, $key, $include_all = 'false
   $split_times = array();
   $cumulative_time = array();
   $controls_found = array();
+  $control_times_array = array();
   $prior_control_time = $start_time;
   $total_score = 0;
   $i = 0;
