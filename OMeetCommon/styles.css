@@ -12,7 +12,7 @@ input[type=submit] {
     width: 100%;
     font-size: 12pt;
     margin-top: 10px;
-    max-width: 250px;
+    max-width: 325px;
     cursor: pointer;
 }
 @media (prefers-color-scheme: dark) {
