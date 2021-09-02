@@ -7,7 +7,7 @@ import re
 import time
 import base64
 if not 'NO_SI_READER_IMPORT' in os.environ:
-  from sireader import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
+  from sportident import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
 from datetime import datetime
 from base64 import b64encode
 import urllib
@@ -130,6 +130,7 @@ def get_event(event_key):
      while True:
        for i in range(len(event_ids)):
          print("{:2d}: {:s} {:s}".format(i + 1, event_names[i], ("(" + event_ids[i] + ")") if verbose else ""))
+         sys.stdout.flush()
 
        user_input = raw_input("Your choice: ")
        if (debug):
@@ -303,12 +304,22 @@ def get_sireader(serial_port_name, verbose):
   try:
     if (serial_port_name != ""):
       si = SIReaderReadout(port=serial_port_name)
+    elif sys.platform == 'win32':
+      for i in range(256):
+        try:
+          com_port = "COM{:d}".format(i)
+          if debug or verbose: print ("Trying {}".format(com_port))
+          si = SIReaderReadout(port=com_port)
+          if verbose: print ("{} appears ok".format(com_port))
+        except SIReaderException as sire:
+          si = None
     else:
       si = SIReaderReadout()
   except SIReaderException as sire:
     si = None
     if verbose:
       print "Cannot find si download station, reason: {}".format(sire)
+    
 
   return si
 

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from sireader import SIReader, SIReaderReadout, SIReaderControl
+from sportident import SIReader, SIReaderReadout, SIReaderControl
 from time import sleep
 
 #SIReader only supports the so called "Extended Protocol" mode. If your
@@ -16,7 +16,21 @@ from time import sleep
 # connect to base station, the station is automatically detected,
 # if this does not work, give the path to the port as an argument
 # see the pyserial documentation for further information.
-si = SIReaderReadout()
+try:
+  if sys.platform == 'win32':
+    for i in range(256):
+      try:
+        com_port = "COM{:d}".format(i)
+        print ("Trying {}".format(com_port))
+        si = SIReaderReadout(port=com_port)
+        print ("{} appears ok".format(com_port))
+      except SIReaderException as sire:
+        si = None
+  else:
+    si = SIReaderReadout()
+except SIReaderException as sire:
+  si = None
+  print "Cannot find si download station, reason: {}".format(sire)
 
 # wait for a card to be inserted into the reader
 while not si.poll_sicard():
