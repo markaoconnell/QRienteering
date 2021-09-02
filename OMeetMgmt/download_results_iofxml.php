@@ -52,8 +52,8 @@ xmlwriter_start_element($xw, 'ResultList');
 add_xml_attribute($xw, "xmlns", "http://www.orienteering.org/datastandard/3.0");
 add_xml_attribute($xw, "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
 add_xml_attribute($xw, "iofVersion", "3.0");
-add_xml_attribute($xw, "Creator", "QRienteering from Mark OConnell");
-add_xml_attribute($xw, "Status", "Complete");
+add_xml_attribute($xw, "creator", "QRienteering from Mark OConnell");
+add_xml_attribute($xw, "status", "Complete");
 add_xml_attribute($xw, "createTime", iso8601(time()));
 
 xmlwriter_start_element($xw, "Event");
@@ -124,7 +124,8 @@ foreach ($course_list as $one_course) {
     add_text_element($xw, "Position", "{$place}");
     add_text_element($xw, "Status", $this_result["dnf"] ? "MissingPunch" : "OK");
     $time_behind = $this_result["raw_time"] - $winning_time;
-    add_text_element($xw, "TimeBehind", "{$time_behind}");
+//    Livelox at least doesn't seem to like this for reasons I don't understand, even though it is in the spec
+//    add_text_element($xw, "TimeBehind", "{$time_behind}");
 
 
     foreach ($splits_array["controls"] as $this_split) {
@@ -140,7 +141,7 @@ foreach ($course_list as $one_course) {
       $unvisited_controls = array_slice($controls_on_course, count($splits_array["controls"]));
       foreach ($unvisited_controls as $missed_control) {
         xmlwriter_start_element($xw, "SplitTime");
-	add_xml_attribute($xw, "Status", "Missing");
+	add_xml_attribute($xw, "status", "Missing");
 	add_text_element($xw, "ControlCode", $missed_control[0]);
 	xmlwriter_end_element($xw);  // SplitTime for Missing controls
       }	      
