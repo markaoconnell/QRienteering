@@ -109,15 +109,16 @@ if ($registration_info_supplied) {
 else {
   echo "<br><p>What is your name?<br>\n";
   echo "<input type=\"text\" size=30 name=\"competitor_name\" value=\"{$default_name}\"><br>\n";
+}
 
-  $additional_prompts = get_extra_prompts($key);
-  if (count($additional_prompts) > 0) {
-    for ($i = 0; $i < count($additional_prompts); $i++) {
-      echo "<br><p>{$additional_prompts[$i]}<br>\n";
-      echo "<input type=\"text\" size=30 name=\"extra-{$i}\"><br>\n";
-    }
+$additional_prompts = get_extra_prompts($key);
+if (count($additional_prompts) > 0) {
+  for ($i = 0; $i < count($additional_prompts); $i++) {
+    echo "<br><p>{$additional_prompts[$i]}<br>\n";
+    echo "<input type=\"text\" size=30 name=\"extra-{$i}\"><br>\n";
   }
 }
+
 echo "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
 echo "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
 
