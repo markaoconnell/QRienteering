@@ -311,6 +311,8 @@ def get_sireader(serial_port_name, verbose):
           if debug or verbose: print ("Trying {}".format(com_port))
           si = SIReaderReadout(port=com_port)
           if verbose: print ("{} appears ok".format(com_port))
+          sys.stdout.flush()
+          break
         except SIReaderException as sire:
           si = None
     else:

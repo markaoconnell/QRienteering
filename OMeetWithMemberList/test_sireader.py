@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
-from sportident import SIReader, SIReaderReadout, SIReaderControl
+from sportident import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
 from time import sleep
+import sys
 
 #SIReader only supports the so called "Extended Protocol" mode. If your
 #base station is not in this mode you have to change the protocol mode
@@ -24,6 +25,7 @@ try:
         print ("Trying {}".format(com_port))
         si = SIReaderReadout(port=com_port)
         print ("{} appears ok".format(com_port))
+        break
       except SIReaderException as sire:
         si = None
   else:
