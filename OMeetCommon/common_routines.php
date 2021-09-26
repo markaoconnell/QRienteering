@@ -465,6 +465,23 @@ function key_to_path($key) {
   return "";
 }
 
+function get_preregistrations($event, $key) {
+  if (preregistrations_allowed($event, $key)) {
+    $entrants = scandir("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations");
+    return(array_diff($entrants, array(".", "..")));
+  }
+}
+
+function preregistrations_allowed($event, $key) {
+  return(file_exists("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations"));
+}
+
+function enable_preregistration($event, $key) {
+  if (!file_exists("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations")) {
+    mkdir("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations");
+  }
+}
+
 function get_courses_path($event, $key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key) . "/{$event}/Courses");
 }
