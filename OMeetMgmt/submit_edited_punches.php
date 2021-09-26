@@ -107,7 +107,10 @@ $finish_time = 0;
 $final_entry = end($final_punch_entries);
 $final_control_pieces = explode(",", $final_entry);
 $finish_offset = $_GET["finish_offset"];
-if (preg_match("/^\+[0-9]+$/", $finish_offset)) {
+if ($finish_offset == "please specify") {
+  error_and_exit("<p>ERROR: Adjusted finish time must be set - \"{$finish_offset}\" was specified.\n");
+}
+else if (preg_match("/^\+[0-9]+$/", $finish_offset)) {
   // Time is relative to the last entry
   $finish_time = $finish_offset + $final_control_pieces[0];
 }
