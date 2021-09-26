@@ -240,7 +240,12 @@ if ($splits_array["finish"] != -1) {
   }
 }
 else {
-  $output_string .= "<p>Not yet finished.\n";
+  if ($allow_editing) {
+    $output_string .= "<p>Finish at <input type=text name=\"finish_offset\" value=\"please specify\"> (seconds).\n";
+  }
+  else {
+    $output_string .= "<p>Not yet finished.\n";
+  }
 }
 
 if ($allow_editing) {
