@@ -80,11 +80,13 @@ if ($num_remembered_entries > 0) {
   <input type="text" name="competitor_last_name"><br>
   <p>Si Unit (optional, can be added later)
   <input type="text" name="competitor_si_stick"><br>
+  <p><?php echo $club_name; ?> club member?
+  <input type="checkbox" name="competitor_is_member"><br>
 
 <?php
   foreach ($courses_array as $this_course) {
-    echo "<input type=radio name=\"new-competitor\" value=\"{$this_course}\">\n";
-    echo "<label for=\"new-competitor\">" . ltrim($this_course, "0..9-") . "</label><br>\n";
+    echo "<input type=radio name=\"competitor_course\" value=\"{$this_course}\">\n";
+    echo "<label for=\"competitor_course\">" . ltrim($this_course, "0..9-") . "</label><br>\n";
   }
 
   echo "<input type=\"submit\" value=\"Preregister\">\n";

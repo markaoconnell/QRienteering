@@ -465,6 +465,15 @@ function key_to_path($key) {
   return "";
 }
 
+function get_preregistered_entrant($entrant, $event, $key) {
+  if (preregistrations_allowed($event, $key)) {
+    $entrant_path = "../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations/{$entrant}";
+    return ($entrant_path);
+  }
+
+  return("");
+}
+
 function get_preregistrations($event, $key) {
   if (preregistrations_allowed($event, $key)) {
     $entrants = scandir("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations");

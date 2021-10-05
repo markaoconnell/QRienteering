@@ -110,7 +110,7 @@ function validate_and_parse_course($course_description) {
     $verbose_output_string .= "<p>Course name {$course_name} passes the checks.\n";
   }
   else {
-    $error_string .= "<p>ERROR: Course name \"{$course_name}\" fails the checks, only letters, numbers, and - allowed.\n";
+    $error_string .= "<p>ERROR: Course name \"{$course_name}\" fails the checks, only letters, numbers, and - allowed (no spaces allowed).\n";
   }
 
   $control_list = array_map('trim', array_slice($course_name_and_controls, 1));
