@@ -64,7 +64,7 @@ if (isset($_GET["competitor_first_name"]) && ($_GET["competitor_first_name"] != 
     $member_properties = get_member_properties(get_base_path($key));
     $matching_info = read_names_info(get_members_path($key, $member_properties), get_nicknames_path($key, $member_properties));
 
-    $possible_member_ids = find_best_name_match($matching_info, $first_name_to_lookup, $last_name_to_lookup);
+    $possible_member_ids = find_best_name_match($matching_info, $first_name, $last_name);
 
 
     $error_string = "";
@@ -95,6 +95,13 @@ if (isset($_GET["competitor_first_name"]) && ($_GET["competitor_first_name"] != 
   }
   else {
     // Not a member
+    $preregistered_entrants[] = array("first_name" => $first_name,
+                                      "last_name" => $last_name,
+                                      "stick" => $stick,
+                                      "member_id" => "not_a_member",
+                                      "course" => $course,
+                                      "timestamp" => $current_time);
+    $success_string .= "Preregistered {$first_name} {$last_name} on {$course}<br>\n";
   }
 }
 
@@ -110,7 +117,7 @@ foreach ($preregistered_entrants as $this_entrant) {
   while ($tries < 5) {
     $preregister_id = uniqid() . "-{$num_preregistered}-{$tries}";
     $preregister_path = get_preregistered_entrant($preregister_id, $event, $key);
-    $preregister_file = fopen("{$preregister_path}/name", "x");
+    $preregister_file = fopen("{$preregister_path}", "x");
     if ($preregister_file !== false) {
       break;
     }
@@ -122,7 +129,7 @@ foreach ($preregistered_entrants as $this_entrant) {
   }
 
   $entrant_pieces = array();
-  foreach (keys($this_entrant) as $this_entrant_key) {
+  foreach (array_keys($this_entrant) as $this_entrant_key) {
     $entrant_pieces[] .= "${this_entrant_key}," . base64_encode($this_entrant[$this_entrant_key]);
   }
 
@@ -142,7 +149,7 @@ if (isset($_COOKIE["{$key}-preregistrations"])) {
   // Filter out the expired entries
   // Format will be base64(first_name:last_name:stick:member_id:timestamp_of_last_registration),base64(first_name:last_name:stick:member_id:timestamp_of_last_registration),...
   $entries = explode(",", $_COOKIE["{$key}-preregistrations"]);
-  $time_cutoff = $time() - (86400 * 90);  // 3 month window
+  $time_cutoff = time() - (86400 * 90);  // 3 month window
   foreach ($entries as $saved_entrant) {
     $this_entrant = explode(":", base64_decode($saved_entrant));
     if ($this_entrant[4] > $time_cutoff) {
@@ -190,6 +197,6 @@ setcookie("{$key}-preregistrations", $new_cookie_value, $current_time + 86400 * 
 echo get_web_page_header(true, false, true);
 
 echo $success_string;
-  
+
 echo get_web_page_footer();
 ?>
