@@ -2,6 +2,7 @@
 require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/course_properties.php';
 require 'name_matcher.php';
+require 'preregistration_routines.php';
 
 ck_testing();
 

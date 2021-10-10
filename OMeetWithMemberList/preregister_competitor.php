@@ -2,6 +2,7 @@
 require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/course_properties.php';
 require 'name_matcher.php';
+require 'preregistration_routines.php';
 
 ck_testing();
 
@@ -48,8 +49,6 @@ for ($i = 0; $i < $num_remembered_entries; $i++) {
                                       "member_id" => $this_entrant[3],
                                       "course" => $value[1],
                                       "timestamp" => $current_time);
-
-    $success_string .= "Preregistered {$this_entrant[0]} {$this_entrant[1]} on {$value[1]}<br>\n";
   }
 }
 
@@ -80,7 +79,6 @@ if (isset($_GET["competitor_first_name"]) && ($_GET["competitor_first_name"] != 
                                         "member_id" => $possible_member_ids[0],
                                         "course" => $course,
                                         "timestamp" => $current_time);
-      $success_string .= "Preregistered {$name_array[0]} {$name_array[1]} on {$course}<br>\n";
     }
     else {
       $success_string .= "<p>Ambiguous member name, please choose:\n";
@@ -101,16 +99,25 @@ if (isset($_GET["competitor_first_name"]) && ($_GET["competitor_first_name"] != 
                                       "member_id" => "not_a_member",
                                       "course" => $course,
                                       "timestamp" => $current_time);
-    $success_string .= "Preregistered {$first_name} {$last_name} on {$course}<br>\n";
   }
 }
 
 
-// Check if already preregistered
-
-// add in as a preregistration
+// add in as a preregistration (if unique)
 $num_preregistered = 0;
+$duplicates_string = "";
+$preregistration_matching_info = read_preregistrations($event, $key);
+$skipped_preregistrations = array();
 foreach ($preregistered_entrants as $this_entrant) {
+
+  // Check if already preregistered
+  $possible_prereg_ids = find_best_name_match($preregistration_matching_info, $this_entrant["first_name"], $this_entrant["last_name"]);
+  if (count($possible_prereg_ids) == 1) {
+    $duplicates_string .= "<p>Entry {$this_entrant["first_name"]} {$this_entrant["last_name"]} for {$this_entrant["course"]} appears to be preregistered as: " .
+                          "{$preregistration_matching_info["members_hash"][$possible_prereg_ids[0]]["full_name"]}";
+    $skipped_preregistrations[] = $this_entrant;
+    continue;
+  }
 
   // Generate the preregister_id and make sure it is truly unique
   $tries = 0;
@@ -128,19 +135,18 @@ foreach ($preregistered_entrants as $this_entrant) {
     error_and_exit("ERROR: Cannot process preregistrations now, please retry later.\n");
   }
 
-  $entrant_pieces = array();
-  foreach (array_keys($this_entrant) as $this_entrant_key) {
-    $entrant_pieces[] .= "${this_entrant_key}," . base64_encode($this_entrant[$this_entrant_key]);
-  }
+  $encoded_info = encode_preregistered_entrant($this_entrant);
 
   // Save the information about the competitor
-  fwrite($preregister_file, implode(":", $entrant_pieces));
+  fwrite($preregister_file, $encoded_info);
   fclose($preregister_file);
 
   $num_preregistered++;
 
   $success_string .= "<p>Preregistered {$this_entrant["first_name"]} {$this_entrant["last_name"]} on {$this_entrant["course"]}.\n";
 }
+
+$preregistered_entrants = array_diff($preregistered_entrants, $skipped_preregistrations);
 
 // ********************
 // Set the new cookie
@@ -197,6 +203,14 @@ setcookie("{$key}-preregistrations", $new_cookie_value, $current_time + 86400 * 
 echo get_web_page_header(true, false, true);
 
 echo $success_string;
+
+if ($duplicates_string != "") {
+  echo "<p>These entrants appear to have preregistered already.<p>If this is wrong, please re-enter these names but make them more unique.\n";
+  echo $duplicates_string;
+}
+
+echo "<p><p><p>\n";
+print_r($preregistration_matching_info);
 
 echo get_web_page_footer();
 ?>
