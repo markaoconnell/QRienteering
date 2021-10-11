@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require 'preregistration_routines.php';
 
 ck_testing();
 
@@ -8,13 +9,16 @@ $first_name = "";
 $last_name = "";
 $club_name = "";
 $si_stick = "";
-$is_member = isset($_GET["member_id"]);
+$has_preset_id = isset($_GET["member_id"]);
 $member_id = $_GET["member_id"];
 $key = $_GET["key"];
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
 
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
+
+$is_preregistered_checkin = isset($_GET["checkin"]) && ($_GET["checkin"] == "true");
 
 $saved_registration_info = array();
 if (isset($_COOKIE["{$key}-safety_info"])) {
@@ -22,7 +26,7 @@ if (isset($_COOKIE["{$key}-safety_info"])) {
 }
 
 $stick_override_msg = "";
-if ($is_member) {
+if ($has_preset_id) {
   if (!isset($_GET["using_stick"])) {
     error_and_exit("No value found for SI unit usage - error in scripting?  Please restart registration.\n");
   }
@@ -77,7 +81,12 @@ echo get_web_page_header(true, false, true);
 
 echo "<p class=title><u>Safety information</u>\n";
 echo "<form action=\"./finalize_registration.php\">\n";
-if ($is_member) {
+if ($is_preregistered_checkin) {
+  echo "<input type=hidden name=\"checkin\" value=\"true\">\n";
+  echo "<input type=hidden name=\"event\" value=\"{$event}\">\n";
+}
+
+if ($has_preset_id) {
   echo "<input type=hidden name=\"member_id\" value=\"{$member_id}\">\n";
 }
 else {
@@ -92,6 +101,15 @@ echo "<input type=hidden name=\"key\" value=\"{$key}\">\n";
 // Warn the user if they entered a SI unit number but selected QR code orienteering
 if ($stick_override_msg != "") {
   echo $stick_override_msg;
+}
+
+if ($is_preregistered_checkin) {
+  $entrant_info_path = get_preregistered_entrant($member_id, $event, $key);
+  $entrant_info = decode_preregistered_entrant($entrant_info_path);
+  $is_member = ($entrant_info["member_id"] != "not_a_member");
+}
+else {
+  $is_member = $has_preset_id;
 }
 
 $base_path = get_base_path($key, "..");

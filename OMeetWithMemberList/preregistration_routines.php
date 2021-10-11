@@ -81,7 +81,8 @@ function read_preregistrations($event, $key) {
     $member_hash[$preregistered_entrant] = array("first" => $entrant_info["first_name"],
                                                  "last" => $entrant_info["last_name"],
                                                  "full_name" => "{$entrant_info["first_name"]} {$entrant_info["last_name"]}",
-                                                 "si_stick"=> $entrant_info["stick"]);
+                                                 "si_stick"=> $entrant_info["stick"],
+						 "club_member_id" => $entrant_info["member_id"]);
     $lower_case_full_name = strtolower("{$entrant_info["first_name"]} {$entrant_info["last_name"]}");
     $last_name_hash[strtolower($entrant_info["last_name"])][] = $preregistered_entrant; 
     $full_name_hash[$lower_case_full_name] = $preregistered_entrant;

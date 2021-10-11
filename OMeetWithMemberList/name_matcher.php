@@ -43,6 +43,17 @@ function read_names_info($member_file, $nicknames_file) {
     }
   }
 
+  $nicknames_hash = read_nicknames_info($nicknames_file);
+
+  return (array("members_hash" => $member_hash,
+               "last_name_hash" => $last_name_hash,
+               "full_name_hash" => $full_name_hash,
+               "si_hash" => $si_hash,
+               "nicknames_hash" => $nicknames_hash));
+}
+
+function read_nicknames_info($nicknames_file) {
+  $nicknames_hash = array();
   if (file_exists($nicknames_file)) {
     $nickname_list = file($nicknames_file, FILE_IGNORE_NEW_LINES);
     foreach ($nickname_list as $equivalent_names_csv) {
@@ -54,13 +65,8 @@ function read_names_info($member_file, $nicknames_file) {
     }
   }
 
-  return (array("members_hash" => $member_hash,
-               "last_name_hash" => $last_name_hash,
-               "full_name_hash" => $full_name_hash,
-               "si_hash" => $si_hash,
-               "nicknames_hash" => $nicknames_hash));
+  return($nicknames_hash);
 }
-
 
 function get_full_name($member_id, $matching_info) {
   return($matching_info["members_hash"][$member_id]["full_name"]);

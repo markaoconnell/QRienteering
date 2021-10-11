@@ -2,6 +2,7 @@
 require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/course_properties.php';
 require 'name_matcher.php';
+require 'preregistration_routines.php';
 
 ck_testing();
 
@@ -14,26 +15,57 @@ if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
 
-$is_member = isset($_GET["member_id"]);
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
 
-if ($is_member) {
-  $member_properties = get_member_properties(get_base_path($key));
-  $matching_info = read_names_info(get_members_path($key, $member_properties), get_nicknames_path($key, $member_properties));
-  
-  if (!isset($_GET["member_id"])) {
-    error_and_exit("No member id specified, please restart registration.\n");
+$has_preset_id = isset($_GET["member_id"]);
+$is_preregistered_checkin = isset($_GET["checkin"]) && ($_GET["checkin"] == "true");
+$is_member = false;
+$member_id = "";
+$pass_info_to_registration = "";
+
+if ($has_preset_id) {
+  if ($is_preregistered_checkin) {
+    $prereg_id = $_GET["member_id"];
+    $entrant_path = get_preregistered_entrant($prereg_id, $event, $key);
+    $entrant_info = decode_preregistered_entrant($entrant_path);
+
+    $first_name = $entrant_info["first_name"];
+    $last_name = $entrant_info["last_name"];
+
+    $pass_info_to_registration="&course={$entrant_info["course"]}&event={$event}";
+
+    if ($entrant_info["member_id"] != "not_a_member") {
+      $member_properties = get_member_properties(get_base_path($key));
+      $club_name = get_club_name($key, $member_properties);
+      $is_member = true;
+      $member_id = $entrant_info["member_id"];
+    }
+    else {
+      $club_name = "unknown";
+    }
   }
   else {
     $member_id = $_GET["member_id"];
-    if (get_full_name($member_id, $matching_info) == "") {
-      error_and_exit("No such member id {$_GET["member_id"]} found, please retry or ask for assistance.\n");
-    }
-  }
   
-  $name_info = get_member_name_info($member_id, $matching_info);
-  $first_name = $name_info[0];
-  $last_name = $name_info[1];
-  $club_name = get_club_name($key, $member_properties);
+    $member_properties = get_member_properties(get_base_path($key));
+    $matching_info = read_names_info(get_members_path($key, $member_properties), get_nicknames_path($key, $member_properties));
+  
+    if (!isset($_GET["member_id"])) {
+      error_and_exit("No member id specified, please restart registration.\n");
+    }
+    else {
+      $member_id = $_GET["member_id"];
+      if (get_full_name($member_id, $matching_info) == "") {
+        error_and_exit("No such member id {$_GET["member_id"]} found, please retry or ask for assistance.\n");
+      }
+    }
+  
+    $is_member = true;
+    $name_info = get_member_name_info($member_id, $matching_info);
+    $first_name = $name_info[0];
+    $last_name = $name_info[1];
+    $club_name = get_club_name($key, $member_properties);
+  }
 }
 else {
   $first_name = find_get_key_or_empty_string("competitor_first_name");
@@ -78,5 +110,5 @@ $registration_info_string = implode(",", array("first_name", base64_encode($firs
                                                "is_member", base64_encode($is_member ? "yes" : "no")));
 
 // Redirect to the main registration screens
-echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../OMeetRegistration/register.php?key={$key}&registration_info=${registration_info_string}\" /></head></html>";
+echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../OMeetRegistration/register.php?key={$key}&registration_info=${registration_info_string}{$pass_info_to_registration}\" /></head></html>";
 ?>
