@@ -23,6 +23,10 @@ function preregistrations_allowed($event, $key) {
   return(file_exists("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations"));
 }
 
+function preregistrations_allowed_by_event_path($base_event_pathname) {
+  return(file_exists("{$base_event_pathname}/Preregistrations"));
+}
+
 function enable_preregistration($event, $key) {
   if (!file_exists("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations")) {
     mkdir("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations");
