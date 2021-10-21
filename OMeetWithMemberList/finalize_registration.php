@@ -27,18 +27,21 @@ if ($has_preset_id) {
   if ($is_preregistered_checkin) {
     $prereg_id = $_GET["member_id"];
     $entrant_path = get_preregistered_entrant($prereg_id, $event, $key);
-    $entrant_info = decode_preregistered_entrant($entrant_path);
+    $entrant_info = decode_preregistered_entrant($entrant_path, $event, $key);
 
     $first_name = $entrant_info["first_name"];
     $last_name = $entrant_info["last_name"];
 
     $pass_info_to_registration="&course={$entrant_info["course"]}&event={$event}";
 
-    if ($entrant_info["member_id"] != "not_a_member") {
+    if (($entrant_info["member_id"] != "not_a_member") && ($entrant_info["member_id"] != "")) {
       $member_properties = get_member_properties(get_base_path($key));
       $club_name = get_club_name($key, $member_properties);
       $is_member = true;
       $member_id = $entrant_info["member_id"];
+    }
+    else if (isset($entrant_info["club_name"])) {
+      $club_name = $entrant_info["club_name"];
     }
     else {
       $club_name = "unknown";

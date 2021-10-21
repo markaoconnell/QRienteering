@@ -75,7 +75,7 @@ else if (count($possible_member_ids) == 1) {
     $printable_name = get_full_name($possible_member_ids[0], $prereg_matching_info);
     $si_stick = get_si_stick($possible_member_ids[0], $prereg_matching_info);
     $member_id = $prereg_matching_info["members_hash"][$possible_member_ids[0]]["club_member_id"]; 
-    if ($member_id != "not_a_member") {
+    if (($member_id != "not_a_member") && ($member_id != "")) {
       $email_address = get_member_email($member_id, $matching_info);
     }
     $pass_preregistration_marker = "<input type=\"hidden\" name=\"checkin\" value=\"true\">\n";
@@ -144,10 +144,10 @@ echo get_web_page_header(true, false, true);
 echo $success_string;
 
 if ($is_preregistered_checkin) {
-  echo "<a href=\"./competition_register.php?key={$key}&member=1\">Start over and re-enter information</a>\n";
+  echo "<a href=\"./checkin_preregistered.php?key={$key}&event={$event}\">Start over and re-enter information</a>\n";
 }
 else {
-  echo "<a href=\"./checkin_preregistered.php?key={$key}&event={$event}\">Start over and re-enter information</a>\n";
+  echo "<a href=\"./competition_register.php?key={$key}&member=1\">Start over and re-enter information</a>\n";
 }
 
 echo get_web_page_footer();

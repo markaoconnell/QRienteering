@@ -105,34 +105,43 @@ if ($stick_override_msg != "") {
 
 if ($is_preregistered_checkin) {
   $entrant_info_path = get_preregistered_entrant($member_id, $event, $key);
-  $entrant_info = decode_preregistered_entrant($entrant_info_path);
-  $is_member = ($entrant_info["member_id"] != "not_a_member");
+  $entrant_info = decode_preregistered_entrant($entrant_info_path, $event, $key);
+  $is_member = ($entrant_info["member_id"] != "not_a_member") && ($entrant_info["member_id"] != "");
 }
 else {
   $is_member = $has_preset_id;
+  $entrant_info = array();
 }
 
 $base_path = get_base_path($key, "..");
-if ($is_member) {
-  if (file_exists("{$base_path}/member_waiver")) {
-    $waiver_html = file_get_contents("{$base_path}/member_waiver");
-    echo "<p><strong><input type=checkbox name=\"waiver_signed\" value=\"signed\">  (Required) {$waiver_html}</strong><br>\n";
-  }
-  else {
-    echo "<p><input type=hidden name=\"waiver_signed\" value=\"signed\"><br>";
-  }
+if (isset($entrant_info["waiver_signed"]) && (strtolower($entrant_info["waiver_signed"]) == "yes")) {
+  echo "<p><input type=hidden name=\"waiver_signed\" value=\"signed\"><br>";
 }
 else {
-  if (file_exists("{$base_path}/non_member_waiver")) {
-    $waiver_html = file_get_contents("{$base_path}/non_member_waiver");
-    echo "<p><strong><input type=checkbox name=\"waiver_signed\" value=\"signed\">  (Required) {$waiver_html}</strong><br>\n";
+  if ($is_member) {
+    if (file_exists("{$base_path}/member_waiver")) {
+      $waiver_html = file_get_contents("{$base_path}/member_waiver");
+      echo "<p><strong><input type=checkbox name=\"waiver_signed\" value=\"signed\">  (Required) {$waiver_html}</strong><br>\n";
+    }
+    else {
+      echo "<p><input type=hidden name=\"waiver_signed\" value=\"signed\"><br>";
+    }
   }
   else {
-    echo "<p><strong><input type=checkbox name=\"waiver_signed\" value=\"signed\">  (Required) I am participating of my own accord and hold the organizers harmless for any injury sustained.</strong><br>\n";
+    if (file_exists("{$base_path}/non_member_waiver")) {
+      $waiver_html = file_get_contents("{$base_path}/non_member_waiver");
+      echo "<p><strong><input type=checkbox name=\"waiver_signed\" value=\"signed\">  (Required) {$waiver_html}</strong><br>\n";
+    }
+    else {
+      echo "<p><strong><input type=checkbox name=\"waiver_signed\" value=\"signed\">  (Required) I am participating of my own accord and hold the organizers harmless for any injury sustained.</strong><br>\n";
+    }
   }
 }
 
-if (isset($saved_registration_info["cell_phone"])) {
+if ($is_preregistered_checkin && isset($entrant_info["cell_phone"])) {
+  $presupplied_cell_phone = "value=\"{$entrant_info["cell_phone"]}\"";
+}
+else if (isset($saved_registration_info["cell_phone"])) {
   $presupplied_cell_phone = "value=\"{$saved_registration_info["cell_phone"]}\"";
 }
 else {
@@ -146,7 +155,10 @@ else {
   $presupplied_car_info = "";
 }
 
-if (isset($saved_registration_info["email_address"]) && ($saved_registration_info["email_address"] != "")) {
+if ($is_preregistered_checkin && isset($entrant_info["email_address"])) {
+  $presupplied_email_address = "value=\"{$entrant_info["email_address"]}\"";
+}
+else if (isset($saved_registration_info["email_address"]) && ($saved_registration_info["email_address"] != "")) {
   $presupplied_email_address = "value=\"{$saved_registration_info["email_address"]}\"";
 }
 else {

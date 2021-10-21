@@ -2,22 +2,36 @@
 
 function get_preregistered_entrant($entrant, $event, $key) {
   if (preregistrations_allowed($event, $key)) {
-    $entrant_path = "../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations/{$entrant}";
+    if (substr($entrant, 0, 5) == "file-") {
+      $entrant_path = $entrant;
+    }
+    else {
+      $entrant_path = "../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations/{$entrant}";
+    }
     return ($entrant_path);
   }
 
   return("");
 }
 
-function get_preregistrations($event, $key) {
+function get_preregistration_file($event, $key) {
   if (preregistrations_allowed($event, $key)) {
-    $entrants = scandir("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations");
-    return(array_diff($entrants, array(".", "..")));
+    $entrant_path = "../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations/Prereg.csv";
+    return ($entrant_path);
   }
-  else {
-    return(array());
-  }
+
+  return("");
 }
+
+//function get_preregistrations($event, $key) {
+//  if (preregistrations_allowed($event, $key)) {
+//    $entrants = scandir("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations");
+//    return(array_diff($entrants, array(".", "..", "Prereg.csv")));
+//  }
+//  else {
+//    return(array());
+//  }
+//}
 
 function preregistrations_allowed($event, $key) {
   return(file_exists("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations"));
@@ -41,13 +55,36 @@ function encode_preregistered_entrant($preregistered_entrant) {
 }
 
 
-function decode_preregistered_entrant($preregistered_entrant_path) {
-  $encoded_entrant_info = file_get_contents($preregistered_entrant_path);
-  $encoded_entrant_pieces = explode(":", $encoded_entrant_info);
+function decode_preregistered_entrant($preregistered_entrant_path, $event, $key) {
+  if (substr($preregistered_entrant_path, 0, 5) == "file-") {
+    $preregistration_file = get_preregistration_file($event, $key);
+    $file_array_key = substr($preregistered_entrant_path, 5);
+    if ($preregistration_file != "") {
+      $preregistration_file_entries = file($preregistration_file, FILE_IGNORE_NEW_LINES);
+      return(decode_preregistered_file_entrant($preregistration_file_entries[$file_array_key]));
+    }
+    else {
+      return (array());
+    }
+  }
+  else {
+    $encoded_entrant_info = file_get_contents($preregistered_entrant_path);
+    $encoded_entrant_pieces = explode(":", $encoded_entrant_info);
+
+    $entrant_info = array();
+    array_map(function ($elt) use (&$entrant_info) { $kv_pieces = explode(",", $elt); $entrant_info[$kv_pieces[0]] = base64_decode($kv_pieces[1]); },
+              $encoded_entrant_pieces);
+  }
+
+  return($entrant_info);
+}
+
+function decode_preregistered_file_entrant($file_entry) {
+  $entrant_pieces = explode(";", $file_entry);
 
   $entrant_info = array();
-  array_map(function ($elt) use (&$entrant_info) { $kv_pieces = explode(",", $elt); $entrant_info[$kv_pieces[0]] = base64_decode($kv_pieces[1]); },
-            $encoded_entrant_pieces);
+  array_map(function ($elt) use (&$entrant_info) { $kv_pieces = explode(":", $elt); $entrant_info[$kv_pieces[0]] = $kv_pieces[1]; },
+            $entrant_pieces);
 
   return($entrant_info);
 }
@@ -67,7 +104,14 @@ function read_preregistrations($event, $key) {
   $si_hash = array();
   $nicknames_hash = array();
 
-  $preregistration_ids = get_preregistrations($event, $key);
+  if (preregistrations_allowed($event, $key)) {
+    $entrants = scandir("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations");
+    $preregistration_ids = array_diff($entrants, array(".", "..", "Prereg.csv"));
+  }
+  else {
+    $preregistration_ids = array();
+  }
+
   foreach ($preregistration_ids as $preregistered_entrant) {
     $entrant_info_path = get_preregistered_entrant($preregistered_entrant, $event, $key);
     if ($entrant_info_path == "") {
@@ -76,7 +120,7 @@ function read_preregistrations($event, $key) {
     }
 
 
-    $entrant_info = decode_preregistered_entrant($entrant_info_path);
+    $entrant_info = decode_preregistered_entrant($entrant_info_path, $event, $key);
 
     $member_hash[$preregistered_entrant] = array("first" => $entrant_info["first_name"],
                                                  "last" => $entrant_info["last_name"],
@@ -87,6 +131,26 @@ function read_preregistrations($event, $key) {
     $last_name_hash[strtolower($entrant_info["last_name"])][] = $preregistered_entrant; 
     $full_name_hash[$lower_case_full_name] = $preregistered_entrant;
     $si_hash[$entrant_info["stick"]] = $preregistered_entrant;
+  }
+
+  $preregistration_file = get_preregistration_file($event, $key);
+  if ($preregistration_file != "") {
+    $preregistration_file_entries = file($preregistration_file, FILE_IGNORE_NEW_LINES);
+
+    foreach (array_keys($preregistration_file_entries) as $file_entry_key) {
+      $entrant_info = decode_preregistered_file_entrant($preregistration_file_entries[$file_entry_key]);
+      $entrant_id = "file-{$file_entry_key}";
+
+      $member_hash[$entrant_id] = array("first" => $entrant_info["first_name"],
+                                                   "last" => $entrant_info["last_name"],
+                                                   "full_name" => "{$entrant_info["first_name"]} {$entrant_info["last_name"]}",
+                                                   "si_stick"=> $entrant_info["stick"],
+						   "club_member_id" => $entrant_info["member_id"]);
+      $lower_case_full_name = strtolower("{$entrant_info["first_name"]} {$entrant_info["last_name"]}");
+      $last_name_hash[strtolower($entrant_info["last_name"])][] = $entrant_id; 
+      $full_name_hash[$lower_case_full_name] = $entrant_id;
+      $si_hash[$entrant_info["stick"]] = $entrant_id;
+    }
   }
 
   return (array("members_hash" => $member_hash,

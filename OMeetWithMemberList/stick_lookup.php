@@ -52,8 +52,15 @@ $success_string = "";
 if ($is_preregistered_checkin) {
   $printable_name = get_full_name($member_id, $prereg_matching_info);
   $club_member_id = $prereg_matching_info["members_hash"][$member_id]["club_member_id"]; 
-  if ($club_member_id != "not_a_member") {
+  if (($club_member_id != "not_a_member") && ($club_member_id != "")) {
     $email_address = get_member_email($club_member_id, $matching_info);
+  }
+  else {
+    $entrant_path = get_preregistered_entrant($member_id, $event, $key);
+    $entrant_info = decode_preregistered_entrant($entrant_path, $event, $key);
+    if (isset($entrant_info["email_address"])) {
+      $email_address = $entrant_info["email_address"];
+    }
   }
   $pass_preregistration_marker = "<input type=\"hidden\" name=\"checkin\" value=\"true\">\n";
   $pass_preregistration_marker .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
