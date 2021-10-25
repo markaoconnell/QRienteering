@@ -152,8 +152,7 @@ echo $output;
 
 if (!$download_csv) {
   echo "</pre>\n";
+  echo get_web_page_footer();
 }
 
-
-echo get_web_page_footer();
 ?>
