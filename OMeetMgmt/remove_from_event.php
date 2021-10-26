@@ -60,7 +60,8 @@ foreach ($competitor_list as $competitor) {
     $course = file_get_contents("{$competitor_directory}/{$competitor}/course");
     $competitor_name = file_get_contents("{$competitor_directory}/{$competitor}/name");
     $entry_output = "{$competitor_name} from " . ltrim($course, "0..9-");
-    if (file_exists("{$competitor_directory}/{$competitor}/controls_found/finish")) {
+    if (file_exists("{$competitor_directory}/{$competitor}/controls_found/finish") ||
+        file_exists("{$competitor_directory}/{$competitor}/controls_found/self_reported")) {
       # Remove the completed entry
       $results_path = get_results_path($event, $key, "..") . "/{$course}";
       $results_listing = scandir($results_path);

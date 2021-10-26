@@ -122,10 +122,13 @@ if (count($additional_prompts) > 0) {
 echo "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
 echo "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
 
+
+$preselected_course = isset($_GET["course"]) ? $_GET["course"] : "";
 echo "<br><p>Select a course:<br>\n";
 foreach ($courses_array as $course_name) {
   if (!file_exists("{$courses_path}/{$course_name}/removed")) {
-    echo "<p><input type=\"radio\" name=\"course\" value=\"" . $course_name . "\">" . ltrim($course_name, "0..9-") . " <br>\n";
+    $prechecked_value = ($course_name == $preselected_course) ? "checked" : "";
+    echo "<p><input type=\"radio\" name=\"course\" value=\"{$course_name}\" {$prechecked_value}>" . ltrim($course_name, "0..9-") . " <br>\n";
   }
 }
 

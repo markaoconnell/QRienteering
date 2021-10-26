@@ -2,6 +2,7 @@
 require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/course_properties.php';
 require 'name_matcher.php';
+require 'preregistration_routines.php';
 
 ck_testing();
 
@@ -10,8 +11,21 @@ if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
 
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
+
 $member_properties = get_member_properties(get_base_path($key)); 
 $matching_info = read_names_info(get_members_path($key, $member_properties), get_nicknames_path($key, $member_properties));
+
+$is_preregistered_checkin = isset($_GET["checkin"]) && ($_GET["checkin"] == "true");
+if ($is_preregistered_checkin) {
+  if ($event == "") {
+    error_and_exit("Event must be set when checking in a preregistered competitor.\n");
+  }
+
+  $prereg_matching_info = read_preregistrations($event, $key);
+  $prereg_matching_info["nicknames_hash"] = $matching_info["nicknames_hash"];
+}
+
 
 if (!isset($_GET["si_stick"])) {
   error_and_exit("Unspecified SI unit number, please hit back and retry.\n");
@@ -19,16 +33,43 @@ if (!isset($_GET["si_stick"])) {
 
 $si_stick = $_GET["si_stick"];
 
-$member_id = get_by_si_stick($si_stick, $matching_info);
-if ($member_id == "") {
-  error_and_exit("No member with SI unit \"{$si_stick}\" found, please hit back and retry.\n");
+if ($is_preregistered_checkin) {
+  $member_id = $prereg_matching_info["si_hash"][$si_stick];
+  if ($member_id == "") {
+    error_and_exit("No preregistration entry with SI unit \"{$si_stick}\" found, please hit back and retry.\n");
+  }
+}
+else {
+  $member_id = get_by_si_stick($si_stick, $matching_info);
+  if ($member_id == "") {
+    error_and_exit("No member with SI unit \"{$si_stick}\" found, please hit back and retry.\n");
+  }
 }
 
 $error_string = "";
 $success_string = "";
 
-$printable_name = get_full_name($member_id, $matching_info);
-$email_address = get_member_email($member_id, $matching_info);
+if ($is_preregistered_checkin) {
+  $printable_name = get_full_name($member_id, $prereg_matching_info);
+  $club_member_id = $prereg_matching_info["members_hash"][$member_id]["club_member_id"]; 
+  if (($club_member_id != "not_a_member") && ($club_member_id != "")) {
+    $email_address = get_member_email($club_member_id, $matching_info);
+  }
+  else {
+    $entrant_path = get_preregistered_entrant($member_id, $event, $key);
+    $entrant_info = decode_preregistered_entrant($entrant_path, $event, $key);
+    if (isset($entrant_info["email_address"])) {
+      $email_address = $entrant_info["email_address"];
+    }
+  }
+  $pass_preregistration_marker = "<input type=\"hidden\" name=\"checkin\" value=\"true\">\n";
+  $pass_preregistration_marker .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
+}
+else {
+  $printable_name = get_full_name($member_id, $matching_info);
+  $email_address = get_member_email($member_id, $matching_info);
+  $pass_preregistration_marker = "";
+}
 $success_string .= "<p>Welcome {$printable_name}.\n";
 $success_string .= <<<END_OF_FORM
 <form action="./add_safety_info.php">
@@ -36,6 +77,7 @@ $success_string .= <<<END_OF_FORM
 <input type=hidden name="member_email" value="{$email_address}"/>
 <input type=hidden name="key" value="{$key}"/>
 <input type=hidden name="registered_si_stick" value="yes"/>
+{$pass_preregistration_marker}
 <p> How are you orienteering today? <br>
 <p> Using Si unit <input type=radio name="using_stick" value="yes" checked /> <input type=text name="si_stick_number" value="{$si_stick}" readonly/>
 <p> Using QR codes <input type=radio name="using_stick" value="no" />

@@ -29,6 +29,11 @@ if (!is_dir(get_event_path($event, $key, "..")) || !file_exists(get_event_path($
   error_and_exit("Unknown event \"{$event}\" (" . get_base_path($event, $key, "..") . "), are you using an authorized link?\n");
 }
 
+if (file_exists(get_event_path($event, $key, "..") . "/done")) {
+  $event_name = file_get_contents(get_event_path($event, $key, "..") . "/description");
+  error_and_exit("Event {$event_name} is closed and is no longer acception registrations.\n");
+}
+
 $check_for_cookie_support = 0;
 if (!$registration_info_supplied || $registration_info["si_stick"] == "") {
   $check_for_cookie_support = 1;

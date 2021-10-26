@@ -41,6 +41,9 @@ if (isset($_POST["uploadppen"])) {
       $ppen_errors_found .= $extra_info[$ERRORS];
     }
   }
+  else {
+    error_and_exit("No Purple Pen file selected, please choose a file before hitting upload.");
+  }
 }
 elseif (isset($_POST["submit"])) {
   echo "Name of event: " . $_POST["event_name"] . "\n<p>";
