@@ -28,9 +28,6 @@ $event = $_GET["event"];
 $key = $_GET["key"];
 $download_csv = !isset($_GET["show_as_html"]);
 
-#$event="event-612819f443f96";
-#$key="From_NEOC_site";
-
 if ($event == "") {
   error_and_exit("<p>ERROR: Event not specified, no results can be shown.\n");
 }
@@ -89,7 +86,7 @@ foreach ($course_list as $one_course) {
   foreach ($results_array as $this_result) {
     // If the splits array is empty, there is an error - most likely a self reported result with
     // no splits available, so just skip it.
-    $splits_array = get_splits_as_array($this_result["competitor_id"], $event, $key);
+    $splits_array = get_splits_for_download($this_result["competitor_id"], $event, $key);
     if (count($splits_array) == 0) {
       continue;
     }
@@ -130,22 +127,27 @@ foreach ($course_list as $one_course) {
 
     foreach ($splits_array["controls"] as $this_split) {
       xmlwriter_start_element($xw, "SplitTime");
+      if (isset($this_split["missed"])) {
+	add_xml_attribute($xw, "status", "Missing");
+      }
+      else {
+        add_text_element($xw, "Time", $this_split["cumulative_time"]);
+      } 
       add_text_element($xw, "ControlCode", $this_split["control_id"]);
-      add_text_element($xw, "Time", $this_split["cumulative_time"]);
       xmlwriter_end_element($xw); // SplitTime
     }
 
-    // Need to add in controls which were not visited
-    // Should really factor in the controls from the extra list - for later
-    if ($number_controls > count($splits_array["controls"])) {
-      $unvisited_controls = array_slice($controls_on_course, count($splits_array["controls"]));
-      foreach ($unvisited_controls as $missed_control) {
-        xmlwriter_start_element($xw, "SplitTime");
-	add_xml_attribute($xw, "status", "Missing");
-	add_text_element($xw, "ControlCode", $missed_control[0]);
-	xmlwriter_end_element($xw);  // SplitTime for Missing controls
-      }	      
-    }
+//    // Need to add in controls which were not visited
+//    // Should really factor in the controls from the extra list - for later
+//    if ($number_controls > count($splits_array["controls"])) {
+//      $unvisited_controls = array_slice($controls_on_course, count($splits_array["controls"]));
+//      foreach ($unvisited_controls as $missed_control) {
+//        xmlwriter_start_element($xw, "SplitTime");
+//	add_xml_attribute($xw, "status", "Missing");
+//	add_text_element($xw, "ControlCode", $missed_control[0]);
+//	xmlwriter_end_element($xw);  // SplitTime for Missing controls
+//      }	      
+//    }
 
     xmlwriter_end_element($xw); // Result of PersonResult
     xmlwriter_end_element($xw); // PersonResult
