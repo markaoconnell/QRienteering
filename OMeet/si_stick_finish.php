@@ -32,7 +32,7 @@ function record_finish_by_si_stick($event, $key, $si_results_string) {
 
   // Find the competitor with this si_stick
   $competitor_directory = get_competitor_directory($event, $key, ".."); 
-  $competitor_list = scandir("{$competitor_directory}");
+  $competitor_list = scandir("{$competitor_directory}", SCANDIR_SORT_DESCENDING);
   $competitor_list = array_diff($competitor_list, array(".", ".."));
 
   foreach ($competitor_list as $competitor) {

@@ -348,4 +348,149 @@ function get_splits_as_array($competitor_id, $event, $key, $include_all = 'false
   
   return $splits_array;
 }
+
+
+function get_splits_for_download($competitor_id, $event, $key) {
+  global $TYPE_FIELD, $SCORE_O_COURSE, $LIMIT_FIELD, $PENALTY_FIELD, $MAX_SCORE_FIELD;
+
+  $splits_array = array();
+  $competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
+  
+  if (!is_dir($competitor_path)) {
+    return($splits_array);
+  }
+  
+  if (file_exists("{$competitor_path}/self_reported")) {
+    return($splits_array);
+  }
+  
+  $controls_found_path = "{$competitor_path}/controls_found";
+  $course = file_get_contents("{$competitor_path}/course");
+  
+  $courses_path = get_courses_path($event, $key, "..");
+  $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
+
+  // ScoreO courses don't really make sense for WinSplits or LiveLox and the like
+  $course_properties = get_course_properties("{$courses_path}/{$course}");
+  $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+  if ($score_course) {
+    return($splits_array);
+  }
+
+
+  //echo "Controls on the ${course} course.<br>\n";
+  // print_r($control_list);
+  $error_string = "";
+  
+  if (file_exists("{$controls_found_path}/start")) {
+    $start_time = file_get_contents("{$controls_found_path}/start");
+    $splits_array["start"] = $start_time;
+  }
+  else {
+    $start_time = 0;
+    $splits_array["start"] = "-";
+  }
+  
+  
+  // See how many controls have been completed
+  $controls_punched = scandir("./{$controls_found_path}");
+  $controls_punched = array_diff($controls_punched, array(".", "..", "start", "finish")); // Remove the annoying . and .. entries
+  if (file_exists("{$competitor_path}/extra")) {
+    $extra_controls = file("{$competitor_path}/extra", FILE_IGNORE_NEW_LINES);
+    $controls_punched = array_merge($controls_punched, $extra_controls);
+    sort($controls_punched);
+  }
+
+  // Ensure that the array is numbered with sequential keys
+  $controls_punched = array_values($controls_punched);
+  $number_controls_punched = count($controls_punched);
+
+  
+  //echo "Controls done is: <p>";
+  //print_r($controls_done);
+
+  $control_times_array = array();
+  $prior_control_time = $start_time;
+  $total_score = 0;
+  $i = 0;
+  for ($next_control = 0; $next_control < count($control_list); $next_control++) {
+    if ($i < $number_controls_punched) {
+      $control_info_array = explode(",", $controls_punched[$i]);  // format is <time>,<control_id>
+    }
+    else {
+      $control_info_array = array("0", "sentinel-control-never-found");
+    }
+
+    // Easy case - the control is correct
+    if ($control_info_array[1] == $control_list[$next_control][0]) {
+//      echo "Good: {$control_info_array[1]} equals {$control_list[$next_control][0]}, i is {$i}, next_control is {$next_control}\n";  // Remove
+      $this_split = $control_info_array[0] - $prior_control_time;
+      $cumulative_time = $control_info_array[0] - $start_time;
+      //$time_at_control[$i] = $control_info_array[0];
+      //$split_times[$i] = $time_at_control[$i] - $prior_control_time;
+      //$cumulative_time[$i] = $time_at_control[$i] - $start_time;
+
+      $control_entry = array();
+      $control_entry["control_id"] = $control_info_array[1];
+      $control_entry["raw_time"] = $control_info_array[0];
+      $control_entry["split_time"] = $this_split;
+      $control_entry["cumulative_time"] = $cumulative_time;
+      $control_times_array[] = $control_entry;
+
+      $prior_control_time = $control_info_array[0];
+      $i++;
+    }
+    else {
+      // Has this control on the course been found at all?
+      $control_was_punched = false;
+      for ($j = $i+1; $j < $number_controls_punched; $j++) {
+        $later_control_info = explode(",", $controls_punched[$j]);
+	if ($later_control_info[1] == $control_list[$next_control][0]) {
+//      echo "Good: {$later_control_info[1]} equals {$control_list[$next_control][0]}, i is {$i}, j is {$j}, next_control is {$next_control}\n";  // Remove
+          $control_was_punched = true;
+
+          $this_split = $later_control_info[0] - $prior_control_time;
+          $cumulative_time = $later_control_info[0] - $start_time;
+          //$time_at_control[$i] = $later_control_info[0];
+          //$split_times[$i] = $time_at_control[$i] - $prior_control_time;
+          //$cumulative_time[$i] = $time_at_control[$i] - $start_time;
+
+          $control_entry = array();
+          $control_entry["control_id"] = $later_control_info[1];
+          $control_entry["raw_time"] = $later_control_info[0];
+          $control_entry["split_time"] = $this_split;
+          $control_entry["cumulative_time"] = $cumulative_time;
+          $control_times_array[] = $control_entry;
+
+	  $prior_control_time = $later_control_info[0];
+
+	  // Move on to the next control which was punched after this one
+	  $i = $j + 1;
+
+	  break;
+	}
+      }
+
+      if (!$control_was_punched) {
+//      echo "Missed: {$control_list[$next_control][0]}, i is {$i}, j is {$j}, next_control is {$next_control}\n";  // Remove
+          $control_entry = array();
+          $control_entry["control_id"] = $control_list[$next_control][0];
+          $control_entry["missed"] = true;
+          $control_times_array[] = $control_entry;
+      }
+    }
+  }
+
+  if (file_exists("{$controls_found_path}/finish")) {
+    $finish_time = file_get_contents("{$controls_found_path}/finish");
+  }
+  else {
+    $finish_time = -1;
+  }
+
+  $splits_array["finish"] = $finish_time;
+  $splits_array["controls"] = $control_times_array;
+  
+  return $splits_array;
+}
 ?>

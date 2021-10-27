@@ -47,7 +47,7 @@ foreach ($course_list as $one_course) {
   foreach ($results_array as $this_result) {
     // If the splits array is empty, there is an error - most likely a self reported result with
     // no splits available, so just skip it.
-    $splits_array = get_splits_as_array($this_result["competitor_id"], $event, $key);
+    $splits_array = get_splits_for_download($this_result["competitor_id"], $event, $key);
     if (count($splits_array) == 0) {
       continue;
     }
@@ -117,19 +117,22 @@ foreach ($course_list as $one_course) {
     $csv_array[] = strftime("%T", $splits_array["start"]);  // Should be HH:MM:SS
     $csv_array[] = strftime("%T", $splits_array["finish"]); // Should be HH:MM:SS
     $winsplits_csv_line = implode(";", $csv_array);
-    $winsplits_csv_line .= ";" . implode(";", array_map(function($elt) { return ($elt["control_id"] . ";" . trim(csv_formatted_time($elt["cumulative_time"]))); },
+    $winsplits_csv_line .= ";" . implode(";", array_map(function($elt) { return ($elt["control_id"] . ";" .
+	                                                                         (isset($elt["missed"]) ?
+										            "-----" :
+										            trim(csv_formatted_time($elt["cumulative_time"])))); },
                                                         $splits_array["controls"]));
     // Need to add in controls which were not visited
     // Should really factor in the controls from the extra list - for later
-    if ($number_controls > count($splits_array["controls"])) {
-      $unvisited_controls = array_slice($controls_on_course, count($splits_array["controls"]));
-      if (count($splits_array["controls"]) > 0) {
-        // If no controls were found, then there is already an appropriate semicolon from the last implode (for the found controls)
-        $winsplits_csv_line .= ";";
-      }
-      $winsplits_csv_line .= implode(";", array_map(function($elt) { return ($elt[0] . ";-----"); },
-                                                        $unvisited_controls));
-    }
+//    if ($number_controls > count($splits_array["controls"])) {
+//      $unvisited_controls = array_slice($controls_on_course, count($splits_array["controls"]));
+//      if (count($splits_array["controls"]) > 0) {
+//        // If no controls were found, then there is already an appropriate semicolon from the last implode (for the found controls)
+//        $winsplits_csv_line .= ";";
+//      }
+//      $winsplits_csv_line .= implode(";", array_map(function($elt) { return ($elt[0] . ";-----"); },
+//                                                        $unvisited_controls));
+//    }
 
     // Oddity #2: The line MUST end in a semicolon!!!
     $output .= "{$winsplits_csv_line};\n";
