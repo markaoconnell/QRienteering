@@ -85,6 +85,8 @@ $courses_array = array_diff($courses_array, array(".", "..")); // Remove the ann
 $event_name = file_get_contents(get_event_path($event, $key) . "/description");
 
 $current_time = time();
+$name_hash = array();
+$obsolete_registrations = array();
 
 
 $competitor_outputs = array();
@@ -93,6 +95,7 @@ foreach ($competitor_list as $competitor) {
   $is_self_reported = file_exists("{$competitor_directory}/{$competitor}/self_reported");
   $finish_file_exists = file_exists("{$competitor_directory}/{$competitor}/controls_found/finish");
   $has_finished = $finish_file_exists || $is_self_reported;
+  $competitor_name = file_get_contents("{$competitor_directory}/{$competitor}/name");
   if (!$has_finished || $include_finishers) {
     if (file_exists("{$competitor_directory}/{$competitor}/registration_info")) {
       $registration_info = parse_registration_info(file_get_contents("{$competitor_directory}/{$competitor}/registration_info"));
@@ -126,19 +129,41 @@ foreach ($competitor_list as $competitor) {
 
     # The start time for an si_stick user is not a good indicator of how old the entry is, so always use
     # the registration time for si_stick users
+    $competitor_info = get_competitor_info($competitor_directory, $competitor, $status, $registration_info, $si_stick);
     if (!file_exists("${competitor_directory}/${competitor}/controls_found/start") || ($si_stick != "none")) {
       $file_info = stat("{$competitor_directory}/{$competitor}");
       // Weed out people who's registration time is too old (one day in seconds)
       if (($current_time - $file_info["mtime"]) < $TIME_LIMIT) {
-        $competitor_outputs[] = get_competitor_info($competitor_directory, $competitor, $status, $registration_info, $si_stick);
+        $competitor_outputs[] = $competitor_info;
       }
     }
     else {
       $start_time = file_get_contents("{$competitor_directory}/${competitor}/controls_found/start");
       // Weed out people who started more than one day ago
       if (($current_time - $start_time) < $TIME_LIMIT) {
-        $competitor_outputs[] = get_competitor_info($competitor_directory, $competitor, $status, $registration_info, $si_stick);
+        $competitor_outputs[] = $competitor_info;
       }
+    }
+  }
+
+  // Look for obsolete registrations
+  // Use the fact that the registrations are listed in the order they were entered
+  // If person A registers and has not yet finished, remember that (in $name_hash)
+  // If we see another registration for person A, the remembered one is obsolete and should be deleted
+  // If the registration is finished, then don't remember it (person A could run a second course legitimately)
+  // Possible problem - two people who have the EXACT same name - problem for another day
+  if (isset($name_hash[$competitor_name])) {
+    $obsolete_registrations[] = $name_hash[$competitor_name];
+    if ($has_finished) {
+      unset($name_hash[$competitor_name]);
+    }
+    else {
+      $name_hash[$competitor_name] = $competitor_info;
+    }
+  }
+  else {
+    if (!$has_finished) {
+      $name_hash[$competitor_name] = $competitor_info;
     }
   }
 }
@@ -161,9 +186,12 @@ $results_string .= "<input type=hidden name=\"event\" value=\"${event}\">\n";
 $results_string .= "\n<table><tr><th><input type=submit value=\"Remove\"></th><th>Course</th><th>Competitor</th><th>Status</th><th>Si Unit</th>" .
                                 "<th>Punches</th><th>Info</th></tr>\n";
 $results_string .= implode("\n", $competitor_outputs);
+if (count($obsolete_registrations) > 0) {
+  $results_string .= "<tr><td colspan=\"7\">&nbsp;</td></tr><tr><td colspan=\"7\">&nbsp;</td></tr>\n";
+  $results_string .= "<tr><td colspan=\"7\"><strong>Obsolete registration entries which likely should be removed</strong></td></tr>\n";
+  $results_string .= implode("\n", $obsolete_registrations);
+}
 $results_string .= "\n</table>\n</form>\n";
-
-
 
 
 echo get_web_page_header(true, true, true);
