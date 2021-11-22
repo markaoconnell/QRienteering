@@ -129,11 +129,15 @@ foreach ($course_list as $one_course) {
       xmlwriter_start_element($xw, "SplitTime");
       if (isset($this_split["missed"])) {
 	add_xml_attribute($xw, "status", "Missing");
+        add_text_element($xw, "ControlCode", $this_split["control_id"]);
       }
       else {
+        // For some reason, it looks like the ControlCode field is supposed to come before
+        // the Time field, even though I didn't think the order should matter in an xml
+        // doc.  At least LiveLox works this way, even though WinSplits doesn't.
+        add_text_element($xw, "ControlCode", $this_split["control_id"]);
         add_text_element($xw, "Time", $this_split["cumulative_time"]);
       } 
-      add_text_element($xw, "ControlCode", $this_split["control_id"]);
       xmlwriter_end_element($xw); // SplitTime
     }
 
