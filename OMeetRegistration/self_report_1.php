@@ -68,6 +68,18 @@ if (file_exists("{$base_path}/{$event}/no_self_reporting")) {
 $courses_path = get_courses_path($event, $key);
 $courses_array = scandir($courses_path);
 $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
+
+if (isset($_GET["competitor"])) {
+  $competitor = $_GET["competitor"];
+  $competitor_path = get_competitor_path($competitor, $event, $key);
+  if (!is_dir($competitor_path)) {
+    error_and_exit("<p>ERROR: No such competitor found {$competitor} (possibly already removed or edited?).\n");
+  }
+
+  $default_name = file_get_contents("{$competitor_path}/name");
+
+  $course = file_get_contents("{$competitor_path}/course");
+}
 // print_r($courses_array);
 echo "<p>\n";
 
@@ -75,17 +87,24 @@ echo "<p class=title>Self-report a result for orienteering event: " . file_get_c
 echo "<form action=\"./self_report_2.php\">\n";
 
 echo "<br><p class=title>What is your name?</p><br>\n";
-echo "<input type=\"text\" size=30 name=\"competitor_name\" value=\"{$default_name}\"><br>\n";
+echo "<input type=\"text\" size=30 name=\"competitor_name\" value=\"{$default_name}\"" . (isset($_GET["competitor"]) ? " readonly" : "") . "><br>\n";
 
 echo "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
 echo "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
 
 echo "<hr>\n";
-echo "<br><p class=title>Select a course:</p><br>\n";
-foreach ($courses_array as $course_name) {
-  if (!file_exists("{$courses_path}/{$course_name}/removed")) {
-    echo "<p><input type=\"radio\" name=\"course\" value=\"" . $course_name . "\">" . ltrim($course_name, "0..9-") . " <br>\n";
+
+if (!isset($_GET["competitor"])) {
+  echo "<br><p class=title>Select a course:</p><br>\n";
+  foreach ($courses_array as $course_name) {
+    if (!file_exists("{$courses_path}/{$course_name}/removed")) {
+      echo "<p><input type=\"radio\" name=\"course\" value=\"" . $course_name . "\">" . ltrim($course_name, "0..9-") . " <br>\n";
+    }
   }
+}
+else {
+  echo "<input type=hidden name=course value=\"{$course}\">\n";
+  echo "<input type=hidden name=competitor value=\"{$competitor}\">\n";
 }
 
 echo "<hr>\n";

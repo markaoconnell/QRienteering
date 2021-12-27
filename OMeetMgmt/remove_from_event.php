@@ -75,9 +75,9 @@ foreach ($competitor_list as $competitor) {
         if (substr($this_result, 0 - $competitor_id_len - 1) == ",{$competitor}") {
           # remove this entry
           if ($is_confirmed) {
-            unlink("{$results_path}/{$this_result}");
+            rename("{$results_path}/{$this_result}", "{$competitor_directory}/{$competitor}/ResultEntry-{$this_result}");
+            $entry_output .= ", finish marker {$this_result}";
           }
-          $entry_output .= ", finish marker {$this_result}";
           break;
         }
       }

@@ -9,7 +9,7 @@ function non_empty($string_value) {
 }
 
 function get_competitor_info($competitor_base_path, $competitor_id, $status, $registration_info, $si_stick) {
-  global $include_competitor_id, $include_date, $key, $event; 
+  global $include_competitor_id, $show_removed_competitors, $include_date, $key, $event; 
   $competitor_string = "<tr>";
   $competitor_name = file_get_contents("{$competitor_base_path}/{$competitor_id}/name");
   $is_self_reported = file_exists("{$competitor_base_path}/{$competitor_id}/self_reported");
@@ -26,12 +26,12 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
   }
  
   $competitor_string .= "</td><td>{$status}</td><td><a href=\"./update_stick.php?key={$key}&event={$event}&competitor={$competitor_id}\">$si_stick</a></td>";
-  if (!$is_self_reported) {
-    $competitor_string .= "<td><a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}\">show</a> / ";
-    $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}&allow_editing=1\">edit</a></td>";
+  if ($is_self_reported || $show_removed_competitors) {
+    $competitor_string .= "<td>No splits</td>";
   }
   else {
-    $competitor_string .= "<td>No splits</td>";
+    $competitor_string .= "<td><a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}\">show</a> / ";
+    $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}&allow_editing=1\">edit</a></td>";
   }
 
   if (count($registration_info) > 0) {
@@ -62,6 +62,7 @@ $key = $_GET["key"];
 $include_competitor_id = ($_GET["include_competitor_id"] != "");
 $include_date = ($_GET["include_date"] != "");
 $include_finishers = ($_GET["include_finishers"] != "");
+$show_removed_competitors = isset($_GET["show_removed"]);
 
 if (($event == "") || (!key_is_valid($key))) {
   error_and_exit("Empty event \"{$event}\" or bad location key \"{$key}\", is this an unauthorized link?\n");
@@ -74,13 +75,20 @@ if (!file_exists(get_event_path($event, $key, ".."))) {
 set_timezone($key);
 
 $results_string = "";
-$competitor_directory = get_competitor_directory($event, $key, "..");
-$competitor_list = scandir("${competitor_directory}");
-$competitor_list = array_diff($competitor_list, array(".", ".."));
+if ($show_removed_competitors) {
+  $competitor_directory = get_event_path($event, $key) . "/removed_competitors";
+}
+else {
+  $competitor_directory = get_competitor_directory($event, $key, "..");
+}
 
-$courses_path = get_courses_path($event, $key, "..");
-$courses_array = scandir($courses_path);
-$courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
+if (is_dir($competitor_directory)) {
+  $competitor_list = scandir("${competitor_directory}");
+  $competitor_list = array_diff($competitor_list, array(".", ".."));
+}
+else {
+  $competitor_list = array();
+}
 
 $event_name = file_get_contents(get_event_path($event, $key) . "/description");
 
@@ -177,13 +185,21 @@ $time_limit_string .= "</ul>\n";
 $time_limit_string .= "<input type=hidden name=\"key\" value=\"${key}\">\n";
 $time_limit_string .= "<input type=hidden name=\"event\" value=\"${event}\">\n";
 $time_limit_string .= "<p>Include finished competitors? <input type=checkbox name=\"include_finishers\" value=\"1\"" . ($include_finishers ? " checked " : "")  . ">\n";
+$time_limit_string .= "<p>Show removed competitors? <input type=checkbox name=\"show_removed\" value=\"1\"" . ($show_removed_competitors ? " checked " : "")  . ">\n";
 $time_limit_string .= "<p><input type=submit value=\"Update competitor list\"></form>\n";
 
 
 $results_string = "<p>Competitors for {$event_name}<p><p>\n";
-$results_string .= "<form action=\"../OMeetMgmt/remove_from_event.php\">\n<input type=hidden name=\"key\" value=\"${key}\">\n";
+if ($show_removed_competitors) {
+  $results_string .= "<form action=\"../OMeetMgmt/restore_to_event.php\">\n";
+}
+else {
+  $results_string .= "<form action=\"../OMeetMgmt/remove_from_event.php\">\n";
+}
+$results_string .= "<input type=hidden name=\"key\" value=\"${key}\">\n";
 $results_string .= "<input type=hidden name=\"event\" value=\"${event}\">\n";
-$results_string .= "\n<table><tr><th><input type=submit value=\"Remove\"></th><th>Course</th><th>Competitor</th><th>Status</th><th>Si Unit</th>" .
+$button_label = $show_removed_competitors ? "Restore" : "Remove";
+$results_string .= "\n<table><tr><th><input type=submit value=\"{$button_label}\"></th><th>Course</th><th>Competitor</th><th>Status</th><th>Si Unit</th>" .
                                 "<th>Punches</th><th>Info</th></tr>\n";
 $results_string .= implode("\n", $competitor_outputs);
 if (count($obsolete_registrations) > 0) {
