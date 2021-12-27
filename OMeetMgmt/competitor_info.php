@@ -202,7 +202,7 @@ $button_label = $show_removed_competitors ? "Restore" : "Remove";
 $results_string .= "\n<table><tr><th><input type=submit value=\"{$button_label}\"></th><th>Course</th><th>Competitor</th><th>Status</th><th>Si Unit</th>" .
                                 "<th>Punches</th><th>Info</th></tr>\n";
 $results_string .= implode("\n", $competitor_outputs);
-if (count($obsolete_registrations) > 0) {
+if (!$show_removed_competitors && (count($obsolete_registrations) > 0)) {
   $results_string .= "<tr><td colspan=\"7\">&nbsp;</td></tr><tr><td colspan=\"7\">&nbsp;</td></tr>\n";
   $results_string .= "<tr><td colspan=\"7\"><strong>Obsolete registration entries which likely should be removed</strong></td></tr>\n";
   $results_string .= implode("\n", $obsolete_registrations);

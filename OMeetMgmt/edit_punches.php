@@ -40,6 +40,9 @@ set_timezone($key);
 $splits_array = get_splits_as_array($competitor, $event, $key, true);
 
 $start_time = $splits_array["start"];
+if ($start_time == "-") {
+  $start_time = 0;
+}
 if (isset($_GET["new_start_time"])) {
   $entered_start_time = trim($_GET["new_start_time"]);
   if (preg_match("/^-[0-9]+$/", $entered_start_time)) {
@@ -59,9 +62,9 @@ if (isset($_GET["new_start_time"])) {
     $new_start_time = $entered_start_time;
   }
   else if (preg_match("/^[0-9]+:[0-9]+:[0-9]+$/", $entered_start_time)) {
-    if ($start_time == 0) {
-        error_and_exit("<p>ERROR: \"{$entered_start_time}\" should be just a timestamp (positive or negative) when start was not punched.\n");
-    }
+//    if ($start_time == 0) {
+//        error_and_exit("<p>ERROR: \"{$entered_start_time}\" should be just a timestamp (positive or negative) when start was not punched.\n");
+//    }
 
     $new_start_hms = explode(":", $_GET["new_start_time"]);
     if (($new_start_hms[0] < 0) || ($new_start_hms[0] > 23) || ($new_start_hms[1] < 0) || ($new_start_hms[1] > 59)
@@ -88,6 +91,8 @@ if (isset($_GET["new_start_time"])) {
 else {
   $start_time_adjustment = 0;
 }
+
+$unpunched_qr_start = ((($start_time + $start_time_adjustment) == 0) && !$using_si_timing);
 
 $competitor_name = file_get_contents("{$competitor_path}/name");
 
@@ -146,28 +151,39 @@ if ($allow_editing) {
   $output_string .= "<input type=submit value=\"Enter Elapsed Time (no splits)\">\n";
   $output_string .= "</form>\n";
   $output_string .= "<br><br>\n";
-  $output_string .= "<p><form action=./edit_punches.php>\n";
-  $output_string .= "Current start time: <input type=text name=new_start_time value=\"" . format_split_time($start_time + $start_time_adjustment, $using_si_timing, false) . "\">\n";
-  $output_string .= "<br>Enter time as hh:mm:ss or value, where value is an absolute time in seconds (if negative, then relative time to first control).<br>\n";
-  $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
-  $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";
-  $output_string .= "<input type=hidden name=competitor value=\"{$competitor}\">\n";
-  $output_string .= "<input type=hidden name=allow_editing value=\"1\">\n";
-  $output_string .= "<input type=submit value=\"Edit start time\">\n";
-  $output_string .= "</form>\n";
-  $output_string .= "<p>Instructions:\n<ul>\n";
-  $output_string .= "<li>Enter the time (in seconds) for a control that is listed to add that control as punched.\n";
-  $output_string .= "<li>Enter the time preceded by a + (e.g. \"+123\") to add that many seconds to the prior time.\n";
-  $output_string .= "<li>Enter a 0 for the time to remove that control.\n";
-  $output_string .= "</ul>\n";
-  $output_string .= "<form action=./submit_edited_punches.php>\n";
-  $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
-  $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";
-  $output_string .= "<input type=hidden name=competitor value=\"{$competitor}\">\n";
-  $output_string .= "<input type=hidden name=start_time_adjustment value=\"{$start_time_adjustment}\">\n";
+  if ($unpunched_qr_start) {
+    $output_string .= "Current start time: Not Yet Started\n";
+    $allow_editing = false;
+  }
+  else {
+    $output_string .= "<p><form action=./edit_punches.php>\n";
+    $output_string .= "Current start time: <input type=text name=new_start_time value=\"" . format_split_time($start_time + $start_time_adjustment, $using_si_timing, false) . "\">\n";
+    $output_string .= "<br>Enter time as hh:mm:ss or value, where value is an absolute time in seconds (if negative, then relative time to first control).<br>\n";
+    $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
+    $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";
+    $output_string .= "<input type=hidden name=competitor value=\"{$competitor}\">\n";
+    $output_string .= "<input type=hidden name=allow_editing value=\"1\">\n";
+    $output_string .= "<input type=submit value=\"Edit start time\">\n";
+    $output_string .= "</form>\n";
+    $output_string .= "<p>Instructions:\n<ul>\n";
+    $output_string .= "<li>Enter the time (in seconds) for a control that is listed to add that control as punched.\n";
+    $output_string .= "<li>Enter the time preceded by a + (e.g. \"+123\") to add that many seconds to the prior time.\n";
+    $output_string .= "<li>Enter a 0 for the time to remove that control.\n";
+    $output_string .= "</ul>\n";
+    $output_string .= "<form action=./submit_edited_punches.php>\n";
+    $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
+    $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";
+    $output_string .= "<input type=hidden name=competitor value=\"{$competitor}\">\n";
+    $output_string .= "<input type=hidden name=start_time_adjustment value=\"{$start_time_adjustment}\">\n";
+  }
 }
 else {
-  $output_string .= "<p>Current start time: " . format_split_time($start_time + $start_time_adjustment, $using_si_timing, false) . "\n";
+  if ($unpunched_qr_start) {
+    $output_string .= "<p>Current start time: Not Yet Started\n";
+  }
+  else {
+    $output_string .= "<p>Current start time: " . format_split_time($start_time + $start_time_adjustment, $using_si_timing, false) . "\n";
+  }
 }
 
 $output_string .= "<p><table><tr><th>&nbsp&nbsp#&nbsp&nbsp</th><th>Control</th><th>Actual time</th><th>Relative time<br>(seconds)</th></tr>\n";
