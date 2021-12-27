@@ -2,6 +2,23 @@
 // Must already have common_routines.php included
 
 
+function format_split_time($punch_time, $si_time, $include_day) {
+  if ($si_time) {
+    return(format_si_time($punch_time));
+  }
+  else {
+    if ($include_day) {
+      $format_string = "%T (%a - %d)";
+    }
+    else {
+      $format_string = "%T";
+    }
+
+    return (strftime($format_string, $punch_time));
+  }
+}
+
+
 function get_splits_output($competitor_id, $event, $key, $final_results_line) {
   global $TYPE_FIELD, $SCORE_O_COURSE, $LIMIT_FIELD, $PENALTY_FIELD, $MAX_SCORE_FIELD;
 
@@ -12,6 +29,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
   }
   
   $result_pieces = explode(",", $final_results_line);
+  $using_si_timing = file_exists("{$competitor_path}/si_stick");
   $competitor_name = file_get_contents("{$competitor_path}/name");
   $controls_found_path = "{$competitor_path}/controls_found";
   $course = file_get_contents("{$competitor_path}/course");
@@ -72,7 +90,8 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
     foreach ($extra_controls as $extra_one) {
       if ($extra_one != "") {
         $extra_control_info = explode(",", $extra_one);  // Format of each entry is <time>,<control_id>
-        $extra_controls_string .= "<tr><td></td><td>{$extra_control_info[1]}</td><td></td><td></td><td>" . strftime("%T", $extra_control_info[0]) . "</td>\n";
+	$extra_controls_string .= "<tr><td></td><td>{$extra_control_info[1]}</td><td></td><td></td><td>" .
+		                    format_split_time($extra_control_info[0], $using_si_timing, false) . "</td>\n";
       }
     }
   }
@@ -80,7 +99,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
   $table_string = "";
   $table_string .= "<p class=\"title\">Splits for ${competitor_name} on " . ltrim($course, "0..9-") . "\n";
   $table_string .= "<table border=1><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of Day</th></tr>\n";
-  $table_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . strftime("%T (%a - %d)", $start_time) . "</td></tr>\n";
+  $table_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . format_split_time($start_time, $using_si_timing, true) . "</td></tr>\n";
   $controls_found_list = array();  // De-dup controls found if on a scoreO
   for ($i = 0; $i < $number_controls_found; $i++){
     if ($score_course) {
@@ -99,11 +118,13 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
       $control_string_for_table = $controls_found[$i];
     }
     $table_string .= "<tr><td>" . ($i + 1) . "</td><td>{$control_string_for_table}</td><td>" . formatted_time($split_times[$i]) . "</td>" .
-                                             "<td>" . formatted_time($cumulative_time[$i]) . "</td><td>" . strftime("%T", $time_at_control[$i]) . "</td></tr>\n";
+	                                        "<td>" . formatted_time($cumulative_time[$i]) . "</td><td>" .
+	                                        format_split_time($time_at_control[$i], $using_si_timing, false) . "</td></tr>\n";
   }
   $table_string .= "<tr><td>Finish</td><td></td><td>" . formatted_time($split_times[$i]) . "</td>" .
                                            "<td>" . formatted_time($cumulative_time[$i]) . "</td>" .
-                                           "<td>" . strftime("%T (%a - %d)", $time_at_control[$i]) . "</td></tr>\n{$extra_controls_string}\n</table>\n";
+					   "<td>" . format_split_time($time_at_control[$i], $using_si_timing, true) .
+					   "</td></tr>\n{$extra_controls_string}\n</table>\n";
   
   
   $splits_string = "";
@@ -153,6 +174,7 @@ function get_splits_dnf($competitor, $event, $key) {
   $splits_array = get_splits_as_array($competitor, $event, $key, true);
   
   $competitor_name = file_get_contents("{$competitor_path}/name");
+  $using_si_timing = file_exists("{$competitor_path}/si_stick");
   
   $course = file_get_contents("{$competitor_path}/course");
   $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
@@ -202,7 +224,7 @@ function get_splits_dnf($competitor, $event, $key) {
     
   $output_string = "<p class=\"title\">Splits for {$competitor_name} on " . ltrim($course, "0..9-") . ($score_course ? " (ScoreO)" : "") . "\n";
   $output_string .= "<p><table><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of day</th></tr>\n";
-  $output_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . strftime("%T (%a - %d)", $splits_array["start"]) . "</td></tr>\n";
+  $output_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . format_split_time($splits_array["start"], $using_si_timing, true) . "</td></tr>\n";
   
   $control_num_on_course = 0;
   $control_unique_counter = 0;
@@ -229,7 +251,7 @@ function get_splits_dnf($competitor, $event, $key) {
                                                                                       "</td><td>" . $control_id . "</td>";
       $output_string .= "<td>" . formatted_time($this_control["split_time"]) . "</td>\n";
       $output_string .= "<td>" . formatted_time($this_control["cumulative_time"]) . "</td>\n";
-      $output_string .="<td>" . strftime("%T", $this_control["raw_time"]) . "</td></tr>\n";
+      $output_string .="<td>" . format_split_time($this_control["raw_time"], $using_si_timing, false) . "</td></tr>\n";
   
       $control_num_on_course++;
    }
@@ -237,7 +259,7 @@ function get_splits_dnf($competitor, $event, $key) {
       $output_string .= "<tr><td>-</td><td>" . $control_id . "</td>";
       $output_string .= "<td>" . formatted_time($this_control["split_time"]) . "</td>\n";
       $output_string .= "<td>" . formatted_time($this_control["cumulative_time"]) . "</td>\n";
-      $output_string .="<td>" . strftime("%T", $this_control["raw_time"]) . "</td></tr>\n";
+      $output_string .="<td>" . format_split_time($this_control["raw_time"], $using_si_timing, false) . "</td></tr>\n";
     }
   }
   
@@ -251,7 +273,7 @@ function get_splits_dnf($competitor, $event, $key) {
     }
   }
   
-  $output_string .= "<tr><td>Finish</td><td></td><td></td><td></td><td>" . strftime("%T (%a - %d)", $splits_array["finish"]) . "</td></tr>\n";
+  $output_string .= "<tr><td>Finish</td><td></td><td></td><td></td><td>" . format_split_time($splits_array["finish"], $using_si_timing, true) . "</td></tr>\n";
   $output_string .= "</table>\n";
     
   $finish_time = $splits_array["finish"] - $splits_array["start"];

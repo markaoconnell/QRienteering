@@ -7,6 +7,19 @@ function ck_testing() {
   }
 }
 
+// Return a string with the time in seconds pretty printed,
+// like strftime("%T") but with no timezone adjustments
+// (for displaying si unit times)
+function format_si_time($time_in_seconds) {
+  $hours = floor($time_in_seconds / 3600);
+  $mins = floor(($time_in_seconds / 60) % 60);
+//  $hours = 0;
+//  $mins = floor($time_in_seconds / 60);
+  $secs = ($time_in_seconds % 60);
+
+  return sprintf("%02d:%02d:%02d", $hours, $mins, $secs);
+}
+
 // Return a string with the elapsed time in seconds pretty printed
 function formatted_time($time_in_seconds) {
   $hours = floor($time_in_seconds / 3600);

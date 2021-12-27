@@ -34,6 +34,7 @@ if (file_exists("{$competitor_path}/self_reported")) {
   error_and_exit("<p>ERROR: Self reported result, no splits available to edit.\n");
 }
 
+$using_si_timing = file_exists("{$competitor_path}/si_stick");
 set_timezone($key);
 
 $splits_array = get_splits_as_array($competitor, $event, $key, true);
@@ -67,9 +68,16 @@ if (isset($_GET["new_start_time"])) {
                                                             || ($new_start_hms[2] < 0) || ($new_start_hms[2] > 59)) {
       error_and_exit("<p>ERROR: \"{$entered_start_time}\" is malformatted, should be hh:mm:ss, hour between 0 and 23, minute and second between 0 and 60.\n");
     }
-    $localtime_array = localtime($start_time, true);
-    $new_start_time = mktime($new_start_hms[0], $new_start_hms[1], $new_start_hms[2],
-                           $localtime_array["tm_mon"] + 1, $localtime_array["tm_mday"], $localtime_array["tm_year"] + 1900);
+
+    // For si timing, don't both with timezones - just use the time raw
+    if ($using_si_timing) {
+      $new_start_time = (3600 * $new_start_hms[0]) + (60 * $new_start_hms[1]) + $new_start_hms[2];
+    }
+    else {
+      $localtime_array = localtime($start_time, true);
+      $new_start_time = mktime($new_start_hms[0], $new_start_hms[1], $new_start_hms[2],
+	    $localtime_array["tm_mon"] + 1, $localtime_array["tm_mday"], $localtime_array["tm_year"] + 1900);
+      }
   }
   else {
     error_and_exit("<p>ERROR: Cannot parse start time \"{$entered_start_time}\", re-read format instructions for the time.\n");
@@ -130,14 +138,17 @@ $error_string = "";
   
 $output_string = "<p>Punches for {$competitor_name} on " . ltrim($course, "0..9-") . ($score_course ? " (ScoreO)" : "") . "\n";
 if ($allow_editing) {
+  $output_string .= "<p><form action=../OMeetRegistration/self_report_1.php>\n";
+  $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
+  $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";
+  $output_string .= "<input type=hidden name=competitor value=\"{$competitor}\">\n";
+  $output_string .= "<input type=hidden name=course value=\"{$course}\">\n";
+  $output_string .= "<input type=submit value=\"Enter Elapsed Time (no splits)\">\n";
+  $output_string .= "</form>\n";
+  $output_string .= "<br><br>\n";
   $output_string .= "<p><form action=./edit_punches.php>\n";
-  $output_string .= "Current start time: <input type=text name=new_start_time value=\"" . strftime("%T", $start_time + $start_time_adjustment) . "\">\n";
-  if ($start_time != 0) {
-    $output_string .= "<br>Enter time as hh:mm:ss or value, where value is an absolute time in seconds (if negative, then relative time to first control).<br>\n";
-  }
-  else {
-    $output_string .= "<br>Enter time as value, where value is an absolute time in seconds (if negative, then relative time to first control).<br>\n";
-  }
+  $output_string .= "Current start time: <input type=text name=new_start_time value=\"" . format_split_time($start_time + $start_time_adjustment, $using_si_timing, false) . "\">\n";
+  $output_string .= "<br>Enter time as hh:mm:ss or value, where value is an absolute time in seconds (if negative, then relative time to first control).<br>\n";
   $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
   $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";
   $output_string .= "<input type=hidden name=competitor value=\"{$competitor}\">\n";
@@ -156,7 +167,7 @@ if ($allow_editing) {
   $output_string .= "<input type=hidden name=start_time_adjustment value=\"{$start_time_adjustment}\">\n";
 }
 else {
-  $output_string .= "<p>Current start time: " . strftime("%T", $start_time + $start_time_adjustment) . "\n";
+  $output_string .= "<p>Current start time: " . format_split_time($start_time + $start_time_adjustment, $using_si_timing, false) . "\n";
 }
 
 $output_string .= "<p><table><tr><th>&nbsp&nbsp#&nbsp&nbsp</th><th>Control</th><th>Actual time</th><th>Relative time<br>(seconds)</th></tr>\n";
@@ -188,7 +199,7 @@ foreach ($controls_found as $this_control) {
   // is the punched control on the course at all?
   if (isset($controls_hash[$control_id])) {
     $output_string .= "<tr><td>" . implode(",", array_map(function ($elt) { return ($elt + 1); }, $controls_hash[$control_id])) . "</td><td>" . $control_id . "</td>";
-    $output_string .="<td>" . strftime("%T", $this_control["raw_time"]) . "</td>";
+    $output_string .="<td>" . format_split_time($this_control["raw_time"], $using_si_timing, false) . "</td>";
     if ($allow_editing) {
       $output_string .= "<td><input type=text name=\"Control-{$control_id}-{$control_unique_counter}\" value=\"" .
                                                       ($this_control["cumulative_time"] - $start_time_adjustment) . "\"></td></tr>\n";
@@ -201,7 +212,7 @@ foreach ($controls_found as $this_control) {
  }
  else {
     $output_string .= "<tr><td>-</td><td>" . $control_id . "</td>";
-    $output_string .="<td>" . strftime("%T", $this_control["raw_time"]) . "</td>";
+    $output_string .="<td>" . format_split_time($this_control["raw_time"], $using_si_timing, false) . "</td>";
     if ($allow_editing) {
       $output_string .= "<td><input type=text name=\"Control-{$control_id}-{$control_unique_counter}\" value=\"" .
                                                      ($this_control["cumulative_time"] - $start_time_adjustment) . "\"></td></tr>\n";
