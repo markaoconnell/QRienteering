@@ -58,6 +58,12 @@ function name_to_download_links($event_id) {
           "<a href={$base_path_for_links}/OMeetMgmt/download_results_iofxml.php?event={$event_id}&key={$key}> IOF XML 3.0 </a> results for {$event_fullname}");
 }
 
+function name_to_stats_links($event_id) {
+  global $base_path, $key, $base_path_for_links;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li>Get stats for <a href={$base_path_for_links}/OMeetMgmt/meet_statistics.php?event={$event_id}&key={$key}> {$event_fullname} </a>");
+}
+
 function name_to_get_qrcodes_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
@@ -116,6 +122,8 @@ $qrcode_links = array_map("name_to_get_qrcodes_link", $open_event_list);
 $closed_event_result_links = array_map("name_to_results_link", $closed_event_list);
 $closed_event_download_links = array_map("name_to_download_links", $closed_event_list);
 $open_event_download_links = array_map("name_to_download_links", $open_event_list);
+$closed_event_stats_links = array_map("name_to_stats_links", $closed_event_list);
+$open_event_stats_links = array_map("name_to_stats_links", $open_event_list);
 
 
 echo get_web_page_header(true, false, false);
@@ -164,6 +172,11 @@ echo get_web_page_header(true, false, false);
       <ul>
       <?php echo implode("\n", $closed_event_download_links); ?>
       <?php echo implode("\n", $open_event_download_links); ?>
+      </ul>
+    <li> Statistics
+      <ul>
+      <?php echo implode("\n", $closed_event_stats_links); ?>
+      <?php echo implode("\n", $open_event_stats_links); ?>
       </ul>
   </ul>
 

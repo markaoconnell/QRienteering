@@ -366,6 +366,62 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
   return($result_array);
 }
 
+// Get the statistics for a course in an event
+function get_course_stats($event, $key, $course) {
+  $course_results = array("starts" => 0, "members" => 0, "non-members" => 0, "qr_coders" => 0, "self_reported" => 0,
+	  "si_unit" => 0, "dnfs" => 0, "complete" => 0);
+  $course_results["start_names"] = array();
+
+  // No results yet - .csv is empty
+  $results_path = get_results_path($event, $key);
+  if (!is_dir("{$results_path}/{$course}")) {
+    return($course_results);
+  }
+  
+  $results_list = scandir("${results_path}/{$course}");
+  $results_list = array_diff($results_list, array(".", ".."));
+
+  foreach ($results_list as $this_result) {
+    $result_pieces = explode(",", $this_result);
+    $competitor_path = get_competitor_path($result_pieces[2], $event, $key);
+    $competitor_name = file_get_contents("${competitor_path}/name");
+
+    $course_results["start_names"][$competitor_name] = 1;
+    $course_results["starts"]++;
+    if (file_exists("{$competitor_path}/dnf")) {
+      $course_results["dnfs"]++;
+    }
+    else {
+      $course_results["complete"]++;
+    }
+
+    if (file_exists("{$competitor_path}/si_stick")) {
+      $course_results["si_unit"]++;
+    }
+    else if (file_exists("{$competitor_path}/self_reported")) {
+      $course_results["self_reported"]++;
+    }
+    else {
+      $course_results["qr_coders"]++;
+    }
+
+    if (file_exists("{$competitor_path}/registration_info")) {
+      $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
+      if ($registration_info["is_member"] == "yes") {
+        $course_results["members"]++;
+      }
+      else {
+        $course_results["non-members"]++;
+      }
+    }
+    else {
+      $course_results["non-members"]++;
+    }
+  }
+
+  return($course_results);
+}
+
 function get_all_course_result_links($event, $key, $path_to_top = "..") {
   $courses_path = get_courses_path($event, $key);
   $course_list = scandir($courses_path);

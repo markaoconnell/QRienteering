@@ -516,6 +516,32 @@ for $result_file (@results_files) {
 
 success();
 
+#################
+#Test 6 - check the stats
+
+%TEST_INFO = qw(Testname CheckStatsForEvent);
+%GET = qw(key UnitTestPlayground);
+$GET{"event"} = $event_id;
+
+hashes_to_artificial_file();
+
+my($cmd) = "php ../OMeetMgmt/meet_statistics.php";
+my($output);
+$output = qx($cmd);
+
+if ($output !~ /6 unique/) {
+  error_and_exit("Did not find 6 unique entrants in output.\n$output");
+}
+
+my($actual_table_rows);
+$actual_table_rows = () = $output =~ /(<tr><td>)/g;
+
+if ($actual_table_rows != 6) {
+  error_and_exit("Found $actual_table_rows instead of 6 rows in results output.\n$output");
+}
+
+success();
+
 ############
 # Cleanup
 

@@ -127,7 +127,14 @@ $preselected_course = isset($_GET["course"]) ? $_GET["course"] : "";
 echo "<br><p>Select a course:<br>\n";
 foreach ($courses_array as $course_name) {
   if (!file_exists("{$courses_path}/{$course_name}/removed")) {
-    $prechecked_value = ($course_name == $preselected_course) ? "checked" : "";
+    $prechecked_value = (ltrim($course_name, "0..9-") == $preselected_course) ? "checked" : "";
+    // Decide at some point if this should specify the full name or just the human readable name
+    // For now, only support the human readable name for simplicity
+    // Not sure what this will do if there are multiple courses with the same name that wind up checked,
+    // though that would be confusing anyway so I'm not sure it is worth worrying about
+    #if ($prechecked_value == "") {
+    #  $prechecked_value = ($course_name == $preselected_course) ? "checked" : "";
+    #}
     echo "<p><input type=\"radio\" name=\"course\" value=\"{$course_name}\" {$prechecked_value}>" . ltrim($course_name, "0..9-") . " <br>\n";
   }
 }
