@@ -32,17 +32,20 @@ if (!isset($_GET["si_stick"])) {
 }
 
 $si_stick = $_GET["si_stick"];
+$parseable_result_string = "\n<!--\n";
 
 if ($is_preregistered_checkin) {
   $member_id = $prereg_matching_info["si_hash"][$si_stick];
   if ($member_id == "") {
-    error_and_exit("No preregistration entry with SI unit \"{$si_stick}\" found, please hit back and retry.\n");
+    $parseable_result_string .= "####,ERROR,No preregistration entry found for {$si_stick}\n-->\n";
+    error_and_exit("{$parseable_result_string}No preregistration entry with SI unit \"{$si_stick}\" found, please hit back and retry.\n");
   }
 }
 else {
   $member_id = get_by_si_stick($si_stick, $matching_info);
   if ($member_id == "") {
-    error_and_exit("No member with SI unit \"{$si_stick}\" found, please hit back and retry.\n");
+    $parseable_result_string .= "####,ERROR,No member entry found for {$si_stick}\n-->\n";
+    error_and_exit("{$parseable_result_string}No member with SI unit \"{$si_stick}\" found, please hit back and retry.\n");
   }
 }
 
@@ -71,6 +74,7 @@ else {
   $pass_preregistration_marker = "";
 }
 $success_string .= "<p>Welcome {$printable_name}.\n";
+$parseable_result_string .= "\n####,MEMBER_ENTRY," . base64_encode($printable_name) . ",{$member_id},{$email_address}\n";
 $success_string .= <<<END_OF_FORM
 <form action="./add_safety_info.php">
 <input type=hidden name="member_id" value="{$member_id}"/>
@@ -91,6 +95,7 @@ END_OF_FORM;
 echo get_web_page_header(true, false, true);
 
 echo $success_string;
+echo "{$parseable_result_string}\n-->\n";
 
 echo get_web_page_footer();
 ?>

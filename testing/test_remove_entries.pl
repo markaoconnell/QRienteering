@@ -38,6 +38,7 @@ sub remove_one_entrant {
   %GET = qw(key UnitTestPlayground);
   $GET{"Remove-" . $_[0]} = $_[0];
   $GET{"event"} = $event_id;
+  $GET{"confirmed"} = "true";
   %COOKIE = ();  # empty hash
   
   hashes_to_artificial_file();
@@ -63,6 +64,7 @@ sub remove_all_entrants {
   %GET = qw(key UnitTestPlayground);
   $GET{"Remove-all"} = 1;
   $GET{"event"} = $event_id;
+  $GET{"confirmed"} = "true";
   %COOKIE = ();  # empty hash
   
   hashes_to_artificial_file();

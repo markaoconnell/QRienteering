@@ -4,6 +4,8 @@ require '../OMeetCommon/course_properties.php';
 
 ck_testing();
 
+set_page_title("Orienteering Competitor Info Page");
+
 function non_empty($string_value) {
   return(strlen(trim($string_value)) > 0);
 }

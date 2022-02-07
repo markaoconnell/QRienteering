@@ -3,6 +3,8 @@ require '../OMeetCommon/common_routines.php';
 
 ck_testing();
 
+set_page_title("Create Orienteering Event");
+
 echo get_web_page_header(true, false, false);
 
 $verbose = isset($_POST["verbose"]);

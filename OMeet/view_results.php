@@ -78,6 +78,8 @@ else {
   $course_list = array_diff($course_list, array(".", ".."));
 }
 
+$courses_for_parsing = array();
+
 foreach ($course_list as $one_course) {
   $show_course = true;
   if (file_exists("{$courses_path}/{$one_course}/removed")) {
@@ -93,6 +95,7 @@ foreach ($course_list as $one_course) {
   }
 
   if ($show_course || isset($_GET["show_all_courses"])) {
+    $courses_for_parsing[] = $one_course;
     $course_properties = get_course_properties("{$courses_path}/{$one_course}");
     $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
     $max_score = 0;
@@ -120,6 +123,11 @@ echo get_web_page_header(true, true, false);
 echo "<p>Results for: <strong>{$event_name}</strong>\n";
 
 echo $results_string;
+
+echo "<!--\n";
+echo "####,Event,{$event}," . base64_encode($event_name) . "\n";
+echo "####,CourseList," . implode(",", $courses_for_parsing) . "\n";
+echo "-->\n";
 
 echo get_web_page_footer();
 ?>

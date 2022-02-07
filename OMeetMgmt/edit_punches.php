@@ -5,6 +5,8 @@ require '../OMeetCommon/generate_splits_output.php';
 
 ck_testing();
 
+set_page_title("Edit Single Orienteering Result");
+
 // Get the submitted info
 // echo "<p>\n";
 $event = $_GET["event"];

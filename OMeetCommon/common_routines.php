@@ -123,11 +123,18 @@ function is_mobile () {
 }
 
 
+$page_title = "Orienteering Event Managment";
+function set_page_title($new_title) {
+  global $page_title;
+  $page_title = $new_title;
+}
+
+
 $bg_color = "";
 
 // Print out the default headers
 function get_web_page_header($paragraph_style, $table_style, $form_style) {
-  global $bg_color;
+  global $bg_color, $page_title;
 
   $headers_to_show = <<<END_OF_HEADERS
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -135,7 +142,7 @@ function get_web_page_header($paragraph_style, $table_style, $form_style) {
 <head>
   <meta content="text/html; charset=ISO-8859-1"
  http-equiv="content-type">
-  <title>Orienteering Event Management</title>
+  <title>{$page_title}</title>
   <meta content="Mark O'Connell" name="author">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../OMeetCommon/styles.css"></link>

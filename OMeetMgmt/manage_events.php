@@ -3,6 +3,8 @@ require '../OMeetCommon/common_routines.php';
 
 ck_testing();
 
+set_page_title("Orienteering Event Managment Main Page");
+
 function is_event_open($filename) {
   global $base_path;
   return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
@@ -127,6 +129,17 @@ $open_event_stats_links = array_map("name_to_stats_links", $open_event_list);
 
 
 echo get_web_page_header(true, false, false);
+
+// Make the event list easier to parse
+echo "\n<!--\n";
+echo implode("\n", array_map(function ($elt) use ($base_path)
+                             { return ("####,OPEN_EVENT,{$elt}," . base64_encode(file_get_contents("{$base_path}/{$elt}/description"))); },
+                             $open_event_list));
+echo "\n";
+echo implode("\n", array_map(function ($elt) use ($base_path)
+                             { return ("####,CLOSED_EVENT,{$elt}," . base64_encode(file_get_contents("{$base_path}/{$elt}/description"))); },
+                             $closed_event_list));
+echo "\n-->\n";
 ?>
 <br>
 <p>Orienteering Event Management

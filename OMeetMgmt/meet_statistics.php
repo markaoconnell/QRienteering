@@ -27,6 +27,8 @@ function get_percent_data_item($partial, $total) {
 
 ck_testing();
 
+set_page_title("Orienteering Meet Statistics Page");
+
 // Get the submitted info
 // echo "<p>\n";
 $event = isset($_GET["event"]) ? $_GET["event"] : "";
