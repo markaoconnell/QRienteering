@@ -124,6 +124,7 @@ echo "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
 
 
 $preselected_course = isset($_GET["course"]) ? $_GET["course"] : "";
+$parseable_result_string = "\n<!--\n";
 echo "<br><p>Select a course:<br>\n";
 foreach ($courses_array as $course_name) {
   if (!file_exists("{$courses_path}/{$course_name}/removed")) {
@@ -136,6 +137,7 @@ foreach ($courses_array as $course_name) {
     #  $prechecked_value = ($course_name == $preselected_course) ? "checked" : "";
     #}
     echo "<p><input type=\"radio\" name=\"course\" value=\"{$course_name}\" {$prechecked_value}>" . ltrim($course_name, "0..9-") . " <br>\n";
+    $parseable_result_string .= "\n####,COURSE," . ltrim($course_name, "0..9-") . ",{$course_name}\n";
   }
 }
 
@@ -151,6 +153,7 @@ if (!$registration_info_supplied) {
 
 echo "<p><input type=\"submit\" value=\"Submit Registration\">\n";
 echo "</form>";
+echo "{$parseable_result_string}-->\n";
 
 
 echo get_web_page_footer();

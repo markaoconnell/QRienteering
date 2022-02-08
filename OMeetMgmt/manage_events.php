@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetWithMemberList/preregistration_routines.php';
 
 ck_testing();
 
@@ -132,12 +133,14 @@ echo get_web_page_header(true, false, false);
 
 // Make the event list easier to parse
 echo "\n<!--\n";
-echo implode("\n", array_map(function ($elt) use ($base_path)
-                             { return ("####,OPEN_EVENT,{$elt}," . base64_encode(file_get_contents("{$base_path}/{$elt}/description"))); },
+echo implode("\n", array_map(function ($elt) use ($base_path, $key)
+                             { return ("####,OPEN_EVENT,{$elt}," . base64_encode(file_get_contents("{$base_path}/{$elt}/description")) .
+                                                 "," . (preregistrations_allowed($elt, $key) ? "Preregistration" : "no")); },
                              $open_event_list));
 echo "\n";
-echo implode("\n", array_map(function ($elt) use ($base_path)
-                             { return ("####,CLOSED_EVENT,{$elt}," . base64_encode(file_get_contents("{$base_path}/{$elt}/description"))); },
+echo implode("\n", array_map(function ($elt) use ($base_path, $key)
+                             { return ("####,CLOSED_EVENT,{$elt}," . base64_encode(file_get_contents("{$base_path}/{$elt}/description")) .
+                                                 "," . (preregistrations_allowed($elt, $key) ? "Preregistration" : "no")); },
                              $closed_event_list));
 echo "\n-->\n";
 ?>
