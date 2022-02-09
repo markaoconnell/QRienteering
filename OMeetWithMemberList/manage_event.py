@@ -7,6 +7,9 @@ mode_label = None
 mode_button = None
 download_mode = True
 exit_all_threads = False
+discovered_courses = [ "White", "Yellow", "Orange", "Tan", "Brown", "Green", "Red" ]
+open_frames = []
+
 def switch_mode():
     global download_mode
     if download_mode:
@@ -20,6 +23,10 @@ def switch_mode():
     return
 
 def make_status(enclosing_frame, stick, message, is_error):
+    root.after(1, lambda: make_status_on_mainloop(enclosing_frame, stick, message,  is_error))
+    return
+
+def make_status_on_mainloop(enclosing_frame, stick, message, is_error):
     result_frame = tk.LabelFrame(enclosing_frame)
     button_frame = tk.Frame(result_frame)
     label_frame = tk.Frame(result_frame)
@@ -29,19 +36,80 @@ def make_status(enclosing_frame, stick, message, is_error):
         stick_status["fg"] = "red"
     else:
         stick_status["fg"] = "green"
-    stick_ack = tk.Button(button_frame, text="Ack", command=result_frame.destroy)
-    stick_register = tk.Button(button_frame, text="Register")
-    stick_replay = tk.Button(button_frame, text="Replay")
+    stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy)
+    stick_register = tk.Button(button_frame, text="Register for new course")
+    stick_replay = tk.Button(button_frame, text="Retry upload")
     buttons_to_disable = [stick_ack, stick_register, stick_replay]
     stick_replay.configure(command=lambda: replay_stick(stick, stick_status, buttons_to_disable))
+    stick_register.configure(command=lambda: registration_window(stick, stick_status, buttons_to_disable))
     stick_label.pack(side=tk.LEFT)
     stick_status.pack(side=tk.LEFT, fill=tk.X)
     stick_replay.pack(side=tk.LEFT)
-    stick_ack.pack(side=tk.LEFT, padx=5)
     stick_register.pack(side=tk.LEFT, padx=5)
+    stick_ack.pack(side=tk.RIGHT, padx=5)
     label_frame.pack(side=tk.TOP, fill=tk.X)
     button_frame.pack(side=tk.TOP, fill=tk.X)
+
+    # Display the registration window before we actually display the status frame
+    if not download_mode:
+        for button in buttons_to_disable:
+            button.configure(state=tk.DISABLED)
+        registration_window(stick, stick_status, buttons_to_disable)
+
     result_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
+
+def registration_window(stick, stick_status_widget, buttons_to_disable):
+    global open_frames
+
+    for button in buttons_to_disable:
+        button.configure(state=tk.DISABLED)
+
+    registration_frame = tk.Tk()
+    open_frames.append(registration_frame)
+    registration_frame.geometry("300x300")
+    registration_frame.title("Register entrant")
+
+    choices_frame = tk.Frame(registration_frame)
+    button_frame = tk.Frame(registration_frame)
+    chosen_course = tk.StringVar(registration_frame, "unselected")
+    info_label = tk.Label(choices_frame, text=f"Register Mark OConnell ({stick})")
+    info_label.pack(side=tk.TOP)
+
+    for course in discovered_courses:
+        radio_button = tk.Radiobutton(choices_frame, text=course, value=course, variable=chosen_course)
+        radio_button.pack(side=tk.TOP)
+
+    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(stick, stick_status_widget, buttons_to_disable, chosen_course, registration_frame))
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, buttons_to_disable))
+
+    ok_button.pack(side=tk.LEFT)
+    cancel_button.pack(side=tk.LEFT)
+
+    choices_frame.pack(side=tk.TOP)
+    button_frame.pack(side=tk.TOP)
+
+    registration_frame.protocol("WM_DELETE_WINDOW", lambda: kill_registration_window(registration_frame, buttons_to_disable))
+    return
+
+
+def register_for_course(stick, stick_status_widget, buttons_to_disable, chosen_course, enclosing_frame):
+    global open_frames
+
+    for button in buttons_to_disable:
+        button.configure(state=tk.NORMAL)
+
+    stick_status_widget["text"] = f"SI user ({stick}) registered on " + chosen_course.get()
+    enclosing_frame.destroy()
+    open_frames.remove(enclosing_frame)
+    return
+
+def kill_registration_window(registration_window, buttons_to_disable):
+    global open_frames
+    registration_window.destroy()
+    open_frames.remove(registration_window)
+    for button in buttons_to_disable:
+        button.configure(state=tk.NORMAL)
+
 
 def replay_stick(stick, stick_status_widget, buttons_to_disable):
     stick_status_widget["text"] = f"Replaying SI results for {stick}"
@@ -73,7 +141,7 @@ def interruptible_sleep(time_to_sleep):
     return
 
 def slowly_add_status():
-    interruptible_sleep(10)
+    interruptible_sleep(1)
     if exit_all_threads: return
     make_status(status_frame, "2108369", "Mark OConnell, 1h40m21s on Red, course complete", False)
 
@@ -111,6 +179,13 @@ def slowly_add_status():
 
     return
 
+def kill_all_windows():
+    global exit_all_threads, root
+
+    exit_all_threads = True
+    for open_window in open_frames:
+        open_window.destroy()
+    root.destroy()
 
 
 root = tk.Tk()
@@ -122,11 +197,13 @@ mode_frame.pack(fill=tk.X, side=tk.TOP)
 status_frame.pack(fill=tk.BOTH, side=tk.TOP, pady=10)
 
 mode_label = tk.Label(mode_frame, text="In Download mode")
-mode_button = tk.Button(mode_frame, text="Switch to register mode", command=switch_mode)
 mode_label.pack(side=tk.LEFT) 
-mode_button.pack(side=tk.LEFT, padx=5)
-exit_button = tk.Button(mode_frame, text="Exit", command=root.destroy)
+exit_button = tk.Button(mode_frame, text="Exit", command=kill_all_windows)
 exit_button.pack(side=tk.RIGHT)
+mode_button = tk.Button(mode_frame, text="Switch to register mode", command=switch_mode)
+mode_button.pack(side=tk.RIGHT, padx=5)
+
+root.protocol("WM_DELETE_WINDOW", kill_all_windows)
 
 
 
