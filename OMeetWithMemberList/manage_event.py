@@ -10,6 +10,34 @@ exit_all_threads = False
 discovered_courses = [ "White", "Yellow", "Orange", "Tan", "Brown", "Green", "Red" ]
 open_frames = []
 
+class ScrollableFrame(ttk.Frame):
+    def __init__(self, container, *args, **kwargs):
+        super().__init__(container, *args, **kwargs)
+        self.canvas = tk.Canvas(self)
+        scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = ttk.Frame(self.canvas)
+
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")
+            )
+        )
+
+
+        self.canvas_frame = self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        #self.canvas.bind("<Configure>", lambda event: self.canvas.itemconfig(self.canvas_frame, width=event.width))
+        self.canvas.bind("<Configure>", self.InnerFrameResize)
+
+        self.canvas.configure(yscrollcommand=scrollbar.set)
+
+        scrollbar.pack(side="left", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+
+    def InnerFrameResize(self, event):
+        self.canvas.itemconfig(self.canvas_frame, width = event.width)
+        #self.canvas.itemconfig(self.canvas_frame, height = event.height)
+
 def switch_mode():
     global download_mode
     if download_mode:
@@ -149,31 +177,31 @@ def slowly_add_status():
     if exit_all_threads: return
     make_status(status_frame, "5083959473", "Karen Yeowell, 1h25m21s on Red, course complete", False)
 
-    interruptible_sleep(22)
+    interruptible_sleep(10)
     if exit_all_threads: return
     make_status(status_frame, "USD", "John OConnell, 2h25m21s on Red, DNF", True)
 
-    interruptible_sleep(10)
+    interruptible_sleep(15)
     if exit_all_threads: return
     make_status(status_frame, "314159", "Billy OConnell, 1h40m21s on White, course complete", False)
 
-    interruptible_sleep(10)
+    interruptible_sleep(15)
     if exit_all_threads: return
     make_status(status_frame, "271828", "Lydia OConnell, 25m21s on Red, course complete", False)
 
-    interruptible_sleep(10)
+    interruptible_sleep(15)
     if exit_all_threads: return
     make_status(status_frame, "141421", "Janet Berrill, 1h15m31s on Yellow, DNF", True)
 
-    interruptible_sleep(30)
+    interruptible_sleep(20)
     if exit_all_threads: return
     make_status(status_frame, "me-myself", "Judith Berrill, 1h45m31s on Yellow, course complete", False)
 
-    interruptible_sleep(30)
+    interruptible_sleep(15)
     if exit_all_threads: return
     make_status(status_frame, "678234", "The sun also rises, 1h19m58s on Orange, course complete", False)
 
-    interruptible_sleep(30)
+    interruptible_sleep(10)
     if exit_all_threads: return
     make_status(status_frame, "349821", "The Beatles, 1h05m01s on Brown, course complete", False)
 
@@ -192,9 +220,10 @@ root = tk.Tk()
 root.geometry("750x500");
 root.title("QRienteering SI download station")
 mode_frame = tk.Frame(root, highlightbackground="blue", highlightthickness=5)
-status_frame = tk.Frame(root)
+scrollable_status_frame = ScrollableFrame(root)
 mode_frame.pack(fill=tk.X, side=tk.TOP)
-status_frame.pack(fill=tk.BOTH, side=tk.TOP, pady=10)
+scrollable_status_frame.pack(fill=tk.BOTH, side=tk.TOP, pady=10, expand = True)
+status_frame = scrollable_status_frame.scrollable_frame
 
 mode_label = tk.Label(mode_frame, text="In Download mode")
 mode_label.pack(side=tk.LEFT) 
