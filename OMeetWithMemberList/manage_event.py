@@ -222,20 +222,20 @@ def upload_results(stick, event_key, event, qr_result_string):
       if time_taken > 3600:
           hours = time_taken // 3600
           time_taken %= 3600
-          output_string += "{:02d}h:".format(hours)
+          output_string += f"{hours:02d}h:"
       if (time_taken > 60) or (output_string != ""):
           minutes = time_taken // 60
           time_taken %= 60
-          output_string += "{:02d}m:".format(minutes)
-      output_string += "{:02d}s".format(time_taken)
-      upload_status_string = f"{name} finished {course} in {output_string}: "
+          output_string += f"{minutes:02d}m:"
+      output_string += f"{time_taken:02d}s"
+      upload_status_string = f"{name} finished {course} in {output_string} - "
   else:
-      upload_status_string = f"Error, upload of {stick} failed: "
+      upload_status_string = f"Error, upload of {stick} failed - "
 
   error_list = re.findall(r"####,ERROR,.*", output)
   if (len(error_list) == 0):
       is_error = False
-      upload_status_string += "Good result"
+      upload_status_string += "OK"
   else:
       error_list = list(map(lambda entry: entry.split(",")[2], error_list))
       is_error = True
@@ -715,6 +715,18 @@ def create_status_frame():
 ###############################################################
 
 fake_entries = []
+fake_entries.append({SI_STICK_KEY : 5086148225, SI_START_KEY : 1200, SI_FINISH_KEY : 1600, SI_CONTROLS_KEY : ["101:1210", "102:1260", "104:1350", "106:1480", "110:1568"]})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : 5083959473, SI_START_KEY : 1200, SI_FINISH_KEY : 1600, SI_CONTROLS_KEY : ["101:1210", "102:1260", "104:1350", "106:1480", "110:1568"]})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : 2108369, SI_START_KEY : 200, SI_FINISH_KEY : 600, SI_CONTROLS_KEY : ["101:210", "102:260", "104:350", "106:480", "110:568"]})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
@@ -727,17 +739,12 @@ fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : 2108369, SI_START_KEY : 1200, SI_FINISH_KEY : 1600, SI_CONTROLS_KEY : ["101:1210", "102:1260", "104:1350", "106:1480", "110:1568"]})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
 def read_fake_results():
   if len(fake_entries) > 0:
     return fake_entries.pop()
@@ -799,7 +806,10 @@ def sireader_main():
         if (si_stick_entry[SI_FINISH_KEY] != 0):
           if not run_offline:
             if exit_all_threads: return
-            upload_results(si_stick_entry[SI_STICK_KEY], event_key, event, qr_result_string)
+            if download_mode:
+                upload_results(si_stick_entry[SI_STICK_KEY], event_key, event, qr_result_string)
+            else:
+                make_status(status_frame, None, si_stick_entry[SI_STICK_KEY], f"Looking up member for unit {si_stick_entry[SI_STICK_KEY]}", False)
             if exit_all_threads: return
           else:
             total_time = si_stick_entry[SI_FINISH_KEY] - si_stick_entry[SI_START_KEY]
