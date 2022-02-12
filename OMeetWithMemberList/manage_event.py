@@ -10,11 +10,12 @@ import re
 import base64
 from datetime import datetime
 
+progress_label = None
 mode_label = None
 mode_button = None
 download_mode = True
 exit_all_threads = False
-discovered_courses = [ "White", "Yellow", "Orange", "Tan", "Brown", "Green", "Red" ]
+discovered_courses = [ ]
 open_frames = []
 root = None
 status_frame = None
@@ -29,7 +30,7 @@ testing_run = 0
 continuous_testing = 0
 url = "http://www.mkoconnell.com/OMeet/not_there"
 fake_offline_event = "offline_downloads"
-use_fake_read_results = False
+use_fake_read_results = True
 use_real_sireader = False
 
 if (not 'NO_SI_READER_IMPORT' in os.environ) and use_real_sireader:
@@ -109,7 +110,7 @@ def read_ini_file():
 def get_event(event_key):
   output = make_url_call(MANAGE_EVENTS, "key=" + event_key + "&recent_event_timeout=12h")
   #output = make_url_call(MANAGE_EVENTS, "key=" + event_key + "&recent_event_timeout=120d")
-  print (f"Call to manage_events returned {output}")
+  #print (f"Call to manage_events returned {output}")
   event_matches_list = re.findall(r"####,[A-Z]*_EVENT,.*", output)
 
   if (debug):
@@ -136,7 +137,7 @@ def get_event(event_key):
 
 
      choice_frame = tk.Frame(root)
-     choice_prompt = tk.Label(choice_frame, text="Please choose an event, " + str(len(event_ids)) + " choices")
+     choice_prompt = tk.Label(choice_frame, text="Please choose an event:")
      choice_prompt.pack(side=tk.TOP)
      chosen_event = tk.IntVar(choice_frame, -1)
      for index, possible_event in enumerate(event_ids):
@@ -153,20 +154,24 @@ def get_event(event_key):
 def have_event(choice_frame, event_list, chosen_event):
     global event, event_key
     if choice_frame != None:
+        choice_frame.pack_forget()
         choice_frame.destroy()
     if chosen_event != -1:
         event_name = base64.standard_b64decode(event_list[chosen_event][3]).decode("utf-8")
         root.title(f"QRienteering download station for: {event_name}")
+        mode_label.configure(text="Validating event and associated courses")
         event = event_list[chosen_event][2]
         root.after(1, lambda: get_courses(event, event_key))
     else:
         root.title("QRienteering download station - no event selected")
         error_label = tk.Label(root, text = "No event selected, exiting").pack(side=tk.TOP)
+        mode_label.configure(text="Error - no event selected")
         root.after(10000, lambda: sys.exit(1))
 
 
 ###############################################################
 def get_courses(event, event_key):
+    global discovered_courses
     output = make_url_call(VIEW_RESULTS, "event={}&key={}".format(event, event_key))
     if (re.search("####,", output) == None):
         print(f"Event {event} not found, please check if event {event} and key {event_key} are valid.")
@@ -184,32 +189,46 @@ def get_courses(event, event_key):
     courses = match.group(1).split(",")[2:]
     discovered_courses = list(map(lambda entry: (entry.lstrip("0123456789-"), entry), courses))
 
+    mode_label.configure(text="In Download mode")
+    mode_button.configure(state=tk.NORMAL)
+
     print ("\n".join(map(lambda s: s[0] + " -> " + s[1], discovered_courses)))
     print ("\n")
 
+    create_status_frame()
+    root.after(1, start_sireader_thread)
+
 
 ###############################################################
-def upload_results(event_key, event, qr_result_string):
-  web_site_string = base64.standard_b64encode(qr_result_string)
+def upload_results(stick, event_key, event, qr_result_string):
+  web_site_string = base64.standard_b64encode(qr_result_string.encode("utf-8")).decode("utf-8")
   web_site_string = re.sub("\n", "", web_site_string)
   web_site_string = re.sub(r"=", "%3D", web_site_string)
 
   output = make_url_call(FINISH_COURSE, "event={}&key={}&si_stick_finish={}".format(event, event_key, web_site_string))
 
-  results = []
-  match = re.search("(Cannot find.*)", output)
-  if (match != None):
-    results.append(match.group(1))
+  name = "Unknown"
+  match = re.search(r"####,RESULT,(.*)", output)
+  if match != None:
+      finish_entries = match.group(1).split(",")
+      name = base64.standard_b64decode(finish_entries[0]).decode("utf-8")
+      course = finish_entries[1]
+      time_taken = finish_entries[2]
+      upload_status_string = f"{name} finished {course} in {time_taken}: "
+  else:
+      upload_status_string = f"Error, upload of {stick} failed: "
 
-  match = re.search("(Results for:.*)", output)
-  if (match != None):
-    results.append(match.group(1))
+  error_list = re.findall(r"####,ERROR,.*", output)
+  if (len(error_list) == 0):
+      is_error = False
+      upload_status_string += "All ok"
+  else:
+      error_list = list(map(lambda entry: entry.split(",")[2], error_list))
+      is_error = True
+      upload_status_string += "\n" + "\n".join(error_list)
 
-  match = re.search("(Second scan.*)", output)
-  if (match != None):
-    results.append(match.group(1))
+  make_status(status_frame, name, stick, upload_status_string, is_error)
 
-  return results
 
 ###############################################################
 def replay_stick_results(event_key, event, stick_to_replay):
@@ -236,7 +255,7 @@ def replay_stick_results(event_key, event, stick_to_replay):
           print("Found match with {}.".format(stick_at_log_start))
 
         found_stick = True
-        web_results = upload_results(event_key, event, result_line.strip())  # Remove the trailing newline
+        web_results = upload_results(stick_to_replay, event_key, event, result_line.strip())  # Remove the trailing newline
         print ("\n".join(web_results))
 
 
@@ -418,11 +437,11 @@ def switch_mode():
     download_mode = not download_mode
     return
 
-def make_status(enclosing_frame, stick, message, is_error):
-    root.after(1, lambda: make_status_on_mainloop(enclosing_frame, stick, message,  is_error))
+def make_status(enclosing_frame, name, stick, message, is_error):
+    root.after(1, lambda: make_status_on_mainloop(enclosing_frame, name, stick, message,  is_error))
     return
 
-def make_status_on_mainloop(enclosing_frame, stick, message, is_error):
+def make_status_on_mainloop(enclosing_frame, name, stick, message, is_error):
     result_frame = tk.LabelFrame(enclosing_frame)
     button_frame = tk.Frame(result_frame)
     label_frame = tk.Frame(result_frame)
@@ -437,7 +456,7 @@ def make_status_on_mainloop(enclosing_frame, stick, message, is_error):
     stick_replay = tk.Button(button_frame, text="Retry upload")
     buttons_to_disable = [stick_ack, stick_register, stick_replay]
     stick_replay.configure(command=lambda: replay_stick(stick, stick_status, buttons_to_disable))
-    stick_register.configure(command=lambda: registration_window(stick, stick_status, buttons_to_disable))
+    stick_register.configure(command=lambda: registration_window(name, stick, stick_status, buttons_to_disable))
     stick_label.pack(side=tk.LEFT)
     stick_status.pack(side=tk.LEFT, fill=tk.X)
     stick_replay.pack(side=tk.LEFT)
@@ -454,7 +473,7 @@ def make_status_on_mainloop(enclosing_frame, stick, message, is_error):
 
     result_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
 
-def registration_window(stick, stick_status_widget, buttons_to_disable):
+def registration_window(name, stick, stick_status_widget, buttons_to_disable):
     global open_frames
 
     for button in buttons_to_disable:
@@ -468,11 +487,11 @@ def registration_window(stick, stick_status_widget, buttons_to_disable):
     choices_frame = tk.Frame(registration_frame)
     button_frame = tk.Frame(registration_frame)
     chosen_course = tk.StringVar(registration_frame, "unselected")
-    info_label = tk.Label(choices_frame, text=f"Register Mark OConnell ({stick})")
+    info_label = tk.Label(choices_frame, text=f"Register {name} ({stick})")
     info_label.pack(side=tk.TOP)
 
     for course in discovered_courses:
-        radio_button = tk.Radiobutton(choices_frame, text=course, value=course, variable=chosen_course)
+        radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course)
         radio_button.pack(side=tk.TOP)
 
     ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(stick, stick_status_widget, buttons_to_disable, chosen_course, registration_frame))
@@ -584,6 +603,7 @@ def kill_all_windows():
     root.destroy()
 
 def create_status_frame():
+    global status_frame
     scrollable_status_frame = ScrollableFrame(root)
     scrollable_status_frame.pack(fill=tk.BOTH, side=tk.TOP, pady=10, expand = True)
     status_frame = scrollable_status_frame.scrollable_frame
@@ -622,6 +642,78 @@ def read_fake_results():
     sys.exit(0)
     return {SI_STICK_KEY : None}
 
+def start_sireader_thread():
+    sireader_thread = Thread(target=sireader_main)
+    sireader_thread.start()
+
+def sireader_main():
+    run_offline = False
+    if exit_all_threads: return
+    if not testing_run and use_real_sireader:
+      si_reader = get_sireader(serial_port, verbose)
+      if (si_reader == None):
+        progress_label.configure(text="ERROR: Cannot find si download station, is it plugged in?")
+        if (serial_port != ""):
+          print (f"\tAttempted to read from {serial_port}")
+        sys.exit(1)
+    else:
+      si_reader = None
+    
+    loop_count = 0
+    while True:
+      if exit_all_threads: return
+      if not testing_run and use_real_sireader:
+        si_stick_entry = read_results(si_reader)
+      elif use_fake_read_results:
+        si_stick_entry = read_fake_results()
+      else:
+        si_stick_entry = { SI_STICK_KEY : None }
+    
+      if ((loop_count % 60) == 0):
+        time_tuple = time.localtime(None)
+        progress_label.configure(text="Awaiting new results at: {:02d}:{:02d}:{:02d}".format(time_tuple.tm_hour, time_tuple.tm_min, time_tuple.tm_sec))
+    
+      if si_stick_entry[SI_STICK_KEY] != None:
+        if verbose:
+          print(f"\nFound new key: {si_stick_entry[SI_STICK_KEY]}")
+        else:
+          print("\n")
+    
+        upload_entry_list = [ "{:d};{:d}".format(si_stick_entry[SI_STICK_KEY], si_stick_entry[SI_START_KEY]) ]
+        upload_entry_list.append("start:{:d}".format(si_stick_entry[SI_START_KEY]))
+        upload_entry_list.append("finish:{:d}".format(si_stick_entry[SI_FINISH_KEY]))
+        upload_entry_list.extend(si_stick_entry[SI_CONTROLS_KEY])
+        qr_result_string = ",".join(upload_entry_list)
+        if verbose:
+          print (f"Got results {qr_result_string} for si_stick {si_stick_entry[SI_STICK_KEY]}.")
+    
+        with open("{}-results.log".format(event), "a") as LOGFILE:
+          LOGFILE.write(qr_result_string + "\n")
+    
+        # If the finish is 0, then the finish wasn't scanned - we've logged it but don't upload the result.
+        # By editing the log file and replaying the SI stick, we can adjust the result afterwards if necessary.
+        # Though the easiest is to have the competitor go and scan finish and then download again.
+        if (si_stick_entry[SI_FINISH_KEY] != 0):
+          if not run_offline:
+            if exit_all_threads: return
+            upload_results(si_stick_entry[SI_STICK_KEY], event_key, event, qr_result_string)
+            if exit_all_threads: return
+          else:
+            total_time = si_stick_entry[SI_FINISH_KEY] - si_stick_entry[SI_START_KEY]
+            hours = total_time / 3600
+            minutes = (total_time - (hours * 3600)) / 60
+            seconds = (total_time - (hours * 3600) - (minutes * 60))
+            print (f"Downloaded results for si_stick {si_stick_entry[SI_STICK_KEY]}, time was {hours}h:{minutes}m:{seconds}s ({total_time}).")
+            sys.stdout.flush()
+        else:
+          print ("Splits downloaded but no finish time found - punch finish and download again.")
+          sys.stdout.flush()
+    
+      if testing_run and not continuous_testing:
+        break   # While testing, no need to wait for more results
+    
+      time.sleep(1)
+      loop_count += 1
 
 
 #########################################################
@@ -633,12 +725,14 @@ root.title("QRienteering SI download station")
 mode_frame = tk.Frame(root, highlightbackground="blue", highlightthickness=5)
 mode_frame.pack(fill=tk.X, side=tk.TOP)
 
-mode_label = tk.Label(mode_frame, text="In Download mode")
+mode_label = tk.Label(mode_frame, text="Starting up, finding event")
 mode_label.pack(side=tk.LEFT) 
 exit_button = tk.Button(mode_frame, text="Exit", command=kill_all_windows)
 exit_button.pack(side=tk.RIGHT)
-mode_button = tk.Button(mode_frame, text="Switch to register mode", command=switch_mode)
+mode_button = tk.Button(mode_frame, text="Switch to register mode", command=switch_mode, state=tk.DISABLED)
 mode_button.pack(side=tk.RIGHT, padx=5)
+progress_label = tk.Label(mode_frame, text="Starting up")
+progress_label.pack(side=tk.BOTTOM, pady=5)
 
 root.protocol("WM_DELETE_WINDOW", kill_all_windows)
 
@@ -732,118 +826,118 @@ exit_all_threads = True
 
 sys.exit(1)
 
-run_offline = False
-if ((event == "") or (event_key == "")):
-  answer = raw_input("No event found - type yes to run in offline mode? ")
-  answer = answer.strip().lower()
-  run_offline = (answer == "yes")
-  if run_offline:
-    event = fake_offline_event
-    if os.path.exists(fake_offline_event + "-results.log"):
-      # If the offline log was last modified on a different day, then move it to a backup, thereby starting a new one
-      # otherwise just append to it, assuming it is from the same event
-      dlm_tuple = time.localtime(os.path.getmtime(fake_offline_event + "-results.log"))
-      today_tuple = time.localtime(None)
-      if not ((today_tuple.tm_year == dlm_tuple.tm_year) and (today_tuple.tm_mon == dlm_tuple.tm_mon)
-                 and (today_tuple.tm_mday == dlm_tuple.tm_mday)):
-        retry_count = 0
-        while retry_count < 1000:
-          backup_file = "{}-{}-{:02d}-{:02d}-{}-results.log".format(fake_offline_event, dlm_tuple.tm_year, dlm_tuple.tm_mon, dlm_tuple.tm_mday, retry_count)
-          if not os.path.exists(backup_file):
-            if verbose or debug: print (f"Backing up existing results file as {backup_file}")
-            os.rename(fake_offline_event + "-results.log", backup_file)
-            break
-          retry_count += 1
-      else:
-        if verbose or debug: print (f"Appending results to {fake_offline_event}-results.log")
-  else:
-    usage()
-    sys.exit(1)
-  
-## Ensure that the event specified is valid
-if not run_offline:
-  output = make_url_call(VIEW_RESULTS, "event={}&key={}".format(event, event_key))
-  if ((re.search("No such event found {}".format(event), output) != None) or (re.search(r"Show results for", output) == None)):
-    print(f"Event {event} not found, please check if event {event} and key {event_key} are valid.")
-    sys.exit(1)
+#run_offline = False
+#if ((event == "") or (event_key == "")):
+#  answer = raw_input("No event found - type yes to run in offline mode? ")
+#  answer = answer.strip().lower()
+#  run_offline = (answer == "yes")
+#  if run_offline:
+#    event = fake_offline_event
+#    if os.path.exists(fake_offline_event + "-results.log"):
+#      # If the offline log was last modified on a different day, then move it to a backup, thereby starting a new one
+#      # otherwise just append to it, assuming it is from the same event
+#      dlm_tuple = time.localtime(os.path.getmtime(fake_offline_event + "-results.log"))
+#      today_tuple = time.localtime(None)
+#      if not ((today_tuple.tm_year == dlm_tuple.tm_year) and (today_tuple.tm_mon == dlm_tuple.tm_mon)
+#                 and (today_tuple.tm_mday == dlm_tuple.tm_mday)):
+#        retry_count = 0
+#        while retry_count < 1000:
+#          backup_file = "{}-{}-{:02d}-{:02d}-{}-results.log".format(fake_offline_event, dlm_tuple.tm_year, dlm_tuple.tm_mon, dlm_tuple.tm_mday, retry_count)
+#          if not os.path.exists(backup_file):
+#            if verbose or debug: print (f"Backing up existing results file as {backup_file}")
+#            os.rename(fake_offline_event + "-results.log", backup_file)
+#            break
+#          retry_count += 1
+#      else:
+#        if verbose or debug: print (f"Appending results to {fake_offline_event}-results.log")
+#  else:
+#    usage()
+#    sys.exit(1)
+#  
+### Ensure that the event specified is valid
+#if not run_offline:
+#  output = make_url_call(VIEW_RESULTS, "event={}&key={}".format(event, event_key))
+#  if ((re.search("No such event found {}".format(event), output) != None) or (re.search(r"Show results for", output) == None)):
+#    print(f"Event {event} not found, please check if event {event} and key {event_key} are valid.")
+#    sys.exit(1)
+#
 
+#if (replay_si_stick):
+#  si_stick_to_replay = raw_input("Enter the si stick to replay, or offline to reply offline downloads: ")
+#  si_stick_to_replay = si_stick_to_replay.strip()
+#  if (si_stick_to_replay == ""):
+#    print ("ERROR: Must enter si stick when using the -r option, re-run program to try again.")
+#    sys.exit(1)
+#  else:
+#    replay_stick_results(event_key, event, si_stick_to_replay)
+#    sys.exit(0)
+#
 
-if (replay_si_stick):
-  si_stick_to_replay = raw_input("Enter the si stick to replay, or offline to reply offline downloads: ")
-  si_stick_to_replay = si_stick_to_replay.strip()
-  if (si_stick_to_replay == ""):
-    print ("ERROR: Must enter si stick when using the -r option, re-run program to try again.")
-    sys.exit(1)
-  else:
-    replay_stick_results(event_key, event, si_stick_to_replay)
-    sys.exit(0)
-
-
-if not testing_run:
-  si_reader = get_sireader(serial_port, verbose)
-  if (si_reader == None):
-    print ("ERROR: Cannot find si download station, is it plugged in?")
-    if (serial_port != ""):
-      print (f"\tAttempted to read from {serial_port}")
-    sys.exit(1)
-else:
-  si_reader = None
-
-loop_count = 0
-while True:
-  if not testing_run:
-    si_stick_entry = read_results(si_reader)
-  elif use_fake_read_results:
-    si_stick_entry = read_fake_results()
-  else:
-    si_stick_entry = { SI_STICK_KEY : None }
-
-  if ((loop_count % 60) == 0):
-    time_tuple = time.localtime(None)
-    sys.stdout.write("Awaiting new results at: {:02d}:{:02d}:{:02d}\r".format(time_tuple.tm_hour, time_tuple.tm_min, time_tuple.tm_sec))
-    sys.stdout.flush()
-
-  if si_stick_entry[SI_STICK_KEY] != None:
-    if verbose:
-      print(f"\nFound new key: {si_stick_entry[SI_STICK_KEY]}")
-    else:
-      print("\n")
-
-    upload_entry_list = [ "{:d};{:d}".format(si_stick_entry[SI_STICK_KEY], si_stick_entry[SI_START_KEY]) ]
-    upload_entry_list.append("start:{:d}".format(si_stick_entry[SI_START_KEY]))
-    upload_entry_list.append("finish:{:d}".format(si_stick_entry[SI_FINISH_KEY]))
-    upload_entry_list.extend(si_stick_entry[SI_CONTROLS_KEY])
-    qr_result_string = ",".join(upload_entry_list)
-    if verbose:
-      print (f"Got results {qr_result_string} for si_stick {si_stick_entry[SI_STICK_KEY]}.")
-
-    with open("{}-results.log".format(event), "a") as LOGFILE:
-      LOGFILE.write(qr_result_string + "\n")
-
-    # If the finish is 0, then the finish wasn't scanned - we've logged it but don't upload the result.
-    # By editing the log file and replaying the SI stick, we can adjust the result afterwards if necessary.
-    # Though the easiest is to have the competitor go and scan finish and then download again.
-    if (si_stick_entry[SI_FINISH_KEY] != 0):
-      if not run_offline:
-        results = upload_results(event_key, event, qr_result_string)
-        print ("\n".join(results))
-        sys.stdout.flush()
-      else:
-        total_time = si_stick_entry[SI_FINISH_KEY] - si_stick_entry[SI_START_KEY]
-        hours = total_time / 3600
-        minutes = (total_time - (hours * 3600)) / 60
-        seconds = (total_time - (hours * 3600) - (minutes * 60))
-        print (f"Downloaded results for si_stick {si_stick_entry[SI_STICK_KEY]}, time was {hours}h:{minutes}m:{seconds}s ({total_time}).")
-        sys.stdout.flush()
-    else:
-      print ("Splits downloaded but no finish time found - punch finish and download again.")
-      sys.stdout.flush()
-
-  if testing_run and not continuous_testing:
-    break   # While testing, no need to wait for more results
-
-  time.sleep(1)
-  loop_count += 1
-
-
-
+#if not testing_run and use_real_si_reader:
+#  si_reader = get_sireader(serial_port, verbose)
+#  if (si_reader == None):
+#    print ("ERROR: Cannot find si download station, is it plugged in?")
+#    if (serial_port != ""):
+#      print (f"\tAttempted to read from {serial_port}")
+#    sys.exit(1)
+#else:
+#  si_reader = None
+#
+#loop_count = 0
+#while True:
+#  if not testing_run and use_real_si_reader:
+#    si_stick_entry = read_results(si_reader)
+#  elif use_fake_read_results:
+#    si_stick_entry = read_fake_results()
+#  else:
+#    si_stick_entry = { SI_STICK_KEY : None }
+#
+#  if ((loop_count % 60) == 0):
+#    time_tuple = time.localtime(None)
+#    sys.stdout.write("Awaiting new results at: {:02d}:{:02d}:{:02d}\r".format(time_tuple.tm_hour, time_tuple.tm_min, time_tuple.tm_sec))
+#    sys.stdout.flush()
+#
+#  if si_stick_entry[SI_STICK_KEY] != None:
+#    if verbose:
+#      print(f"\nFound new key: {si_stick_entry[SI_STICK_KEY]}")
+#    else:
+#      print("\n")
+#
+#    upload_entry_list = [ "{:d};{:d}".format(si_stick_entry[SI_STICK_KEY], si_stick_entry[SI_START_KEY]) ]
+#    upload_entry_list.append("start:{:d}".format(si_stick_entry[SI_START_KEY]))
+#    upload_entry_list.append("finish:{:d}".format(si_stick_entry[SI_FINISH_KEY]))
+#    upload_entry_list.extend(si_stick_entry[SI_CONTROLS_KEY])
+#    qr_result_string = ",".join(upload_entry_list)
+#    if verbose:
+#      print (f"Got results {qr_result_string} for si_stick {si_stick_entry[SI_STICK_KEY]}.")
+#
+#    with open("{}-results.log".format(event), "a") as LOGFILE:
+#      LOGFILE.write(qr_result_string + "\n")
+#
+#    # If the finish is 0, then the finish wasn't scanned - we've logged it but don't upload the result.
+#    # By editing the log file and replaying the SI stick, we can adjust the result afterwards if necessary.
+#    # Though the easiest is to have the competitor go and scan finish and then download again.
+#    if (si_stick_entry[SI_FINISH_KEY] != 0):
+#      if not run_offline:
+#        results = upload_results(event_key, event, qr_result_string)
+#        print ("\n".join(results))
+#        sys.stdout.flush()
+#      else:
+#        total_time = si_stick_entry[SI_FINISH_KEY] - si_stick_entry[SI_START_KEY]
+#        hours = total_time / 3600
+#        minutes = (total_time - (hours * 3600)) / 60
+#        seconds = (total_time - (hours * 3600) - (minutes * 60))
+#        print (f"Downloaded results for si_stick {si_stick_entry[SI_STICK_KEY]}, time was {hours}h:{minutes}m:{seconds}s ({total_time}).")
+#        sys.stdout.flush()
+#    else:
+#      print ("Splits downloaded but no finish time found - punch finish and download again.")
+#      sys.stdout.flush()
+#
+#  if testing_run and not continuous_testing:
+#    break   # While testing, no need to wait for more results
+#
+#  time.sleep(1)
+#  loop_count += 1
+#
+#
+#
