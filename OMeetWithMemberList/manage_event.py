@@ -9,6 +9,7 @@ import subprocess
 import re
 import base64
 from datetime import datetime
+import urllib.parse
 
 progress_label = None
 mode_label = None
@@ -41,6 +42,8 @@ VIEW_RESULTS = "OMeet/view_results.php"
 FINISH_COURSE = "OMeet/finish_course.php"
 REGISTER_COURSE = "OMeetRegistration/register.php"
 MANAGE_EVENTS = "OMeetMgmt/manage_events.php"
+REGISTER_COMPETITOR = "OMeetRegistration/register_competitor.php"
+SI_LOOKUP = "OMeetWithMemberList/stick_lookup.php"
 
 TWELVE_HOURS_IN_SECONDS = (12 * 3600)
 
@@ -213,15 +216,26 @@ def upload_results(stick, event_key, event, qr_result_string):
       finish_entries = match.group(1).split(",")
       name = base64.standard_b64decode(finish_entries[0]).decode("utf-8")
       course = finish_entries[1]
-      time_taken = finish_entries[2]
-      upload_status_string = f"{name} finished {course} in {time_taken}: "
+      time_taken = int(finish_entries[2])
+
+      output_string = ""
+      if time_taken > 3600:
+          hours = time_taken // 3600
+          time_taken %= 3600
+          output_string += "{:02d}h:".format(hours)
+      if (time_taken > 60) or (output_string != ""):
+          minutes = time_taken // 60
+          time_taken %= 60
+          output_string += "{:02d}m:".format(minutes)
+      output_string += "{:02d}s".format(time_taken)
+      upload_status_string = f"{name} finished {course} in {output_string}: "
   else:
       upload_status_string = f"Error, upload of {stick} failed: "
 
   error_list = re.findall(r"####,ERROR,.*", output)
   if (len(error_list) == 0):
       is_error = False
-      upload_status_string += "All ok"
+      upload_status_string += "Good result"
   else:
       error_list = list(map(lambda entry: entry.split(",")[2], error_list))
       is_error = True
@@ -469,7 +483,7 @@ def make_status_on_mainloop(enclosing_frame, name, stick, message, is_error):
     if not download_mode:
         for button in buttons_to_disable:
             button.configure(state=tk.DISABLED)
-        registration_window(stick, stick_status, buttons_to_disable)
+        registration_window(name, stick, stick_status, buttons_to_disable)
 
     result_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
 
@@ -487,14 +501,19 @@ def registration_window(name, stick, stick_status_widget, buttons_to_disable):
     choices_frame = tk.Frame(registration_frame)
     button_frame = tk.Frame(registration_frame)
     chosen_course = tk.StringVar(registration_frame, "unselected")
-    info_label = tk.Label(choices_frame, text=f"Register {name} ({stick})")
+    registration_string = ""
+    if name != None:
+        registration_string = f"Register {name} ({stick})"
+    else:
+        registration_string = f"Register {stick} (name currently unknown)"
+    info_label = tk.Label(choices_frame, text=registration_string)
     info_label.pack(side=tk.TOP)
 
     for course in discovered_courses:
         radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course)
         radio_button.pack(side=tk.TOP)
 
-    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(stick, stick_status_widget, buttons_to_disable, chosen_course, registration_frame))
+    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(name, stick, stick_status_widget, buttons_to_disable, chosen_course, registration_frame))
     cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, buttons_to_disable))
 
     ok_button.pack(side=tk.LEFT)
@@ -507,17 +526,101 @@ def registration_window(name, stick, stick_status_widget, buttons_to_disable):
     return
 
 
-def register_for_course(stick, stick_status_widget, buttons_to_disable, chosen_course, enclosing_frame):
+def register_for_course(name, stick, stick_status_widget, buttons_to_disable, chosen_course, enclosing_frame):
     global open_frames
 
-    for button in buttons_to_disable:
-        button.configure(state=tk.NORMAL)
+    if name != None:
+        message = f"Attempting to register {name} ({stick}) on " 
+    else:
+        message = f"Attempting to register member with SI unit {stick} on "
 
-    stick_status_widget["text"] = f"SI user ({stick}) registered on " + chosen_course.get()
+    stick_status_widget["text"] = message + chosen_course.get().lstrip("0123456789-")
     enclosing_frame.destroy()
     open_frames.remove(enclosing_frame)
+
+    registration_thread = Thread(target=register_by_si_unit, args=(name, stick, stick_status_widget, buttons_to_disable, chosen_course.get()))
+    registration_thread.start()
     return
 
+
+#######################################################################################
+def register_by_si_unit(name, stick, stick_status_widget, buttons_to_disable, chosen_course):
+
+  if exit_all_threads: return
+  output = make_url_call(SI_LOOKUP, "key={}&si_stick={}".format(event_key, stick))
+  if exit_all_threads: return
+
+  if debug or verbose:
+    print ("Got results from si lookup: {}".format(output))
+  
+  member_match = re.search(r"####,MEMBER_ENTRY,(.*)", output)
+  if member_match == None:
+      message = f"No member found for si unit {stick}, cannot register"
+      root.after(1, lambda: update_status_window(message, stick_status_widget, buttons_to_disable, True))
+      return
+
+  member_elements = member_match.group(1).split(",")
+  found_name = base64.standard_b64decode(member_elements[0]).decode("utf-8")
+  found_id = member_elements[1]
+  found_email = member_elements[2]
+  club_name = member_elements[3]
+
+  if (name != None) and (found_name != name):
+      message = f"SI unit {stick} registered to {found_name} but current user is {name}, registration canceled"
+      root.after(1, lambda: update_status_window(message, stick_status_widget, buttons_to_disable, True))
+      return
+  
+  registration_list = ["first_name", base64.standard_b64encode(found_name.encode("utf-8")).decode("utf-8"),
+                             "last_name", base64.standard_b64encode("".encode("utf-8")).decode("utf-8"),
+                             "club_name", base64.standard_b64encode(club_name.encode("utf-8")).decode("utf-8"),
+                             "si_stick", base64.standard_b64encode(str(stick).encode("utf-8")).decode("utf-8"),
+                             "email_address", base64.standard_b64encode(found_email.encode("utf-8")).decode("utf-8"),
+                             "safety_info", base64.standard_b64encode("On file".encode("utf-8")).decode("utf-8"),
+                             "registration", base64.standard_b64encode("Optimized registration".encode("utf-8")).decode("utf-8"),
+                             "member_id", base64.standard_b64encode(found_id.encode("utf-8")).decode("utf-8"),
+                             "is_member", base64.standard_b64encode("yes".encode("utf-8")).decode("utf-8") ]
+
+  quoted_course = urllib.parse.quote(chosen_course.encode("utf-8"))
+  quoted_name = urllib.parse.quote(found_name.encode("utf-8"))
+  registration_params = "key={}&event={}&course={}&registration_info={}&competitor_name={}"\
+                               .format(event_key, event, quoted_course, ",".join(registration_list), quoted_name)
+  if debug: print("Attempting to register {} with params {}.".format(found_name, registration_params))
+        
+  if exit_all_threads: return
+  output = make_url_call(REGISTER_COMPETITOR, registration_params)
+  if exit_all_threads: return
+  if debug: print ("Results of web call {}.".format(output))
+              
+  registration_result = re.search(r"####,RESULT,(.*)", output)
+  errors = re.findall(r"####,ERROR,(.*)", output)
+
+  output_message = ""
+  if registration_result == None:
+      output_message = "Registration failed: "
+      error_found = True
+  else:
+      output_message = registration_result.group(1) + " "
+      error_found = False
+
+  if (len(errors) > 0):
+      output_message += "\n".join(errors)
+      error_found = True
+
+  root.after(1, lambda: update_status_window(output_message, stick_status_widget, buttons_to_disable, error_found))
+
+  return
+
+#####################################################################
+
+def update_status_window(message, stick_status_widget, buttons_to_disable, is_error):
+    stick_status_widget.configure(text=message, fg = "red" if is_error else "green")
+    for button in buttons_to_disable:
+        button.configure(state=tk.NORMAL)
+    return
+
+
+
+#####################################################################
 def kill_registration_window(registration_window, buttons_to_disable):
     global open_frames
     registration_window.destroy()
