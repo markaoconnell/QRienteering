@@ -33,6 +33,7 @@ url = "http://www.mkoconnell.com/OMeet/not_there"
 fake_offline_event = "offline_downloads"
 use_fake_read_results = True
 use_real_sireader = False
+run_offline = False
 
 if (not 'NO_SI_READER_IMPORT' in os.environ) and use_real_sireader:
   from sireader import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
@@ -52,6 +53,18 @@ SI_STICK_KEY = r"si_stick"
 SI_START_KEY = r"start_timestamp"
 SI_FINISH_KEY = r"finish_timestamp"
 SI_CONTROLS_KEY = r"qr_controls"
+
+# Keys for the entry information dict
+USER_NAME = r"name"
+USER_MEMBER_ID = r"member_id"
+USER_EMAIL = r"email_address"
+USER_CLUB = r"club_name"
+USER_RESULTS = r"qr_result_string"
+USER_STATUS = r"status_widget"
+USER_BUTTONS = r"buttons"
+USER_REG_BUTTON = r"register_button"
+USER_STICK = r"stick"
+USER_CELL_PHONE = r"cell_phone"
 
 def usage():
   print("Usage: " + sys.argv[0])
@@ -122,6 +135,12 @@ def get_event(event_key):
   if (len(event_matches_list) == 0):
     if (verbose or debug):
       print("No currently open (actively ongoing) events found.")
+    no_event_frame = tk.Frame(root)
+    no_event_label = tk.Label(no_event_frame, text="No events found, suspect:\n\tpossible incorrect configuration\n\tno internet connectivity", fg="red")
+    no_event_button = tk.Button(no_event_frame, text="Run in offline mode", command=lambda: run_in_offline_mode(no_event_frame))
+    no_event_label.pack(side=tk.TOP)
+    no_event_button.pack(side=tk.TOP)
+    no_event_frame.pack(side=tk.TOP)
     return("", "")
   elif (len(event_matches_list) == 1):
     elements = event_matches_list[0].split(",")
@@ -195,16 +214,22 @@ def get_courses(event, event_key):
     mode_label.configure(text="In Download mode")
     mode_button.configure(state=tk.NORMAL)
 
-    print ("\n".join(map(lambda s: s[0] + " -> " + s[1], discovered_courses)))
-    print ("\n")
+    if verbose: print ("\n".join(map(lambda s: s[0] + " -> " + s[1], discovered_courses)) + "\n")
 
     create_status_frame()
     root.after(1, start_sireader_thread)
 
+###############################################################
+def run_in_offline_mode(enclosing_frame):
+    global run_offline
+    run_offline = True
+    enclosing_frame.destroy()
+    create_status_frame()
+    root.after(1, start_sireader_thread)
 
 ###############################################################
-def upload_results(stick, event_key, event, qr_result_string):
-  web_site_string = base64.standard_b64encode(qr_result_string.encode("utf-8")).decode("utf-8")
+def upload_results(user_info, event_key, event):
+  web_site_string = base64.standard_b64encode(user_info[USER_RESULTS].encode("utf-8")).decode("utf-8")
   web_site_string = re.sub("\n", "", web_site_string)
   web_site_string = re.sub(r"=", "%3D", web_site_string)
 
@@ -215,6 +240,10 @@ def upload_results(stick, event_key, event, qr_result_string):
   if match != None:
       finish_entries = match.group(1).split(",")
       name = base64.standard_b64decode(finish_entries[0]).decode("utf-8")
+      if user_info[USER_NAME] != name:
+          if user_info[USER_NAME] != None:
+              if verbose: print (f"Updating entry from {user_info[USER_NAME]} to {name} based on result upload.\n")
+          user_info[USER_NAME] = name
       course = finish_entries[1]
       time_taken = int(finish_entries[2])
 
@@ -230,7 +259,7 @@ def upload_results(stick, event_key, event, qr_result_string):
       output_string += f"{time_taken:02d}s"
       upload_status_string = f"{name} finished {course} in {output_string} - "
   else:
-      upload_status_string = f"Error, upload of {stick} failed - "
+      upload_status_string = f"Error, upload of {user_info[USER_STICK]} failed - "
 
   error_list = re.findall(r"####,ERROR,.*", output)
   if (len(error_list) == 0):
@@ -241,11 +270,11 @@ def upload_results(stick, event_key, event, qr_result_string):
       is_error = True
       upload_status_string += "\n" + "\n".join(error_list)
 
-  return(name, upload_status_string, is_error)
+  return(upload_status_string, is_error)
 
-def upload_initial_results(stick, event, event_key, qr_result_string):
-  result_tuple = upload_results(stick, event, event_key, qr_result_string)
-  make_status(status_frame, result_tuple[0], stick, result_tuple[1], result_tuple[2], qr_result_string)
+def upload_initial_results(user_info, event_key, event):
+  result_tuple = upload_results(user_info, event_key, event)
+  make_status(user_info, result_tuple[0], result_tuple[1])
 
 
 ###############################################################
@@ -455,15 +484,19 @@ def switch_mode():
     download_mode = not download_mode
     return
 
-def make_status(enclosing_frame, name, stick, message, is_error, qr_result_string):
-    root.after(1, lambda: make_status_on_mainloop(enclosing_frame, name, stick, message,  is_error, qr_result_string))
+def make_offline_status(user_info, message, is_error):
+    root.after(1, lambda: make_status_on_mainloop(user_info, message, is_error, False))
     return
 
-def make_status_on_mainloop(enclosing_frame, name, stick, message, is_error, qr_result_string):
-    result_frame = tk.LabelFrame(enclosing_frame)
+def make_status(user_info, message, is_error):
+    root.after(1, lambda: make_status_on_mainloop(user_info, message, is_error, True))
+    return
+
+def make_status_on_mainloop(user_info, message, is_error, is_connected):
+    result_frame = tk.LabelFrame(status_frame)
     button_frame = tk.Frame(result_frame)
     label_frame = tk.Frame(result_frame)
-    stick_label = tk.Label(label_frame, text=stick, borderwidth=2, relief=tk.SUNKEN)
+    stick_label = tk.Label(label_frame, text=user_info[USER_STICK], borderwidth=2, relief=tk.SUNKEN)
     stick_status = tk.Label(label_frame, text=message)
     if is_error:
         stick_status["fg"] = "red"
@@ -472,12 +505,20 @@ def make_status_on_mainloop(enclosing_frame, name, stick, message, is_error, qr_
     stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy)
     stick_register = tk.Button(button_frame, text="Register for new course")
     stick_replay = tk.Button(button_frame, text="Retry upload")
-    buttons_to_disable = [stick_ack, stick_register, stick_replay]
-    stick_replay.configure(command=lambda: replay_stick(stick, stick_status, buttons_to_disable, qr_result_string))
-    stick_register.configure(command=lambda: registration_window(name, stick, stick_status, buttons_to_disable))
-    if name == None:
+    user_info[USER_BUTTONS] = [stick_ack, stick_register, stick_replay]
+    user_info[USER_REG_BUTTON] = stick_register
+    user_info[USER_STATUS] = stick_status
+    stick_replay.configure(command=lambda: replay_stick(user_info))
+    stick_register.configure(command=lambda: registration_window(user_info))
+    if user_info[USER_NAME] == None:
         stick_register.configure(state = tk.DISABLED)
-        buttons_to_disable = [ stick_ack, stick_replay ]
+        user_info[USER_BUTTONS] = [ stick_ack, stick_replay ]
+
+    if not is_connected:
+        stick_register.configure(state = tk.DISABLED)
+        stick_replay.configure(state = tk.DISABLED)
+        user_info[USER_BUTTONS] = [ stick_ack ]
+
     stick_label.pack(side=tk.LEFT)
     stick_status.pack(side=tk.LEFT, fill=tk.X)
     stick_replay.pack(side=tk.LEFT)
@@ -487,17 +528,17 @@ def make_status_on_mainloop(enclosing_frame, name, stick, message, is_error, qr_
     button_frame.pack(side=tk.TOP, fill=tk.X)
 
     # Display the registration window before we actually display the status frame
-    if not download_mode and name != None:
-        for button in buttons_to_disable:
+    if not download_mode and user_info[USER_NAME] != None:
+        for button in user_info[USER_BUTTONS]:
             button.configure(state=tk.DISABLED)
-        registration_window(name, stick, stick_status, buttons_to_disable)
+        registration_window(user_info)
 
     result_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
 
-def registration_window(name, stick, stick_status_widget, buttons_to_disable):
+def registration_window(user_info):
     global open_frames
 
-    for button in buttons_to_disable:
+    for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.DISABLED)
 
     registration_frame = tk.Tk()
@@ -509,10 +550,10 @@ def registration_window(name, stick, stick_status_widget, buttons_to_disable):
     button_frame = tk.Frame(registration_frame)
     chosen_course = tk.StringVar(registration_frame, "unselected")
     registration_string = ""
-    if name != None:
-        registration_string = f"Register {name} ({stick})"
+    if user_info[USER_NAME] != None:
+        registration_string = f"Register {user_info[USER_NAME]} ({user_info[USER_STICK]})"
     else:
-        registration_string = f"Register {stick} (name currently unknown)"
+        registration_string = f"Register {user_info[USER_STICK]} (name currently unknown)"
     info_label = tk.Label(choices_frame, text=registration_string)
     info_label.pack(side=tk.TOP)
 
@@ -520,8 +561,8 @@ def registration_window(name, stick, stick_status_widget, buttons_to_disable):
         radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course)
         radio_button.pack(side=tk.TOP)
 
-    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(name, stick, stick_status_widget, buttons_to_disable, chosen_course, registration_frame))
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, buttons_to_disable))
+    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, chosen_course, registration_frame))
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, user_info))
 
     ok_button.pack(side=tk.LEFT)
     cancel_button.pack(side=tk.LEFT)
@@ -529,23 +570,23 @@ def registration_window(name, stick, stick_status_widget, buttons_to_disable):
     choices_frame.pack(side=tk.TOP)
     button_frame.pack(side=tk.TOP)
 
-    registration_frame.protocol("WM_DELETE_WINDOW", lambda: kill_registration_window(registration_frame, buttons_to_disable))
+    registration_frame.protocol("WM_DELETE_WINDOW", lambda: kill_registration_window(registration_frame, user_info))
     return
 
 
-def register_for_course(name, stick, stick_status_widget, buttons_to_disable, chosen_course, enclosing_frame):
+def register_for_course(user_info, chosen_course, enclosing_frame):
     global open_frames
 
-    if name != None:
-        message = f"Attempting to register {name} ({stick}) on " 
+    if user_info[USER_NAME] != None:
+        message = f"Attempting to register {user_info[USER_NAME]} ({user_info[USER_STICK]}) on " 
     else:
-        message = f"Attempting to register member with SI unit {stick} on "
+        message = f"Attempting to register member with SI unit {user_info[USER_STICK]} on "
 
-    stick_status_widget["text"] = message + chosen_course.get().lstrip("0123456789-")
+    user_info[USER_STATUS]["text"] = message + chosen_course.get().lstrip("0123456789-")
     enclosing_frame.destroy()
     open_frames.remove(enclosing_frame)
 
-    registration_thread = Thread(target=register_by_si_unit, args=(name, stick, stick_status_widget, buttons_to_disable, chosen_course.get()))
+    registration_thread = Thread(target=register_by_si_unit, args=(user_info, chosen_course.get()))
     registration_thread.start()
     return
 
@@ -563,7 +604,7 @@ def lookup_si_unit(stick):
   
   member_match = re.search(r"####,MEMBER_ENTRY,(.*)", output)
   if member_match == None:
-      return None
+      return({ USER_NAME : None , USER_STICK : stick})
 
   member_elements = member_match.group(1).split(",")
   found_name = base64.standard_b64decode(member_elements[0]).decode("utf-8")
@@ -571,35 +612,21 @@ def lookup_si_unit(stick):
   found_email = member_elements[2]
   club_name = member_elements[3]
 
-  return({ "name" : found_name, "id" : found_id, "email_address" : found_email, "club_name" : club_name })
+  return({ USER_NAME : found_name, USER_MEMBER_ID : found_id, USER_EMAIL : found_email, USER_CLUB : club_name, USER_STICK : stick })
 
 #######################################################################################
-def register_by_si_unit(name, stick, stick_status_widget, buttons_to_disable, chosen_course):
+def register_by_si_unit(user_info, chosen_course):
 
-  if exit_all_threads: return
-  output = make_url_call(SI_LOOKUP, "key={}&si_stick={}".format(event_key, stick))
-  if exit_all_threads: return
-
-  if debug or verbose:
-    print ("Got results from si lookup: {}".format(output))
+  if user_info[USER_NAME] == None:
+    message = f"SI unit {user_info[USER_STICK]} not registered to a known member, registration canceled"
+    root.after(1, lambda: update_status_window(user_info, message, True))
+    return
   
-  member_match = re.search(r"####,MEMBER_ENTRY,(.*)", output)
-  if member_match == None:
-      message = f"No member found for si unit {stick}, cannot register"
-      root.after(1, lambda: update_status_window(message, stick_status_widget, buttons_to_disable, True))
-      return
-
-  member_elements = member_match.group(1).split(",")
-  found_name = base64.standard_b64decode(member_elements[0]).decode("utf-8")
-  found_id = member_elements[1]
-  found_email = member_elements[2]
-  club_name = member_elements[3]
-
-  if (name != None) and (found_name != name):
-      message = f"SI unit {stick} registered to {found_name} but current user is {name}, registration canceled"
-      root.after(1, lambda: update_status_window(message, stick_status_widget, buttons_to_disable, True))
-      return
-  
+  found_name = user_info[USER_NAME]
+  stick = user_info[USER_STICK]
+  club_name = user_info[USER_CLUB] if USER_CLUB in user_info else ""
+  found_email = user_info[USER_EMAIL] if USER_EMAIL in user_info else ""
+  found_id = user_info[USER_MEMBER_ID] if USER_MEMBER_ID in user_info else ""
   registration_list = ["first_name", base64.standard_b64encode(found_name.encode("utf-8")).decode("utf-8"),
                              "last_name", base64.standard_b64encode("".encode("utf-8")).decode("utf-8"),
                              "club_name", base64.standard_b64encode(club_name.encode("utf-8")).decode("utf-8"),
@@ -636,48 +663,46 @@ def register_by_si_unit(name, stick, stick_status_widget, buttons_to_disable, ch
       output_message += "\n".join(errors)
       error_found = True
 
-  root.after(1, lambda: update_status_window(output_message, stick_status_widget, buttons_to_disable, error_found))
+  root.after(1, lambda: update_status_window(user_info, output_message, error_found))
 
   return
 
 #####################################################################
 
-def update_status_window(message, stick_status_widget, buttons_to_disable, is_error):
-    stick_status_widget.configure(text=message, fg = "red" if is_error else "green")
-    for button in buttons_to_disable:
+def update_status_window(user_info, message, is_error):
+    user_info[USER_STATUS].configure(text=message, fg = "red" if is_error else "green")
+    for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.NORMAL)
     return
 
 
 
 #####################################################################
-def kill_registration_window(registration_window, buttons_to_disable):
+def kill_registration_window(registration_window, user_info):
     global open_frames
     registration_window.destroy()
     open_frames.remove(registration_window)
-    for button in buttons_to_disable:
+    for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.NORMAL)
 
 
-def replay_stick(stick, stick_status_widget, buttons_to_disable, qr_result_string):
-    stick_status_widget["text"] = f"Replaying SI results for {stick}"
-    for button in buttons_to_disable:
+def replay_stick(user_info):
+    user_info[USER_STATUS]["text"] = f"Replaying SI results for {user_info[USER_STICK]}"
+    for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.DISABLED)
-    replay_thread = Thread(target=replay_stick_thread, args=(stick, stick_status_widget, buttons_to_disable, qr_result_string))
+    replay_thread = Thread(target=replay_stick_thread, args=(user_info,))
     replay_thread.start()
     return
 
-def replay_stick_thread(stick, stick_status_widget, buttons_to_enable, qr_result_string):
-    interruptible_sleep(10)
-
+def replay_stick_thread(user_info):
     if exit_all_threads: return
-    result_tuple = upload_results(stick, event_key, event, qr_result_string)
+    result_tuple = upload_results(user_info, event_key, event)
     if exit_all_threads: return
 
-    stick_status_widget["text"] = result_tuple[1]
-    stick_status_widget["fg"] = "red" if result_tuple[2] else "green"
+    user_info[USER_STATUS]["text"] = result_tuple[0]
+    user_info[USER_STATUS]["fg"] = "red" if result_tuple[1] else "green"
 
-    for button in buttons_to_enable:
+    for button in user_info[USER_BUTTONS]:
       button.configure(state=tk.NORMAL)
 
     return
@@ -690,44 +715,6 @@ def interruptible_sleep(time_to_sleep):
         i += 1
     return
 
-def slowly_add_status():
-    interruptible_sleep(1)
-    if exit_all_threads: return
-    make_status(status_frame, "2108369", "Mark OConnell, 1h40m21s on Red, course complete", False)
-
-    interruptible_sleep(5)
-    if exit_all_threads: return
-    make_status(status_frame, "5083959473", "Karen Yeowell, 1h25m21s on Red, course complete", False)
-
-    interruptible_sleep(10)
-    if exit_all_threads: return
-    make_status(status_frame, "USD", "John OConnell, 2h25m21s on Red, DNF", True)
-
-    interruptible_sleep(15)
-    if exit_all_threads: return
-    make_status(status_frame, "314159", "Billy OConnell, 1h40m21s on White, course complete", False)
-
-    interruptible_sleep(15)
-    if exit_all_threads: return
-    make_status(status_frame, "271828", "Lydia OConnell, 25m21s on Red, course complete", False)
-
-    interruptible_sleep(15)
-    if exit_all_threads: return
-    make_status(status_frame, "141421", "Janet Berrill, 1h15m31s on Yellow, DNF", True)
-
-    interruptible_sleep(20)
-    if exit_all_threads: return
-    make_status(status_frame, "me-myself", "Judith Berrill, 1h45m31s on Yellow, course complete", False)
-
-    interruptible_sleep(15)
-    if exit_all_threads: return
-    make_status(status_frame, "678234", "The sun also rises, 1h19m58s on Orange, course complete", False)
-
-    interruptible_sleep(10)
-    if exit_all_threads: return
-    make_status(status_frame, "349821", "The Beatles, 1h05m01s on Brown, course complete", False)
-
-    return
 
 def kill_all_windows():
     global exit_all_threads, root
@@ -789,7 +776,6 @@ def start_sireader_thread():
     sireader_thread.start()
 
 def sireader_main():
-    run_offline = False
     if exit_all_threads: return
     if not testing_run and use_real_sireader:
       si_reader = get_sireader(serial_port, verbose)
@@ -801,6 +787,10 @@ def sireader_main():
     else:
       si_reader = None
     
+    if run_offline:
+        time_tuple = time.localtime(None)
+        event = f"event-offline-{time_tuple.tm_year:04d}-{time_tuple.tm_mon:02d}-{time_tuple.tm_mday:02d}-"
+
     loop_count = 0
     while True:
       if exit_all_threads: return
@@ -816,10 +806,7 @@ def sireader_main():
         progress_label.configure(text="Awaiting new results at: {:02d}:{:02d}:{:02d}".format(time_tuple.tm_hour, time_tuple.tm_min, time_tuple.tm_sec))
     
       if si_stick_entry[SI_STICK_KEY] != None:
-        if verbose:
-          print(f"\nFound new key: {si_stick_entry[SI_STICK_KEY]}")
-        else:
-          print("\n")
+        if verbose: print(f"\nFound new key: {si_stick_entry[SI_STICK_KEY]}")
     
         upload_entry_list = [ "{:d};{:d}".format(si_stick_entry[SI_STICK_KEY], si_stick_entry[SI_START_KEY]) ]
         upload_entry_list.append("start:{:d}".format(si_stick_entry[SI_START_KEY]))
@@ -839,20 +826,25 @@ def sireader_main():
           if not run_offline:
             if exit_all_threads: return
             if download_mode:
-                upload_initial_results(si_stick_entry[SI_STICK_KEY], event_key, event, qr_result_string)
+                user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
+                upload_initial_results(user_info, event_key, event)
             else:
-                member_info_dict = lookup_si_unit(si_stick_entry[SI_STICK_KEY])
-                if (member_info_dict != None):
-                    make_status(status_frame, member_info_dict["name"], si_stick_entry[SI_STICK_KEY], f"Looking up member for unit {si_stick_entry[SI_STICK_KEY]}", False, qr_result_string)
+                user_info = lookup_si_unit(si_stick_entry[SI_STICK_KEY])
+                user_info[USER_RESULTS] = qr_result_string
+                if (user_info[USER_NAME] != None):
+                    make_status(user_info, f"Registering member {user_info[USER_NAME]} with SI unit {user_info[USER_STICK]}", False)
                 else:
-                    make_status(status_frame, None, si_stick_entry[SI_STICK_KEY], f"Could not find member for SI unit {si_stick_entry[SI_STICK_KEY]}", True, qr_result_string)
+                    make_status(user_info, f"Could not find member for SI unit {user_info[USER_STICK]}", True)
             if exit_all_threads: return
           else:
             total_time = si_stick_entry[SI_FINISH_KEY] - si_stick_entry[SI_START_KEY]
-            hours = total_time / 3600
-            minutes = (total_time - (hours * 3600)) / 60
+            hours = total_time // 3600
+            minutes = (total_time - (hours * 3600)) // 60
             seconds = (total_time - (hours * 3600) - (minutes * 60))
-            print (f"Downloaded results for si_stick {si_stick_entry[SI_STICK_KEY]}, time was {hours}h:{minutes}m:{seconds}s ({total_time}).")
+            user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
+            status_message = f"Downloaded results for si_stick {si_stick_entry[SI_STICK_KEY]}, time was {hours}h:{minutes}m:{seconds}s ({total_time})."
+            make_offline_status(user_info, status_message, False)
+            print (status_message)
             sys.stdout.flush()
         else:
           print ("Splits downloaded but no finish time found - punch finish and download again.")
@@ -966,7 +958,7 @@ if (event_key == ""):
 #status_reader_thread.start()
 
 if event != "":
-    root.after(1000, lambda: have_event(None, event, None))
+    root.after(1000, lambda: have_event(None, (None, None, event, event), 0))
 else:
     root.after(1000, lambda: get_event(event_key))
 
