@@ -65,6 +65,9 @@ USER_BUTTONS = r"buttons"
 USER_REG_BUTTON = r"register_button"
 USER_STICK = r"stick"
 USER_CELL_PHONE = r"cell_phone"
+USER_MISSED_FINISH = r"no_finish_punch"
+MISSED_FINISH_PUNCH_SPLIT = 600
+MISSED_FINISH_PUNCH_MESSAGE = "No finish punch detected, recorded finish split of 10m"
 
 def usage():
   print("Usage: " + sys.argv[0])
@@ -136,7 +139,7 @@ def get_event(event_key):
     if (verbose or debug):
       print("No currently open (actively ongoing) events found.")
     no_event_frame = tk.Frame(root)
-    no_event_label = tk.Label(no_event_frame, text="No events found, suspect:\n\tpossible incorrect configuration\n\tno internet connectivity", fg="red")
+    no_event_label = tk.Label(no_event_frame, text="No events found, suspect:\npossible incorrect configuration\nno internet connectivity", fg="red")
     no_event_button = tk.Button(no_event_frame, text="Run in offline mode", command=lambda: run_in_offline_mode(no_event_frame))
     no_event_label.pack(side=tk.TOP)
     no_event_button.pack(side=tk.TOP)
@@ -225,6 +228,8 @@ def run_in_offline_mode(enclosing_frame):
     run_offline = True
     enclosing_frame.destroy()
     create_status_frame()
+    root.title(f"QRienteering download station: offline mode")
+    mode_label.configure(text="In Download mode")
     root.after(1, start_sireader_thread)
 
 ###############################################################
@@ -272,8 +277,19 @@ def upload_results(user_info, event_key, event):
 
   return(upload_status_string, is_error)
 
+###############################################################
 def upload_initial_results(user_info, event_key, event):
   result_tuple = upload_results(user_info, event_key, event)
+
+  # If the username is still None, then there was no registered entry found
+  # See if the person is a member and could be quickly registered
+  if user_info[USER_NAME] == None:
+      possible_member_info = lookup_si_unit(user_info[USER_STICK])
+      if possible_member_info[USER_NAME] != None:
+          user_info.update(possible_member_info)
+          new_result_tuple = (result_tuple[0] + f"\nIdentified member {user_info[USER_NAME]}", result_tuple[1])
+          result_tuple = new_result_tuple
+
   make_status(user_info, result_tuple[0], result_tuple[1])
 
 
@@ -497,11 +513,16 @@ def make_status_on_mainloop(user_info, message, is_error, is_connected):
     button_frame = tk.Frame(result_frame)
     label_frame = tk.Frame(result_frame)
     stick_label = tk.Label(label_frame, text=user_info[USER_STICK], borderwidth=2, relief=tk.SUNKEN)
+
     stick_status = tk.Label(label_frame, text=message)
-    if is_error:
+    if USER_MISSED_FINISH in user_info:
+        stick_status.configure(text=message + "\n" + MISSED_FINISH_PUNCH_MESSAGE)
+        stick_status["fg"] = "red"
+    elif is_error:
         stick_status["fg"] = "red"
     else:
         stick_status["fg"] = "green"
+
     stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy)
     stick_register = tk.Button(button_frame, text="Register for new course")
     stick_replay = tk.Button(button_frame, text="Retry upload")
@@ -699,8 +720,12 @@ def replay_stick_thread(user_info):
     result_tuple = upload_results(user_info, event_key, event)
     if exit_all_threads: return
 
-    user_info[USER_STATUS]["text"] = result_tuple[0]
-    user_info[USER_STATUS]["fg"] = "red" if result_tuple[1] else "green"
+    if USER_MISSED_FINISH in user_info:
+        user_info[USER_STATUS].configure(text=result_tuple[0] + "\n" + MISSED_FINISH_PUNCH_MESSAGE)
+        user_info[USER_STATUS]["fg"] = "red"
+    else:
+        user_info[USER_STATUS]["text"] = result_tuple[0]
+        user_info[USER_STATUS]["fg"] = "red" if result_tuple[1] else "green"
 
     for button in user_info[USER_BUTTONS]:
       button.configure(state=tk.NORMAL)
@@ -731,9 +756,42 @@ def create_status_frame():
     status_frame = scrollable_status_frame.scrollable_frame
 
 
+def get_and_log_results_string(event, stick_values):
+    upload_entry_list = [ "{:d};{:d}".format(stick_values[SI_STICK_KEY], stick_values[SI_START_KEY]) ]
+    upload_entry_list.append("start:{:d}".format(stick_values[SI_START_KEY]))
+    upload_entry_list.append("finish:{:d}".format(stick_values[SI_FINISH_KEY]))
+    upload_entry_list.extend(stick_values[SI_CONTROLS_KEY])
+    qr_result_string = ",".join(upload_entry_list)
+    if verbose:
+      print (f"Got results {qr_result_string} for si_stick {stick_values[SI_STICK_KEY]}.")
+
+    with open("{}-results.log".format(event), "a") as LOGFILE:
+      LOGFILE.write(qr_result_string + "\n")
+
+    return qr_result_string
+    
+
 ###############################################################
 
 fake_entries = []
+fake_entries.append({SI_STICK_KEY : 271828, SI_START_KEY : 300, SI_FINISH_KEY : 0, SI_CONTROLS_KEY : [ ]})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : 141421, SI_START_KEY : 0, SI_FINISH_KEY : 0, SI_CONTROLS_KEY : ["101:1210", "102:1260", "104:1350", "106:1480", "110:1568"]})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : 314159, SI_START_KEY : 1200, SI_FINISH_KEY : 0, SI_CONTROLS_KEY : ["101:1210", "102:1260", "104:1350", "106:1480", "110:1568"]})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
+fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : 5086148225, SI_START_KEY : 1200, SI_FINISH_KEY : 1600, SI_CONTROLS_KEY : ["101:1210", "102:1260", "104:1350", "106:1480", "110:1568"]})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
@@ -747,11 +805,6 @@ fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : 2108369, SI_START_KEY : 200, SI_FINISH_KEY : 600, SI_CONTROLS_KEY : ["101:210", "102:260", "104:350", "106:480", "110:568"]})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
@@ -776,6 +829,7 @@ def start_sireader_thread():
     sireader_thread.start()
 
 def sireader_main():
+    global event
     if exit_all_threads: return
     if not testing_run and use_real_sireader:
       si_reader = get_sireader(serial_port, verbose)
@@ -793,7 +847,10 @@ def sireader_main():
 
     loop_count = 0
     while True:
+      forced_registration = False
+      finish_adjusted = False
       if exit_all_threads: return
+
       if not testing_run and use_real_sireader:
         si_stick_entry = read_results(si_reader)
       elif use_fake_read_results:
@@ -808,46 +865,71 @@ def sireader_main():
       if si_stick_entry[SI_STICK_KEY] != None:
         if verbose: print(f"\nFound new key: {si_stick_entry[SI_STICK_KEY]}")
     
-        upload_entry_list = [ "{:d};{:d}".format(si_stick_entry[SI_STICK_KEY], si_stick_entry[SI_START_KEY]) ]
-        upload_entry_list.append("start:{:d}".format(si_stick_entry[SI_START_KEY]))
-        upload_entry_list.append("finish:{:d}".format(si_stick_entry[SI_FINISH_KEY]))
-        upload_entry_list.extend(si_stick_entry[SI_CONTROLS_KEY])
-        qr_result_string = ",".join(upload_entry_list)
-        if verbose:
-          print (f"Got results {qr_result_string} for si_stick {si_stick_entry[SI_STICK_KEY]}.")
+        qr_result_string = get_and_log_results_string(event, si_stick_entry)
     
-        with open("{}-results.log".format(event), "a") as LOGFILE:
-          LOGFILE.write(qr_result_string + "\n")
-    
-        # If the finish is 0, then the finish wasn't scanned - we've logged it but don't upload the result.
+        # If the finish is 0, then the finish wasn't scanned - we've logged it already so we have the raw data
         # By editing the log file and replaying the SI stick, we can adjust the result afterwards if necessary.
         # Though the easiest is to have the competitor go and scan finish and then download again.
-        if (si_stick_entry[SI_FINISH_KEY] != 0):
-          if not run_offline:
-            if exit_all_threads: return
-            if download_mode:
-                user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
-                upload_initial_results(user_info, event_key, event)
+        #
+        # Now try and figure out what to do if the finish key is 0 (finish not scanned)
+        # If start was also not scanned, then the stick was likely cleared and this is probably a registration
+        # If start was scanned, then assign a finish split of 10 minutes (something ridiculous) and allow the entry
+        # The competitor can always go back and punch finish and then download again
+        if si_stick_entry[SI_FINISH_KEY] == 0:
+            if si_stick_entry[SI_START_KEY] == 0:
+                forced_registration = True
             else:
-                user_info = lookup_si_unit(si_stick_entry[SI_STICK_KEY])
-                user_info[USER_RESULTS] = qr_result_string
-                if (user_info[USER_NAME] != None):
-                    make_status(user_info, f"Registering member {user_info[USER_NAME]} with SI unit {user_info[USER_STICK]}", False)
+                punch_times = list(map(lambda punch: int(punch.split(":")[1]), si_stick_entry[SI_CONTROLS_KEY]))
+                if len(punch_times) > 0:
+                    last_punch = max(punch_times)
                 else:
-                    make_status(user_info, f"Could not find member for SI unit {user_info[USER_STICK]}", True)
-            if exit_all_threads: return
+                    last_punch = 0
+
+                if last_punch > si_stick_entry[SI_START_KEY]:
+                    si_stick_entry[SI_FINISH_KEY] = last_punch + MISSED_FINISH_PUNCH_SPLIT
+                else:
+                    si_stick_entry[SI_FINISH_KEY] = si_stick_entry[SI_START_KEY] + MISSED_FINISH_PUNCH_SPLIT
+                qr_result_string = get_and_log_results_string(event, si_stick_entry)
+                finish_adjusted = True
+
+        if not run_offline:
+          if exit_all_threads: return
+          if not download_mode or forced_registration:
+              display_as_error = False
+              user_info = lookup_si_unit(si_stick_entry[SI_STICK_KEY])
+              user_info[USER_RESULTS] = qr_result_string
+              if (user_info[USER_NAME] != None):
+                  message = f"Recognized member {user_info[USER_NAME]} with SI unit {user_info[USER_STICK]}"
+              else:
+                  display_as_error = True
+                  message = f"Could not find member for SI unit {user_info[USER_STICK]}"
+
+              if download_mode and forced_registration:
+                  message += "\nNo punches found - was stick cleared?"
+                  display_as_error = True
+
+              if finish_adjusted:
+                  user_info[USER_MISSED_FINISH] = True
+
+              make_status(user_info, message, display_as_error)
           else:
-            total_time = si_stick_entry[SI_FINISH_KEY] - si_stick_entry[SI_START_KEY]
-            hours = total_time // 3600
-            minutes = (total_time - (hours * 3600)) // 60
-            seconds = (total_time - (hours * 3600) - (minutes * 60))
-            user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
-            status_message = f"Downloaded results for si_stick {si_stick_entry[SI_STICK_KEY]}, time was {hours}h:{minutes}m:{seconds}s ({total_time})."
-            make_offline_status(user_info, status_message, False)
-            print (status_message)
-            sys.stdout.flush()
+              user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
+              if finish_adjusted:
+                  user_info[USER_MISSED_FINISH] = True
+              upload_initial_results(user_info, event_key, event)
+
+          if exit_all_threads: return
         else:
-          print ("Splits downloaded but no finish time found - punch finish and download again.")
+          total_time = si_stick_entry[SI_FINISH_KEY] - si_stick_entry[SI_START_KEY]
+          hours = total_time // 3600
+          minutes = (total_time - (hours * 3600)) // 60
+          seconds = (total_time - (hours * 3600) - (minutes * 60))
+          user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
+          status_message = f"Downloaded results for si_stick {si_stick_entry[SI_STICK_KEY]}, time was {hours}h:{minutes}m:{seconds}s ({total_time})."
+          if finish_adjusted:
+              user_info[USER_MISSED_FINISH] = True
+          make_offline_status(user_info, status_message, False)
+          print (status_message)
           sys.stdout.flush()
     
       if testing_run and not continuous_testing:
