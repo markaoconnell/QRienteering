@@ -66,6 +66,7 @@ USER_REG_BUTTON = r"register_button"
 USER_STICK = r"stick"
 USER_CELL_PHONE = r"cell_phone"
 USER_MISSED_FINISH = r"no_finish_punch"
+USER_COURSE = r"course"   # Only for preregistered entrants
 MISSED_FINISH_PUNCH_SPLIT = 600
 MISSED_FINISH_PUNCH_MESSAGE = "No finish punch detected, recorded finish split of 10m"
 
@@ -144,7 +145,7 @@ def get_event(event_key):
     no_event_label.pack(side=tk.TOP)
     no_event_button.pack(side=tk.TOP)
     no_event_frame.pack(side=tk.TOP)
-    return("", "")
+    return
   elif (len(event_matches_list) == 1):
     elements = event_matches_list[0].split(",")
     #match = re.search(r"(event-[0-9a-f]+).*>Results for (.*?)<", event_matches_list[0])
@@ -177,7 +178,7 @@ def get_event(event_key):
 
 ##############################################################
 def have_event(choice_frame, event_list, chosen_event):
-    global event, event_key
+    global event, event_key, event_allows_preregistration
     if choice_frame != None:
         choice_frame.pack_forget()
         choice_frame.destroy()
@@ -186,6 +187,7 @@ def have_event(choice_frame, event_list, chosen_event):
         root.title(f"QRienteering download station for: {event_name}")
         mode_label.configure(text="Validating event and associated courses")
         event = event_list[chosen_event][2]
+        event_allows_preregistration = (event_list[chosen_event][4] == "Preregistration")
         root.after(1, lambda: get_courses(event, event_key))
     else:
         root.title("QRienteering download station - no event selected")
@@ -581,6 +583,8 @@ def registration_window(user_info):
     for course in discovered_courses:
         radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course)
         radio_button.pack(side=tk.TOP)
+        if (user_info[USER_COURSE] != None) and (user_info[USER_COURSE] == course[0]):
+            chosen_course.set(course[1])
 
     ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, chosen_course, registration_frame))
     cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, user_info))
@@ -615,9 +619,27 @@ def register_for_course(user_info, chosen_course, enclosing_frame):
 
 #######################################################################################
 def lookup_si_unit(stick):
+    global event_allows_preregistration
+
+    lookup_results = { USER_NAME : None, USER_STICK : stick }
+    if event_allows_preregistration:
+        lookup_results = make_lookup_si_unit_call(stick, True)
+
+    if lookup_results[USER_NAME] == None:
+        lookup_results = make_lookup_si_unit_call(stick, False)
+
+    return lookup_results
+
+
+#######################################################################################
+def make_lookup_si_unit_call(stick, check_preregistration):
+  if check_preregistration:
+      extra_params = "&checkin=true"
+  else:
+      extra_params = ""
 
   if exit_all_threads: return
-  output = make_url_call(SI_LOOKUP, "key={}&si_stick={}".format(event_key, stick))
+  output = make_url_call(SI_LOOKUP, f"key={event_key}&event={event}&si_stick={stick}{extra_params}")
   if exit_all_threads: return
 
   if debug or verbose:
@@ -632,8 +654,11 @@ def lookup_si_unit(stick):
   found_id = member_elements[1]
   found_email = member_elements[2]
   club_name = member_elements[3]
+  course = None
+  if (len(member_elements) > 4):
+      course = member_elements[4]
 
-  return({ USER_NAME : found_name, USER_MEMBER_ID : found_id, USER_EMAIL : found_email, USER_CLUB : club_name, USER_STICK : stick })
+  return({ USER_NAME : found_name, USER_MEMBER_ID : found_id, USER_EMAIL : found_email, USER_CLUB : club_name, USER_STICK : stick , USER_COURSE : course })
 
 #######################################################################################
 def register_by_si_unit(user_info, chosen_course):
@@ -967,6 +992,7 @@ initializations = read_ini_file()
 event = ""
 event_name = ""
 event_key = ""
+event_allows_preregistration = False
 serial_port = ""
 event_found = False
 
