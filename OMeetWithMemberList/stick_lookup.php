@@ -27,12 +27,14 @@ if ($is_preregistered_checkin) {
 }
 
 
+$parseable_result_string = "\n<!--\n";
+
 if (!isset($_GET["si_stick"])) {
-  error_and_exit("Unspecified SI unit number, please hit back and retry.\n");
+  $parseable_result_string .= "####,ERROR,Unspecified SI unit number in the lookup call\n-->\n";
+  error_and_exit("{$parseable_result_string}Unspecified SI unit number, please hit back and retry.\n");
 }
 
 $si_stick = $_GET["si_stick"];
-$parseable_result_string = "\n<!--\n";
 
 if ($is_preregistered_checkin) {
   $member_id = $prereg_matching_info["si_hash"][$si_stick];

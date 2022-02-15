@@ -53,6 +53,10 @@ sub check_results {
     error_and_exit("Found $actual_table_rows instead of $expected_table_rows in results output.\n$output");
   }
 
+  if ($output !~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04-GetEmAll/) {
+    error_and_exit("Did not find expected course list in results output.\n$output");
+  }
+
   return ($output);
 }
 

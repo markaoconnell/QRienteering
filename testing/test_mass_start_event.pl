@@ -345,13 +345,6 @@ success();
 $GET{"event"} = $event_id;
 $output = run_mass_start_courses();
 
-##########
-# For the si stick results, we need to adjust the control times
-# based on the mass start time.  Estimate the mass start time based
-# on the current time.
-my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime();
-my($estimated_start_time) = ($hour * 3600) + ($min * 60) + $sec;
-##########
 
 if (($output =~ /$COMPETITOR_1/) || ($output =~ /$COMPETITOR_2/) || ($output =~ /$COMPETITOR_5/) ||
     ($output =~ /$COMPETITOR_6/) || ($output !~ /$COMPETITOR_3 on/) || ($output !~ /$COMPETITOR_4 on/)) {
@@ -574,14 +567,18 @@ $COOKIE{"event"} = $event_id;
 
 finish_score_successfully(70, \%GET, \%COOKIE, \%TEST_INFO);
 
-# See the TestMassStartWhite for an explanation
-# of the estimated start time
+##########
+# For the si stick results, we need to adjust the control times
+# based on the mass start time.  Get the mass start time 
+# for the current competitor.
+my($mass_start_time) = get_competitor_mass_start_time("UnitTestPlayground", $event_id, $si_competitor_1_id);
+##########
 
 # si competitor 1 finishes
 %GET = qw(key UnitTestPlayground);  # empty hash
 $GET{"event"} = $event_id;
 my(@si_results) = qw(2108369;0 start:0 finish:800 201:210 202:300 203:440 204:600 205:700);
-@si_results = adjust_si_results($estimated_start_time, @si_results);
+@si_results = adjust_si_results($mass_start_time, @si_results);
 print "New si_results are: " . join(",", @si_results) . "\n";
 my($base_64_results) = encode_base64(join(",", @si_results));
 $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
@@ -596,8 +593,9 @@ validate_si_results("${path}/Competitors/${si_competitor_1_id}/controls_found", 
 # si competitor 2 finishes
 %GET = qw(key UnitTestPlayground);  # empty hash
 $GET{"event"} = $event_id;
+$mass_start_time = get_competitor_mass_start_time("UnitTestPlayground", $event_id, $si_competitor_2_id);
 my(@si_results) = qw(314159;0 start:0 finish:1200 202:303 204:459 206:588 208:999 210:1102);
-@si_results = adjust_si_results($estimated_start_time, @si_results);
+@si_results = adjust_si_results($mass_start_time, @si_results);
 print "New si_results are: " . join(",", @si_results) . "\n";
 my($base_64_results) = encode_base64(join(",", @si_results));
 $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
@@ -613,15 +611,16 @@ validate_si_results("${path}/Competitors/${si_competitor_2_id}/controls_found", 
 # si competitor 3 finishes
 %GET = qw(key UnitTestPlayground);  # empty hash
 $GET{"event"} = $event_id;
+$mass_start_time = get_competitor_mass_start_time("UnitTestPlayground", $event_id, $si_competitor_3_id);
 my(@si_results) = qw(141421;0 start:0 finish:1523 301:444 305:742 302:808 304:1414);
-@si_results = adjust_si_results($estimated_start_time, @si_results);
+@si_results = adjust_si_results($mass_start_time, @si_results);
 print "New si_results are: " . join(",", @si_results) . "\n";
 my($base_64_results) = encode_base64(join(",", @si_results));
 $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
 $GET{"si_stick_finish"} = $base_64_results;
 
 
-# 21 minutes over time (1203 seconds really, 20m3s), 120 points - 21 point penalty
+# 21 minutes over time (1203 seconds really, 20m23s), 120 points - 21 point penalty
 finish_scoreO_with_stick_successfully($si_competitor_3_id, "02-ScoreO", 99, \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
 validate_si_results("${path}/Competitors/${si_competitor_3_id}/controls_found", @si_results);
