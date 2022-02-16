@@ -32,11 +32,11 @@ continuous_testing = 0
 url = "http://www.mkoconnell.com/OMeet/not_there"
 fake_offline_event = "offline_downloads"
 use_fake_read_results = True
-use_real_sireader = False
+use_real_sireader = True
 run_offline = False
 
 if (not 'NO_SI_READER_IMPORT' in os.environ) and use_real_sireader:
-  from sireader import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
+  from sireader2 import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
 
 # URLs for the web site
 VIEW_RESULTS = "OMeet/view_results.php"
@@ -846,7 +846,6 @@ def read_fake_results():
   if len(fake_entries) > 0:
     return fake_entries.pop()
   else:
-    sys.exit(0)
     return {SI_STICK_KEY : None}
 
 def start_sireader_thread():
@@ -862,7 +861,7 @@ def sireader_main():
         progress_label.configure(text="ERROR: Cannot find si download station, is it plugged in?")
         if (serial_port != ""):
           print (f"\tAttempted to read from {serial_port}")
-        sys.exit(1)
+        return
     else:
       si_reader = None
     
