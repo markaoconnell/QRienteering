@@ -173,8 +173,12 @@ else {
 
 <br><p>(Best option) Your cell phone number, or a parent/guardian's, spouse's, etc.<br>
 <input type="text" size=50 name="cell_number" <?php echo $presupplied_cell_phone; ?>><br>
-<br><p>What car (make/model/plate) did you come in (we can check the lot to see if you've left)?<br>
-<input type="text" size=50 name="car_info" <?php echo $presupplied_car_info; ?>><br>
+<?php
+if (file_exists("{$base_path}/collect_car_info")) {
+  echo "<br><p>What car (make/model/plate) did you come in (we can check the lot to see if you've left)?<br>\n";
+  echo "<input type=\"text\" size=50 name=\"car_info\" {$presupplied_car_info}><br>\n";
+}
+?>
 
 <p>
 <?php

@@ -40,6 +40,10 @@ if ($output !~ /value="yes" checked/) {
   error_and_exit("SI stick of member found but not checked as default.\n$output");
 }
 
+if ($output !~ /\#\#\#\#,MEMBER_ENTRY,.*,314,mark\@mkoconnell.com,NEOC/) {
+  error_and_exit("Did not find parseable member entry information:\n$output");
+}
+
 success();
 
 ###########
@@ -65,6 +69,10 @@ if ($output !~ /value="yes" checked/) {
   error_and_exit("SI stick of member found but not checked as default.\n$output");
 }
 
+if ($output !~ /\#\#\#\#,MEMBER_ENTRY,.*,103,,NEOC/) {
+  error_and_exit("Did not find parseable member entry information:\n$output");
+}
+
 success();
 
 ###########
@@ -82,6 +90,15 @@ if ($output !~ /No member with SI unit "271828" found/) {
   error_and_exit("Found non-existing stick 271828.\n$output");
 }
 
+if ($output =~ /\#\#\#\#,MEMBER_ENTRY,.*/) {
+  error_and_exit("Should not have found a parseable MEMBER_ENTRY information:\n$output");
+}
+
+if ($output !~ /\#\#\#\#,ERROR,.*/) {
+  error_and_exit("Should have found a parseable ERROR entry\n$output");
+}
+
+
 success();
 
 ###########
@@ -98,6 +115,17 @@ $output = qx($cmd);
 if ($output !~ /Unspecified SI unit number/) {
   error_and_exit("Failed to recognize that no SI stick was specified.\n$output");
 }
+
+if ($output =~ /\#\#\#\#,MEMBER_ENTRY,.*/) {
+  error_and_exit("Should not have found a parseable MEMBER_ENTRY information:\n$output");
+}
+
+# Should fix this - currently when no si stick is passed we do successfully return an
+# error but not in the easily parseable comments - should really fix this
+if ($output !~ /\#\#\#\#,ERROR,.*/) {
+  error_and_exit("Should have found a parseable ERROR entry but didn't when no si stick specified\n$output");
+}
+
 
 success();
 

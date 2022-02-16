@@ -282,11 +282,17 @@ if ($error_string == "") {
     $readable_course_name = ltrim($course, "0..9-");
     $output_string .= "<p class=\"title\">Results for: {$new_competitor_name}, course complete ({$readable_course_name}{$dnf_string}), time taken " . formatted_time($time_taken) . "<p><p>";
 
+    $output_string .= "<form action=\"./remove_from_event.php\">\n";
+    $output_string .= "<input type=hidden name=key value=\"{$key}\">\n";
+    $output_string .= "<input type=hidden name=event value=\"{$event}\">\n";
+    $output_string .= "<input type=hidden name=Remove-{$competitor} value=\"1\">\n";
+    $output_string .= "<input type=submit value=\"Remove prior entry for {$competitor_name}\">\n";
+    $output_string .= "</form>\n\n";
     // Update the existing competitor name as having been overridden by the edits
-    if (substr($competitor_name, -4) != " (*)") {
-      $updated_competitor_name = "{$competitor_name} (*)";
-      file_put_contents("{$competitor_path}/name", $updated_competitor_name);
-    }
+    // if (substr($competitor_name, -4) != " (*)") {
+    //   $updated_competitor_name = "{$competitor_name} (*)";
+    //   file_put_contents("{$competitor_path}/name", $updated_competitor_name);
+    // }
   }
 }
 

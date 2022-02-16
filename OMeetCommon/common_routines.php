@@ -7,6 +7,19 @@ function ck_testing() {
   }
 }
 
+// Return a string with the time in seconds pretty printed,
+// like strftime("%T") but with no timezone adjustments
+// (for displaying si unit times)
+function format_si_time($time_in_seconds) {
+  $hours = floor($time_in_seconds / 3600);
+  $mins = floor(($time_in_seconds / 60) % 60);
+//  $hours = 0;
+//  $mins = floor($time_in_seconds / 60);
+  $secs = ($time_in_seconds % 60);
+
+  return sprintf("%02d:%02d:%02d", $hours, $mins, $secs);
+}
+
 // Return a string with the elapsed time in seconds pretty printed
 function formatted_time($time_in_seconds) {
   $hours = floor($time_in_seconds / 3600);
@@ -110,11 +123,18 @@ function is_mobile () {
 }
 
 
+$page_title = "Orienteering Event Managment";
+function set_page_title($new_title) {
+  global $page_title;
+  $page_title = $new_title;
+}
+
+
 $bg_color = "";
 
 // Print out the default headers
 function get_web_page_header($paragraph_style, $table_style, $form_style) {
-  global $bg_color;
+  global $bg_color, $page_title;
 
   $headers_to_show = <<<END_OF_HEADERS
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -122,7 +142,7 @@ function get_web_page_header($paragraph_style, $table_style, $form_style) {
 <head>
   <meta content="text/html; charset=ISO-8859-1"
  http-equiv="content-type">
-  <title>Orienteering Event Management</title>
+  <title>{$page_title}</title>
   <meta content="Mark O'Connell" name="author">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../OMeetCommon/styles.css"></link>
@@ -351,6 +371,62 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
     $result_array[] = $competitor_result_array;
   }
   return($result_array);
+}
+
+// Get the statistics for a course in an event
+function get_course_stats($event, $key, $course) {
+  $course_results = array("starts" => 0, "members" => 0, "non-members" => 0, "qr_coders" => 0, "self_reported" => 0,
+	  "si_unit" => 0, "dnfs" => 0, "complete" => 0);
+  $course_results["start_names"] = array();
+
+  // No results yet - .csv is empty
+  $results_path = get_results_path($event, $key);
+  if (!is_dir("{$results_path}/{$course}")) {
+    return($course_results);
+  }
+  
+  $results_list = scandir("${results_path}/{$course}");
+  $results_list = array_diff($results_list, array(".", ".."));
+
+  foreach ($results_list as $this_result) {
+    $result_pieces = explode(",", $this_result);
+    $competitor_path = get_competitor_path($result_pieces[2], $event, $key);
+    $competitor_name = file_get_contents("${competitor_path}/name");
+
+    $course_results["start_names"][$competitor_name] = 1;
+    $course_results["starts"]++;
+    if (file_exists("{$competitor_path}/dnf")) {
+      $course_results["dnfs"]++;
+    }
+    else {
+      $course_results["complete"]++;
+    }
+
+    if (file_exists("{$competitor_path}/si_stick")) {
+      $course_results["si_unit"]++;
+    }
+    else if (file_exists("{$competitor_path}/self_reported")) {
+      $course_results["self_reported"]++;
+    }
+    else {
+      $course_results["qr_coders"]++;
+    }
+
+    if (file_exists("{$competitor_path}/registration_info")) {
+      $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
+      if ($registration_info["is_member"] == "yes") {
+        $course_results["members"]++;
+      }
+      else {
+        $course_results["non-members"]++;
+      }
+    }
+    else {
+      $course_results["non-members"]++;
+    }
+  }
+
+  return($course_results);
 }
 
 function get_all_course_result_links($event, $key, $path_to_top = "..") {

@@ -10,6 +10,12 @@ ck_testing();
 // Make sure any funky HTML sequeneces in the name are escaped
 $competitor_name = htmlentities($_GET["competitor_name"]);
 $course = $_GET["course"];
+if (isset($_GET["competitor"])) {
+  $competitor = $_GET["competitor"];
+}
+else {
+  $competitor = "";
+}
 
 
 $key = $_GET["key"];
@@ -88,7 +94,7 @@ if ($score_course) {
 }
 else {
   // For a non-ScoreO, each control is 1 point
-  $control_list = read_controls("${courses_path}/${course}/controls.txt");
+  $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
   $max_score = count($control_list);
   if (!$is_a_dnf) {
     $scoreo_score = $max_score;
@@ -101,16 +107,26 @@ else {
 
 
 // Generate the competitor_id and make sure it is truly unique
+// Unless this is for an existing competitor...
 $tries = 0;
-while ($tries < 5) {
-  $competitor_id = uniqid();
-  $competitor_path = get_competitor_path($competitor_id, $event, $key, "..");
-  mkdir ($competitor_path, 0777);
-  $competitor_file = fopen($competitor_path . "/name", "x");
-  if ($competitor_file !== false) {
-    break;
+if ($competitor == "") {
+  while ($tries < 5) {
+    $competitor_id = uniqid();
+    $competitor_path = get_competitor_path($competitor_id, $event, $key);
+    mkdir ($competitor_path, 0777);
+    $competitor_file = fopen($competitor_path . "/name", "x");
+    if ($competitor_file !== false) {
+      break;
+    }
+    $tries++;
   }
-  $tries++;
+}
+else {
+  $competitor_path = get_competitor_path($competitor, $event, $key);
+  if (!is_dir($competitor_path)) {
+    error_and_exit("Unknown competitor {$competitor} with name {$competitor_name}, was the entry already removed?\n");
+  }
+  $competitor_id = $competitor;
 }
 
 if ($tries === 5) {
@@ -118,11 +134,15 @@ if ($tries === 5) {
 }
 else {
   // Save the information about the competitor
-  fwrite($competitor_file, $competitor_name);
-  fclose($competitor_file);
-  file_put_contents("{$competitor_path}/course", $course);
+  if ($competitor == "") {
+    fwrite($competitor_file, $competitor_name);
+    fclose($competitor_file);
+    file_put_contents("{$competitor_path}/course", $course);
+  }
   file_put_contents("{$competitor_path}/self_reported", "");
-  mkdir("./{$competitor_path}/controls_found");
+  if (!file_exists("{$competitor_path}/controls_found")) {
+    mkdir("{$competitor_path}/controls_found");
+  }
   
   // Mark as a DNF if not all the controls were found
   if ($is_a_dnf) {
@@ -159,8 +179,8 @@ if ($score_course && ($score_penalty_msg != "")) {
   echo $score_penalty_msg;
 }
 
-echo show_results($event, $key, $course, $score_course, $max_score, "..");
-echo get_all_course_result_links($event, $key, "..");
+echo show_results($event, $key, $course, $score_course, $max_score);
+echo get_all_course_result_links($event, $key);
 
 
 echo "<p><p>Want to <a href=\"https://www.newenglandorienteering.org/meet-directors/142-mark-o-connell\">give feedback?</a>  All comments welcome.\n";

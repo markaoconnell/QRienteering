@@ -53,16 +53,19 @@ $courses_array = array_diff($courses_array, array(".", "..")); // Remove the ann
 
 $body_string = "";
 $using_si_stick = false;
+$parseable_result_string = "\n<!--\n";
 
 // Validate the info
 $error = false;
 if (!in_array($course, $courses_array)) {
   $body_string .= "<p>ERROR: Course must be specified.\n";
+  $parseable_result_string .= "\n####,ERROR,Course must be specified\n";
   $error = true;
 }
 
 if ($competitor_name == "") {
   $body_string .= "<p>ERROR: Competitor name must be specified.\n";
+  $parseable_result_string .= "\n####,ERROR,Competitor must be specified\n";
   $error = true;
 }
 
@@ -83,10 +86,12 @@ if (!$error) {
 
   if ($tries === 5) {
     $body_string .= "ERROR Cannot register " . $competitor_name . " with id: " . $competitor_id . "\n";
+    $parseable_result_string .= "\n####,ERROR,Cannot register {$competitor_name}, internal error generating id\n";
     $error = true;
   }
   else {
     $body_string .= "<p>Registration complete: " . $competitor_name . " on " . ltrim($course, "0..9-");
+    $parseable_result_string .= "\n####,RESULT,Registered {$competitor_name} on " . ltrim($course, "0..9-") . "\n";
 
     $cookie_path = isset($_SERVER["REQUEST_URI"]) ? dirname(dirname($_SERVER["REQUEST_URI"])) : "";
 
@@ -165,6 +170,7 @@ else {
 echo get_web_page_header(true, false, true);
 
 echo $body_string;
+echo "{$parseable_result_string}\n-->\n";
 
 if (!$error) {
   if ($using_si_stick) {

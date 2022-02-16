@@ -216,6 +216,10 @@ sub register_successfully {
     error_and_exit("Web page output wrong, registration complete string not found.\n$output");
   }
   
+  if ($output !~ /\#\#\#\#,RESULT,Registered $competitor_name on ${readable_course_name}/) {
+    error_and_exit("Did not see parseable registration result:\n$output");
+  }
+
   #print $output;
   
   my($competitor_id);
@@ -279,6 +283,10 @@ sub register_member_successfully {
 
   if ($output !~ /Registration complete: $competitor_name on ${readable_course_name}/) {
     error_and_exit("Web page output wrong, registration complete string not found.\n$output");
+  }
+
+  if ($output !~ /\#\#\#\#,RESULT,Registered $competitor_name on ${readable_course_name}/) {
+    error_and_exit("Did not see parseable registration result:\n$output");
   }
   
   #print $output;
@@ -411,6 +419,10 @@ sub finish_successfully {
   if (($output =~ /ERROR: DNF status/) || ($output !~ /course complete.*, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
   }
+
+  if ($output !~ /\#\#\#\#,RESULT,.*,${readable_course_name},[0-9]+/) {
+    error_and_exit("Did not see parseable finish entry:\n$output");
+  }
   
   #print $output;
   
@@ -470,6 +482,10 @@ sub finish_with_stick_successfully {
 
   if (($output =~ /ERROR: DNF status/) || ($output !~ /course complete.*, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
+  }
+  
+  if ($output !~ /\#\#\#\#,RESULT,.*,${readable_course_name},[0-9]+/) {
+    error_and_exit("Did not see parseable finish entry:\n$output");
   }
   
   #print $output;
@@ -536,6 +552,10 @@ sub finish_score_successfully {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
   }
   
+  if ($output !~ /\#\#\#\#,RESULT,.*,${readable_course_name},[0-9]+/) {
+    error_and_exit("Did not see parseable finish entry:\n$output");
+  }
+  
   #print $output;
   
   $path = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Competitors/$competitor_id";
@@ -595,6 +615,10 @@ sub finish_scoreO_with_stick_successfully {
   if (($output =~ /ERROR: DNF status/) || ($output !~ /course complete.*, time taken/) || ($output !~ /Results on ${readable_course_name}/) ||
       ($output !~ m#<td>$expected_points</td>#)) {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
+  }
+  
+  if ($output !~ /\#\#\#\#,RESULT,.*,${readable_course_name},[0-9]+/) {
+    error_and_exit("Did not see parseable finish entry:\n$output");
   }
   
   #print $output;
@@ -659,6 +683,15 @@ sub finish_with_dnf {
   if (($output !~ /DNF/) || ($output !~ /course complete.*DNF.*, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
   }
+
+  if ($output !~ /\#\#\#\#,RESULT,.*,${readable_course_name},[0-9]+/) {
+    error_and_exit("Did not see parseable finish entry:\n$output");
+  }
+
+  if ($output !~ /\#\#\#\#,ERROR,DNF/) {
+    error_and_exit("Did not see parseable DNF error\n$output");
+  }
+  
   
   #print $output;
   
@@ -719,6 +752,14 @@ sub finish_with_stick_dnf {
 
   if (($output !~ /DNF/) || ($output !~ /course complete.*DNF.*, time taken/) || ($output !~ /Results on ${readable_course_name}/)) {
     error_and_exit("Web page output wrong, not all controls entry not found.\n$output");
+  }
+  
+  if ($output !~ /\#\#\#\#,RESULT,.*,${readable_course_name},[0-9]+/) {
+    error_and_exit("Did not see parseable finish entry:\n$output");
+  }
+
+  if ($output !~ /\#\#\#\#,ERROR,DNF/) {
+    error_and_exit("Did not see parseable DNF error\n$output");
   }
   
   #print $output;

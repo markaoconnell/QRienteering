@@ -27,8 +27,11 @@ if ($is_preregistered_checkin) {
 }
 
 
+$parseable_result_string = "\n<!--\n";
+
 if (!isset($_GET["si_stick"])) {
-  error_and_exit("Unspecified SI unit number, please hit back and retry.\n");
+  $parseable_result_string .= "####,ERROR,Unspecified SI unit number in the lookup call\n-->\n";
+  error_and_exit("{$parseable_result_string}Unspecified SI unit number, please hit back and retry.\n");
 }
 
 $si_stick = $_GET["si_stick"];
@@ -36,41 +39,52 @@ $si_stick = $_GET["si_stick"];
 if ($is_preregistered_checkin) {
   $member_id = $prereg_matching_info["si_hash"][$si_stick];
   if ($member_id == "") {
-    error_and_exit("No preregistration entry with SI unit \"{$si_stick}\" found, please hit back and retry.\n");
+    $parseable_result_string .= "####,ERROR,No preregistration entry found for {$si_stick}\n-->\n";
+    error_and_exit("{$parseable_result_string}No preregistration entry with SI unit \"{$si_stick}\" found, please hit back and retry.\n");
   }
 }
 else {
   $member_id = get_by_si_stick($si_stick, $matching_info);
   if ($member_id == "") {
-    error_and_exit("No member with SI unit \"{$si_stick}\" found, please hit back and retry.\n");
+    $parseable_result_string .= "####,ERROR,No member entry found for {$si_stick}\n-->\n";
+    error_and_exit("{$parseable_result_string}No member with SI unit \"{$si_stick}\" found, please hit back and retry.\n");
   }
 }
 
 $error_string = "";
 $success_string = "";
 
+$club_name = "";
+$preregistered_course = "";
 if ($is_preregistered_checkin) {
   $printable_name = get_full_name($member_id, $prereg_matching_info);
+  $entrant_path = get_preregistered_entrant($member_id, $event, $key);
+  $entrant_info = decode_preregistered_entrant($entrant_path, $event, $key);
+
   $club_member_id = $prereg_matching_info["members_hash"][$member_id]["club_member_id"]; 
   if (($club_member_id != "not_a_member") && ($club_member_id != "")) {
     $email_address = get_member_email($club_member_id, $matching_info);
+    $club_name = get_club_name($key, $member_properties);
   }
   else {
-    $entrant_path = get_preregistered_entrant($member_id, $event, $key);
-    $entrant_info = decode_preregistered_entrant($entrant_path, $event, $key);
     if (isset($entrant_info["email_address"])) {
       $email_address = $entrant_info["email_address"];
     }
+    $club_name = isset($entrant_info["club_name"]) ? $entrant_info["club_name"] : "";
   }
   $pass_preregistration_marker = "<input type=\"hidden\" name=\"checkin\" value=\"true\">\n";
   $pass_preregistration_marker .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
+
+  $preregistered_course = isset($entrant_info["course"]) ? "," . $entrant_info["course"] : "";
 }
 else {
   $printable_name = get_full_name($member_id, $matching_info);
   $email_address = get_member_email($member_id, $matching_info);
+  $club_name = get_club_name($key, $member_properties);
   $pass_preregistration_marker = "";
 }
 $success_string .= "<p>Welcome {$printable_name}.\n";
+$parseable_result_string .= "\n####,MEMBER_ENTRY," . base64_encode($printable_name) . ",{$member_id},{$email_address},{$club_name}{$preregistered_course}\n";
 $success_string .= <<<END_OF_FORM
 <form action="./add_safety_info.php">
 <input type=hidden name="member_id" value="{$member_id}"/>
@@ -91,6 +105,7 @@ END_OF_FORM;
 echo get_web_page_header(true, false, true);
 
 echo $success_string;
+echo "{$parseable_result_string}\n-->\n";
 
 echo get_web_page_footer();
 ?>

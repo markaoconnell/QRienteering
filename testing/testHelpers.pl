@@ -272,4 +272,10 @@ sub convert_to_seconds {
   return ($time_in_seconds);
 }
 
+sub get_competitor_mass_start_time {
+  my($key, $event_id, $competitor) = @_;
+  my($mass_start_time) = file_get_contents(get_base_path($key) . "/${event_id}/Competitors/${competitor}/mass_si_stick_start");
+  return($mass_start_time);
+}
+
 1;

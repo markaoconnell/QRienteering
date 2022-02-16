@@ -39,7 +39,8 @@ if (isset($_GET["si_stick_finish"])) {
   $finish_info = record_finish_by_si_stick($event, $key, $si_results_string);
 
   if (isset($finish_info["error"]) && ($finish_info["error"] != "")) {
-    error_and_exit("ERROR: Cannot find competitor for registered SI unit {$finish_info["si_stick"]}: {$finish_info["error"]}\n");
+    $parseable_error_string = "\n<!--\n####,ERROR,Cannot find competitor for registered SI unit {$finish_info["si_stick"]}: {$finish_info["error"]}\n-->\n";
+    error_and_exit("{$parseable_error_string}ERROR: Cannot find competitor for registered SI unit {$finish_info["si_stick"]}: {$finish_info["error"]}\n");
   }
 
   $course = $finish_info["course"];
@@ -114,6 +115,7 @@ else {
 //echo "Controls on the ${course} course.<br>\n";
 // print_r($control_list);
 $error_string = "";
+$parseable_result_string = "\n<!--\n";
 $result_filename = "";
 $suppress_email = false;
 
@@ -189,6 +191,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
 }
 else {
   $error_string .= "<p>Second scan of finish?  Finish time not updated.\n";
+  $parseable_result_string .= "\n####,ERROR,Second scan of finish\n";
   $suppress_email = true;
   $course_started_at = file_get_contents("{$controls_found_path}/start");
   $course_finished_at = file_get_contents("{$controls_found_path}/finish");
@@ -215,17 +218,20 @@ if ($error_string != "") {
 $dnf_string = "";
 if (file_exists("${competitor_path}/dnf")) {
   echo "<p>ERROR: DNF status.\n";
+  $parseable_result_string .= "\n####,ERROR,DNF\n"; 
   $dnf_string = " - DNF";
 }
 
 $competitor_name = file_get_contents("{$competitor_path}/name");
 $readable_course_name = ltrim($course, "0..9-");
 $results_string = "<p class=\"title\">Results for: {$competitor_name}, course complete ({$readable_course_name}{$dnf_string}), time taken " . formatted_time($time_taken) . "<p><p>";
+$parseable_result_string .= "\n####,RESULT," . base64_encode($competitor_name) . ",{$readable_course_name},{$time_taken}\n";
 echo "{$results_string}\n";
 if ($score_course && ($score_penalty_msg != "")) {
   echo $score_penalty_msg;
 }
 
+echo "{$parseable_result_string}\n-->\n";
 echo show_results($event, $key, $course, $score_course, $max_score, "..");
 echo get_all_course_result_links($event, $key, "..");
 
