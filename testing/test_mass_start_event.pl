@@ -274,7 +274,7 @@ success();
 # 0 results
 
 %TEST_INFO = qw(Testname TestStartersAtEventYellowScoreMassStart);
-%GET = qw(key UnitTestPlayground courses_to_start 01-Yellow,02-ScoreO);
+%GET = qw(key UnitTestPlayground courses_to_start 01-Yellow,02-ScoreO universal_start yes);
 $GET{"event"} = $event_id;
 $output = run_mass_start_courses();
 
@@ -341,7 +341,7 @@ success();
 # Competitor 5 finds another control
 # Competitor 6 finds a control
 %TEST_INFO = qw(Testname TestMassStartWhite);
-%GET = qw(key UnitTestPlayground courses_to_start 00-White);
+%GET = qw(key UnitTestPlayground courses_to_start 00-White universal_start yes);
 $GET{"event"} = $event_id;
 $output = run_mass_start_courses();
 

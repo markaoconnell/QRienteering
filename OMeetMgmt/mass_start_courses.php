@@ -25,6 +25,8 @@ else {
   $si_stick_start_time = 0;
 }
 
+$universal_start = !$si_time_supplied && isset($_GET["universal_start"]) && $_GET["universal_start"] == "yes";
+
 if (!key_is_valid($key)) {
   error_and_exit("Unknown management key \"{$key}\", are you using an authorized link?\n");
 }
@@ -68,7 +70,7 @@ if (($event != "") && file_exists($event_path) && is_dir($courses_path)) {
             file_put_contents("{$competitor_path}/{$competitor}/controls_found/start", $mass_start_time);
           }
         }
-        else {
+        elseif ($si_time_supplied || $universal_start) {
           file_put_contents("{$competitor_path}/{$competitor}/mass_si_stick_start", $si_stick_start_time);
           $started_array[] = "{$competitor_name} on " . ltrim($course_for_competitor, "0..9-");
           if (!$si_time_supplied) {
