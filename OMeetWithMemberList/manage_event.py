@@ -9,12 +9,12 @@ import subprocess
 import re
 import base64
 from datetime import datetime
+from collections import Counter
 import urllib.parse
 
 progress_label = None
 mode_label = None
 mode_button = None
-download_mode = True
 exit_all_threads = False
 discovered_courses = [ ]
 open_frames = []
@@ -32,7 +32,7 @@ continuous_testing = 0
 url = "http://www.mkoconnell.com/OMeet/not_there"
 fake_offline_event = "offline_downloads"
 use_fake_read_results = True
-use_real_sireader = True
+use_real_sireader = False
 run_offline = False
 
 if (not 'NO_SI_READER_IMPORT' in os.environ) and use_real_sireader:
@@ -45,6 +45,7 @@ REGISTER_COURSE = "OMeetRegistration/register.php"
 MANAGE_EVENTS = "OMeetMgmt/manage_events.php"
 REGISTER_COMPETITOR = "OMeetRegistration/register_competitor.php"
 SI_LOOKUP = "OMeetWithMemberList/stick_lookup.php"
+MASS_START = "OMeetMgmt/mass_start_courses.php"
 
 TWELVE_HOURS_IN_SECONDS = (12 * 3600)
 
@@ -69,6 +70,12 @@ USER_MISSED_FINISH = r"no_finish_punch"
 USER_COURSE = r"course"   # Only for preregistered entrants
 MISSED_FINISH_PUNCH_SPLIT = 600
 MISSED_FINISH_PUNCH_MESSAGE = "No finish punch detected, recorded finish split of 10m"
+
+# Modes for what to do with the info from the SI unit
+DOWNLOAD_MODE = 1
+REGISTER_MODE = 2
+MASS_START_MODE = 3
+current_mode = DOWNLOAD_MODE
 
 def usage():
   print("Usage: " + sys.argv[0])
@@ -490,16 +497,30 @@ class ScrollableFrame(ttk.Frame):
     #def InnerFrameResize(self, event):
         #self.canvas.itemconfig(self.canvas_frame, width = event.width)
 
+def switch_to_mass_start_mode():
+    global current_mode
+    mode_label["text"] = "Reading mass start time from SI unit"
+    mode_button["text"] = "Switch to download mode"
+    current_mode = MASS_START_MODE
+
+    return
+
 def switch_mode():
-    global download_mode
-    if download_mode:
+    global current_mode
+    if current_mode == DOWNLOAD_MODE:
         mode_label["text"] = "In Register mode"
         mode_button["text"] = "Switch to download mode"
-    else:
+        current_mode = REGISTER_MODE
+    elif (current_mode == REGISTER_MODE) or (current_mode == MASS_START_MODE):
         mode_label["text"] = "In Download mode"
         mode_button["text"] = "Switch to register mode"
+        current_mode = DOWNLOAD_MODE
 
-    download_mode = not download_mode
+    return
+
+
+def make_mass_start_status(user_info, event_key, event):
+    root.after(1, lambda: make_mass_start_status_on_mainloop(user_info, event_key, event))
     return
 
 def make_offline_status(user_info, message, is_error):
@@ -551,10 +572,49 @@ def make_status_on_mainloop(user_info, message, is_error, is_connected):
     button_frame.pack(side=tk.TOP, fill=tk.X)
 
     # Display the registration window before we actually display the status frame
-    if not download_mode and user_info[USER_NAME] != None:
+    if (current_mode == REGISTER_MODE) and (user_info[USER_NAME] != None):
         for button in user_info[USER_BUTTONS]:
             button.configure(state=tk.DISABLED)
         registration_window(user_info)
+
+    result_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
+
+def make_mass_start_status_on_mainloop(user_info, event_key, event):
+    result_frame = tk.LabelFrame(status_frame)
+    button_frame = tk.Frame(result_frame)
+    label_frame = tk.Frame(result_frame)
+    stick_label = tk.Label(label_frame, text=user_info[USER_STICK], borderwidth=2, relief=tk.SUNKEN)
+
+    # Get the start time from the result string
+    qr_result_entries = user_info[USER_RESULTS].split(",")
+    start_entry = qr_result_entries[1].split(":")
+    start_seconds = int(start_entry[1])
+
+    hours = start_seconds // 3600
+    minutes = (start_seconds - (hours * 3600)) // 60
+    seconds = (start_seconds - (hours * 3600) - (minutes * 60))
+    status_message = f"Use mass start time of: {hours:02d}h:{minutes:02d}m:{seconds:02d}s ({start_seconds})."
+
+    stick_status = tk.Label(label_frame, text=status_message)
+    stick_status["fg"] = "green"
+
+    stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy)
+    stick_mass_start = tk.Button(button_frame, text="Mass start course(s)")
+    user_info[USER_BUTTONS] = [stick_ack, stick_mass_start]
+    user_info[USER_REG_BUTTON] = None
+    user_info[USER_STATUS] = stick_status
+    stick_mass_start.configure(command=lambda: mass_start_window(user_info, start_seconds, event_key, event))
+
+    #if not is_connected:
+        #stick_mass_start.configure(state = tk.DISABLED)
+        #user_info[USER_BUTTONS] = [ stick_ack ]
+
+    stick_label.pack(side=tk.LEFT)
+    stick_status.pack(side=tk.LEFT, fill=tk.X)
+    stick_mass_start.pack(side=tk.LEFT)
+    stick_ack.pack(side=tk.RIGHT, padx=5)
+    label_frame.pack(side=tk.TOP, fill=tk.X)
+    button_frame.pack(side=tk.TOP, fill=tk.X)
 
     result_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
 
@@ -583,8 +643,9 @@ def registration_window(user_info):
     for course in discovered_courses:
         radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course)
         radio_button.pack(side=tk.TOP)
-        if (user_info[USER_COURSE] != None) and (user_info[USER_COURSE] == course[0]):
-            chosen_course.set(course[1])
+        if USER_COURSE in user_info:
+            if (user_info[USER_COURSE] != None) and (user_info[USER_COURSE] == course[0]):
+                chosen_course.set(course[1])
 
     ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, chosen_course, registration_frame))
     cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, user_info))
@@ -616,6 +677,67 @@ def register_for_course(user_info, chosen_course, enclosing_frame):
     return
 
 
+def mass_start_window(user_info, start_seconds, event_key, event):
+    global open_frames
+
+    for button in user_info[USER_BUTTONS]:
+        button.configure(state=tk.DISABLED)
+
+    mass_start_frame = tk.Tk()
+    open_frames.append(mass_start_frame)
+    mass_start_frame.geometry("300x300")
+    mass_start_frame.title("Mass Start course(s)")
+
+    choices_frame = tk.Frame(mass_start_frame)
+    button_frame = tk.Frame(mass_start_frame)
+    info_label = tk.Label(choices_frame, text="Choose course(s) to start:")
+    info_label.pack(side=tk.TOP)
+
+    course_choices = [ ]
+    for course in discovered_courses:
+        chosen_course = tk.StringVar(mass_start_frame, "unselected")
+        course_choices.append(chosen_course)
+        radio_button = tk.Checkbutton(choices_frame, text=course[0], onvalue=course[1], offvalue="unselected", variable=chosen_course)
+        radio_button.pack(side=tk.TOP)
+
+    ok_button = tk.Button(button_frame, text="Mass start course(s)", command=lambda: mass_start_courses(user_info, course_choices, start_seconds, mass_start_frame))
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_mass_start_window(mass_start_frame, user_info))
+
+    ok_button.pack(side=tk.LEFT)
+    cancel_button.pack(side=tk.LEFT)
+
+    choices_frame.pack(side=tk.TOP)
+    button_frame.pack(side=tk.TOP)
+
+    mass_start_frame.protocol("WM_DELETE_WINDOW", lambda: kill_mass_start_window(mass_start_frame, user_info))
+    return
+
+def mass_start_courses(user_info, course_choices, start_seconds, enclosing_frame):
+    global open_frames
+
+    courses_to_start = list(filter(lambda elt: elt.get() != "unselected", course_choices))
+    courses_to_start = list(map(lambda elt: elt.get(), courses_to_start))
+
+    if len(courses_to_start) != 0:
+        printable_courses_to_start = list(map(lambda elt: elt.lstrip("0123456789-"), courses_to_start))
+        user_info[USER_STATUS]["text"] = "Starting courses: " + ", ".join(printable_courses_to_start)
+        mass_start_thread = Thread(target=send_mass_start_command, args=(user_info, courses_to_start, start_seconds))
+        mass_start_thread.start()
+    else:
+        user_info[USER_STATUS]["text"] = "No courses chosen for mass start"
+
+    enclosing_frame.destroy()
+    open_frames.remove(enclosing_frame)
+
+    return
+
+#####################################################################
+def kill_mass_start_window(mass_start_window, user_info):
+    global open_frames
+    mass_start_window.destroy()
+    open_frames.remove(mass_start_window)
+    for button in user_info[USER_BUTTONS]:
+        button.configure(state=tk.NORMAL)
 
 #######################################################################################
 def lookup_si_unit(stick):
@@ -731,6 +853,52 @@ def kill_registration_window(registration_window, user_info):
     for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.NORMAL)
 
+
+#######################################################################################
+def send_mass_start_command(user_info, courses_to_start, start_seconds):
+
+  #if user_info[USER_NAME] == None:
+    #message = f"SI unit {user_info[USER_STICK]} not registered to a known member, registration canceled"
+    #root.after(1, lambda: update_status_window(user_info, message, True))
+    #return
+  
+  mass_start_params = f"key={event_key}&event={event}&si_stick_time={start_seconds}&courses_to_start=" + ",".join(courses_to_start)
+  if debug: print(f"Attempting to mass start with params {mass_start_params}.")
+        
+  if exit_all_threads: return
+  output = make_url_call(MASS_START, mass_start_params)
+  if exit_all_threads: return
+  if debug: print (f"Results of web call {output}.")
+              
+  mass_start_results = re.findall(r"####,STARTED,(.*)", output)
+  errors = re.findall(r"####,ERROR,(.*)", output)
+
+  output_message = ""
+  if len(mass_start_results) == 0:
+      output_message = "Mass start failed: no competitors_started"
+      error_found = True
+  else:
+      courses_started_list = map(lambda elt: elt.split(",")[1], mass_start_results)
+      started_histogram = Counter(courses_started_list)
+      starts_by_course = map(lambda elt: elt.lstrip("0123456789-") + ":" + (str(started_histogram[elt]) if elt in started_histogram else "0"), courses_to_start)
+      output_message = "Mass starts on course(s): " + ", ".join(starts_by_course)
+      error_found = False
+
+  if (len(errors) > 0):
+      output_message += "\n".join(errors)
+      error_found = True
+
+  root.after(1, lambda: update_status_window(user_info, output_message, error_found))
+
+  return
+
+#####################################################################
+
+def update_status_window(user_info, message, is_error):
+    user_info[USER_STATUS].configure(text=message, fg = "red" if is_error else "green")
+    for button in user_info[USER_BUTTONS]:
+        button.configure(state=tk.NORMAL)
+    return
 
 def replay_stick(user_info):
     user_info[USER_STATUS]["text"] = f"Replaying SI results for {user_info[USER_STICK]}"
@@ -918,7 +1086,10 @@ def sireader_main():
 
         if not run_offline:
           if exit_all_threads: return
-          if not download_mode or forced_registration:
+          if current_mode == MASS_START_MODE:
+              user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
+              make_mass_start_status(user_info, event_key, event)
+          elif (current_mode == REGISTER_MODE) or forced_registration:
               display_as_error = False
               user_info = lookup_si_unit(si_stick_entry[SI_STICK_KEY])
               user_info[USER_RESULTS] = qr_result_string
@@ -928,7 +1099,7 @@ def sireader_main():
                   display_as_error = True
                   message = f"Could not find member for SI unit {user_info[USER_STICK]}"
 
-              if download_mode and forced_registration:
+              if (current_mode == DOWNLOAD_MODE) and forced_registration:
                   message += "\nNo punches found - was stick cleared?"
                   display_as_error = True
 
@@ -936,7 +1107,7 @@ def sireader_main():
                   user_info[USER_MISSED_FINISH] = True
 
               make_status(user_info, message, display_as_error)
-          else:
+          elif (current_mode == DOWNLOAD_MODE):
               user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
               if finish_adjusted:
                   user_info[USER_MISSED_FINISH] = True
@@ -967,8 +1138,15 @@ def sireader_main():
 # Main program
 
 root = tk.Tk()
-root.geometry("750x500");
+root.geometry("750x500")
 root.title("QRienteering SI download station")
+
+menubar = tk.Menu(root)
+options_menu = tk.Menu(menubar, tearoff = 0)
+options_menu.add_command(label = "Mass start from SI unit", command = switch_to_mass_start_mode)
+menubar.add_cascade(label = "Options", menu = options_menu)
+root.config(menu = menubar)
+
 mode_frame = tk.Frame(root, highlightbackground="blue", highlightthickness=5)
 mode_frame.pack(fill=tk.X, side=tk.TOP)
 

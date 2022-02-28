@@ -38,6 +38,8 @@ $courses_to_start = explode(",", $_GET["courses_to_start"]);
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";
 $event_path = get_event_path($event, $key, "..");
 $courses_path = get_courses_path($event, $key, "..");
+
+$parseable_status = "\n<!--\n";
 if (($event != "") && file_exists($event_path) && is_dir($courses_path)) {
 
   // Make sure the courses are valid
@@ -60,32 +62,52 @@ if (($event != "") && file_exists($event_path) && is_dir($courses_path)) {
 
   foreach ($competitor_list as $competitor) {
     $course_for_competitor = file_get_contents("{$competitor_path}/{$competitor}/course");
+    $competitor_started = false;
+    $competitor_already_started = false;
     if (in_array($course_for_competitor, $validated_courses)) {
       $competitor_name = file_get_contents("{$competitor_path}/{$competitor}/name");
 
-      if (!file_exists("{$competitor_path}/{$competitor}/controls_found/start")) {
-        if (!file_exists("{$competitor_path}/{$competitor}/si_stick")) {
-          if (!$si_time_supplied) {
-            $started_array[] = "{$competitor_name} on " . ltrim($course_for_competitor, "0..9-");
-            file_put_contents("{$competitor_path}/{$competitor}/controls_found/start", $mass_start_time);
+      if (file_exists("{$competitor_path}/{$competitor}/si_stick")) {
+        if ($si_time_supplied || $universal_start) {
+          if (!file_exists("{$competitor_path}/{$competitor}/mass_si_stick_start") && !file_exists("{$competitor_path}/{$competitor}/controls_found/start")) {
+            file_put_contents("{$competitor_path}/{$competitor}/mass_si_stick_start", $si_stick_start_time);
+            $competitor_started = true;
+            if ($universal_start) {
+              file_put_contents("{$competitor_path}/{$competitor}/raw_mass_start_time", strftime("%T", $mass_start_time));
+            }
           }
-        }
-        elseif ($si_time_supplied || $universal_start) {
-          file_put_contents("{$competitor_path}/{$competitor}/mass_si_stick_start", $si_stick_start_time);
-          $started_array[] = "{$competitor_name} on " . ltrim($course_for_competitor, "0..9-");
-          if (!$si_time_supplied) {
-            file_put_contents("{$competitor_path}/{$competitor}/raw_mass_start_time", strftime("%T", $mass_start_time));
+          else {
+            $competitor_already_started = true;
           }
         }
       }
       else {
+        if (!file_exists("{$competitor_path}/{$competitor}/controls_found/start")) {
+          if (!$si_time_supplied) {
+            file_put_contents("{$competitor_path}/{$competitor}/controls_found/start", $mass_start_time);
+            $competitor_started = true;
+          }
+        }
+        else {
+          $competitor_already_started = true;
+        }
+      }
+
+      if ($competitor_started) {
+        $started_array[] = "{$competitor_name} on " . ltrim($course_for_competitor, "0..9-");
+        $parseable_status .= "####,STARTED,{$competitor_name},$course_for_competitor\n";
+      }
+
+      if ($competitor_already_started) {
         $already_started_array[] = "{$competitor_name} already on " . ltrim($course_for_competitor, "0..9-");
+        $parseable_status .= "####,ALREADY_STARTED,{$competitor_name},$course_for_competitor\n";
       }
     }
   }
 }
 else {
   $error_string .= "<p>ERROR: No event or bad event ({$event}) specified, bad link?\n";
+  $parseable_status .= "####,ERROR,No event or bad event ({$event})";
 }
 
 
@@ -94,17 +116,18 @@ echo get_web_page_header(true, false, true);
 if ($error_string == "") {
   if (count($already_started_array) > 0) {
     echo "<p>Competitors started BEFORE the mass start:\n";
-    echo "<ul><li>" . join("</li><li>", $already_started_array) . "</li></ul>";
+    echo "<ul><li>" . join("</li>\n<li>", $already_started_array) . "</li></ul>\n";
   }
 
   if (count($invalid_courses) > 0) {
     echo "<p>Bad courses specified, no competitors started:\n";
-    echo "<ul><li>" . join("</li><li>", $invalid_courses) . "</li></ul>";
+    echo "<ul><li>" . join("</li>\n<li>", $invalid_courses) . "</li></ul>\n";
+    $parseable_status .= ("\n" . join("\n", array_map(function ($elt) { return("####,BAD_COURSE,$elt"); }, $invalid_courses)) . "\n");
   }
 
   if (count($started_array) > 0) {
     echo "<p>Competitors started correctly:\n";
-    echo "<ul><li>" . join("</li><li>", $started_array) . "</li></ul>";
+    echo "<ul><li>" . join("</li>\n<li>", $started_array) . "</li></ul>\n";
   }
   else {
     echo "<p>No competitors started - second mass start???";
@@ -113,6 +136,8 @@ if ($error_string == "") {
 else {
   echo "<p>ERROR: $error_string\n<p>No courses started.\n";
 }
+
+echo "{$parseable_status}\n-->\n";
 
 echo get_web_page_footer();
 ?>
