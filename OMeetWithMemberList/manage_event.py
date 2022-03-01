@@ -642,7 +642,7 @@ def registration_window(user_info):
 
     for course in discovered_courses:
         radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course)
-        radio_button.pack(side=tk.TOP)
+        radio_button.pack(side=tk.TOP, anchor=tk.W)
         if USER_COURSE in user_info:
             if (user_info[USER_COURSE] != None) and (user_info[USER_COURSE] == course[0]):
                 chosen_course.set(course[1])
@@ -698,7 +698,7 @@ def mass_start_window(user_info, start_seconds, event_key, event):
         chosen_course = tk.StringVar(mass_start_frame, "unselected")
         course_choices.append(chosen_course)
         radio_button = tk.Checkbutton(choices_frame, text=course[0], onvalue=course[1], offvalue="unselected", variable=chosen_course)
-        radio_button.pack(side=tk.TOP)
+        radio_button.pack(side=tk.TOP, anchor=tk.W)
 
     ok_button = tk.Button(button_frame, text="Mass start course(s)", command=lambda: mass_start_courses(user_info, course_choices, start_seconds, mass_start_frame))
     cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_mass_start_window(mass_start_frame, user_info))

@@ -274,7 +274,7 @@ success();
 # 0 results
 
 %TEST_INFO = qw(Testname TestStartersAtEventYellowScoreMassStart);
-%GET = qw(key UnitTestPlayground courses_to_start 01-Yellow,02-ScoreO universal_start yes);
+%GET = qw(key UnitTestPlayground courses_to_start 01-Yellow,02-ScoreO);
 $GET{"event"} = $event_id;
 $output = run_mass_start_courses();
 
@@ -284,10 +284,25 @@ if (($output !~ /$COMPETITOR_1 on/) || ($output !~ /$COMPETITOR_2 on/) || ($outp
 }
 
 # Started si stick registrants should also appear
+if (($output =~ /$SI_COMPETITOR_1_NAME/) || ($output =~ /$SI_COMPETITOR_2_NAME on/) ||
+    ($output =~ /$SI_COMPETITOR_3_NAME on/)) {
+  error_and_exit("Incorrect si stick results - should only start qr runners.\n$output");
+}
+
+$GET{"si_stick_time"} = 36000;  # 10 am start time
+$output = run_mass_start_courses();
+
+# Started si stick registrants should also appear now
 if (($output =~ /$SI_COMPETITOR_1_NAME/) || ($output !~ /$SI_COMPETITOR_2_NAME on/) ||
     ($output !~ /$SI_COMPETITOR_3_NAME on/)) {
   error_and_exit("Incorrect si stick results from starting only Yellow and ScoreO.\n$output");
 }
+
+if (($output =~ /$COMPETITOR_1 on/) || ($output =~ /$COMPETITOR_2 on/) || ($output =~ /$COMPETITOR_5 on/) ||
+    ($output =~ /$COMPETITOR_6 on/) || ($output =~ /$COMPETITOR_3/) || ($output =~ /$COMPETITOR_4/)) {
+  error_and_exit("QR competitors should not appear for a SI only start of Yellow and ScoreO.\n$output");
+}
+
 
 # Competitor 1 gets two controls
 %COOKIE = qw(key UnitTestPlayground course 01-Yellow);
@@ -341,14 +356,14 @@ success();
 # Competitor 5 finds another control
 # Competitor 6 finds a control
 %TEST_INFO = qw(Testname TestMassStartWhite);
-%GET = qw(key UnitTestPlayground courses_to_start 00-White universal_start yes);
+%GET = qw(key UnitTestPlayground courses_to_start 00-White si_stick_time 37800);  # 10:30am start time
 $GET{"event"} = $event_id;
 $output = run_mass_start_courses();
 
 
 if (($output =~ /$COMPETITOR_1/) || ($output =~ /$COMPETITOR_2/) || ($output =~ /$COMPETITOR_5/) ||
-    ($output =~ /$COMPETITOR_6/) || ($output !~ /$COMPETITOR_3 on/) || ($output !~ /$COMPETITOR_4 on/)) {
-  error_and_exit("Incorrect results from starting only White and not Yellow or ScoreO.\n$output");
+    ($output =~ /$COMPETITOR_6/) || ($output =~ /$COMPETITOR_3 on/) || ($output =~ /$COMPETITOR_4 on/)) {
+  error_and_exit("Incorrect results from starting only White and not Yellow or ScoreO with si time - should not include qr runners.\n$output");
 }
 
 # Started si stick registrants should also appear
@@ -357,6 +372,19 @@ if (($output !~ /$SI_COMPETITOR_1_NAME on/) || ($output =~ /$SI_COMPETITOR_2_NAM
   error_and_exit("Incorrect si stick results from starting only White.\n$output");
 }
 
+%GET = qw(key UnitTestPlayground courses_to_start 00-White);
+$GET{"event"} = $event_id;
+$output = run_mass_start_courses();
+
+if (($output =~ /$COMPETITOR_1/) || ($output =~ /$COMPETITOR_2/) || ($output =~ /$COMPETITOR_5/) ||
+    ($output =~ /$COMPETITOR_6/) || ($output !~ /$COMPETITOR_3 on/) || ($output !~ /$COMPETITOR_4 on/)) {
+  error_and_exit("Incorrect results from starting only White and not Yellow or ScoreO.\n$output");
+}
+
+if (($output =~ /$SI_COMPETITOR_1_NAME on/) || ($output =~ /$SI_COMPETITOR_2_NAME/) ||
+    ($output =~ /$SI_COMPETITOR_3_NAME/)) {
+  error_and_exit("No si competitors should appear for a QR mass start on White.\n$output");
+}
 
 # Competitor 1 finds two more controls
 %COOKIE = qw(key UnitTestPlayground course 01-Yellow);
