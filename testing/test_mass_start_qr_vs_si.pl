@@ -283,11 +283,34 @@ if (($output !~ /$COMPETITOR_1 on/) || ($output !~ /$COMPETITOR_2 on/) || ($outp
   error_and_exit("Incorrect results from starting only Yellow and ScoreO.\n$output");
 }
 
-# Started si stick registrants should also appear
+if ($output =~ /ALREADY_STARTED/) {
+  error_and_exit("No entrants should be in the already started state.\n$output");
+}
+
+if (($output !~ /\#\#\#\#,STARTED,$COMPETITOR_1,01-Yellow/) ||
+    ($output !~ /\#\#\#\#,STARTED,$COMPETITOR_2,01-Yellow/) ||
+    ($output !~ /\#\#\#\#,STARTED,$COMPETITOR_5,02-ScoreO/) ||
+    ($output !~ /\#\#\#\#,STARTED,$COMPETITOR_6,02-ScoreO/)) {
+  error_and_exit("Correct parseable entries not found for Yellow or ScoreO.\n$output");
+}
+
+if (($output =~ /\#\#\#\#,STARTED,$COMPETITOR_3,00-White/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_4,00-White/)) {
+  error_and_exit("Should not see a parseable entry for White.\n$output");
+}
+
+# Was only a QR start, no si entrants should appear at the moment
 if (($output =~ /$SI_COMPETITOR_1_NAME/) || ($output =~ /$SI_COMPETITOR_2_NAME on/) ||
     ($output =~ /$SI_COMPETITOR_3_NAME on/)) {
   error_and_exit("Incorrect si stick results - should only start qr runners.\n$output");
 }
+
+if (($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_1_NAME,/) ||
+    ($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_2_NAME,/) ||
+    ($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_3_NAME,/)) {
+  error_and_exit("Should not see a parseable entry for SI users.\n$output");
+}
+
 
 $GET{"si_stick_time"} = 36000;  # 10 am start time
 $output = run_mass_start_courses();
@@ -302,6 +325,25 @@ if (($output =~ /$COMPETITOR_1 on/) || ($output =~ /$COMPETITOR_2 on/) || ($outp
     ($output =~ /$COMPETITOR_6 on/) || ($output =~ /$COMPETITOR_3/) || ($output =~ /$COMPETITOR_4/)) {
   error_and_exit("QR competitors should not appear for a SI only start of Yellow and ScoreO.\n$output");
 }
+
+if (($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_1_NAME,/) ||
+    ($output !~ /\#\#\#\#,STARTED,$SI_COMPETITOR_2_NAME,/) ||
+    ($output !~ /\#\#\#\#,STARTED,$SI_COMPETITOR_3_NAME,/)) {
+  error_and_exit("Seeing incorrect parseable entries for SI users.\n$output");
+}
+
+if (($output =~ /\#\#\#\#,STARTED,$COMPETITOR_1,01-Yellow/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_2,01-Yellow/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_5,02-ScoreO/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_6,02-ScoreO/)) {
+  error_and_exit("Parseable entries found for QR for Yellow or ScoreO incorrectly.\n$output");
+}
+
+if (($output =~ /\#\#\#\#,STARTED,$COMPETITOR_3,00-White/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_4,00-White/)) {
+  error_and_exit("Should not see a parseable entry for QR White.\n$output");
+}
+
 
 
 # Competitor 1 gets two controls
@@ -366,11 +408,33 @@ if (($output =~ /$COMPETITOR_1/) || ($output =~ /$COMPETITOR_2/) || ($output =~ 
   error_and_exit("Incorrect results from starting only White and not Yellow or ScoreO with si time - should not include qr runners.\n$output");
 }
 
-# Started si stick registrants should also appear
+# si stick registrants should not appear - only a QR start
 if (($output !~ /$SI_COMPETITOR_1_NAME on/) || ($output =~ /$SI_COMPETITOR_2_NAME/) ||
     ($output =~ /$SI_COMPETITOR_3_NAME/)) {
   error_and_exit("Incorrect si stick results from starting only White.\n$output");
 }
+
+# Should be no one already started
+if ($output =~ /ALREADY_STARTED/) {
+  error_and_exit("No entrants should be in the already started state.\n$output");
+}
+
+# Only a SI start, no QR runners should appear
+if (($output =~ /\#\#\#\#,STARTED,$COMPETITOR_1,01-Yellow/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_2,01-Yellow/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_3,00-White/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_4,00-White/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_5,02-ScoreO/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_6,02-ScoreO/)) {
+  error_and_exit("Should not see parseable entries for QR runners on White.\n$output");
+}
+
+if (($output !~ /\#\#\#\#,STARTED,$SI_COMPETITOR_1_NAME,/) ||
+    ($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_2_NAME,/) ||
+    ($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_3_NAME,/)) {
+  error_and_exit("Incorrect parseable entries for SI users.\n$output");
+}
+
 
 %GET = qw(key UnitTestPlayground courses_to_start 00-White);
 $GET{"event"} = $event_id;
@@ -384,6 +448,27 @@ if (($output =~ /$COMPETITOR_1/) || ($output =~ /$COMPETITOR_2/) || ($output =~ 
 if (($output =~ /$SI_COMPETITOR_1_NAME on/) || ($output =~ /$SI_COMPETITOR_2_NAME/) ||
     ($output =~ /$SI_COMPETITOR_3_NAME/)) {
   error_and_exit("No si competitors should appear for a QR mass start on White.\n$output");
+}
+
+# Should be no one already started
+if ($output =~ /ALREADY_STARTED/) {
+  error_and_exit("No entrants should be in the already started state.\n$output");
+}
+
+# Only a QR start, no SI runners should appear
+if (($output =~ /\#\#\#\#,STARTED,$COMPETITOR_1,01-Yellow/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_2,01-Yellow/) ||
+    ($output !~ /\#\#\#\#,STARTED,$COMPETITOR_3,00-White/) ||
+    ($output !~ /\#\#\#\#,STARTED,$COMPETITOR_4,00-White/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_5,02-ScoreO/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_6,02-ScoreO/)) {
+  error_and_exit("Incorrect parseable entries for QR runners on White.\n$output");
+}
+
+if (($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_1_NAME,/) ||
+    ($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_2_NAME,/) ||
+    ($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_3_NAME,/)) {
+  error_and_exit("Parseable entries for SI users should not appear in a QR start.\n$output");
 }
 
 # Competitor 1 finds two more controls
@@ -711,6 +796,119 @@ for $result_file (@results_files) {
 }
 
 success();
+
+###################
+# Test 6 - restart the events (just SI)
+
+%TEST_INFO = qw(Testname RedoMassStartValidateSIStartedEntries);
+%GET = qw(key UnitTestPlayground courses_to_start 00-White,01-Yellow,02-ScoreO si_stick_time 41400);  # 11:30am start time
+$GET{"event"} = $event_id;
+$output = run_mass_start_courses();
+
+# Should be no one already started
+if ($output !~ /ALREADY_STARTED/) {
+  error_and_exit("All entrants should be in the already started state.\n$output");
+}
+
+my($num_started);
+$num_started = () = ($output =~ /(ALREADY_STARTED,.*)/g);
+if ($num_started != 3) {
+  error_and_exit("Should have found three already started SI runners.\n$output");
+}
+
+# No new starts should appear
+if (($output =~ /\#\#\#\#,STARTED,$COMPETITOR_1,01-Yellow/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_2,01-Yellow/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_3,00-White/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_4,00-White/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_5,02-ScoreO/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_6,02-ScoreO/)) {
+  error_and_exit("Incorrect parseable entries for QR runners on White.\n$output");
+}
+
+if (($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_1_NAME,/) ||
+    ($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_2_NAME,/) ||
+    ($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_3_NAME,/)) {
+  error_and_exit("Parseable entries for SI users should not appear - runners already started.\n$output");
+}
+
+success();
+
+###################
+# Test 7 - restart the events (just QR)
+
+%TEST_INFO = qw(Testname RedoMassStartValidateQRStartedEntries);
+%GET = qw(key UnitTestPlayground courses_to_start 00-White,01-Yellow,02-ScoreO);
+$GET{"event"} = $event_id;
+$output = run_mass_start_courses();
+
+# Everyone should have already started
+if ($output !~ /ALREADY_STARTED/) {
+  error_and_exit("All entrants should be in the already started state.\n$output");
+}
+
+my($num_started);
+$num_started = () = ($output =~ /(ALREADY_STARTED,.*)/g);
+if ($num_started != 6) {
+  error_and_exit("Should have found six already started QR runners.\n$output");
+}
+
+# No new starts should appear
+if (($output =~ /\#\#\#\#,STARTED,$COMPETITOR_1,01-Yellow/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_2,01-Yellow/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_3,00-White/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_4,00-White/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_5,02-ScoreO/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_6,02-ScoreO/)) {
+  error_and_exit("Incorrect parseable entries for QR runners on White.\n$output");
+}
+
+if (($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_1_NAME,/) ||
+    ($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_2_NAME,/) ||
+    ($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_3_NAME,/)) {
+  error_and_exit("Parseable entries for SI users should not appear - runners already started.\n$output");
+}
+
+success();
+
+
+###################
+# Test 8 - restart the events (All)
+
+%TEST_INFO = qw(Testname RedoMassStartValidateAllStartedEntries);
+%GET = qw(key UnitTestPlayground courses_to_start 00-White,01-Yellow,02-ScoreO universal_start yes);
+$GET{"event"} = $event_id;
+$output = run_mass_start_courses();
+
+# Everyone should have already started
+if ($output !~ /ALREADY_STARTED/) {
+  error_and_exit("All entrants should be in the already started state.\n$output");
+}
+
+my($num_started);
+$num_started = () = ($output =~ /(ALREADY_STARTED,.*)/g);
+if ($num_started != 9) {
+  error_and_exit("Should have found nine already started runners.\n$output");
+}
+
+# No new starts should appear
+if (($output =~ /\#\#\#\#,STARTED,$COMPETITOR_1,01-Yellow/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_2,01-Yellow/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_3,00-White/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_4,00-White/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_5,02-ScoreO/) ||
+    ($output =~ /\#\#\#\#,STARTED,$COMPETITOR_6,02-ScoreO/)) {
+  error_and_exit("Incorrect parseable entries for QR runners on White.\n$output");
+}
+
+if (($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_1_NAME,/) ||
+    ($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_2_NAME,/) ||
+    ($output =~ /\#\#\#\#,STARTED,$SI_COMPETITOR_3_NAME,/)) {
+  error_and_exit("Parseable entries for SI users should not appear - runners already started.\n$output");
+}
+
+success();
+
 
 ############
 # Cleanup

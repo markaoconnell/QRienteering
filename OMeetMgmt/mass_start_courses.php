@@ -67,7 +67,7 @@ if (($event != "") && file_exists($event_path) && is_dir($courses_path)) {
     if (in_array($course_for_competitor, $validated_courses)) {
       $competitor_name = file_get_contents("{$competitor_path}/{$competitor}/name");
 
-      if (file_exists("{$competitor_path}/{$competitor}/si_stick")) {
+      if (file_exists("{$competitor_path}/{$competitor}/si_stick")) {  # SI Unit competitor
         if ($si_time_supplied || $universal_start) {
           if (!file_exists("{$competitor_path}/{$competitor}/mass_si_stick_start") && !file_exists("{$competitor_path}/{$competitor}/controls_found/start")) {
             file_put_contents("{$competitor_path}/{$competitor}/mass_si_stick_start", $si_stick_start_time);
@@ -81,15 +81,15 @@ if (($event != "") && file_exists($event_path) && is_dir($courses_path)) {
           }
         }
       }
-      else {
-        if (!file_exists("{$competitor_path}/{$competitor}/controls_found/start")) {
-          if (!$si_time_supplied) {
+      else {   # QR competitor
+        if (!$si_time_supplied) {
+          if (!file_exists("{$competitor_path}/{$competitor}/controls_found/start")) {
             file_put_contents("{$competitor_path}/{$competitor}/controls_found/start", $mass_start_time);
             $competitor_started = true;
           }
-        }
-        else {
-          $competitor_already_started = true;
+          else {
+            $competitor_already_started = true;
+          }
         }
       }
 
