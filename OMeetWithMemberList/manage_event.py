@@ -31,8 +31,8 @@ testing_run = 0
 continuous_testing = 0
 url = "http://www.mkoconnell.com/OMeet/not_there"
 fake_offline_event = "offline_downloads"
-use_fake_read_results = True
-use_real_sireader = False
+use_fake_read_results = False
+use_real_sireader = True
 run_offline = False
 
 if (not 'NO_SI_READER_IMPORT' in os.environ) and use_real_sireader:
