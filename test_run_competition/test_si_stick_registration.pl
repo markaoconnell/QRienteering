@@ -40,7 +40,7 @@ if ($output !~ /value="yes" checked/) {
   error_and_exit("SI stick of member found but not checked as default.\n$output");
 }
 
-if ($output !~ /\#\#\#\#,MEMBER_ENTRY,.*,314,mark\@mkoconnell.com,NEOC/) {
+if ($output !~ /\#\#\#\#,MEMBER_ENTRY,.*,314,mark\@mkoconnell.com,5086148225,NEOC/) {
   error_and_exit("Did not find parseable member entry information:\n$output");
 }
 
@@ -69,7 +69,7 @@ if ($output !~ /value="yes" checked/) {
   error_and_exit("SI stick of member found but not checked as default.\n$output");
 }
 
-if ($output !~ /\#\#\#\#,MEMBER_ENTRY,.*,103,,NEOC/) {
+if ($output !~ /\#\#\#\#,MEMBER_ENTRY,.*,103,,,NEOC/) {
   error_and_exit("Did not find parseable member entry information:\n$output");
 }
 

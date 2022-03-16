@@ -56,6 +56,8 @@ $success_string = "";
 
 $club_name = "";
 $preregistered_course = "";
+$cell_phone = "";
+$email_address = "";
 if ($is_preregistered_checkin) {
   $printable_name = get_full_name($member_id, $prereg_matching_info);
   $entrant_path = get_preregistered_entrant($member_id, $event, $key);
@@ -64,11 +66,15 @@ if ($is_preregistered_checkin) {
   $club_member_id = $prereg_matching_info["members_hash"][$member_id]["club_member_id"]; 
   if (($club_member_id != "not_a_member") && ($club_member_id != "")) {
     $email_address = get_member_email($club_member_id, $matching_info);
+    $cell_phone = get_member_cell_phone($club_member_id, $matching_info);
     $club_name = get_club_name($key, $member_properties);
   }
   else {
     if (isset($entrant_info["email_address"])) {
       $email_address = $entrant_info["email_address"];
+    }
+    if (isset($entrant_info["email_address"])) {
+      $cell_phone = $entrant_info["cell_phone"];
     }
     $club_name = isset($entrant_info["club_name"]) ? $entrant_info["club_name"] : "";
   }
@@ -80,11 +86,12 @@ if ($is_preregistered_checkin) {
 else {
   $printable_name = get_full_name($member_id, $matching_info);
   $email_address = get_member_email($member_id, $matching_info);
+  $cell_phone = get_member_cell_phone($member_id, $matching_info);
   $club_name = get_club_name($key, $member_properties);
   $pass_preregistration_marker = "";
 }
 $success_string .= "<p>Welcome {$printable_name}.\n";
-$parseable_result_string .= "\n####,MEMBER_ENTRY," . base64_encode($printable_name) . ",{$member_id},{$email_address},{$club_name}{$preregistered_course}\n";
+$parseable_result_string .= "\n####,MEMBER_ENTRY," . base64_encode($printable_name) . ",{$member_id},{$email_address},{$cell_phone},{$club_name}{$preregistered_course}\n";
 $success_string .= <<<END_OF_FORM
 <form action="./add_safety_info.php">
 <input type=hidden name="member_id" value="{$member_id}"/>

@@ -31,8 +31,8 @@ testing_run = 0
 continuous_testing = 0
 url = "http://www.mkoconnell.com/OMeet/not_there"
 fake_offline_event = "offline_downloads"
-use_fake_read_results = False
-use_real_sireader = True
+use_fake_read_results = True
+use_real_sireader = False
 run_offline = False
 
 if (not 'NO_SI_READER_IMPORT' in os.environ) and use_real_sireader:
@@ -67,6 +67,7 @@ USER_REG_BUTTON = r"register_button"
 USER_STICK = r"stick"
 USER_CELL_PHONE = r"cell_phone"
 USER_MISSED_FINISH = r"no_finish_punch"
+USER_CELL = r"cell_phone"
 USER_COURSE = r"course"   # Only for preregistered entrants
 MISSED_FINISH_PUNCH_SPLIT = 600
 MISSED_FINISH_PUNCH_MESSAGE = "No finish punch detected, recorded finish split of 10m"
@@ -176,7 +177,7 @@ def get_event(event_key):
      for index, possible_event in enumerate(event_ids):
         #print(f"Choice {index} is {possible_event[2]}\n")
         this_choice = tk.Radiobutton(choice_frame, text=base64.standard_b64decode(possible_event[3]).decode("utf-8"), value=index, var=chosen_event)
-        this_choice.pack(side=tk.TOP)
+        this_choice.pack(anchor=tk.W, side=tk.TOP)
 
      choice_button = tk.Button(choice_frame, text="Use chosen event", command=lambda: have_event(choice_frame, event_ids, chosen_event.get()))
      choice_button.pack(side=tk.TOP)
@@ -647,7 +648,16 @@ def registration_window(user_info):
             if (user_info[USER_COURSE] != None) and (user_info[USER_COURSE] == course[0]):
                 chosen_course.set(course[1])
 
-    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, chosen_course, registration_frame))
+    cell_phone = tk.StringVar(registration_frame, "")
+    if USER_CELL in user_info:
+      cell_phone.set(user_info[USER_CELL])
+      
+    cell_phone_label = tk.Label(choices_frame, text="Verify cell phone (re-enter if incorrect):")
+    cell_phone_box = tk.Entry(choices_frame, textvariable = cell_phone)
+    cell_phone_label.pack(side=tk.TOP, anchor=tk.W)
+    cell_phone_box.pack(side=tk.TOP, anchor=tk.W)
+
+    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, chosen_course, cell_phone, registration_frame))
     cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, user_info))
 
     ok_button.pack(side=tk.LEFT)
@@ -660,7 +670,7 @@ def registration_window(user_info):
     return
 
 
-def register_for_course(user_info, chosen_course, enclosing_frame):
+def register_for_course(user_info, chosen_course, cell_phone, enclosing_frame):
     global open_frames
 
     if user_info[USER_NAME] != None:
@@ -672,7 +682,7 @@ def register_for_course(user_info, chosen_course, enclosing_frame):
     enclosing_frame.destroy()
     open_frames.remove(enclosing_frame)
 
-    registration_thread = Thread(target=register_by_si_unit, args=(user_info, chosen_course.get()))
+    registration_thread = Thread(target=register_by_si_unit, args=(user_info, chosen_course.get(), cell_phone.get()))
     registration_thread.start()
     return
 
@@ -775,15 +785,16 @@ def make_lookup_si_unit_call(stick, check_preregistration):
   found_name = base64.standard_b64decode(member_elements[0]).decode("utf-8")
   found_id = member_elements[1]
   found_email = member_elements[2]
-  club_name = member_elements[3]
+  cell_phone = member_elements[3]
+  club_name = member_elements[4]
   course = None
-  if (len(member_elements) > 4):
+  if (len(member_elements) > 5):
       course = member_elements[4]
 
-  return({ USER_NAME : found_name, USER_MEMBER_ID : found_id, USER_EMAIL : found_email, USER_CLUB : club_name, USER_STICK : stick , USER_COURSE : course })
+  return({ USER_NAME : found_name, USER_MEMBER_ID : found_id, USER_EMAIL : found_email, USER_CLUB : club_name, USER_STICK : stick , USER_CELL : cell_phone , USER_COURSE : course })
 
 #######################################################################################
-def register_by_si_unit(user_info, chosen_course):
+def register_by_si_unit(user_info, chosen_course, cell_phone):
 
   if user_info[USER_NAME] == None:
     message = f"SI unit {user_info[USER_STICK]} not registered to a known member, registration canceled"
@@ -803,6 +814,7 @@ def register_by_si_unit(user_info, chosen_course):
                              "safety_info", base64.standard_b64encode("On file".encode("utf-8")).decode("utf-8"),
                              "registration", base64.standard_b64encode("Optimized registration".encode("utf-8")).decode("utf-8"),
                              "member_id", base64.standard_b64encode(found_id.encode("utf-8")).decode("utf-8"),
+                             "cell_phone", base64.standard_b64encode(cell_phone.encode("utf-8")).decode("utf-8"),
                              "is_member", base64.standard_b64encode("yes".encode("utf-8")).decode("utf-8") ]
 
   quoted_course = urllib.parse.quote(chosen_course.encode("utf-8"))
