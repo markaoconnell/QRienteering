@@ -31,8 +31,8 @@ testing_run = 0
 continuous_testing = 0
 url = "http://www.mkoconnell.com/OMeet/not_there"
 fake_offline_event = "offline_downloads"
-use_fake_read_results = True
-use_real_sireader = False
+use_fake_read_results = False
+use_real_sireader = True
 run_offline = False
 
 if (not 'NO_SI_READER_IMPORT' in os.environ) and use_real_sireader:
@@ -770,9 +770,9 @@ def make_lookup_si_unit_call(stick, check_preregistration):
   else:
       extra_params = ""
 
-  if exit_all_threads: return
+  if exit_all_threads: return({ USER_NAME : None , USER_STICK : stick})
   output = make_url_call(SI_LOOKUP, f"key={event_key}&event={event}&si_stick={stick}{extra_params}")
-  if exit_all_threads: return
+  if exit_all_threads: return({ USER_NAME : None , USER_STICK : stick})
 
   if debug or verbose:
     print ("Got results from si lookup: {}".format(output))
