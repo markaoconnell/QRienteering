@@ -139,13 +139,13 @@ foreach ($course_list as $one_course) {
 	// So 2 participlants in the first two and 4 in the last one
 	$regex_matches = array();
         $totals_array["total_participants"]++;
-	if (preg_match('/[+-]\s*(\d+)\s*$/', $possible_unique_starter, $regex_matches)) {
+	if (preg_match('/[+-]\s*(\d{1,2})\s*$/', $possible_unique_starter, $regex_matches)) {
 	  $totals_array["total_participants"] += $regex_matches[1];
 	}
-	else if (preg_match('/\(\s*(\d+)\s*\)\s*$/', $possible_unique_starter, $regex_matches)) {
+	else if (preg_match('/\(\s*(\d{1,2})\s*\)\s*$/', $possible_unique_starter, $regex_matches)) {
 	  $totals_array["total_participants"] += $regex_matches[1];
 	}
-	else if (preg_match('/\s+(\d+)\s*$/', $possible_unique_starter, $regex_matches)) {
+	else if (preg_match('/\s+(\d{1,2})\s*$/', $possible_unique_starter, $regex_matches)) {
           if (preg_match('/troop /i', $possible_unique_starter) || preg_match('/crew /i', $possible_unique_starter) ||
 		  preg_match('/unit /i', $possible_unique_starter)) {
 	    // Assume that this is a troop number, e.g. Troop 160, and not a participant count
