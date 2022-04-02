@@ -211,12 +211,17 @@ sub register_successfully {
   my($readable_course_name) = $course;
   $readable_course_name =~ s/^[0-9]+-//;
   my($competitor_name) = $get_ref->{"competitor_name"};
+  $competitor_name =~ s/--space--/ /g;
+  my($competitor_name_for_match) = $competitor_name;
+  $competitor_name_for_match =~ s/\+/\\+/g;
+  $competitor_name_for_match =~ s/\(/\\(/g;
+  $competitor_name_for_match =~ s/\)/\\)/g;
 
-  if ($output !~ /Registration complete: $competitor_name on ${readable_course_name}/) {
+  if ($output !~ /Registration complete: $competitor_name_for_match on ${readable_course_name}/) {
     error_and_exit("Web page output wrong, registration complete string not found.\n$output");
   }
   
-  if ($output !~ /\#\#\#\#,RESULT,Registered $competitor_name on ${readable_course_name}/) {
+  if ($output !~ /\#\#\#\#,RESULT,Registered $competitor_name_for_match on ${readable_course_name}/) {
     error_and_exit("Did not see parseable registration result:\n$output");
   }
 

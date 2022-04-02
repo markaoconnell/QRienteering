@@ -18,10 +18,10 @@ ck_testing();
 
 // Get the submitted info
 // echo "<p>\n";
-$course = $_GET["course"];
-$event = $_GET["event"];
+$course = isset($_GET["course"]) ? $_GET["course"] : "";
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
 $key = $_GET["key"];
-$download_csv_flag = $_GET["download_csv"];
+$download_csv_flag = isset($_GET["download_csv"]) ? $_GET["download_csv"] : "";
 $download_csv = ($download_csv_flag != "");
 
 

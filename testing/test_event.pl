@@ -6,12 +6,18 @@ require "testHelpers.pl";
 require "success_call_helpers.pl";
 
 my(%GET, %TEST_INFO, %COOKIE, %POST);
-my($COMPETITOR_1) = "Mark_OConnell";
-my($COMPETITOR_2) = "Karen_Yeowell";
-my($COMPETITOR_3) = "LydBid";
-my($COMPETITOR_4) = "JohnnyJohnCon";
+my($COMPETITOR_1) = "Mark_OConnell--space-----space--2";
+my($COMPETITOR_2) = "Karen_Yeowell--space--+2";   # +3 HTML encoded
+my($COMPETITOR_3) = "LydBid--space--(2)";       # (2) HTML encoded
+my($COMPETITOR_4) = "JohnnyJohnCon--space--3";
 my($COMPETITOR_5) = "LinaNowak";
 my($COMPETITOR_6) = "RoxyAndTheGemstoneKitties";
+my($COMPETITOR_1_RE) = "Mark_OConnell - 2";
+my($COMPETITOR_2_RE) = "Karen_Yeowell \\+2";   # +3 HTML encoded
+my($COMPETITOR_3_RE) = "LydBid \\(2\\)";       # (2) HTML encoded
+my($COMPETITOR_4_RE) = "JohnnyJohnCon 3";
+my($COMPETITOR_5_RE) = "LinaNowak";
+my($COMPETITOR_6_RE) = "RoxyAndTheGemstoneKitties";
 my($competitor_1_id, $competitor_2_id, $competitor_3_id, $competitor_4_id, $competitor_5_id, $competitor_6_id);
 
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
@@ -94,7 +100,13 @@ sub check_competitor_on_course {
   my($output);
   $output = qx($cmd);
 
-  if ($output !~ /$competitor_name \($competitor_id\)/) {
+  $competitor_name =~ s/--space--/ /g;
+  my($competitor_name_for_match) = $competitor_name;
+  $competitor_name_for_match =~ s/\+/\\+/g;
+  $competitor_name_for_match =~ s/\(/\\(/g;
+  $competitor_name_for_match =~ s/\)/\\)/g;
+
+  if ($output !~ /$competitor_name_for_match \($competitor_id\)/) {
     error_and_exit("Name and id - $competitor_name and $competitor_id - not found in on_course output.\n$output");
   }
   
@@ -216,8 +228,8 @@ my($output) = check_on_course(6);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;  # Easier to check in a regex without the newlines
 
-if (($no_newline_output !~ m#$COMPETITOR_2</td><td>[0-9:]+</td><td>start</td>#) || ($no_newline_output !~ m#$COMPETITOR_1</td><td>[0-9:]+</td><td>2</td>#) ||
-    ($no_newline_output !~ m#$COMPETITOR_5</td><td>[0-9:]+</td><td>304</td>#)) {
+if (($no_newline_output !~ m#$COMPETITOR_2_RE</td><td>[0-9:]+</td><td>start</td>#) || ($no_newline_output !~ m#$COMPETITOR_1_RE</td><td>[0-9:]+</td><td>2</td>#) ||
+    ($no_newline_output !~ m#$COMPETITOR_5_RE</td><td>[0-9:]+</td><td>304</td>#)) {
   error_and_exit("On course output showing wrong controls.\n$output");
 }
 
@@ -347,7 +359,7 @@ my($output) = check_results(1);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;
 
-if ($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1</a></td><td>[0-9 smh:]+</td>#) {
+if ($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1_RE</a></td><td>[0-9 smh:]+</td>#) {
   error_and_exit("View result output for $COMPETITOR_1 wrong.\n$output");
 }
 
@@ -355,9 +367,9 @@ my($output) = check_on_course(5);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;  # Easier to check in a regex without the newlines
 
-if (($no_newline_output !~ m#$COMPETITOR_2</td><td>[0-9:]+</td><td>3</td>#) || ($no_newline_output !~ m#$COMPETITOR_3</td><td>[0-9:]+</td><td>1</td>#) ||
-    ($no_newline_output !~ m#$COMPETITOR_5</td><td>[0-9:]+</td><td>305</td>#) || ($no_newline_output !~ m#$COMPETITOR_6</td><td>[0-9:]+</td><td>303</td>#) || 
-    ($no_newline_output !~ m#$COMPETITOR_4</td><td>[0-9:]+</td><td>start</td>#) || ($no_newline_output =~ m#$COMPETITOR_1#)) {
+if (($no_newline_output !~ m#$COMPETITOR_2_RE</td><td>[0-9:]+</td><td>3</td>#) || ($no_newline_output !~ m#$COMPETITOR_3_RE</td><td>[0-9:]+</td><td>1</td>#) ||
+    ($no_newline_output !~ m#$COMPETITOR_5_RE</td><td>[0-9:]+</td><td>305</td>#) || ($no_newline_output !~ m#$COMPETITOR_6_RE</td><td>[0-9:]+</td><td>303</td>#) || 
+    ($no_newline_output !~ m#$COMPETITOR_4_RE</td><td>[0-9:]+</td><td>start</td>#) || ($no_newline_output =~ m#$COMPETITOR_1_RE#)) {
   error_and_exit("On course output showing wrong controls.\n$output");
 }
 
@@ -477,12 +489,12 @@ my($output) = check_results(6);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;
 
-if (($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1</a></td><td>[0-9 smh:]+</td>#) ||
-    ($no_newline_output !~ m#,$competitor_2_id">$COMPETITOR_2</a></td><td>DNF</td>#) ||
-    ($no_newline_output !~ m#,$competitor_3_id">$COMPETITOR_3</a></td><td>[0-9 smh:]+</td>#) ||
-    ($no_newline_output !~ m#,$competitor_5_id">$COMPETITOR_5</a></td><td>[0-9 smh:]+</td><td>100</td>#) ||
-    ($no_newline_output !~ m#,$competitor_6_id">$COMPETITOR_6</a></td><td>[0-9 smh:]+</td><td>70</td>#) ||
-    ($no_newline_output !~ m#,$competitor_4_id">$COMPETITOR_4</a></td><td>DNF</td>#)) {
+if (($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1_RE</a></td><td>[0-9 smh:]+</td>#) ||
+    ($no_newline_output !~ m#,$competitor_2_id">$COMPETITOR_2_RE</a></td><td>DNF</td>#) ||
+    ($no_newline_output !~ m#,$competitor_3_id">$COMPETITOR_3_RE</a></td><td>[0-9 smh:]+</td>#) ||
+    ($no_newline_output !~ m#,$competitor_5_id">$COMPETITOR_5_RE</a></td><td>[0-9 smh:]+</td><td>100</td>#) ||
+    ($no_newline_output !~ m#,$competitor_6_id">$COMPETITOR_6_RE</a></td><td>[0-9 smh:]+</td><td>70</td>#) ||
+    ($no_newline_output !~ m#,$competitor_4_id">$COMPETITOR_4_RE</a></td><td>DNF</td>#)) {
   error_and_exit("View result output wrong for 1 or more competitors.\n$output");
 }
 
@@ -535,6 +547,10 @@ $output = qx($cmd);
 
 if ($output !~ /6 unique/) {
   error_and_exit("Did not find 6 unique entrants in output.\n$output");
+}
+
+if ($output !~ /15 total participants/) {
+  error_and_exit("Did not find 15 total participants in output.\n$output");
 }
 
 my($actual_table_rows);

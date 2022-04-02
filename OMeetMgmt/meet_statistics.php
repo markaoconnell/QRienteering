@@ -91,7 +91,7 @@ $course_list = scandir($courses_path);
 $course_list = array_diff($course_list, array(".", ".."));
 
 $totals_array = array("starts" => 0, "members" => 0, "non-members" => 0, "qr_coders" => 0, "self_reported" => 0,
-                      "si_unit" => 0, "dnfs" => 0, "complete" => 0, "unique_starts" => 0);
+                      "si_unit" => 0, "dnfs" => 0, "complete" => 0, "unique_starts" => 0, "total_participants" => 0);
 $course_stats = array();
 $unique_names = array();
 
@@ -132,6 +132,27 @@ foreach ($course_list as $one_course) {
       if (!isset($unique_names[$possible_unique_starter])) {
         $unique_names[$possible_unique_starter] = 1;
 	$totals_array["unique_starts"]++;
+	// Try and figure out how many people went out together - this isn't perfect, but hopefully it works reasonably
+	// If there is a number at the end, then assume that it the number of extra people - so assume an entry like
+	// John Doe +1 or Jane Dough (1) or Jonah Donut - 3
+	// Lastly, also accept Bill Bob 4 as 5 people
+	// So 2 participlants in the first two and 4 in the last one
+	$regex_matches = array();
+        $totals_array["total_participants"]++;
+	if (preg_match('/[+-]\s*(\d+)\s*$/', $possible_unique_starter, $regex_matches)) {
+	  $totals_array["total_participants"] += $regex_matches[1];
+	}
+	else if (preg_match('/\(\s*(\d+)\s*\)\s*$/', $possible_unique_starter, $regex_matches)) {
+	  $totals_array["total_participants"] += $regex_matches[1];
+	}
+	else if (preg_match('/\s*(\d+)\s*$/', $possible_unique_starter, $regex_matches)) {
+	  $totals_array["total_participants"] += $regex_matches[1];
+	}
+	else {
+	  // No number found - assume a single participant
+	  // If ambitious, one could look at the number of spaces to see if maybe multiple names
+	  // were listed, but I'm not that ambitious, at least not yet
+	}
       }
     }
 
@@ -165,6 +186,7 @@ $results_string .= get_percent_data_item($totals_array["complete"], $totals_arra
 $results_string .= "</tr>\n";
 $results_string .= "</table>\n";
 $results_string .= "<p>{$totals_array["unique_starts"]} unique starts\n";
+$results_string .= "<p>{$totals_array["total_participants"]} total participants (best guess)\n";
 
 if ($download_csv) {
   $results_string .= "</pre>\n";
