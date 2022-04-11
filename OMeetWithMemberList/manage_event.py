@@ -36,7 +36,7 @@ use_real_sireader = True
 run_offline = False
 
 if (not 'NO_SI_READER_IMPORT' in os.environ) and use_real_sireader:
-  from sireader2 import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
+  from sireader import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
 
 # URLs for the web site
 VIEW_RESULTS = "OMeet/view_results.php"
@@ -257,7 +257,7 @@ def upload_results(user_info, event_key, event):
       name = base64.standard_b64decode(finish_entries[0]).decode("utf-8")
       if user_info[USER_NAME] != name:
           if user_info[USER_NAME] != None:
-              if verbose: print (f"Updating entry from {user_info[USER_NAME]} to {name} based on result upload.\n")
+              if verbose: print (f"Updating entry from {user_info[USER_NAME]} to {name} based on result download.\n")
           user_info[USER_NAME] = name
       course = finish_entries[1]
       time_taken = int(finish_entries[2])
@@ -274,7 +274,7 @@ def upload_results(user_info, event_key, event):
       output_string += f"{time_taken:02d}s"
       upload_status_string = f"{name} finished {course} in {output_string} - "
   else:
-      upload_status_string = f"Error, upload of {user_info[USER_STICK]} failed - "
+      upload_status_string = f"Error, download of {user_info[USER_STICK]} failed - "
 
   error_list = re.findall(r"####,ERROR,.*", output)
   if (len(error_list) == 0):
@@ -418,7 +418,7 @@ def read_results(si_reader):
     finish_timestamp = get_24hour_timestamp(card_data['finish'])
   else:
     finish_timestamp = 0
-    print (f"No finish timestamp on stick {card_number} - please scan finish and then download.")
+    if debug: print (f"No finish timestamp on stick {card_number} - please scan finish and then download.")
 	
   array_of_punches = []
   if ((finish_timestamp < start_timestamp) and (finish_timestamp < TWELVE_HOURS_IN_SECONDS)):
@@ -549,7 +549,7 @@ def make_status_on_mainloop(user_info, message, is_error, is_connected):
 
     stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy)
     stick_register = tk.Button(button_frame, text="Register for new course")
-    stick_replay = tk.Button(button_frame, text="Retry upload")
+    stick_replay = tk.Button(button_frame, text="Download stick info")
     user_info[USER_BUTTONS] = [stick_ack, stick_register, stick_replay]
     user_info[USER_REG_BUTTON] = stick_register
     user_info[USER_STATUS] = stick_status
