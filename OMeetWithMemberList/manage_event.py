@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+import tkinter.font as font
 from threading import Thread
 import time
 import sys, getopt
@@ -148,8 +149,8 @@ def get_event(event_key):
     if (verbose or debug):
       print("No currently open (actively ongoing) events found.")
     no_event_frame = tk.Frame(root)
-    no_event_label = tk.Label(no_event_frame, text="No events found, suspect:\npossible incorrect configuration\nno internet connectivity", fg="red")
-    no_event_button = tk.Button(no_event_frame, text="Run in offline mode", command=lambda: run_in_offline_mode(no_event_frame))
+    no_event_label = tk.Label(no_event_frame, text="No events found, suspect:\npossible incorrect configuration\nno internet connectivity", fg="red", font=myFont)
+    no_event_button = tk.Button(no_event_frame, text="Run in offline mode", command=lambda: run_in_offline_mode(no_event_frame), font=myFont)
     no_event_label.pack(side=tk.TOP)
     no_event_button.pack(side=tk.TOP)
     no_event_frame.pack(side=tk.TOP)
@@ -171,15 +172,15 @@ def get_event(event_key):
 
 
      choice_frame = tk.Frame(root)
-     choice_prompt = tk.Label(choice_frame, text="Please choose an event:")
+     choice_prompt = tk.Label(choice_frame, text="Please choose an event:", font=myFont)
      choice_prompt.pack(side=tk.TOP)
      chosen_event = tk.IntVar(choice_frame, -1)
      for index, possible_event in enumerate(event_ids):
         #print(f"Choice {index} is {possible_event[2]}\n")
-        this_choice = tk.Radiobutton(choice_frame, text=base64.standard_b64decode(possible_event[3]).decode("utf-8"), value=index, var=chosen_event)
+        this_choice = tk.Radiobutton(choice_frame, text=base64.standard_b64decode(possible_event[3]).decode("utf-8"), value=index, var=chosen_event, font=myFont)
         this_choice.pack(anchor=tk.W, side=tk.TOP)
 
-     choice_button = tk.Button(choice_frame, text="Use chosen event", command=lambda: have_event(choice_frame, event_ids, chosen_event.get()))
+     choice_button = tk.Button(choice_frame, text="Use chosen event", command=lambda: have_event(choice_frame, event_ids, chosen_event.get()), font=myFont)
      choice_button.pack(side=tk.TOP)
      choice_frame.pack(side=tk.TOP)
 
@@ -536,9 +537,9 @@ def make_status_on_mainloop(user_info, message, is_error, is_connected):
     result_frame = tk.LabelFrame(status_frame)
     button_frame = tk.Frame(result_frame)
     label_frame = tk.Frame(result_frame)
-    stick_label = tk.Label(label_frame, text=user_info[USER_STICK], borderwidth=2, relief=tk.SUNKEN)
+    stick_label = tk.Label(label_frame, text=user_info[USER_STICK], borderwidth=2, relief=tk.SUNKEN, font=myFont)
 
-    stick_status = tk.Label(label_frame, text=message)
+    stick_status = tk.Label(label_frame, text=message, font=myFont)
     if USER_MISSED_FINISH in user_info:
         stick_status.configure(text=message + "\n" + MISSED_FINISH_PUNCH_MESSAGE)
         stick_status["fg"] = "red"
@@ -547,9 +548,9 @@ def make_status_on_mainloop(user_info, message, is_error, is_connected):
     else:
         stick_status["fg"] = "green"
 
-    stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy)
-    stick_register = tk.Button(button_frame, text="Register for new course")
-    stick_replay = tk.Button(button_frame, text="Download stick info")
+    stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy, font=myFont)
+    stick_register = tk.Button(button_frame, text="Register for new course", font=myFont)
+    stick_replay = tk.Button(button_frame, text="Download stick info", font=myFont)
     user_info[USER_BUTTONS] = [stick_ack, stick_register, stick_replay]
     user_info[USER_REG_BUTTON] = stick_register
     user_info[USER_STATUS] = stick_status
@@ -584,7 +585,7 @@ def make_mass_start_status_on_mainloop(user_info, event_key, event):
     result_frame = tk.LabelFrame(status_frame)
     button_frame = tk.Frame(result_frame)
     label_frame = tk.Frame(result_frame)
-    stick_label = tk.Label(label_frame, text=user_info[USER_STICK], borderwidth=2, relief=tk.SUNKEN)
+    stick_label = tk.Label(label_frame, text=user_info[USER_STICK], borderwidth=2, relief=tk.SUNKEN, font=myFont)
 
     # Get the start time from the result string
     qr_result_entries = user_info[USER_RESULTS].split(",")
@@ -596,11 +597,11 @@ def make_mass_start_status_on_mainloop(user_info, event_key, event):
     seconds = (start_seconds - (hours * 3600) - (minutes * 60))
     status_message = f"Use mass start time of: {hours:02d}h:{minutes:02d}m:{seconds:02d}s ({start_seconds})."
 
-    stick_status = tk.Label(label_frame, text=status_message)
+    stick_status = tk.Label(label_frame, text=status_message, font=myFont)
     stick_status["fg"] = "green"
 
-    stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy)
-    stick_mass_start = tk.Button(button_frame, text="Mass start course(s)")
+    stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy, font=myFont)
+    stick_mass_start = tk.Button(button_frame, text="Mass start course(s)", font=myFont)
     user_info[USER_BUTTONS] = [stick_ack, stick_mass_start]
     user_info[USER_REG_BUTTON] = None
     user_info[USER_STATUS] = stick_status
@@ -638,11 +639,11 @@ def registration_window(user_info):
         registration_string = f"Register {user_info[USER_NAME]} ({user_info[USER_STICK]})"
     else:
         registration_string = f"Register {user_info[USER_STICK]} (name currently unknown)"
-    info_label = tk.Label(choices_frame, text=registration_string)
+    info_label = tk.Label(choices_frame, text=registration_string, font=myFont)
     info_label.pack(side=tk.TOP)
 
     for course in discovered_courses:
-        radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course)
+        radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course, font=myFont)
         radio_button.pack(side=tk.TOP, anchor=tk.W)
         if USER_COURSE in user_info:
             if (user_info[USER_COURSE] != None) and (user_info[USER_COURSE] == course[0]):
@@ -652,13 +653,13 @@ def registration_window(user_info):
     if USER_CELL in user_info:
       cell_phone.set(user_info[USER_CELL])
       
-    cell_phone_label = tk.Label(choices_frame, text="Verify cell phone (re-enter if incorrect):")
-    cell_phone_box = tk.Entry(choices_frame, textvariable = cell_phone)
+    cell_phone_label = tk.Label(choices_frame, text="Verify cell phone (re-enter if incorrect):", font=myFont)
+    cell_phone_box = tk.Entry(choices_frame, textvariable = cell_phone, font=myFont)
     cell_phone_label.pack(side=tk.TOP, anchor=tk.W)
     cell_phone_box.pack(side=tk.TOP, anchor=tk.W)
 
-    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, chosen_course, cell_phone, registration_frame))
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, user_info))
+    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, chosen_course, cell_phone, registration_frame), font=myFont)
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, user_info), font=myFont)
 
     ok_button.pack(side=tk.LEFT)
     cancel_button.pack(side=tk.LEFT)
@@ -700,18 +701,18 @@ def mass_start_window(user_info, start_seconds, event_key, event):
 
     choices_frame = tk.Frame(mass_start_frame)
     button_frame = tk.Frame(mass_start_frame)
-    info_label = tk.Label(choices_frame, text="Choose course(s) to start:")
+    info_label = tk.Label(choices_frame, text="Choose course(s) to start:", font=myFont)
     info_label.pack(side=tk.TOP)
 
     course_choices = [ ]
     for course in discovered_courses:
         chosen_course = tk.StringVar(mass_start_frame, "unselected")
         course_choices.append(chosen_course)
-        radio_button = tk.Checkbutton(choices_frame, text=course[0], onvalue=course[1], offvalue="unselected", variable=chosen_course)
+        radio_button = tk.Checkbutton(choices_frame, text=course[0], onvalue=course[1], offvalue="unselected", variable=chosen_course, font=myFont)
         radio_button.pack(side=tk.TOP, anchor=tk.W)
 
-    ok_button = tk.Button(button_frame, text="Mass start course(s)", command=lambda: mass_start_courses(user_info, course_choices, start_seconds, mass_start_frame))
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_mass_start_window(mass_start_frame, user_info))
+    ok_button = tk.Button(button_frame, text="Mass start course(s)", command=lambda: mass_start_courses(user_info, course_choices, start_seconds, mass_start_frame), font=myFont)
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_mass_start_window(mass_start_frame, user_info), font=myFont)
 
     ok_button.pack(side=tk.LEFT)
     cancel_button.pack(side=tk.LEFT)
@@ -748,6 +749,68 @@ def kill_mass_start_window(mass_start_window, user_info):
     open_frames.remove(mass_start_window)
     for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.NORMAL)
+
+
+##############################################################################
+def change_font_size():
+    root.after(1, lambda: change_font_size_on_mainloop())
+
+def change_font_size_on_mainloop():
+    global open_frames
+
+    change_font_size_frame = tk.Tk()
+    open_frames.append(change_font_size_frame)
+    change_font_size_frame.geometry("300x300")
+    change_font_size_frame.title("Change font size")
+
+    choices_frame = tk.Frame(change_font_size_frame)
+    button_frame = tk.Frame(change_font_size_frame)
+    info_label = tk.Label(choices_frame, text="Enter new font size:", font=myFont)
+    info_label.pack(side=tk.TOP, anchor=tk.W)
+
+    new_font_size = tk.StringVar(choices_frame, "")
+    if font_size != None:
+      new_font_size.set(str(font_size))
+      
+    font_size_box = tk.Entry(choices_frame, textvariable = new_font_size, font=myFont)
+    font_size_box.pack(side=tk.TOP, anchor=tk.W)
+
+
+    ok_button = tk.Button(button_frame, text="Change font size", command=lambda: make_font_size_change(change_font_size_frame, info_label, new_font_size), font=myFont)
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_change_font_size_frame(change_font_size_frame), font=myFont)
+
+    ok_button.pack(side=tk.LEFT)
+    cancel_button.pack(side=tk.LEFT)
+
+    choices_frame.pack(side=tk.TOP)
+    button_frame.pack(side=tk.TOP)
+
+    change_font_size_frame.protocol("WM_DELETE_WINDOW", lambda: kill_change_font_size_frame(change_font_size_frame))
+    return
+
+#####################################################################
+def make_font_size_change(change_font_size_frame, info_label, new_font_size):
+    global font_size
+    new_font_size_int = -1
+    try:
+        new_font_size_int = int(new_font_size.get())
+    except ValueError:
+        pass
+
+    if new_font_size_int != -1:
+        font_size = new_font_size_int
+        myFont.config(size=font_size)
+        kill_change_font_size_frame(change_font_size_frame)
+    else:
+        info_label.configure(text="Please enter a valid font size:")
+
+
+
+#####################################################################
+def kill_change_font_size_frame(change_font_size_frame):
+    global open_frames
+    change_font_size_frame.destroy()
+    open_frames.remove(change_font_size_frame)
 
 #######################################################################################
 def lookup_si_unit(stick):
@@ -1153,22 +1216,28 @@ root = tk.Tk()
 root.geometry("750x500")
 root.title("QRienteering SI download station")
 
+#Configure the default properties, especially font size
+myFont = font.Font()
+
+
+# Set up the initial layout
 menubar = tk.Menu(root)
 options_menu = tk.Menu(menubar, tearoff = 0)
 options_menu.add_command(label = "Mass start from SI unit", command = switch_to_mass_start_mode)
+options_menu.add_command(label = "Change font size", command = change_font_size)
 menubar.add_cascade(label = "Options", menu = options_menu)
 root.config(menu = menubar)
 
 mode_frame = tk.Frame(root, highlightbackground="blue", highlightthickness=5)
 mode_frame.pack(fill=tk.X, side=tk.TOP)
 
-mode_label = tk.Label(mode_frame, text="Starting up, finding event")
+mode_label = tk.Label(mode_frame, text="Starting up, finding event", font=myFont)
 mode_label.pack(side=tk.LEFT) 
-exit_button = tk.Button(mode_frame, text="Exit", command=kill_all_windows)
+exit_button = tk.Button(mode_frame, text="Exit", command=kill_all_windows, font=myFont)
 exit_button.pack(side=tk.RIGHT)
-mode_button = tk.Button(mode_frame, text="Switch to register mode", command=switch_mode, state=tk.DISABLED)
+mode_button = tk.Button(mode_frame, text="Switch to register mode", command=switch_mode, state=tk.DISABLED, font=myFont)
 mode_button.pack(side=tk.RIGHT, padx=5)
-progress_label = tk.Label(mode_frame, text="Starting up")
+progress_label = tk.Label(mode_frame, text="Starting up", font=myFont)
 progress_label.pack(side=tk.BOTTOM, pady=5)
 
 root.protocol("WM_DELETE_WINDOW", kill_all_windows)
@@ -1184,6 +1253,7 @@ event_key = ""
 event_allows_preregistration = False
 serial_port = ""
 event_found = False
+font_size = None
 
 if ("key" in initializations):
   event_key = initializations["key"]
@@ -1202,6 +1272,10 @@ if ("testing_run" in initializations):
 
 if ("serial_port" in initializations):
   serial_port = initializations["serial_port"]
+
+if ("font_size" in initializations):
+  font_size = int(initializations["font_size"])
+  myFont.config(size=font_size)
 
 replay_si_stick = 0
 
@@ -1226,6 +1300,7 @@ for opt, arg in opts:
     serial_port = arg
   elif opt == "-f":
     use_fake_read_results = True
+    use_real_sireader = False
   elif opt == "-c":
     continuous_testing = True
   elif opt == "-d":
