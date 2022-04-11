@@ -188,6 +188,7 @@ $time_limit_string .= "<input type=hidden name=\"key\" value=\"${key}\">\n";
 $time_limit_string .= "<input type=hidden name=\"event\" value=\"${event}\">\n";
 $time_limit_string .= "<p>Include finished competitors? <input type=checkbox name=\"include_finishers\" value=\"1\"" . ($include_finishers ? " checked " : "")  . ">\n";
 $time_limit_string .= "<p>Show removed competitors? <input type=checkbox name=\"show_removed\" value=\"1\"" . ($show_removed_competitors ? " checked " : "")  . ">\n";
+$time_limit_string .= "<p>Show time of registration? <input type=checkbox name=\"include_date\" value=\"1\"" . ($include_date ? " checked " : "")  . ">\n";
 $time_limit_string .= "<p><input type=submit value=\"Update competitor list\"></form>\n";
 
 
