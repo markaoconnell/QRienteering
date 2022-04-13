@@ -21,7 +21,8 @@ function non_empty($string_value) {
 ck_testing();
 
 $event = $_GET["event"];
-$key = $_GET["key"];
+$key = isset($_GET["key"]) ?  $_GET["key"] : "";
+$key = translate_key($key);
 
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");

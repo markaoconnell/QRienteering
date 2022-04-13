@@ -492,6 +492,7 @@ function parse_registration_info($raw_info_string) {
 // Functions to return the paths to commonly used areas
 $keys_read = false;
 $keys_hash = array();
+$key_translation_hash = array();
 
 // For testing purposes only
 function key_reset() {
@@ -499,18 +500,34 @@ function key_reset() {
 
   $keys_read = false;
   $keys_hash = array();
+  $key_translation_hash = array();
 }
 
-function key_is_valid($key) {
-  global $keys_read, $keys_hash;
+function read_key_file() {
+  global $keys_read, $keys_hash, $key_translation_hash;
 
   if (!$keys_read) {
     if (file_exists("../keys")) {
       $key_file_lines = file("../keys", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
       foreach ($key_file_lines as $key_line) {
         // Format is key, path, password
+        // or xlation_key, real_key  (xlation_key must begin with XLT:)
         $line_pieces = explode(",", $key_line);
-        $keys_hash[trim($line_pieces[0])] = array(trim($line_pieces[1]), trim($line_pieces[2]));
+        $number_pieces = count($line_pieces);
+        if ($number_pieces == 3) {
+          $keys_hash[trim($line_pieces[0])] = array(trim($line_pieces[1]), trim($line_pieces[2]));
+        }
+        else if ($number_pieces == 2) {
+          if (str_starts_with($line_pieces[0], "XLT:")) {
+            $key_translation_hash[substr($line_pieces[0], 4)] = $line_pieces[1];
+          }
+          else {
+          // Do nothing and skip this entry - should really figure out a way to report this somewhere
+          }
+        }
+        else {
+          // Do nothing and skip this entry - should really figure out a way to report this somewhere
+        }
       }
 
       $keys_read = true;
@@ -518,6 +535,31 @@ function key_is_valid($key) {
     else {
       $keys_read = true;
     }
+  }
+
+  return;
+}
+
+function translate_key($key) {
+  global $keys_read, $key_translation_hash;
+
+  if (!$keys_read) {
+    read_key_file();
+  }
+
+  if (isset($key_translation_hash[$key])) {
+    return ($key_translation_hash[$key]);
+  }
+  else {
+    return($key);
+  }
+}
+
+function key_is_valid($key) {
+  global $keys_read, $keys_hash;
+
+  if (!$keys_read) {
+    read_key_file();
   }
 
   return(isset($keys_hash[$key]));

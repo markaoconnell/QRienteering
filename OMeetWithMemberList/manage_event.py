@@ -136,11 +136,16 @@ def read_ini_file():
 
 
 ############################################################################
-def get_event(event_key):
-  output = make_url_call(MANAGE_EVENTS, "key=" + event_key + "&recent_event_timeout=12h")
-  #output = make_url_call(MANAGE_EVENTS, "key=" + event_key + "&recent_event_timeout=120d")
+def get_event(current_event_key):
+  global event_key
+  output = make_url_call(MANAGE_EVENTS, "key=" + current_event_key + "&recent_event_timeout=12h")
+  #output = make_url_call(MANAGE_EVENTS, "key=" + current_event_key + "&recent_event_timeout=120d")
   #print (f"Call to manage_events returned {output}")
   event_matches_list = re.findall(r"####,[A-Z]*_EVENT,.*", output)
+  key_match = re.search(r"####,XLATED_KEY,(.*)", output);
+  if key_match != None:
+    event_key = key_match.group(1);
+    current_event_key = key_match.group(1);
 
   if (debug):
     print("Found " + str(len(event_matches_list)) + " events from the website.")
