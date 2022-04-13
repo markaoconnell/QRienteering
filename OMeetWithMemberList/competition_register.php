@@ -21,7 +21,8 @@ function name_to_link($event_id) {
 
 echo "<p>\n";
 
-$key = $_GET["key"];
+$key = isset($_GET["key"]) ? $_GET["key"] : "";
+$key = translate_key($key);
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }

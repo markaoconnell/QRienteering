@@ -68,12 +68,13 @@ function name_to_stats_links($event_id) {
 }
 
 function name_to_get_qrcodes_link($event_id) {
-  global $base_path, $key, $base_path_for_links;
+  global $base_path, $key, $orig_key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
-  return ("<li><a href={$base_path_for_links}/OMeetMgmt/get_event_qr_codes.php?event={$event_id}&key={$key}> Get QR codes for {$event_fullname}</a>");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/get_event_qr_codes.php?event={$event_id}&key={$key}&orig_key={$orig_key}> Get QR codes for {$event_fullname}</a>");
 }
 
-$key = $_GET["key"];
+$orig_key = isset($_GET["key"]) ? $_GET["key"] : "";
+$key = translate_key($orig_key);
 if (!key_is_valid($key)) {
   error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
 }
@@ -145,6 +146,7 @@ echo implode("\n", array_map(function ($elt) use ($base_path, $key)
                              { return ("####,CLOSED_EVENT,{$elt}," . base64_encode(file_get_contents("{$base_path}/{$elt}/description")) .
                                                  "," . (preregistrations_allowed($elt, $key) ? "Preregistration" : "no")); },
                              $closed_event_list));
+echo "\n####,XLATED_KEY,{$key}\n";
 echo "\n-->\n";
 ?>
 <br>
