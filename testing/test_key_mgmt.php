@@ -52,7 +52,7 @@ else {
 }
 
 // Create the key file
-file_put_contents("../keys", "valid_key,NEOC_BYOM,123456789\nkey2,NEOC_Meets,55555\nToriMeets,Tori/Acton,kdkdkd\n");
+file_put_contents("../keys", "valid_key,NEOC_BYOM,123456789\nkey2,NEOC_Meets,55555\nToriMeets,Tori/Acton,kdkdkd\nXLT:NEOC_Generic,key2\nXLT:NEOC_err,kdkd\nXLT:BYOM,valid_key");
 
 if (key_is_valid("valid_key")) {
   echo "ERROR: \"valid_key\", with key file but no reset, returned valid.\n";
@@ -63,6 +63,38 @@ else {
 }
 
 key_reset();
+
+if (translate_key("NEOC_Generic") != "key2") {
+  echo "ERROR: \"NEOC_Generic\", after translation, was not key2.\n";
+  $failure = true;
+}
+else {
+  echo "Success: NEOC_Generic successfully translates.\n";
+}
+
+if (translate_key("NEOC_err") != "kdkd") {
+  echo "ERROR: \"NEOC_error\", after translation, was not kdkd.\n";
+  $failure = true;
+}
+else {
+  echo "Success: NEOC_err successfully translates.\n";
+}
+
+if (translate_key("not_present") != "not_present") {
+  echo "ERROR: \"not_present\", after translation, was changed incorrectly.\n";
+  $failure = true;
+}
+else {
+  echo "Success: not_present successfully translated to itself.\n";
+}
+
+if (translate_key("valid_key") != "valid_key") {
+  echo "ERROR: \"valid_key\", after translation, was changed incorrectly.\n";
+  $failure = true;
+}
+else {
+  echo "Success: valid_key successfully translated to itself.\n";
+}
 
 if (!key_is_valid("valid_key")) {
   echo "ERROR: \"valid_key\", with key file after reset, returned invalid.\n";
@@ -96,6 +128,14 @@ else {
   echo "Success: key of NotYetThere invalid.\n";
 }
 
+if (key_is_valid("BYOM")) {
+  echo "ERROR: \"BYOM\", with key file after reset, returned valid.\n";
+  $failure = true;
+}
+else {
+  echo "Success: key of BYOM invalid.\n";
+}
+
 if (!key_password_ok("valid_key", "123456789")) {
   echo "ERROR: \"valid_key\", with good password \"123456789\", did not pass validity check.\n";
   $failure = true;
@@ -123,57 +163,78 @@ else {
 $testing_values  = array (
                      array("Hale2020",
                            "key2",
+                           "NEOC_Generic",
                            "../OMeetData/NEOC_Meets/Hale2020/Courses",
                            "../OMeetData/NEOC_Meets/Hale2020/Competitors",
                            "../OMeetData/NEOC_Meets/Hale2020/Results"),
                      array("NobscotMay2020",
+                           "key2",
                            "key2",
                            "../OMeetData/NEOC_Meets/NobscotMay2020/Courses",
                            "../OMeetData/NEOC_Meets/NobscotMay2020/Competitors",
                            "../OMeetData/NEOC_Meets/NobscotMay2020/Results"),
                      array("LegacyEvent",
                            "",
+                           "",
                            "../OMeetData//LegacyEvent/Courses",
                            "../OMeetData//LegacyEvent/Competitors",
                            "../OMeetData//LegacyEvent/Results"),
                      array("NobscotMay2020",
                            "valid_key",
+                           "BYOM",
                            "../OMeetData/NEOC_BYOM/NobscotMay2020/Courses",
                            "../OMeetData/NEOC_BYOM/NobscotMay2020/Competitors",
                            "../OMeetData/NEOC_BYOM/NobscotMay2020/Results"),
                      array("ActonBoxborough",
+                           "ToriMeets",
                            "ToriMeets",
                            "../OMeetData/Tori/Acton/ActonBoxborough/Courses",
                            "../OMeetData/Tori/Acton/ActonBoxborough/Competitors",
                            "../OMeetData/Tori/Acton/ActonBoxborough/Results"));
 
 foreach ($testing_values as $test_array) {
-  if (get_courses_path($test_array[0], $test_array[1], "..") != $test_array[2]) {
-    echo "ERORR: get courses for {$test_array[0]} and {$test_array[1]} did not return {$test_array[2]}.\n";
+  if (get_courses_path($test_array[0], $test_array[1], "..") != $test_array[3]) {
+    echo "ERORR: get courses for {$test_array[0]} and {$test_array[1]} did not return {$test_array[3]}.\n";
     $failure = true;
   }
   else {
     echo "Success: get_courses with {$test_array[0]} and {$test_array[1]}.\n";
   }
 
-  if (get_competitor_directory($test_array[0], $test_array[1], "..") != $test_array[3]) {
-    echo "ERORR: get competitors directory for {$test_array[0]} and {$test_array[1]} did not return {$test_array[3]}.\n";
+  if (get_courses_path($test_array[0], translate_key($test_array[2]), "..") != $test_array[3]) {
+    echo "ERORR: get courses for {$test_array[0]} and translated {$test_array[2]} did not return {$test_array[3]}.\n";
+    $failure = true;
+  }
+  else {
+    echo "Success: get_courses with {$test_array[0]} and translated {$test_array[2]}.\n";
+  }
+
+  if (get_competitor_directory($test_array[0], $test_array[1], "..") != $test_array[4]) {
+    echo "ERORR: get competitors directory for {$test_array[0]} and {$test_array[1]} did not return {$test_array[4]}.\n";
     $failure = true;
   }
   else {
     echo "Success: get_competitor_directory with {$test_array[0]} and {$test_array[1]}.\n";
   }
 
-  if (get_competitor_path($test_array[0] . $test_array[1], $test_array[0], $test_array[1], "..") != ($test_array[3] . "/" . $test_array[0] . $test_array[1])) {
-    echo "ERORR: get competitor for {$test_array[0]} and {$test_array[1]} did not return {$test_array[3]}/{$test_array[0]}{$test_array[1]}.\n";
+  if (get_competitor_directory($test_array[0], translate_key($test_array[2]), "..") != $test_array[4]) {
+    echo "ERORR: get competitors directory for {$test_array[0]} and translated {$test_array[2]} did not return {$test_array[4]}.\n";
+    $failure = true;
+  }
+  else {
+    echo "Success: get_competitor_directory with {$test_array[0]} and translated {$test_array[2]}.\n";
+  }
+
+  if (get_competitor_path($test_array[0] . $test_array[1], $test_array[0], $test_array[1], "..") != ($test_array[4] . "/" . $test_array[0] . $test_array[1])) {
+    echo "ERORR: get competitor for {$test_array[0]} and {$test_array[1]} did not return {$test_array[4]}/{$test_array[0]}{$test_array[1]}.\n";
     $failure = true;
   }
   else {
     echo "Success: get_competitor_path with {$test_array[0]} and {$test_array[1]}.\n";
   }
 
-  if (get_results_path($test_array[0], $test_array[1], "..") != $test_array[4]) {
-    echo "ERORR: get results path for {$test_array[0]} and {$test_array[1]} did not return {$test_array[4]}.\n";
+  if (get_results_path($test_array[0], $test_array[1], "..") != $test_array[5]) {
+    echo "ERORR: get results path for {$test_array[0]} and {$test_array[1]} did not return {$test_array[5]}.\n";
     $failure = true;
   }
   else {

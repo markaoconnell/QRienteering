@@ -576,7 +576,7 @@ function read_key_file() {
           $keys_hash[trim($line_pieces[0])] = array(trim($line_pieces[1]), trim($line_pieces[2]));
         }
         else if ($number_pieces == 2) {
-          if (str_starts_with($line_pieces[0], "XLT:")) {
+          if (substr($line_pieces[0], 0, 4) == "XLT:") {
             $key_translation_hash[substr($line_pieces[0], 4)] = $line_pieces[1];
           }
           else {

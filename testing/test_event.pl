@@ -41,9 +41,18 @@ sub register_one_entrant {
 }
 
 sub check_results {
-  my($expected_table_rows) = @_;
+  return(check_results_inner("UnitTestPlayground", @_));
+}
 
-  %GET = qw(key UnitTestPlayground);
+sub check_results_xlt {
+  return(check_results_inner("UnitTestXlt", @_));
+}
+
+sub check_results_inner {
+  my($key, $expected_table_rows) = @_;
+
+  %GET = qw(key UnitTestPlayground);  # This clears the GET array, and then the key is overridden
+  $GET{"key"} = $key;
   $GET{"event"} = $event_id;
   %COOKIE = ();
   hashes_to_artificial_file();
@@ -67,9 +76,18 @@ sub check_results {
 }
 
 sub check_on_course {
-  my($expected_table_rows) = @_;
+  return(check_on_course_inner("UnitTestPlayground", @_));
+}
+
+sub check_on_course_xlt {
+  return(check_on_course_inner("UnitTestXlt", @_));
+}
+
+sub check_on_course_inner {
+  my($key, $expected_table_rows) = @_;
 
   %GET = qw(key UnitTestPlayground);
+  $GET{"key"} = $key;
   $GET{"event"} = $event_id;
   %COOKIE = ();
   hashes_to_artificial_file();
@@ -89,9 +107,18 @@ sub check_on_course {
 }
 
 sub check_competitor_on_course {
-  my($competitor_name, $competitor_id) = @_;
+  return(check_competitor_on_course_inner("UnitTestPlayground", @_));
+}
+
+sub check_competitor_on_course_xlt {
+  return(check_competitor_on_course_inner("UnitTestXlt", @_));
+}
+
+sub check_competitor_on_course_inner {
+  my($key, $competitor_name, $competitor_id) = @_;
 
   %GET = qw(key UnitTestPlayground include_competitor_id 1);
+  $GET{"key"} = $key;
   $GET{"event"} = $event_id;
   %COOKIE = ();
   hashes_to_artificial_file();
@@ -170,6 +197,9 @@ $competitor_6_id = register_one_entrant($COMPETITOR_6, "02-ScoreO");
 check_results(0);
 check_on_course(6);
 check_competitor_on_course($COMPETITOR_1, $competitor_1_id);
+check_results_xlt(0);
+check_on_course_xlt(6);
+check_competitor_on_course_xlt($COMPETITOR_1, $competitor_1_id);
 
 success();
 
@@ -376,6 +406,9 @@ if (($no_newline_output !~ m#$COMPETITOR_2_RE</td><td>[0-9:]+</td><td>3</td>#) |
 check_competitor_on_course($COMPETITOR_3, $competitor_3_id);
 check_competitor_on_course($COMPETITOR_6, $competitor_6_id);
 check_competitor_on_course($COMPETITOR_5, $competitor_5_id);
+check_competitor_on_course_xlt($COMPETITOR_3, $competitor_3_id);
+check_competitor_on_course_xlt($COMPETITOR_6, $competitor_6_id);
+check_competitor_on_course_xlt($COMPETITOR_5, $competitor_5_id);
 
 success();
 
@@ -485,7 +518,7 @@ finish_score_successfully(70, \%GET, \%COOKIE, \%TEST_INFO);
 
 #########
 # Validate results
-my($output) = check_results(6);
+my($output) = check_results_xlt(6);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;
 
@@ -498,7 +531,7 @@ if (($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1_RE</a></td><td>[0-
   error_and_exit("View result output wrong for 1 or more competitors.\n$output");
 }
 
-check_on_course(0);
+check_on_course_xlt(0);
 
 success();
 
