@@ -164,14 +164,21 @@ sub remove_member_properties {
 
 
 my(%keys);
+my(%xlt_keys);
 sub create_key_file {
   $keys{"UnitTestPlayground"} = "TestingDirectory";
   $keys{"UnitTestAlternate"} = "NewDirectory_foo";
+  $xlt_keys{"UnitTestXlt"} = "UnitTestPlayground";
+  $xlt_keys{"UnitTestAltXlt"} = "UnitTestAlternate";
+  $xlt_keys{"UnitTestBad"} = "no_way_no_how";
 
   open(KEY_FILE, ">../keys");
   my($element);
   foreach $element (keys(%keys)) {
     print KEY_FILE join(",", $element, $keys{$element}, "no_password") . "\n";
+  }
+  foreach $element (keys(%xlt_keys)) {
+    print KEY_FILE join(",", "XLT:" . $element, $xlt_keys{$element}) . "\n";
   }
   close(KEY_FILE);
 

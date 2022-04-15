@@ -165,6 +165,30 @@ finish_with_stick_successfully($competitor_id, "00-White", \%GET, \%COOKIE, \%TE
 success();
 
 
+
+###############
+# Test 7 - Validate non-SI stick users can register using the reusable key
+#
+%TEST_INFO = qw(Testname TestRegistrationUsingReusableKey);
+%GET = qw(key UnitTestXlt);
+%COOKIE = ();  # empty hash
+
+my($output);
+my($cmd) = "php ../OMeetRegistration/register.php";
+hashes_to_artificial_file();
+$output = qx($cmd);
+
+if ($output !~ /hidden.*UnitTestPlayground/) {
+  error_and_exit("Web page output wrong, did not see translated key UnitTestXlt -> UnitTestPlayground.\n$output");
+}
+
+if ($output =~ /hidden.*UnitTestXlt/) {
+  error_and_exit("Web page output wrong, should not see UnitTestXlt in output.\n$output");
+}
+
+
+success();
+
 ############
 # Cleanup
 
