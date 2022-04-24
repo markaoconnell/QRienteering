@@ -646,6 +646,41 @@ function get_extra_prompts($key) {
   return (array());
 }
 
+function event_is_using_nre_classes($event, $key) {
+  return(file_exists(get_event_path($event, $key) . "/using_nre_classes"));
+}
+
+function get_nre_classifcation_file($key) {
+  return("../OMeetData/" . key_to_path($key) . "/default_classes.csv");
+}
+
+// Get the nre classification info
+// The returned information is ordered so that the first match should be the best
+// The information comes back in an array, with each entry
+// [0] -> Course being run
+// [1] -> gender
+// [2] -> min age
+// [3] -> max age
+// [4] -> QR codes allowed
+// [5] -> classification
+function get_nre_classes_info($key) {
+  $nre_classification_file = get_nre_classification_file($key);
+  return(read_and_parse_classification_file($nre_classification_file));
+}
+
+// This is mostly separate from get_nre_classes_info for easier testing in unit tests
+function read_and_parse_classification_file($nre_classification_file) {
+  if (file_exists($nre_classification_file)) {
+    $nre_classification_data = file($nre_classification_file, FILE_IGNORE_NEW_LINES);
+    $filtered_data = array_filter($nre_classification_data, function ($line) { $trimmed = ltrim($line); return (($trimmed != "") && ($trimmed[0] != "#")); });
+    $parsed_classes = array_map(function ($line) { return explode(",", $line); }, $filtered_data);
+    return($parsed_classes);
+  }
+
+  // Return a sensible default - no entries
+  return (array());
+}
+
 function get_qr_code_html_footer_file($key) {
   return("../OMeetData/" . key_to_path($key) . "/qr_code_footer.html");
 }

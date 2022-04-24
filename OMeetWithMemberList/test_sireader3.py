@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from sireader import SIReader, SIReaderReadout, SIReaderControl
+from sireader2 import SIReader, SIReaderReadout, SIReaderControl
 from time import sleep
 
 #SIReader only supports the so called "Extended Protocol" mode. If your
@@ -32,6 +32,8 @@ card_data = si.read_sicard()
 # beep
 si.ack_sicard()
 
+print(f"The card is {card_number}.")
+print(f"The card type is {card_type}.")
 print(f"The start time is {card_data['start']}.")
 print(f"The end time is {card_data['finish']}.")
 print(f"The check time is {card_data['check']} - why do I want this?")

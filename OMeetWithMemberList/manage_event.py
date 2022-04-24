@@ -66,7 +66,6 @@ USER_STATUS = r"status_widget"
 USER_BUTTONS = r"buttons"
 USER_REG_BUTTON = r"register_button"
 USER_STICK = r"stick"
-USER_CELL_PHONE = r"cell_phone"
 USER_MISSED_FINISH = r"no_finish_punch"
 USER_CELL = r"cell_phone"
 USER_COURSE = r"course"   # Only for preregistered entrants
