@@ -80,7 +80,10 @@ if (!key_is_valid($key)) {
 
 $base_path = get_base_path($key, "..");
 if (!is_dir($base_path)) {
-  error_and_exit("No event directory found, please contact administrator to create \"{$base_path}\"");
+  // Note: This will not create the full directory path, only the bottom directory if it does not exist
+  // Not sure if I want to change this or not, I'll leave it alone for the moment
+  mkdir($base_path);
+  #error_and_exit("No event directory found, please contact administrator to create \"{$base_path}\"");
 }
 
 

@@ -12,6 +12,24 @@ if (!key_is_valid($key)) {
 }
 
 $event = isset($_GET["event"]) ? $_GET["event"] : "";
+if ($event == "") {
+  error_and_exit("Unknown event (empty), are you using an authorized link?\n");
+}
+
+$event_path = get_event_path($event, $key, "..");
+if (!is_dir($event_path) || !file_exists("{$event_path}/description")) {
+  error_and_exit("<p>ERROR: Bad event \"{$event}\", was this created properly?" . get_error_info_string());
+}
+
+if (file_exists("{$base_path}/{$event}/done")) {
+  error_and_exit("Event " . file_get_contents("{$base_path}/{$event}/description") . " has completed and registrations are no longer possible.\n");
+}
+
+
+$using_nre_classes = event_is_using_nre_classes($event, $key);
+$birth_year = -1;
+$gender = "";
+$competition_class = "";
  
 $saved_registration_info = array();
 if (isset($_COOKIE["{$key}-safety_info"])) {
@@ -67,6 +85,7 @@ else {
 
 $error_string = "";
 $success_string = "";
+$classification_form_entry = "";
 if (count($possible_member_ids) == 0) {
   error_and_exit("No such member {$first_name_to_lookup} {$last_name_to_lookup} found, please retry or ask for assistance.\n");
 }
@@ -80,12 +99,25 @@ else if (count($possible_member_ids) == 1) {
     }
     $pass_preregistration_marker = "<input type=\"hidden\" name=\"checkin\" value=\"true\">\n";
     $pass_preregistration_marker .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
+    if ($using_nre_classes) {
+      $birth_year = $prereg_matching_info["members_hash"][$possible_member_ids[0]]["birth_year"];
+      $gender = $prereg_matching_info["members_hash"][$possible_member_ids[0]]["gender"];
+      $competition_class = $prereg_matching_info["members_hash"][$possible_member_ids[0]]["class"];
+      $classification_info = encode_entrant_classification_info($birth_year, $gender, $competition_class);
+      $classification_form_entry = "<input type=hidden name=\"classification_info\" value=\"{$classification_info}\">\n";
+    }
   }
   else {
     $printable_name = get_full_name($possible_member_ids[0], $matching_info);
     $si_stick = get_si_stick($possible_member_ids[0], $matching_info);
     $email_address = get_member_email($possible_member_ids[0], $matching_info);
     $pass_preregistration_marker = "";
+    if ($using_nre_classes) {
+      $birth_year = get_member_birth_year($possible_member_ids[0], $matching_info);
+      $gender = get_member_gender($possible_member_ids[0], $matching_info);
+      $classification_info = encode_entrant_classification_info($birth_year, $gender, "");
+      $classification_form_entry = "<input type=hidden name=\"classification_info\" value=\"{$classification_info}\">\n";
+    }
   }
   $success_string .= "<p>Welcome {$printable_name}.\n";
   if ($si_stick != "") {
@@ -111,6 +143,7 @@ else if (count($possible_member_ids) == 1) {
 <input type=hidden name="member_email" value="{$email_address}"/>
 {$pass_preregistration_marker}
 {$pass_registered_si_stick_entry}
+{$classification_form_entry}
 <p> Using Si unit <input type=radio name="using_stick" value="yes" {$yes_checked_by_default} /> <input type=text name="si_stick_number" value="{$si_stick}" />
 <p> Using QR codes <input type=radio name="using_stick" value="no" {$no_checked_by_default}/>
 <input type="hidden" name="key" value="{$key}">
@@ -147,7 +180,7 @@ if ($is_preregistered_checkin) {
   echo "<a href=\"./checkin_preregistered.php?key={$key}&event={$event}\">Start over and re-enter information</a>\n";
 }
 else {
-  echo "<a href=\"./competition_register.php?key={$key}&member=1\">Start over and re-enter information</a>\n";
+  echo "<a href=\"./competition_register.php?key={$key}&event={$event}&member=1\">Start over and re-enter information</a>\n";
 }
 
 echo get_web_page_footer();

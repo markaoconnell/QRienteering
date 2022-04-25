@@ -3,6 +3,7 @@
 use strict;
 
 require "../testing/testHelpers.pl";
+require "../testing/success_call_helpers.pl";
 require "./setup_member_info.pl";
 
 my(%GET, %TEST_INFO, %COOKIE, %POST);
@@ -13,11 +14,19 @@ mkdir(get_base_path("UnitTestPlayground"));
 setup_member_files(get_base_path("UnitTestPlayground"));
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 
+initialize_event();
+create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
+my($event_id) = $TEST_INFO{"event_id"};
+set_no_redirects_for_event($event_id, "UnitTestPlayground");
+
+
+
 ###########
 # Test 1 - Lookup an existing member by SI stick
 # 
 %TEST_INFO = qw(Testname TestGoodMemberLookupBySiStick);
 %GET = qw(key UnitTestPlayground si_stick 2108369);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -51,6 +60,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestSecondGoodMemberLookupBySiStick);
 %GET = qw(key UnitTestPlayground si_stick 559);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -80,6 +90,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestUnregisteredSiStick);
 %GET = qw(key UnitTestPlayground si_stick 271828);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -106,6 +117,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNoSiStickSpecified);
 %GET = qw(key UnitTestPlayground competitor_first_name William competitor_last_name Blake);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -129,6 +141,23 @@ if ($output !~ /\#\#\#\#,ERROR,.*/) {
 
 success();
 
+
+##############
+# Test 5 - Failure, no event specified
+#
+%TEST_INFO = qw(Testname TestNoEventSpecified);
+%GET = qw(key UnitTestPlayground competitor_first_name William competitor_last_name Blake);
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/stick_lookup.php";
+$output = qx($cmd);
+
+if ($output !~ /Unknown event \(empty\)/) {
+  error_and_exit("No message found that the event was not specified.\n$output");
+}
+
+success();
 
 
 #################

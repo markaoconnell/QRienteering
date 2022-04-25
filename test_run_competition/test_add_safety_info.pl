@@ -5,6 +5,7 @@ use MIME::Base64;
 
 require "../testing/testHelpers.pl";
 require "./setup_member_info.pl";
+require "../testing/success_call_helpers.pl";
 
 my(%GET, %TEST_INFO, %COOKIE, %POST);
 my($cmd, $output);
@@ -12,8 +13,13 @@ my($cmd, $output);
 create_key_file();
 mkdir(get_base_path("UnitTestPlayground"));
 setup_member_files(get_base_path("UnitTestPlayground"));
-
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
+
+initialize_event();
+create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
+my($event_id) = $TEST_INFO{"event_id"};
+set_no_redirects_for_event($event_id, "UnitTestPlayground");
+
 
 ###############
 # Take the registration_info field and crack it into its constituent parts
@@ -72,6 +78,7 @@ sub compare_hashes {
 # 
 %TEST_INFO = qw(Testname TestMemberUsingDefaultStick);
 %GET = qw(key UnitTestPlayground member_id 31 using_stick yes si_stick_number 3959473 member_email karen@mkoconnell.com);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -102,6 +109,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestMemberUsingDifferentStick);
 %GET = qw(key UnitTestPlayground member_id 31 using_stick yes si_stick_number 141421);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -131,6 +139,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestMemberWithStickSpecifiedButSaysQRienteering);
 %GET = qw(key UnitTestPlayground member_id 31 using_stick no si_stick_number 141421);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -164,6 +173,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestMemberNotUsingStick);
 %GET = qw(key UnitTestPlayground member_id 31 using_stick no);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -197,6 +207,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestMemberNotUsingStick);
 %GET = qw(key UnitTestPlayground member_id 41 using_stick no);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -229,6 +240,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestMemberUsingStickButNoDefault);
 %GET = qw(key UnitTestPlayground member_id 171 using_stick yes si_stick_number 314159);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -262,6 +274,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestMemberUsingBadStickNumber);
 %GET = qw(key UnitTestPlayground member_id 41 using_stick yes si_stick_number 14xx21);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -281,6 +294,7 @@ success();
 %TEST_INFO = qw(Testname TestMemberUsingEmptyStickNumber);
 %GET = qw(key UnitTestPlayground member_id 41 using_stick yes);
 $GET{"si_stick_number"} = "";
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -299,6 +313,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNoMember);
 %GET = qw(key UnitTestPlayground using_stick yes si_stick_number 14xx21);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -316,6 +331,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestUsingStickWrong);
 %GET = qw(key UnitTestPlayground member_id 314 using_stick maybe si_stick_number 14xx21);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -333,6 +349,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestUsingStickButNoStick);
 %GET = qw(key UnitTestPlayground member_id 314 using_stick yes);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -341,6 +358,24 @@ $output = qx($cmd);
 
 if ($output !~ /Yes specified for SI unit usage but no SI unit number found/) {
   error_and_exit("Bad SI unit error message not found.\n$output");
+}
+
+success();
+
+
+###########
+# Test 11 - Failed registration - no event specified
+# 
+%TEST_INFO = qw(Testname TestWithoutAnEvent);
+%GET = qw(key UnitTestPlayground member_id 314 using_stick no);
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
+$output = qx($cmd);
+
+if ($output !~ /Unknown event \(empty\)/) {
+  error_and_exit("No error message found that the event was not specified.\n$output");
 }
 
 success();

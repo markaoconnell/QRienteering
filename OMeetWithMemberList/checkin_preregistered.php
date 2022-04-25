@@ -57,7 +57,6 @@ if (file_exists("{$base_path}/{$event}/done")) {
   error_and_exit("Event " . file_get_contents("{$base_path}/{$event}/description") . " has completed and checkins are no longer possible.\n");
 }
 
-$radio_button_string = "";
 
 $member_properties = get_member_properties(get_base_path($key));
 $club_name = get_club_name($key, $member_properties);
@@ -65,7 +64,6 @@ $club_name = get_club_name($key, $member_properties);
 ?>
   <p class="title"><u><?php echo $club_name ?> event checkin (only for preregistered entrants):</u>
   <form action="./name_lookup.php">
-  <?php if ($radio_button_string != "") { echo "{$radio_button_string}<p><p>\n"; } ?>
   <p>Lookup by preregistered entrant name:
   <p>First name 
   <input type="text" name="competitor_first_name"><br>

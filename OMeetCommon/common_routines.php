@@ -650,7 +650,36 @@ function event_is_using_nre_classes($event, $key) {
   return(file_exists(get_event_path($event, $key) . "/using_nre_classes"));
 }
 
-function get_nre_classifcation_file($key) {
+// I add the GenderId: to the gender to make the base64 encoding of the gender a little less
+// obvious.  I don't know if this is really worthwhile and maybe I should get rid of this, but I'll keep it
+// for now.
+function encode_entrant_classification_info($birth_year, $gender, $presupplied_class) {
+  if ($presupplied_class != "") {
+    $class_info = "CLASS:" . base64_encode($presupplied_class);
+  }
+  else {
+    $class_info = "CLASS:";
+  }
+  return("BY:" . base64_encode($birth_year) . ",G:" . base64_encode("GenderId:" . $gender) . ",{$class_info}");
+}
+
+function decode_entrant_classification_info($classification_info) {
+  $pieces = explode(",", $classification_info);
+  $pre_hash = array_map(function ($entry) { return (explode(":", $entry)); }, $pieces);
+  $return_hash = array();
+  array_map(function ($entry) use (&$return_hash) { $return_hash[$entry[0]] = base64_decode($entry[1]); }, $pre_hash);
+  if (isset($return_hash["G"])) {
+    $gender_pieces = explode(":", $return_hash["G"]);
+    $return_hash["G"] = $gender_pieces[1];
+    // Comment this out after done with testing
+    if ($gender_pieces[0] != "GenderId") {
+      echo "WARNING: classification info has wrong gender field {$gender_pieces[0]}:{$gender_pieces[1]}\n";
+    }
+  }
+  return($return_hash);
+}
+
+function get_nre_classification_file($key) {
   return("../OMeetData/" . key_to_path($key) . "/default_classes.csv");
 }
 

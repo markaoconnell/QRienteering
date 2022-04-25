@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetRegistration/nre_class_handling.php';
 
 ck_testing();
 
@@ -156,6 +157,45 @@ if (!$error) {
       setcookie("course", $course, $timeout_value, $cookie_path);
       setcookie("event", $_GET["event"], $timeout_value, $cookie_path);
       setcookie("key", $key, $timeout_value, $cookie_path);
+    }
+
+    // Handle the processing of the OUSA classes if necessary
+    if (event_is_using_nre_classes($event, $key)) {
+	    // echo "Event is using nre classes\n";
+      $birth_year = isset($_GET["birth_year"]) ? $_GET["birth_year"] : "";
+      $gender = isset($_GET["gender"]) ? $_GET["gender"] : "";
+      $entrant_class = "";
+      if ($registration_info_supplied && isset($registration_info["classification_info"])) {
+	    // echo "Registration info was supplied\n";
+	$classification_info = $registration_info["classification_info"];
+	$classification_hash = decode_entrant_classification_info($classification_info);
+	// If the entrant class was pre-specified, that wins
+	if ($classification_hash["CLASS"] != "") {
+	  $entrant_class = $classification_hash["CLASS"];
+	}
+	else {
+	  // Birth year and gender from the Member/Non-member registration path trump
+	  // the values from the BYOM registration path in case of conflict
+	  // This should never happen, but best to cater for it explicitly
+	  if ($classification_hash["BY"] != "") {
+	    $birth_year = $classification_hash["BY"];
+	  }
+
+	  if ($classification_hash["G"] != "") {
+	    $gender = $classification_hash["G"];
+	  }
+	}
+      }
+
+      // Now lookup to see what the class is, if necessary
+      if (($entrant_class == "") && ($birth_year != "") && ($gender != "")) {
+	    // echo "Looking up class for {$birth_year} and {$gender}\n";
+        $entrant_class = get_nre_class($event, $key, $gender, $birth_year, $course, $using_si_stick);
+        if ($entrant_class != "") {
+          file_put_contents("{$competitor_path}/competition_class", $entrant_class);
+          $parseable_result_string .= "\n####,CLASS,{$entrant_class}\n";
+	}
+      }
     }
   }
 }

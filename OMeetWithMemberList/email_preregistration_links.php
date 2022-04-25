@@ -31,16 +31,11 @@ echo "<p>\n";
 $base_path = get_base_path($key, "..");
 
 $event = isset($_GET["event"]) ? $_GET["event"] : "";
-//echo "event is \"${event}\"<p>";
-//echo "strcmp returns " . strcmp($event, "") . "<p>\n";
 if (strcmp($event, "") == 0) {
   $event_list = scandir($base_path);
-  //print_r($event_list);
   $event_list = array_filter($event_list, "is_event_preregistration_enabled");
-  //print_r($event_list);
   if (count($event_list) == 1) {
     $event = basename(current($event_list));
-    //echo "Identified event as ${event}\n<p>";
   }
   else if (count($event_list) > 1) {
     $event_output_array = array_map(name_to_link, $event_list);

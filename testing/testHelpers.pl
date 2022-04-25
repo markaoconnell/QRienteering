@@ -104,6 +104,24 @@ sub remove_email_properties {
   unlink($email_props_path);
 }
 
+sub set_using_nre_classes {
+  my($key, $event) = @_;
+  open(NRE_CLASS_FILE, ">" . get_base_path($key) . "/${event}/using_nre_classes");
+  close(NRE_CLASS_FILE);
+}
+
+sub set_nre_classes {
+  my($key) = @_;
+  my($nre_class_file) = get_base_path($key) . "/default_classes.csv";
+  qx(cp default_classes.csv $nre_class_file);
+}
+
+sub remove_nre_classes {
+  my($key) = @_;
+  my($nre_class_file) = get_base_path($key) . "/default_classes.csv";
+  unlink($nre_class_file);
+}
+
 sub set_default_timezone {
   my($key, $default_timezone) = @_;
   my($timezone_file) = get_base_path($key) . "/timezone.txt";
@@ -193,7 +211,7 @@ sub get_base_path {
 sub initialize_event {
   # Make the event for testing purposes
   %{$post_ref} = qw(submit true event_name UnitTesting key UnitTestPlayground
-                    course_description White,201,202,203,204,205--newline--Yellow,202,204,206,208,210--newline--s:ScoreO:300:1,301:10,302:20,303:30,304:40,305:50--newline--Butterfly,401,402,403,401,404,405,401,406,407--newline--s:GetEmAll:0:10,301:1,302:1,303:1,304:1,305:1);
+                    course_description White,201,202,203,204,205--newline--Yellow,202,204,206,208,210--newline--s:ScoreO:300:1,301:10,302:20,303:30,304:40,305:50--newline--Butterfly,401,402,403,401,404,405,401,406,407--newline--s:GetEmAll:0:10,301:1,302:1,303:1,304:1,305:1--newline--Green,101--newline--Red,101--newline--Brown,101);
 #  mkdir("UnitTestingEvent");
 #  mkdir("UnitTestingEvent/Competitors");
 #  mkdir("UnitTestingEvent/Results");
@@ -229,6 +247,14 @@ sub hash_to_registration_info_string {
   #print "String is $info_return\n";
 
   return($info_return);
+}
+
+########################
+# Create the classification information string
+sub values_to_classification_info {
+  my($birth_year, $gender, $preset_class) = @_;
+
+  return("BY:" . encode_base64($birth_year) . ",G:" . encode_base64("GenderId:" . $gender) . ",CLASS:" . encode_base64($preset_class));
 }
 
 ########################

@@ -150,6 +150,27 @@ if (!$registration_info_supplied) {
   }
 }
 
+// If we are using NRE classes in a BYOM, this is where we would prompt for birth_year and gender
+// I actually can't imagine we'll ever do this, but, then again, I could never have imagined
+// that we'd use QRienteering for a local club NRE with reporting based on OUSA classes, so
+// never say never...
+if ((event_is_using_nre_classes($event, $key)) && !$registration_info_supplied) {
+  echo "<br><br><p>If you would like your time to count for national ranking purposes, please enter your birth year and gender.\n";
+  echo "<p>Please leave blank if you are orienteering recreationally or going out in a group (more than 1 person).\n";
+
+  echo "<p>(Optional) Birth year (for ranking purposes), please use 4 digits, e.g. 1973, 2001, etc.<br>\n";
+  $presupplied_birth_year = "value=\"\"";
+  echo "<input type=\"text\" size=50 name=\"birth_year\" {$presupplied_birth_year} ><br><br>\n";
+
+  $male_checked = "";
+  $female_checked = "";
+  $other_checked = "";
+  echo "<p>(Optional) Gender (for ranking purposes): <br>";
+  echo "<input type=radio name=\"gender\" value=\"f\" {$male_checked} >  Female<br>\n";
+  echo "<input type=radio name=\"gender\" value=\"m\" {$female_checked} >  Male<br>\n";
+  echo "<input type=radio name=\"gender\" value=\"o\" {$other_checked} >  Other<br>\n";
+}
+
 
 echo "<p><input type=\"submit\" value=\"Submit Registration\">\n";
 echo "</form>";

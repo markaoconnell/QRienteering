@@ -2,7 +2,7 @@
 
 use strict;
 
-require "testHelpers.pl";
+require "../testing/testHelpers.pl";
 
 my($cmd, $output, $output2, $competitor_id, $path, $time_now);
 my(@file_contents_array);

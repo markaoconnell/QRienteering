@@ -174,6 +174,8 @@ $classification_test_data = array(
 	array("m", 68, "Brown", True, "M65+"),
 	array("m", 68, "Orange", True, "M Orange"),
 	array("m", 68, "Yellow", False, "M Yellow"),
+	array("o", 68, "Yellow", False, ""),
+	array("o", 15, "Red", True, ""),
 	array("m", 55, "LongWhite", False, ""),
 	array("m", 48, "Find40", True, ""),
 	array("f", 18, "ScoreO_Find20", False, ""),
@@ -204,6 +206,45 @@ foreach ($classification_test_data as $classification_test_entry) {
 
 if (!$show_all_classification_tests) {
   echo "Got {$correct_classification_tests} correct classifications, all passed.\n";
+}
+
+function validate_encode_decode_classification($birth_year, $gender, $class) {
+  $return_code = true;
+  $encoded_info = encode_entrant_classification_info($birth_year, $gender, $class);
+  $decoded_info = decode_entrant_classification_info($encoded_info);
+
+  if ($decoded_info["BY"] != $birth_year) {
+    echo "Encode / decode of birth year failed: {$birth_year} supplied, {$decoded_info["BY"]} returned.\n";
+    $return_code = false;
+  }
+
+  if ($decoded_info["G"] != $gender) {
+    echo "Encode / decode of gender failed: {$gender} supplied, {$decoded_info["G"]} returned.\n";
+    $return_code = false;
+  }
+
+  if ($decoded_info["CLASS"] != $class) {
+    echo "Encode / decode of clas failed: {$class} supplied, {$decoded_info["CLASS"]} returned.\n";
+    $return_code = false;
+  }
+
+  return($return_code);
+}
+
+if (!validate_encode_decode_classification("1967", "m", "")) {
+  $failure = true;
+}
+
+if (!validate_encode_decode_classification("1968", "f", "")) {
+  $failure = true;
+}
+
+if (!validate_encode_decode_classification("2001", "f", "F-21")) {
+  $failure = true;
+}
+
+if (!validate_encode_decode_classification("2005", "o", "M/F White")) {
+  $failure = true;
 }
 
 if ($failure) {

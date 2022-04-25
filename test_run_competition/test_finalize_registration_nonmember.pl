@@ -4,6 +4,7 @@ use strict;
 use MIME::Base64;
 
 require "../testing/testHelpers.pl";
+require "../testing/success_call_helpers.pl";
 require "./setup_member_info.pl";
 
 my(%GET, %TEST_INFO, %COOKIE, %POST);
@@ -14,6 +15,13 @@ mkdir(get_base_path("UnitTestPlayground"));
 setup_member_files(get_base_path("UnitTestPlayground"));
 
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
+
+initialize_event();
+create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
+my($event_id) = $TEST_INFO{"event_id"};
+set_no_redirects_for_event($event_id, "UnitTestPlayground");
+
+
 
 ###############
 # Take the registration_info field and crack it into its constituent parts
@@ -72,6 +80,7 @@ sub compare_hashes {
 # 
 %TEST_INFO = qw(Testname TestNonMemberAllInfoProvided);
 %GET = qw(key UnitTestPlayground competitor_first_name Mark competitor_last_name OConnell club_name QOC si_stick 32768 email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470 waiver_signed signed);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -99,6 +108,7 @@ success();
 # Even if they claim to be a NEOC member, they are registered as a non-member
 %TEST_INFO = qw(Testname TestNonMemberAllInfoProvidedClaimsNEOC);
 %GET = qw(key UnitTestPlayground competitor_first_name Isabelle competitor_last_name Davenport club_name NEOC si_stick 32768 email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470 waiver_signed signed);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -126,6 +136,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNonMemberBadStickId);
 %GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson club_name UNO si_stick 1o24 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro waiver_signed signed);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -144,6 +155,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNonMemberNoFirstName);
 %GET = qw(key UnitTestPlayground competitor_last_name Wolfson);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -163,6 +175,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNonMemberNoLastName);
 %GET = qw(key UnitTestPlayground competitor_first_name Dasha);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -181,6 +194,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNonMemberBadSiStick);
 %GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson si_stick abcde);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -201,6 +215,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNonMemberNoFirstName);
 %GET = qw(key UnitTestPlayground competitor_last_name Baldwin club_name UNO si_stick 124 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro waiver_signed signed);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -218,6 +233,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNonMemberNoLastName);
 %GET = qw(key UnitTestPlayground competitor_first_name Karen club_name NEOC si_stick 124 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro waiver_signed signed);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -236,6 +252,7 @@ success();
 # Test with less than all information provided
 %TEST_INFO = qw(Testname TestNonMemberSomeInfoProvided);
 %GET = qw(key UnitTestPlayground competitor_first_name Freddie competitor_last_name Mercury club_name DVOC email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470 waiver_signed signed);
+$GET{"event"} = $event_id;
 $GET{"si_stick"} = "";
 %COOKIE = ();  # empty hash
 
@@ -270,6 +287,7 @@ $GET{"club_name"} = "";
 $GET{"email"} = "";
 $GET{"cell_number"} = "";
 $GET{"car_info"} = "";
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -302,6 +320,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNonMemberNoWaiver);
 %GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson club_name UNO si_stick 1024 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -310,6 +329,24 @@ $output = qx($cmd);
 
 if ($output !~ /The waiver must be acknowledged/) {
   error_and_exit("Did not detect no waiver signed.\n$output");
+}
+
+success();
+
+
+###########
+# Test 14 - Failure - no event specified
+# 
+%TEST_INFO = qw(Testname TestNoEventSpecified);
+%GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson club_name UNO si_stick 1024 email dasha@umassamherst.edu cell_number 5083291200 car_info RedCamaro);
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
+$output = qx($cmd);
+
+if ($output !~ /Unknown event \(empty\)/) {
+  error_and_exit("Did not detect no event specified.\n$output");
 }
 
 success();

@@ -47,11 +47,20 @@ if (file_exists("{$competitor_path}/si_stick")) {
   error_and_exit("<p>ERROR: {$competitor_name} registered for {$event_fullname} with SI unit, should not scan start QR code.");
 }
 
-if (file_exists("${controls_found_path}/start")) {
-  $error_string = "Course " . ltrim($course, "0..9-") . " already started for {$competitor_name}.";
+if (file_exists("{$controls_found_path}/start")) {
+  // If no controls have been found yet, then just update the start time
+  // Remember that the control found could have been one not on the course
+  $controls_done = scandir("{$controls_found_path}");
+  $controls_done = array_diff($controls_done, array(".", "..", "start"));
+  if ((count($controls_done) != 0) || file_exists("{$competitor_path}/extra")) {
+    $error_string = "Course " . ltrim($course, "0..9-") . " already started for {$competitor_name}.";
+  }
+  else {
+    file_put_contents("{$controls_found_path}/start", strval(time()));
+  }
 }
 else {
-  file_put_contents("${controls_found_path}/start", strval(time()));
+  file_put_contents("{$controls_found_path}/start", strval(time()));
 }
 
 if ($error_string == "") {
