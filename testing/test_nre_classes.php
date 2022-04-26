@@ -50,7 +50,7 @@ $classification_test_data = array(
 	array("f", 12, "White", False, "F-12"),
 	array("f", 13, "Yellow", False, "F-14"),
 	array("f", 14, "Yellow", False, "F-14"),
-	array("f", 14, "White", False, "M/F White"),
+	array("f", 14, "White", False, "MF White"),
 	array("f", 14, "Orange", False, "F-16"),
 	array("f", 16, "Orange", False, "F-16"),
 	array("f", 16, "Brown", False, ""),
@@ -62,7 +62,7 @@ $classification_test_data = array(
 	array("f", 12, "White", True, "F-12"),
 	array("f", 13, "Yellow", True, "F-14"),
 	array("f", 14, "Yellow", True, "F-14"),
-	array("f", 14, "White", True, "M/F White"),
+	array("f", 14, "White", True, "MF White"),
 	array("f", 14, "Orange", True, "F-16"),
 	array("f", 16, "Orange", True, "F-16"),
 	array("f", 16, "Brown", False, ""),
@@ -115,7 +115,7 @@ $classification_test_data = array(
 	array("m", 12, "White", False, "M-12"),
 	array("m", 13, "Yellow", False, "M-14"),
 	array("m", 14, "Yellow", False, "M-14"),
-	array("m", 14, "White", False, "M/F White"),
+	array("m", 14, "White", False, "MF White"),
 	array("m", 14, "Orange", False, "M-16"),
 	array("m", 16, "Orange", False, "M-16"),
 	array("m", 16, "Brown", False, ""),
@@ -129,7 +129,7 @@ $classification_test_data = array(
 	array("m", 12, "White", True, "M-12"),
 	array("m", 13, "Yellow", True, "M-14"),
 	array("m", 14, "Yellow", True, "M-14"),
-	array("m", 14, "White", True, "M/F White"),
+	array("m", 14, "White", True, "MF White"),
 	array("m", 14, "Orange", True, "M-16"),
 	array("m", 16, "Orange", True, "M-16"),
 	array("m", 16, "Brown", False, ""),
@@ -243,7 +243,7 @@ if (!validate_encode_decode_classification("2001", "f", "F-21")) {
   $failure = true;
 }
 
-if (!validate_encode_decode_classification("2005", "o", "M/F White")) {
+if (!validate_encode_decode_classification("2005", "o", "MF White")) {
   $failure = true;
 }
 
