@@ -270,7 +270,20 @@ sub register_successfully {
 ###########
 # Successfully register a new competitor
 sub register_member_successfully {
-  my($get_ref, $cookie_ref, $registration_info_ref, $test_info_ref) = @_;
+  return (register_member_successfully_inner(@_, 0));
+}
+
+#################
+# Success register a new competitor at an NRE
+sub register_member_successfully_for_nre {
+  my($get_ref, $cookie_ref, $registration_info_ref, $test_info_ref, $expecting_class_entry) = @_;
+  return (register_member_successfully_inner($get_ref, $cookie_ref, $registration_info_ref, $test_info_ref, $expecting_class_entry));
+}
+
+###########
+# Successfully register a new competitor
+sub register_member_successfully_inner {
+  my($get_ref, $cookie_ref, $registration_info_ref, $test_info_ref, $expecting_class_entry) = @_;
 
   $test_info_ref->{"subroutine"} = "register_member_successfully";
   my($raw_registration_info) = hash_to_registration_info_string($registration_info_ref);
@@ -285,15 +298,19 @@ sub register_member_successfully {
   $readable_course_name =~ s/^[0-9]+-//;
   my($competitor_name) = $get_ref->{"competitor_name"};
   $competitor_name =~ s/--space--/ /g;
+  my($competitor_name_for_match) = $competitor_name;
+  $competitor_name_for_match =~ s/\+/\\+/g;
+  $competitor_name_for_match =~ s/\(/\\(/g;
+  $competitor_name_for_match =~ s/\)/\\)/g;
 
-  if ($output !~ /Registration complete: $competitor_name on ${readable_course_name}/) {
+  if ($output !~ /Registration complete: $competitor_name_for_match on ${readable_course_name}/) {
     error_and_exit("Web page output wrong, registration complete string not found.\n$output");
   }
-
-  if ($output !~ /\#\#\#\#,RESULT,Registered $competitor_name on ${readable_course_name}/) {
+  
+  if ($output !~ /\#\#\#\#,RESULT,Registered $competitor_name_for_match on ${readable_course_name}/) {
     error_and_exit("Did not see parseable registration result:\n$output");
   }
-  
+
   #print $output;
   
   my($competitor_id);
@@ -315,8 +332,15 @@ sub register_member_successfully {
     error_and_exit("One of $path/name or $path/course does not exist.");
   }
   
-  if ($registration_info_ref->{"si_stick"} ne "") {
+  my($has_stick) = ($registration_info_ref->{"si_stick"} ne "");
+  if ($has_stick && !$expecting_class_entry) {
     @directory_contents = check_directory_contents($path, qw(name course controls_found registration_info si_stick));
+  }
+  elsif ($has_stick && $expecting_class_entry) {
+    @directory_contents = check_directory_contents($path, qw(name course controls_found registration_info si_stick competition_class));
+  }
+  elsif (!$has_stick && $expecting_class_entry) {
+    @directory_contents = check_directory_contents($path, qw(name course controls_found registration_info competition_class));
   }
   else {
     @directory_contents = check_directory_contents($path, qw(name course controls_found registration_info));

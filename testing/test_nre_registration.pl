@@ -111,54 +111,6 @@ print $output;
 
 success();
 
-exit();
-
-
-
-###########
-# Test 2 - Register with no name
-# Should return an error message
-%TEST_INFO = qw(Testname TestStartRegistrationNoName);
-%COOKIE = ();
-%GET = qw(key UnitTestPlayground);  # empty hash
-$GET{"event"} = $event_id;
-$GET{"course"} = "00-White";
-$COOKIE{"testing_cookie_support"} = "can--space--this--space--be--space--read?";
-hashes_to_artificial_file();
-$cmd = "php ../OMeetRegistration/register_competitor.php";
-$output = qx($cmd);
-
-if ($output !~ /Competitor name must be specified/) {
-  error_and_exit("Web page output wrong, should receive error about no competitor name.\n$output");
-}
-
-#print $output;
-
-success();
-
-
-
-###########
-# Test 3 - Register with no course
-# Should return an error message
-%TEST_INFO = qw(Testname TestStartRegistrationNoCourse);
-%COOKIE = ();
-%GET = qw(key UnitTestPlayground);  # empty hash
-$GET{"event"} = $event_id;
-$GET{"competitor_name"} = $COMPETITOR_NAME;
-$COOKIE{"testing_cookie_support"} = "can--space--this--space--be--space--read?";
-hashes_to_artificial_file();
-$cmd = "php ../OMeetRegistration/register_competitor.php";
-$output = qx($cmd);
-
-if ($output !~ /Course must be specified/) {
-  error_and_exit("Web page output wrong, should receive error about no course specified.\n$output");
-}
-
-#print $output;
-
-success();
-
 
 
 

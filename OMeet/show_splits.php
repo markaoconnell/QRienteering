@@ -7,7 +7,6 @@ ck_testing();
 
 // Get the submitted info
 // echo "<p>\n";
-$course = $_GET["course"];
 $time_and_competitor = $_GET["entry"];
 $event = $_GET["event"];
 $key = $_GET["key"];
