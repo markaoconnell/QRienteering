@@ -104,7 +104,6 @@ echo "<p class=title><u>Safety information</u>\n";
 echo "<form action=\"./finalize_registration.php\">\n";
 if ($is_preregistered_checkin) {
   echo "<input type=hidden name=\"checkin\" value=\"true\">\n";
-  echo "<input type=hidden name=\"event\" value=\"{$event}\">\n";
 }
 
 if ($has_preset_id) {

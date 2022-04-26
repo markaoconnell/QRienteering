@@ -16,7 +16,7 @@ function name_to_link($event_id) {
   global $key, $base_path, $params_to_pass;
 
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
-  return ("<li><a href=./competition_register.php?event={$event_id}&key={$key}{$params_to_passs}>{$event_fullname}</a>\n");
+  return ("<li><a href=./competition_register.php?event={$event_id}&key={$key}{$params_to_pass}>{$event_fullname}</a>\n");
 }
 
 echo "<p>\n";
