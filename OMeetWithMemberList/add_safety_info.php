@@ -247,8 +247,8 @@ if ($using_nre_classes && (!$classification_info_supplied || ($classification_in
     }
   }
   echo "<p>(Optional) Gender (for ranking purposes): <br>";
-  echo "<input type=radio name=\"gender\" value=\"f\" {$male_checked} >  Female<br>\n";
-  echo "<input type=radio name=\"gender\" value=\"m\" {$female_checked} >  Male<br>\n";
+  echo "<input type=radio name=\"gender\" value=\"f\" {$female_checked} >  Female<br>\n";
+  echo "<input type=radio name=\"gender\" value=\"m\" {$male_checked} >  Male<br>\n";
   echo "<input type=radio name=\"gender\" value=\"o\" {$other_checked} >  Other<br>\n";
 }
 ?>

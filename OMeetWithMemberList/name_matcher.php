@@ -6,7 +6,7 @@ $MAX_CHECK_DISTANCE = 3;
 // Read in the members together with si_stick, if they have one
 // Results
 // Hash from si_stick -> member
-// Hash from member-> hash(first -> , last ->, full_name ->, si_stick->, email->, cell_phone->)
+// Hash from member-> hash(first -> , last ->, full_name ->, si_stick->, email->, cell_phone->, birth_year->, gender->)
 // Hash from last -> member list
 // Hash from full_name -> member_id (assumes unique names amongst the membership)
 // Hash of equivalent nicknames
@@ -32,13 +32,17 @@ function read_names_info($member_file, $nicknames_file) {
       $si_stick = isset($pieces[3]) ? $pieces[3] : "";
       $email_address = isset($pieces[4]) ? $pieces[4] : "";
       $cell_phone = isset($pieces[5]) ? $pieces[5] : "";
+      $birth_year = isset($pieces[6]) ? $pieces[6] : "";
+      $gender = isset($pieces[7]) ? $pieces[7] : "";
       if (!isset($full_name_hash[$lower_case_full_name])) {
         $member_hash[$pieces[0]] = array("first" => $pieces[1],
                                          "last" => $pieces[2],
                                          "full_name" => "{$pieces[1]} {$pieces[2]}",
                                          "si_stick"=> $si_stick,
 					 "email" => $email_address,
-                                         "cell_phone" => $cell_phone);
+					 "cell_phone" => $cell_phone,
+	                                 "birth_year" => $birth_year,
+	                                 "gender" => $gender);
         $last_name_hash[strtolower($pieces[2])][] = $pieces[0]; 
         $full_name_hash[$lower_case_full_name] = $pieces[0];
       }
@@ -86,12 +90,19 @@ function get_member_cell_phone($member_id, $matching_info) {
   return($matching_info["members_hash"][$member_id]["cell_phone"]);
 }
 
+function get_member_birth_year($member_id, $matching_info) {
+  return($matching_info["members_hash"][$member_id]["birth_year"]);
+}
+
+function get_member_gender($member_id, $matching_info) {
+  return($matching_info["members_hash"][$member_id]["gender"]);
+}
+
 function get_si_stick($member_id, $matching_info) {
   return($matching_info["members_hash"][$member_id]["si_stick"]);
 }
 
 function get_by_si_stick($si_stick, $matching_info) {
-  
   return(isset($matching_info["si_hash"][$si_stick]) ? $matching_info["si_hash"][$si_stick] : "");
 }
 

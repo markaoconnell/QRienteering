@@ -716,6 +716,12 @@ function set_class_for_competitor($competitor_path, $class) {
   file_put_contents("{$competitor_path}/competition_class", $class);
 }
 
+function remove_class_for_competitor($competitor_path) {
+  if (file_exists("{$competitor_path}/competition_class")) {
+    unlink("{$competitor_path}/competition_class");
+  }
+}
+
 function competitor_has_class($competitor_path) {
   return(file_exists("{$competitor_path}/competition_class"));
 }

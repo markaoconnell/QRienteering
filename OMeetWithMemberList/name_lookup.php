@@ -98,7 +98,6 @@ else if (count($possible_member_ids) == 1) {
       $email_address = get_member_email($member_id, $matching_info);
     }
     $pass_preregistration_marker = "<input type=\"hidden\" name=\"checkin\" value=\"true\">\n";
-    $pass_preregistration_marker .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
     if ($using_nre_classes) {
       $birth_year = $prereg_matching_info["members_hash"][$possible_member_ids[0]]["birth_year"];
       $gender = $prereg_matching_info["members_hash"][$possible_member_ids[0]]["gender"];
@@ -147,6 +146,7 @@ else if (count($possible_member_ids) == 1) {
 <p> Using Si unit <input type=radio name="using_stick" value="yes" {$yes_checked_by_default} /> <input type=text name="si_stick_number" value="{$si_stick}" />
 <p> Using QR codes <input type=radio name="using_stick" value="no" {$no_checked_by_default}/>
 <input type="hidden" name="key" value="{$key}">
+<input type="hidden" name="event" value="{$event}">
 <p><input type="submit" value="Fill in safety information"/>
 </form>
 END_OF_FORM;
