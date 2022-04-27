@@ -624,15 +624,18 @@ def make_mass_start_status_on_mainloop(user_info, event_key, event):
     result_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
 
 def registration_window(user_info):
-    global open_frames
-
     for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.DISABLED)
 
     registration_frame = tk.Tk()
-    open_frames.append(registration_frame)
     registration_frame.geometry("300x300")
     registration_frame.title("Register entrant")
+
+    localFont = font.Font(root = registration_frame)
+    if font_size != None:
+        localFont.config(size=font_size)
+
+    add_frame_and_font(registration_frame, localFont)
 
     choices_frame = tk.Frame(registration_frame)
     button_frame = tk.Frame(registration_frame)
@@ -642,11 +645,11 @@ def registration_window(user_info):
         registration_string = f"Register {user_info[USER_NAME]} ({user_info[USER_STICK]})"
     else:
         registration_string = f"Register {user_info[USER_STICK]} (name currently unknown)"
-    info_label = tk.Label(choices_frame, text=registration_string, font=myFont)
+    info_label = tk.Label(choices_frame, text=registration_string, font=localFont)
     info_label.pack(side=tk.TOP)
 
     for course in discovered_courses:
-        radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course, font=myFont)
+        radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course, font=localFont)
         radio_button.pack(side=tk.TOP, anchor=tk.W)
         if USER_COURSE in user_info:
             if (user_info[USER_COURSE] != None) and (user_info[USER_COURSE] == course[0]):
@@ -656,13 +659,13 @@ def registration_window(user_info):
     if USER_CELL in user_info:
       cell_phone.set(user_info[USER_CELL])
       
-    cell_phone_label = tk.Label(choices_frame, text="Verify cell phone (re-enter if incorrect):", font=myFont)
-    cell_phone_box = tk.Entry(choices_frame, textvariable = cell_phone, font=myFont)
+    cell_phone_label = tk.Label(choices_frame, text="Verify cell phone (re-enter if incorrect):", font=localFont)
+    cell_phone_box = tk.Entry(choices_frame, textvariable = cell_phone, font=localFont)
     cell_phone_label.pack(side=tk.TOP, anchor=tk.W)
     cell_phone_box.pack(side=tk.TOP, anchor=tk.W)
 
-    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, chosen_course, cell_phone, registration_frame), font=myFont)
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, user_info), font=myFont)
+    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, chosen_course, cell_phone, registration_frame), font=localFont)
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, user_info), font=localFont)
 
     ok_button.pack(side=tk.LEFT)
     cancel_button.pack(side=tk.LEFT)
@@ -675,8 +678,6 @@ def registration_window(user_info):
 
 
 def register_for_course(user_info, chosen_course, cell_phone, enclosing_frame):
-    global open_frames
-
     if user_info[USER_NAME] != None:
         message = f"Attempting to register {user_info[USER_NAME]} ({user_info[USER_STICK]}) on " 
     else:
@@ -684,7 +685,7 @@ def register_for_course(user_info, chosen_course, cell_phone, enclosing_frame):
 
     user_info[USER_STATUS]["text"] = message + chosen_course.get().lstrip("0123456789-")
     enclosing_frame.destroy()
-    open_frames.remove(enclosing_frame)
+    remove_frame(enclosing_frame)
 
     registration_thread = Thread(target=register_by_si_unit, args=(user_info, chosen_course.get(), cell_phone.get()))
     registration_thread.start()
@@ -692,30 +693,33 @@ def register_for_course(user_info, chosen_course, cell_phone, enclosing_frame):
 
 
 def mass_start_window(user_info, start_seconds, event_key, event):
-    global open_frames
-
     for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.DISABLED)
 
     mass_start_frame = tk.Tk()
-    open_frames.append(mass_start_frame)
     mass_start_frame.geometry("300x300")
     mass_start_frame.title("Mass Start course(s)")
 
+    localFont = font.Font(root = mass_start_frame)
+    if font_size != None:
+        localFont.config(size=font_size)
+
+    add_frame_and_font(mass_start_frame, localFont)
+
     choices_frame = tk.Frame(mass_start_frame)
     button_frame = tk.Frame(mass_start_frame)
-    info_label = tk.Label(choices_frame, text="Choose course(s) to start:", font=myFont)
+    info_label = tk.Label(choices_frame, text="Choose course(s) to start:", font=localFont)
     info_label.pack(side=tk.TOP)
 
     course_choices = [ ]
     for course in discovered_courses:
         chosen_course = tk.StringVar(mass_start_frame, "unselected")
         course_choices.append(chosen_course)
-        radio_button = tk.Checkbutton(choices_frame, text=course[0], onvalue=course[1], offvalue="unselected", variable=chosen_course, font=myFont)
+        radio_button = tk.Checkbutton(choices_frame, text=course[0], onvalue=course[1], offvalue="unselected", variable=chosen_course, font=localFont)
         radio_button.pack(side=tk.TOP, anchor=tk.W)
 
-    ok_button = tk.Button(button_frame, text="Mass start course(s)", command=lambda: mass_start_courses(user_info, course_choices, start_seconds, mass_start_frame), font=myFont)
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_mass_start_window(mass_start_frame, user_info), font=myFont)
+    ok_button = tk.Button(button_frame, text="Mass start course(s)", command=lambda: mass_start_courses(user_info, course_choices, start_seconds, mass_start_frame), font=localFont)
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_mass_start_window(mass_start_frame, user_info), font=localFont)
 
     ok_button.pack(side=tk.LEFT)
     cancel_button.pack(side=tk.LEFT)
@@ -727,8 +731,6 @@ def mass_start_window(user_info, start_seconds, event_key, event):
     return
 
 def mass_start_courses(user_info, course_choices, start_seconds, enclosing_frame):
-    global open_frames
-
     courses_to_start = list(filter(lambda elt: elt.get() != "unselected", course_choices))
     courses_to_start = list(map(lambda elt: elt.get(), courses_to_start))
 
@@ -741,15 +743,14 @@ def mass_start_courses(user_info, course_choices, start_seconds, enclosing_frame
         user_info[USER_STATUS]["text"] = "No courses chosen for mass start"
 
     enclosing_frame.destroy()
-    open_frames.remove(enclosing_frame)
+    remove_frame(enclosing_frame)
 
     return
 
 #####################################################################
 def kill_mass_start_window(mass_start_window, user_info):
-    global open_frames
     mass_start_window.destroy()
-    open_frames.remove(mass_start_window)
+    remove_frame(mass_start_window)
     for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.NORMAL)
 
@@ -759,28 +760,31 @@ def change_font_size():
     root.after(1, lambda: change_font_size_on_mainloop())
 
 def change_font_size_on_mainloop():
-    global open_frames
-
     change_font_size_frame = tk.Tk()
-    open_frames.append(change_font_size_frame)
     change_font_size_frame.geometry("300x300")
     change_font_size_frame.title("Change font size")
 
+    localFont = font.Font(root = change_font_size_frame)
+    if font_size != None:
+        localFont.config(size=font_size)
+
+    add_frame_and_font(change_font_size_frame, localFont)
+
     choices_frame = tk.Frame(change_font_size_frame)
     button_frame = tk.Frame(change_font_size_frame)
-    info_label = tk.Label(choices_frame, text="Enter new font size:", font=myFont)
+    info_label = tk.Label(choices_frame, text="Enter new font size:", font=localFont)
     info_label.pack(side=tk.TOP, anchor=tk.W)
 
     new_font_size = tk.StringVar(choices_frame, "")
     if font_size != None:
       new_font_size.set(str(font_size))
       
-    font_size_box = tk.Entry(choices_frame, textvariable = new_font_size, font=myFont)
+    font_size_box = tk.Entry(choices_frame, textvariable = new_font_size, font=localFont)
     font_size_box.pack(side=tk.TOP, anchor=tk.W)
 
 
-    ok_button = tk.Button(button_frame, text="Change font size", command=lambda: make_font_size_change(change_font_size_frame, info_label, new_font_size), font=myFont)
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_change_font_size_frame(change_font_size_frame), font=myFont)
+    ok_button = tk.Button(button_frame, text="Change font size", command=lambda: make_font_size_change(change_font_size_frame, info_label, new_font_size), font=localFont)
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_change_font_size_frame(change_font_size_frame), font=localFont)
 
     ok_button.pack(side=tk.LEFT)
     cancel_button.pack(side=tk.LEFT)
@@ -803,6 +807,7 @@ def make_font_size_change(change_font_size_frame, info_label, new_font_size):
     if new_font_size_int != -1:
         font_size = new_font_size_int
         myFont.config(size=font_size)
+        propagate_font_size_change_to_all_frames(font_size)
         kill_change_font_size_frame(change_font_size_frame)
     else:
         info_label.configure(text="Please enter a valid font size:")
@@ -811,9 +816,8 @@ def make_font_size_change(change_font_size_frame, info_label, new_font_size):
 
 #####################################################################
 def kill_change_font_size_frame(change_font_size_frame):
-    global open_frames
     change_font_size_frame.destroy()
-    open_frames.remove(change_font_size_frame)
+    remove_frame(change_font_size_frame)
 
 #######################################################################################
 def lookup_si_unit(stick):
@@ -937,9 +941,8 @@ def update_status_window(user_info, message, is_error):
 
 #####################################################################
 def kill_registration_window(registration_window, user_info):
-    global open_frames
     registration_window.destroy()
-    open_frames.remove(registration_window)
+    remove_frame(registration_window)
     for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.NORMAL)
 
@@ -1023,13 +1026,28 @@ def interruptible_sleep(time_to_sleep):
         i += 1
     return
 
+def propagate_font_size_change_to_all_frames(font_size):
+    global open_frames
+    for frame_and_font in open_frames:
+        frame_and_font[1].config(size=font_size)
+
+def add_frame_and_font(frame, font):
+    global open_frames
+    open_frames.append((frame, font))
+
+def remove_frame(frame):
+    global open_frames
+    for frame_and_font in open_frames:
+        if frame_and_font[0] == frame:
+            open_frames.remove(frame_and_font)
+            return
 
 def kill_all_windows():
     global exit_all_threads, root
 
     exit_all_threads = True
-    for open_window in open_frames:
-        open_window.destroy()
+    for frame_and_font in open_frames:
+        frame_and_font[0].destroy()
     root.destroy()
 
 def create_status_frame():
