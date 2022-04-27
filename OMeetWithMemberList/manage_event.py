@@ -37,7 +37,7 @@ use_real_sireader = True
 run_offline = False
 
 if (not 'NO_SI_READER_IMPORT' in os.environ) and use_real_sireader:
-  from sireader import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
+  from sireader2 import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
 
 # URLs for the web site
 VIEW_RESULTS = "OMeet/view_results.php"
@@ -69,6 +69,7 @@ USER_STICK = r"stick"
 USER_MISSED_FINISH = r"no_finish_punch"
 USER_CELL = r"cell_phone"
 USER_COURSE = r"course"   # Only for preregistered entrants
+USER_NRE_INFO = r"nre_info"  # Only for events with NRE ranking
 MISSED_FINISH_PUNCH_SPLIT = 600
 MISSED_FINISH_PUNCH_MESSAGE = "No finish punch detected, recorded finish split of 10m"
 
@@ -273,6 +274,9 @@ def upload_results(user_info, event_key, event):
           output_string += f"{minutes:02d}m:"
       output_string += f"{time_taken:02d}s"
       upload_status_string = f"{name} finished {course} in {output_string} - "
+      nre_class_match = re.search(r"####,CLASS,(.*)", output)
+      if nre_class_match != None:
+          upload_status_string += f"({nre_class_match.group(1)}) - "
   else:
       upload_status_string = f"Error, download of {user_info[USER_STICK]} failed - "
 
@@ -853,7 +857,12 @@ def make_lookup_si_unit_call(stick, check_preregistration):
   if (len(member_elements) > 5):
       course = member_elements[4]
 
-  return({ USER_NAME : found_name, USER_MEMBER_ID : found_id, USER_EMAIL : found_email, USER_CLUB : club_name, USER_STICK : stick , USER_CELL : cell_phone , USER_COURSE : course })
+  nre_info = None
+  nre_info_match = re.search(r"####,CLASSIFICATION_INFO,(.*)", output)
+  if nre_info_match != None:
+      nre_info = nre_info_match.group(1)
+
+  return({ USER_NAME : found_name, USER_MEMBER_ID : found_id, USER_EMAIL : found_email, USER_CLUB : club_name, USER_STICK : stick , USER_CELL : cell_phone , USER_COURSE : course , USER_NRE_INFO : nre_info})
 
 #######################################################################################
 def register_by_si_unit(user_info, chosen_course, cell_phone):
@@ -878,6 +887,10 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
                              "member_id", base64.standard_b64encode(found_id.encode("utf-8")).decode("utf-8"),
                              "cell_phone", base64.standard_b64encode(cell_phone.encode("utf-8")).decode("utf-8"),
                              "is_member", base64.standard_b64encode("yes".encode("utf-8")).decode("utf-8") ]
+  if USER_NRE_INFO in user_info:
+      if user_info[USER_NRE_INFO] != None:
+          registration_list.append("classification_info")
+          registration_list.append(base64.standard_b64encode(user_info[USER_NRE_INFO].encode("utf-8")).decode("utf-8"))
 
   quoted_course = urllib.parse.quote(chosen_course.encode("utf-8"))
   quoted_name = urllib.parse.quote(found_name.encode("utf-8"))
@@ -891,6 +904,7 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
   if debug: print ("Results of web call {}.".format(output))
               
   registration_result = re.search(r"####,RESULT,(.*)", output)
+  nre_class_result = re.search(r"####,CLASS,(.*)", output)
   errors = re.findall(r"####,ERROR,(.*)", output)
 
   output_message = ""
@@ -899,6 +913,8 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
       error_found = True
   else:
       output_message = registration_result.group(1) + " "
+      if nre_class_result != None:
+          output_message += f"({nre_class_result.group(1)}) "
       error_found = False
 
   if (len(errors) > 0):
