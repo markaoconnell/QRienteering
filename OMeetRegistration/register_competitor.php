@@ -187,6 +187,10 @@ if (!$error) {
 	}
       }
 
+      if ($entrant_class != "") {
+        set_class_for_competitor($competitor_path, $entrant_class);
+      }
+
       // Now lookup to see what the class is, if necessary
       if (($entrant_class == "") && ($birth_year != "") && ($gender != "")) {
 	    // echo "Looking up class for {$birth_year} and {$gender}\n";

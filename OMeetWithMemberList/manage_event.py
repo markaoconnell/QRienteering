@@ -855,7 +855,7 @@ def make_lookup_si_unit_call(stick, check_preregistration):
   club_name = member_elements[4]
   course = None
   if (len(member_elements) > 5):
-      course = member_elements[4]
+      course = member_elements[5]
 
   nre_info = None
   nre_info_match = re.search(r"####,CLASSIFICATION_INFO,(.*)", output)

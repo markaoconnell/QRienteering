@@ -91,7 +91,13 @@ function get_member_cell_phone($member_id, $matching_info) {
 }
 
 function get_member_birth_year($member_id, $matching_info) {
-  return($matching_info["members_hash"][$member_id]["birth_year"]);
+  if (isset($matching_info["members_hash"][$member_id]["birth_year"]) && ($matching_info["members_hash"][$member_id]["birth_year"] != "")) {
+    return($matching_info["members_hash"][$member_id]["birth_year"]);
+  }
+  # No birth year found, assume age 21 (most competitive, will generally put them in the Open category)
+  $current_year = localtime()[5];
+  $birth_year = $current_year + 1900 - 21;
+  return($birth_year);
 }
 
 function get_member_gender($member_id, $matching_info) {
