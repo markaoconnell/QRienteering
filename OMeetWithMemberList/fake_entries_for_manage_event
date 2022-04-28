@@ -1,0 +1,19 @@
+#Format is stick,start time (in seconds),finish time (in seconds),control list
+#Control list is a,b,c,d where a is control_num:time (in seconds)
+#Blank lines indicate a pause of a second or so
+2108369,0,0
+
+
+123456,0,0
+
+
+13579,200,800,101:240,102:280,203:320,204:379
+
+
+24680,1000,2000,151:1100,152:1500,155:1600,151:1680
+
+
+2075933,0,0
+
+
+503555,0,0

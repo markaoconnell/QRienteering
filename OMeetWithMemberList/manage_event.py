@@ -1118,9 +1118,39 @@ fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
+simulated_entries = []
+results_initialized = False
+def initialize_fake_results():
+  global results_initialized
+  if results_initialized: return
+  results_initialized = True
+
+  try:
+    with open("fake_entries_for_manage_event", "r") as FAKE_ENTRIES:
+      for line in FAKE_ENTRIES:
+        line = line.strip()
+        if line.startswith("#"): # Ignore comment lines
+          continue
+        if line == "":
+          simulated_entries.append({SI_STICK_KEY : None})
+        else:
+          value = line.split(",")
+          #print (f"The line is --{line}--")
+          #print (f"It has {len(value)} entries.")
+          if (len(value) > 3):
+            simulated_entries.append({SI_STICK_KEY : int(value[0]), SI_START_KEY : int(value[1]), SI_FINISH_KEY : int(value[2]), SI_CONTROLS_KEY : value[3:]})
+          else:
+            simulated_entries.append({SI_STICK_KEY : int(value[0]), SI_START_KEY : int(value[1]), SI_FINISH_KEY : int(value[2]), SI_CONTROLS_KEY : []})
+  except FileNotFoundError:
+    pass  # Fine if the file is not there, we'll just use the pre-coded fake entries
+
+  if len(simulated_entries) == 0:
+    simulated_entries.extend(fake_entries)
+  
 def read_fake_results():
-  if len(fake_entries) > 0:
-    return fake_entries.pop()
+  initialize_fake_results()
+  if len(simulated_entries) > 0:
+    return simulated_entries.pop()
   else:
     return {SI_STICK_KEY : None}
 
