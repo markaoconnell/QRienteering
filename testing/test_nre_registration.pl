@@ -51,7 +51,7 @@ if ($output !~ /\#\#\#\#,CLASS,M55\+/) {
   error_and_exit("Web page output wrong, correct parseable class entry not found.\n$output");
 }
 
-print $output;
+#print $output;
 
 success();
 
@@ -79,7 +79,7 @@ if ($output =~ /\#\#\#\#,CLASS/) {
   error_and_exit("Web page output wrong, parseable class entry was found.\n$output");
 }
 
-print $output;
+#print $output;
 
 success();
 
@@ -107,7 +107,7 @@ if ($output !~ /\#\#\#\#,CLASS,M Brown/) {
   error_and_exit("Web page output wrong, correct parseable class entry was not found.\n$output");
 }
 
-print $output;
+#print $output;
 
 success();
 

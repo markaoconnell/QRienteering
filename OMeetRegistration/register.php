@@ -50,7 +50,7 @@ if (isset($_GET["registration_info"])) {
 else {
   // See if there is a cookie about the byom registration remembered on the phone
   $registration_info_supplied = false;
-  $byom_registration_info = $_COOKIE["byom_registration_info"];
+  $byom_registration_info = isset($_COOKIE["byom_registration_info"]) ? $_COOKIE["byom_registration_info"] : "";
   if ($byom_registration_info != "") {
     $byom_registration_pieces = explode(",", $byom_registration_info);
     $default_name = base64_decode($byom_registration_pieces[0]);
@@ -58,20 +58,20 @@ else {
   }
 }
 
-$key = $_GET["key"];
+$key = isset($_GET["key"]) ? $_GET["key"] : "";
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
 
 $base_path = get_base_path($key, "..");
 
-$event = $_GET["event"];
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
 //echo "event is \"${event}\"<p>";
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";
 if (strcmp($event, "") == 0) {
   $event_list = scandir($base_path);
   //print_r($event_list);
-  $event_list = array_filter($event_list, is_event);
+  $event_list = array_filter($event_list, "is_event");
   //print_r($event_list);
   if (count($event_list) == 1) {
     $event = basename(current($event_list));

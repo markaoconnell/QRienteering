@@ -133,8 +133,11 @@ foreach ($competitor_list as $competitor) {
     else {
       $si_stick = "none";
     }
-    
-    if (file_exists("${competitor_directory}/${competitor}/controls_found/finish")) {
+
+    if ($is_self_reported) {
+      $status = "self reported";
+    }
+    else if (file_exists("${competitor_directory}/${competitor}/controls_found/finish")) {
       $status = "finished";
     }
     else if (file_exists("{$competitor_directory}/${competitor}/controls_found/start")) {
@@ -142,9 +145,6 @@ foreach ($competitor_list as $competitor) {
     }
     else if (file_exists("{$competitor_directory}/{$competitor}/si_stick")) {
       $status = "registered";
-    }
-    else if ($is_self_reported) {
-      $status = "self reported";
     }
     else {
       $status = "not started";
