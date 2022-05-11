@@ -37,7 +37,7 @@ use_real_sireader = True
 run_offline = False
 
 if (not 'NO_SI_READER_IMPORT' in os.environ) and use_real_sireader:
-  from sireader import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
+  from sireader2 import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
 
 # URLs for the web site
 VIEW_RESULTS = "OMeet/view_results.php"
@@ -66,10 +66,10 @@ USER_STATUS = r"status_widget"
 USER_BUTTONS = r"buttons"
 USER_REG_BUTTON = r"register_button"
 USER_STICK = r"stick"
-USER_CELL_PHONE = r"cell_phone"
 USER_MISSED_FINISH = r"no_finish_punch"
 USER_CELL = r"cell_phone"
 USER_COURSE = r"course"   # Only for preregistered entrants
+USER_NRE_INFO = r"nre_info"  # Only for events with NRE ranking
 MISSED_FINISH_PUNCH_SPLIT = 600
 MISSED_FINISH_PUNCH_MESSAGE = "No finish punch detected, recorded finish split of 10m"
 
@@ -274,6 +274,9 @@ def upload_results(user_info, event_key, event):
           output_string += f"{minutes:02d}m:"
       output_string += f"{time_taken:02d}s"
       upload_status_string = f"{name} finished {course} in {output_string} - "
+      nre_class_match = re.search(r"####,CLASS,(.*)", output)
+      if nre_class_match != None:
+          upload_status_string += f"({nre_class_match.group(1)}) - "
   else:
       upload_status_string = f"Error, download of {user_info[USER_STICK]} failed - "
 
@@ -621,15 +624,18 @@ def make_mass_start_status_on_mainloop(user_info, event_key, event):
     result_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
 
 def registration_window(user_info):
-    global open_frames
-
     for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.DISABLED)
 
     registration_frame = tk.Tk()
-    open_frames.append(registration_frame)
     registration_frame.geometry("300x300")
     registration_frame.title("Register entrant")
+
+    localFont = font.Font(root = registration_frame)
+    if font_size != None:
+        localFont.config(size=font_size)
+
+    add_frame_and_font(registration_frame, localFont)
 
     choices_frame = tk.Frame(registration_frame)
     button_frame = tk.Frame(registration_frame)
@@ -639,11 +645,11 @@ def registration_window(user_info):
         registration_string = f"Register {user_info[USER_NAME]} ({user_info[USER_STICK]})"
     else:
         registration_string = f"Register {user_info[USER_STICK]} (name currently unknown)"
-    info_label = tk.Label(choices_frame, text=registration_string, font=myFont)
+    info_label = tk.Label(choices_frame, text=registration_string, font=localFont)
     info_label.pack(side=tk.TOP)
 
     for course in discovered_courses:
-        radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course, font=myFont)
+        radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course, font=localFont)
         radio_button.pack(side=tk.TOP, anchor=tk.W)
         if USER_COURSE in user_info:
             if (user_info[USER_COURSE] != None) and (user_info[USER_COURSE] == course[0]):
@@ -653,13 +659,13 @@ def registration_window(user_info):
     if USER_CELL in user_info:
       cell_phone.set(user_info[USER_CELL])
       
-    cell_phone_label = tk.Label(choices_frame, text="Verify cell phone (re-enter if incorrect):", font=myFont)
-    cell_phone_box = tk.Entry(choices_frame, textvariable = cell_phone, font=myFont)
+    cell_phone_label = tk.Label(choices_frame, text="Verify cell phone (re-enter if incorrect):", font=localFont)
+    cell_phone_box = tk.Entry(choices_frame, textvariable = cell_phone, font=localFont)
     cell_phone_label.pack(side=tk.TOP, anchor=tk.W)
     cell_phone_box.pack(side=tk.TOP, anchor=tk.W)
 
-    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, chosen_course, cell_phone, registration_frame), font=myFont)
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, user_info), font=myFont)
+    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, chosen_course, cell_phone, registration_frame), font=localFont)
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, user_info), font=localFont)
 
     ok_button.pack(side=tk.LEFT)
     cancel_button.pack(side=tk.LEFT)
@@ -672,8 +678,6 @@ def registration_window(user_info):
 
 
 def register_for_course(user_info, chosen_course, cell_phone, enclosing_frame):
-    global open_frames
-
     if user_info[USER_NAME] != None:
         message = f"Attempting to register {user_info[USER_NAME]} ({user_info[USER_STICK]}) on " 
     else:
@@ -681,7 +685,7 @@ def register_for_course(user_info, chosen_course, cell_phone, enclosing_frame):
 
     user_info[USER_STATUS]["text"] = message + chosen_course.get().lstrip("0123456789-")
     enclosing_frame.destroy()
-    open_frames.remove(enclosing_frame)
+    remove_frame(enclosing_frame)
 
     registration_thread = Thread(target=register_by_si_unit, args=(user_info, chosen_course.get(), cell_phone.get()))
     registration_thread.start()
@@ -689,30 +693,33 @@ def register_for_course(user_info, chosen_course, cell_phone, enclosing_frame):
 
 
 def mass_start_window(user_info, start_seconds, event_key, event):
-    global open_frames
-
     for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.DISABLED)
 
     mass_start_frame = tk.Tk()
-    open_frames.append(mass_start_frame)
     mass_start_frame.geometry("300x300")
     mass_start_frame.title("Mass Start course(s)")
 
+    localFont = font.Font(root = mass_start_frame)
+    if font_size != None:
+        localFont.config(size=font_size)
+
+    add_frame_and_font(mass_start_frame, localFont)
+
     choices_frame = tk.Frame(mass_start_frame)
     button_frame = tk.Frame(mass_start_frame)
-    info_label = tk.Label(choices_frame, text="Choose course(s) to start:", font=myFont)
+    info_label = tk.Label(choices_frame, text="Choose course(s) to start:", font=localFont)
     info_label.pack(side=tk.TOP)
 
     course_choices = [ ]
     for course in discovered_courses:
         chosen_course = tk.StringVar(mass_start_frame, "unselected")
         course_choices.append(chosen_course)
-        radio_button = tk.Checkbutton(choices_frame, text=course[0], onvalue=course[1], offvalue="unselected", variable=chosen_course, font=myFont)
+        radio_button = tk.Checkbutton(choices_frame, text=course[0], onvalue=course[1], offvalue="unselected", variable=chosen_course, font=localFont)
         radio_button.pack(side=tk.TOP, anchor=tk.W)
 
-    ok_button = tk.Button(button_frame, text="Mass start course(s)", command=lambda: mass_start_courses(user_info, course_choices, start_seconds, mass_start_frame), font=myFont)
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_mass_start_window(mass_start_frame, user_info), font=myFont)
+    ok_button = tk.Button(button_frame, text="Mass start course(s)", command=lambda: mass_start_courses(user_info, course_choices, start_seconds, mass_start_frame), font=localFont)
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_mass_start_window(mass_start_frame, user_info), font=localFont)
 
     ok_button.pack(side=tk.LEFT)
     cancel_button.pack(side=tk.LEFT)
@@ -724,8 +731,6 @@ def mass_start_window(user_info, start_seconds, event_key, event):
     return
 
 def mass_start_courses(user_info, course_choices, start_seconds, enclosing_frame):
-    global open_frames
-
     courses_to_start = list(filter(lambda elt: elt.get() != "unselected", course_choices))
     courses_to_start = list(map(lambda elt: elt.get(), courses_to_start))
 
@@ -738,15 +743,14 @@ def mass_start_courses(user_info, course_choices, start_seconds, enclosing_frame
         user_info[USER_STATUS]["text"] = "No courses chosen for mass start"
 
     enclosing_frame.destroy()
-    open_frames.remove(enclosing_frame)
+    remove_frame(enclosing_frame)
 
     return
 
 #####################################################################
 def kill_mass_start_window(mass_start_window, user_info):
-    global open_frames
     mass_start_window.destroy()
-    open_frames.remove(mass_start_window)
+    remove_frame(mass_start_window)
     for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.NORMAL)
 
@@ -756,28 +760,31 @@ def change_font_size():
     root.after(1, lambda: change_font_size_on_mainloop())
 
 def change_font_size_on_mainloop():
-    global open_frames
-
     change_font_size_frame = tk.Tk()
-    open_frames.append(change_font_size_frame)
     change_font_size_frame.geometry("300x300")
     change_font_size_frame.title("Change font size")
 
+    localFont = font.Font(root = change_font_size_frame)
+    if font_size != None:
+        localFont.config(size=font_size)
+
+    add_frame_and_font(change_font_size_frame, localFont)
+
     choices_frame = tk.Frame(change_font_size_frame)
     button_frame = tk.Frame(change_font_size_frame)
-    info_label = tk.Label(choices_frame, text="Enter new font size:", font=myFont)
+    info_label = tk.Label(choices_frame, text="Enter new font size:", font=localFont)
     info_label.pack(side=tk.TOP, anchor=tk.W)
 
     new_font_size = tk.StringVar(choices_frame, "")
     if font_size != None:
       new_font_size.set(str(font_size))
       
-    font_size_box = tk.Entry(choices_frame, textvariable = new_font_size, font=myFont)
+    font_size_box = tk.Entry(choices_frame, textvariable = new_font_size, font=localFont)
     font_size_box.pack(side=tk.TOP, anchor=tk.W)
 
 
-    ok_button = tk.Button(button_frame, text="Change font size", command=lambda: make_font_size_change(change_font_size_frame, info_label, new_font_size), font=myFont)
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_change_font_size_frame(change_font_size_frame), font=myFont)
+    ok_button = tk.Button(button_frame, text="Change font size", command=lambda: make_font_size_change(change_font_size_frame, info_label, new_font_size), font=localFont)
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_change_font_size_frame(change_font_size_frame), font=localFont)
 
     ok_button.pack(side=tk.LEFT)
     cancel_button.pack(side=tk.LEFT)
@@ -800,6 +807,7 @@ def make_font_size_change(change_font_size_frame, info_label, new_font_size):
     if new_font_size_int != -1:
         font_size = new_font_size_int
         myFont.config(size=font_size)
+        propagate_font_size_change_to_all_frames(font_size)
         kill_change_font_size_frame(change_font_size_frame)
     else:
         info_label.configure(text="Please enter a valid font size:")
@@ -808,9 +816,8 @@ def make_font_size_change(change_font_size_frame, info_label, new_font_size):
 
 #####################################################################
 def kill_change_font_size_frame(change_font_size_frame):
-    global open_frames
     change_font_size_frame.destroy()
-    open_frames.remove(change_font_size_frame)
+    remove_frame(change_font_size_frame)
 
 #######################################################################################
 def lookup_si_unit(stick):
@@ -852,9 +859,14 @@ def make_lookup_si_unit_call(stick, check_preregistration):
   club_name = member_elements[4]
   course = None
   if (len(member_elements) > 5):
-      course = member_elements[4]
+      course = member_elements[5]
 
-  return({ USER_NAME : found_name, USER_MEMBER_ID : found_id, USER_EMAIL : found_email, USER_CLUB : club_name, USER_STICK : stick , USER_CELL : cell_phone , USER_COURSE : course })
+  nre_info = None
+  nre_info_match = re.search(r"####,CLASSIFICATION_INFO,(.*)", output)
+  if nre_info_match != None:
+      nre_info = nre_info_match.group(1)
+
+  return({ USER_NAME : found_name, USER_MEMBER_ID : found_id, USER_EMAIL : found_email, USER_CLUB : club_name, USER_STICK : stick , USER_CELL : cell_phone , USER_COURSE : course , USER_NRE_INFO : nre_info})
 
 #######################################################################################
 def register_by_si_unit(user_info, chosen_course, cell_phone):
@@ -879,6 +891,10 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
                              "member_id", base64.standard_b64encode(found_id.encode("utf-8")).decode("utf-8"),
                              "cell_phone", base64.standard_b64encode(cell_phone.encode("utf-8")).decode("utf-8"),
                              "is_member", base64.standard_b64encode("yes".encode("utf-8")).decode("utf-8") ]
+  if USER_NRE_INFO in user_info:
+      if user_info[USER_NRE_INFO] != None:
+          registration_list.append("classification_info")
+          registration_list.append(base64.standard_b64encode(user_info[USER_NRE_INFO].encode("utf-8")).decode("utf-8"))
 
   quoted_course = urllib.parse.quote(chosen_course.encode("utf-8"))
   quoted_name = urllib.parse.quote(found_name.encode("utf-8"))
@@ -892,6 +908,7 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
   if debug: print ("Results of web call {}.".format(output))
               
   registration_result = re.search(r"####,RESULT,(.*)", output)
+  nre_class_result = re.search(r"####,CLASS,(.*)", output)
   errors = re.findall(r"####,ERROR,(.*)", output)
 
   output_message = ""
@@ -900,6 +917,8 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
       error_found = True
   else:
       output_message = registration_result.group(1) + " "
+      if nre_class_result != None:
+          output_message += f"({nre_class_result.group(1)}) "
       error_found = False
 
   if (len(errors) > 0):
@@ -922,9 +941,8 @@ def update_status_window(user_info, message, is_error):
 
 #####################################################################
 def kill_registration_window(registration_window, user_info):
-    global open_frames
     registration_window.destroy()
-    open_frames.remove(registration_window)
+    remove_frame(registration_window)
     for button in user_info[USER_BUTTONS]:
         button.configure(state=tk.NORMAL)
 
@@ -1008,13 +1026,28 @@ def interruptible_sleep(time_to_sleep):
         i += 1
     return
 
+def propagate_font_size_change_to_all_frames(font_size):
+    global open_frames
+    for frame_and_font in open_frames:
+        frame_and_font[1].config(size=font_size)
+
+def add_frame_and_font(frame, font):
+    global open_frames
+    open_frames.append((frame, font))
+
+def remove_frame(frame):
+    global open_frames
+    for frame_and_font in open_frames:
+        if frame_and_font[0] == frame:
+            open_frames.remove(frame_and_font)
+            return
 
 def kill_all_windows():
     global exit_all_threads, root
 
     exit_all_threads = True
-    for open_window in open_frames:
-        open_window.destroy()
+    for frame_and_font in open_frames:
+        frame_and_font[0].destroy()
     root.destroy()
 
 def create_status_frame():
@@ -1085,9 +1118,39 @@ fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
 fake_entries.append({SI_STICK_KEY : None})
+simulated_entries = []
+results_initialized = False
+def initialize_fake_results():
+  global results_initialized
+  if results_initialized: return
+  results_initialized = True
+
+  try:
+    with open("fake_entries_for_manage_event", "r") as FAKE_ENTRIES:
+      for line in FAKE_ENTRIES:
+        line = line.strip()
+        if line.startswith("#"): # Ignore comment lines
+          continue
+        if line == "":
+          simulated_entries.append({SI_STICK_KEY : None})
+        else:
+          value = line.split(",")
+          #print (f"The line is --{line}--")
+          #print (f"It has {len(value)} entries.")
+          if (len(value) > 3):
+            simulated_entries.append({SI_STICK_KEY : int(value[0]), SI_START_KEY : int(value[1]), SI_FINISH_KEY : int(value[2]), SI_CONTROLS_KEY : value[3:]})
+          else:
+            simulated_entries.append({SI_STICK_KEY : int(value[0]), SI_START_KEY : int(value[1]), SI_FINISH_KEY : int(value[2]), SI_CONTROLS_KEY : []})
+  except FileNotFoundError:
+    pass  # Fine if the file is not there, we'll just use the pre-coded fake entries
+
+  if len(simulated_entries) == 0:
+    simulated_entries.extend(fake_entries)
+  
 def read_fake_results():
-  if len(fake_entries) > 0:
-    return fake_entries.pop()
+  initialize_fake_results()
+  if len(simulated_entries) > 0:
+    return simulated_entries.pop()
   else:
     return {SI_STICK_KEY : None}
 

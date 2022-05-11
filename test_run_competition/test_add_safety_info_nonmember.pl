@@ -4,6 +4,7 @@ use strict;
 use MIME::Base64;
 
 require "../testing/testHelpers.pl";
+require "../testing/success_call_helpers.pl";
 
 my(%GET, %TEST_INFO, %COOKIE, %POST);
 my($cmd, $output);
@@ -13,6 +14,12 @@ mkdir(get_base_path("UnitTestPlayground"));
 
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 
+initialize_event();
+create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
+my($event_id) = $TEST_INFO{"event_id"};
+set_no_redirects_for_event($event_id, "UnitTestPlayground");
+
+
 
 
 
@@ -21,6 +28,7 @@ set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 # 
 %TEST_INFO = qw(Testname TestNonMemberWithStick);
 %GET = qw(key UnitTestPlayground competitor_first_name Karen competitor_last_name Yeowell si_stick 3959473);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -63,6 +71,7 @@ success();
 %TEST_INFO = qw(Testname TestNonMemberNoStickWithClub);
 %GET = qw(key UnitTestPlayground competitor_first_name Karen competitor_last_name Yeowell club_name CSU);
 $GET{"si_stick"} = "";
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -108,6 +117,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNonMemberUsingNoFirstName);
 %GET = qw(key UnitTestPlayground competitor_last_name Dokey si_stick 14xx21);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -126,6 +136,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNonMemberUsingNoFirstName);
 %GET = qw(key UnitTestPlayground competitor_first_name Mokey si_stick 14xx21);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -145,6 +156,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNonMemberUsingBadStickNumber);
 %GET = qw(key UnitTestPlayground competitor_first_name Mokey competitor_last_name Dokey si_stick 14xx21);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();

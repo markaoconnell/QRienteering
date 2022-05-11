@@ -11,7 +11,10 @@ function non_empty($string_value) {
 }
 
 function get_competitor_info($competitor_base_path, $competitor_id, $status, $registration_info, $si_stick) {
-  global $include_competitor_id, $show_removed_competitors, $include_date, $key, $event; 
+  global $include_competitor_id, $show_removed_competitors, $is_nre_event, $include_date, $key, $event; 
+
+  $nre_class_string = "";
+
   $competitor_string = "<tr>";
   $competitor_name = file_get_contents("{$competitor_base_path}/{$competitor_id}/name");
   $is_self_reported = file_exists("{$competitor_base_path}/{$competitor_id}/self_reported");
@@ -36,11 +39,19 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
     $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}&allow_editing=1\">edit</a></td>";
   }
 
+  if ($is_nre_event) {
+    $competitor_class = get_class_for_competitor("{$competitor_base_path}/{$competitor_id}");
+    if ($competitor_class == "") {
+      $competitor_class = "Rec (unranked)";
+    }
+    $nre_class_string = "<a href=\"../OMeetMgmt/edit_competitor_class.php?event={$event}&key={$key}&competitor={$competitor_id}\">{$competitor_class}</a><br>\n";
+  }
+
   if (count($registration_info) > 0) {
     $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = " . htmlentities($registration_info[$key])); },
                                                                                                                 array_diff(array_keys($registration_info),
                                                                                                                            array("first_name", "last_name")));
-    $competitor_string .= "<td>" . implode(", ", $registration_info_strings)  . "</td>";
+    $competitor_string .= "<td>{$nre_class_string}" . implode(", ", $registration_info_strings)  . "</td>";
   }
   else {
     $competitor_string .= "<td></td>";
@@ -52,18 +63,18 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
 
 // Get the submitted info
 // echo "<p>\n";
-if ($_GET["TIME_LIMIT"] == "") {
+if (!isset($_GET["TIME_LIMIT"])) {
   $TIME_LIMIT = 86400;  // One day in seconds
 }
 else {
   $TIME_LIMIT = intval($_GET["TIME_LIMIT"]);
 }
 
-$event = $_GET["event"];
-$key = $_GET["key"];
-$include_competitor_id = ($_GET["include_competitor_id"] != "");
-$include_date = ($_GET["include_date"] != "");
-$include_finishers = ($_GET["include_finishers"] != "");
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
+$key = isset($_GET["key"]) ? $_GET["key"] : "";
+$include_competitor_id = isset($_GET["include_competitor_id"]);
+$include_date = isset($_GET["include_date"]);
+$include_finishers = isset($_GET["include_finishers"]);
 $show_removed_competitors = isset($_GET["show_removed"]);
 
 if (($event == "") || (!key_is_valid($key))) {
@@ -75,6 +86,8 @@ if (!file_exists(get_event_path($event, $key, ".."))) {
 }
 
 set_timezone($key);
+
+$is_nre_event = event_is_using_nre_classes($event, $key);
 
 $results_string = "";
 if ($show_removed_competitors) {
@@ -120,8 +133,11 @@ foreach ($competitor_list as $competitor) {
     else {
       $si_stick = "none";
     }
-    
-    if (file_exists("${competitor_directory}/${competitor}/controls_found/finish")) {
+
+    if ($is_self_reported) {
+      $status = "self reported";
+    }
+    else if (file_exists("${competitor_directory}/${competitor}/controls_found/finish")) {
       $status = "finished";
     }
     else if (file_exists("{$competitor_directory}/${competitor}/controls_found/start")) {
@@ -129,9 +145,6 @@ foreach ($competitor_list as $competitor) {
     }
     else if (file_exists("{$competitor_directory}/{$competitor}/si_stick")) {
       $status = "registered";
-    }
-    else if ($is_self_reported) {
-      $status = "self reported";
     }
     else {
       $status = "not started";

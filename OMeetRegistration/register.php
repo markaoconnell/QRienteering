@@ -50,7 +50,7 @@ if (isset($_GET["registration_info"])) {
 else {
   // See if there is a cookie about the byom registration remembered on the phone
   $registration_info_supplied = false;
-  $byom_registration_info = $_COOKIE["byom_registration_info"];
+  $byom_registration_info = isset($_COOKIE["byom_registration_info"]) ? $_COOKIE["byom_registration_info"] : "";
   if ($byom_registration_info != "") {
     $byom_registration_pieces = explode(",", $byom_registration_info);
     $default_name = base64_decode($byom_registration_pieces[0]);
@@ -58,20 +58,20 @@ else {
   }
 }
 
-$key = $_GET["key"];
+$key = isset($_GET["key"]) ? $_GET["key"] : "";
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
 
 $base_path = get_base_path($key, "..");
 
-$event = $_GET["event"];
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
 //echo "event is \"${event}\"<p>";
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";
 if (strcmp($event, "") == 0) {
   $event_list = scandir($base_path);
   //print_r($event_list);
-  $event_list = array_filter($event_list, is_event);
+  $event_list = array_filter($event_list, "is_event");
   //print_r($event_list);
   if (count($event_list) == 1) {
     $event = basename(current($event_list));
@@ -148,6 +148,27 @@ if (!$registration_info_supplied) {
     echo "<br><p>If you would like your results emailed to you, please supply a valid email (optional):<br>\n";
     echo "<input type=\"text\" size=50 name=\"email_address\" value=\"{$default_email}\"><br>\n";
   }
+}
+
+// If we are using NRE classes in a BYOM, this is where we would prompt for birth_year and gender
+// I actually can't imagine we'll ever do this, but, then again, I could never have imagined
+// that we'd use QRienteering for a local club NRE with reporting based on OUSA classes, so
+// never say never...
+if ((event_is_using_nre_classes($event, $key)) && !$registration_info_supplied) {
+  echo "<br><br><p>If you would like your time to count for national ranking purposes, please enter your birth year and gender.\n";
+  echo "<p>Please leave blank if you are orienteering recreationally or going out in a group (more than 1 person).\n";
+
+  echo "<p>(Optional) Birth year (for ranking purposes), please use 4 digits, e.g. 1973, 2001, etc.<br>\n";
+  $presupplied_birth_year = "value=\"\"";
+  echo "<input type=\"text\" size=50 name=\"birth_year\" {$presupplied_birth_year} ><br><br>\n";
+
+  $male_checked = "";
+  $female_checked = "";
+  $other_checked = "";
+  echo "<p>(Optional) Gender (for ranking purposes): <br>";
+  echo "<input type=radio name=\"gender\" value=\"f\" {$male_checked} >  Female<br>\n";
+  echo "<input type=radio name=\"gender\" value=\"m\" {$female_checked} >  Male<br>\n";
+  echo "<input type=radio name=\"gender\" value=\"o\" {$other_checked} >  Other<br>\n";
 }
 
 

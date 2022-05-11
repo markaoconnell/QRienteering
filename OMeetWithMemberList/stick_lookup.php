@@ -12,6 +12,25 @@ if (!key_is_valid($key)) {
 }
 
 $event = isset($_GET["event"]) ? $_GET["event"] : "";
+if ($event == "") {
+  error_and_exit("Unknown event (empty), are you using an authorized link?\n");
+}
+
+$event_path = get_event_path($event, $key, "..");
+if (!is_dir($event_path) || !file_exists("{$event_path}/description")) {
+  error_and_exit("<p>ERROR: Bad event \"{$event}\", was this created properly?" . get_error_info_string());
+}
+
+if (file_exists("{$base_path}/{$event}/done")) {
+  error_and_exit("Event " . file_get_contents("{$base_path}/{$event}/description") . " has completed and registrations are no longer possible.\n");
+}
+
+$using_nre_classes = event_is_using_nre_classes($event, $key);
+$birth_year = -1;
+$gender = "";
+$competition_class = "";
+$classification_form_entry = "";
+$classification_info = "";
 
 $member_properties = get_member_properties(get_base_path($key)); 
 $matching_info = read_names_info(get_members_path($key, $member_properties), get_nicknames_path($key, $member_properties));
@@ -82,6 +101,13 @@ if ($is_preregistered_checkin) {
   $pass_preregistration_marker .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
 
   $preregistered_course = isset($entrant_info["course"]) ? "," . $entrant_info["course"] : "";
+  if ($using_nre_classes) {
+    $birth_year = $entrant_info["birth_year"];
+    $gender = $entrant_info["gender"];
+    $competition_class = $entrant_info["class"];
+    $classification_info = encode_entrant_classification_info($birth_year, $gender, $competition_class);
+    $classification_form_entry = "<input type=hidden name=\"classification_info\" value=\"{$classification_info}\">\n";
+  }
 }
 else {
   $printable_name = get_full_name($member_id, $matching_info);
@@ -89,16 +115,27 @@ else {
   $cell_phone = get_member_cell_phone($member_id, $matching_info);
   $club_name = get_club_name($key, $member_properties);
   $pass_preregistration_marker = "";
+  if ($using_nre_classes) {
+    $birth_year = get_member_birth_year($member_id, $matching_info);
+    $gender = get_member_gender($member_id, $matching_info);
+    $classification_info = encode_entrant_classification_info($birth_year, $gender, "");
+    $classification_form_entry = "<input type=hidden name=\"classification_info\" value=\"{$classification_info}\">\n";
+  }
 }
 $success_string .= "<p>Welcome {$printable_name}.\n";
 $parseable_result_string .= "\n####,MEMBER_ENTRY," . base64_encode($printable_name) . ",{$member_id},{$email_address},{$cell_phone},{$club_name}{$preregistered_course}\n";
+if ($classification_info != "") {
+  $parseable_result_string .= "\n####,CLASSIFICATION_INFO,{$classification_info}\n";
+}
 $success_string .= <<<END_OF_FORM
 <form action="./add_safety_info.php">
 <input type=hidden name="member_id" value="{$member_id}"/>
 <input type=hidden name="member_email" value="{$email_address}"/>
 <input type=hidden name="key" value="{$key}"/>
+<input type=hidden name="event" value="{$event}"/>
 <input type=hidden name="registered_si_stick" value="yes"/>
 {$pass_preregistration_marker}
+{$classification_form_entry}
 <p> How are you orienteering today? <br>
 <p> Using Si unit <input type=radio name="using_stick" value="yes" checked /> <input type=text name="si_stick_number" value="{$si_stick}" readonly/>
 <p> Using QR codes <input type=radio name="using_stick" value="no" />

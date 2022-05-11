@@ -3,6 +3,7 @@
 use strict;
 
 require "../testing/testHelpers.pl";
+require "../testing/success_call_helpers.pl";
 require "./setup_member_info.pl";
 
 my(%GET, %TEST_INFO, %COOKIE, %POST);
@@ -14,11 +15,19 @@ setup_member_files(get_base_path("UnitTestPlayground"));
 
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 
+initialize_event();
+create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
+my($event_id) = $TEST_INFO{"event_id"};
+set_no_redirects_for_event($event_id, "UnitTestPlayground");
+
+
+
 ###########
 # Test 1 - Lookup an existing member with an SI stick
 # 
 %TEST_INFO = qw(Testname TestGoodMemberLookupWithSiStick);
 %GET = qw(key UnitTestPlayground competitor_first_name Mark competitor_last_name OConnell);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -44,6 +53,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestGoodMemberLookupNoSiStick);
 %GET = qw(key UnitTestPlayground competitor_first_name Lawrence competitor_last_name Berrill);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -69,6 +79,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestNotAMember);
 %GET = qw(key UnitTestPlayground competitor_first_name William competitor_last_name Blake);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -91,6 +102,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestAmbiguousMember);
 %GET = qw(key UnitTestPlayground competitor_first_name Is competitor_last_name Finlayson);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -126,6 +138,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestMemberLookupWithSiStick);
 %GET = qw(key UnitTestPlayground member_id 109);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -152,6 +165,7 @@ success();
 # No SI stick
 %TEST_INFO = qw(Testname TestMemberLookupNoSiStick);
 %GET = qw(key UnitTestPlayground member_id 171);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -177,6 +191,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestMemberLookupNoSiStick);
 %GET = qw(key UnitTestPlayground member_id 141421);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -200,6 +215,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestSavedMemberIdLookup);
 %GET = qw(key UnitTestPlayground member 1);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 my($time_now) = time();
@@ -230,6 +246,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestSavedMemberIdLookupSomeTimedOut);
 %GET = qw(key UnitTestPlayground member 1);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 my($time_now) = time();
@@ -261,6 +278,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestSavedMemberIdLookupAllTimedOut);
 %GET = qw(key UnitTestPlayground member 1);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 my($time_now) = time();
@@ -292,6 +310,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestSavedMemberIdLookupNoCookie);
 %GET = qw(key UnitTestPlayground member 1);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -319,6 +338,7 @@ success();
 # 
 %TEST_INFO = qw(Testname TestRegistrationNonMember);
 %GET = qw(key UnitTestPlayground);
+$GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();
@@ -335,6 +355,28 @@ if ($output =~ /<u>NEOC club member registration/) {
 
 if ($output !~ /Non-NEOC club member registration/) {
   error_and_exit("Message about non-member registration not found even though member was not specified.\n$output");
+}
+
+success();
+
+
+###########
+# Test 13 - No event specified, should pick up the one existing event
+# 
+%TEST_INFO = qw(Testname TestEventNotSpecified);
+%GET = qw(key UnitTestPlayground);
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/competition_register.php";
+$output = qx($cmd);
+
+if ($output =~ /Unknown event \(empty\)/) {
+  error_and_exit("Message found (incorrectly) that the event was not specified.\n$output");
+}
+
+if ($output !~ /value="$event_id"/) {
+  error_and_exit("Did not see the event id as a hidden parameter.\n$output");
 }
 
 success();

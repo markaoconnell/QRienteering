@@ -103,8 +103,25 @@ $COOKIE{"event"} = $event_id;
 
 start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
 
+sleep 5;  # Add a delay to make sure we get a new start time
 
-# Now start the course again - this is the real part of the test
+# Now start the course again, it should succeed (no controls found yet)
+%COOKIE = qw(key UnitTestPlayground course 00-White);
+$COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
+%GET = ();  # empty hash
+
+start_successfully(\%GET, \%COOKIE, \%TEST_INFO);
+
+
+# Now find a control and start the course again - this is the real part of the test
+%COOKIE = qw(key UnitTestPlayground course 00-White);
+$COOKIE{"competitor_id"} = $competitor_id;
+$COOKIE{"event"} = $event_id;
+%GET = qw(control 201);  # control we reached
+
+reach_control_successfully(0, \%GET, \%COOKIE, \%TEST_INFO);
+
 %COOKIE = qw(key UnitTestPlayground course 00-White);
 $COOKIE{"competitor_id"} = $competitor_id;
 $COOKIE{"event"} = $event_id;
@@ -125,8 +142,9 @@ if ($#directory_contents != -1) {
   error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
 }
 
+# Should be one entry for the control that was found
 @directory_contents = check_directory_contents("${path}/controls_found", qw(start));
-if ($#directory_contents != -1) {
+if ($#directory_contents != 0) {
   error_and_exit("More files exist in ${path}/controls_found than expected: " . join("--", @directory_contents));
 }
 

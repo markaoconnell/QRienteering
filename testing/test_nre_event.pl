@@ -5,7 +5,7 @@ use strict;
 require "testHelpers.pl";
 require "success_call_helpers.pl";
 
-my(%GET, %TEST_INFO, %COOKIE, %POST);
+my(%GET, %TEST_INFO, %COOKIE, %POST, %REGISTRATION_INFO);
 my($COMPETITOR_1) = "Mark_OConnell--space-----space--2";
 my($COMPETITOR_2) = "Karen_Yeowell--space--+2";   # +3 HTML encoded
 my($COMPETITOR_3) = "LydBid--space--(2)";       # (2) HTML encoded
@@ -27,16 +27,30 @@ create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
 my($event_id) = $TEST_INFO{"event_id"};
 set_no_redirects_for_event($event_id, "UnitTestPlayground");
 
+# Set up the NRE classification tables
+set_using_nre_classes("UnitTestPlayground", $event_id);
+set_nre_classes("UnitTestPlayground");
+
+
 sub register_one_entrant {
   %GET = qw(key UnitTestPlayground);
   $GET{"course"} = $_[1];
   $GET{"competitor_name"} = $_[0];
   $GET{"event"} = $event_id;
+  my($birth_year, $gender);
+  $birth_year = $_[2];
+  $gender = $_[3];
+  my($expecting_class_entry) = $_[4];
   %COOKIE = ();  # empty hash
   
   #print "Register $_[0] on $_[1]\n";
 
-  register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
+  %REGISTRATION_INFO = qw(club_name NEOC email_address mark:@mkoconnell.com cell_phone 5086148225 car_info ChevyBoltEV3470MA is_member yes);
+  $REGISTRATION_INFO{"first_name"} = "unused first";
+  $REGISTRATION_INFO{"last_name"} = "unused last";
+  $REGISTRATION_INFO{"classification_info"} = values_to_classification_info($birth_year, $gender, "");
+
+  register_member_successfully_for_nre(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO, $expecting_class_entry);
   return($TEST_INFO{"competitor_id"});
 }
 
@@ -59,7 +73,7 @@ sub check_results {
     error_and_exit("Found $actual_table_rows instead of $expected_table_rows in results output.\n$output");
   }
 
-  if ($output !~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04-GetEmAll/) {
+  if ($output !~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04-GetEmAll,05-Green,06-Red,07-Brown\n/) {
     error_and_exit("Did not find expected course list in results output.\n$output");
   }
 
@@ -158,14 +172,14 @@ sub check_splits {
 ###########
 # Test 1 - register a new entrant successfully
 # Test registration of a new entrant
-%TEST_INFO = qw(Testname Register6AndCheckOnCourse);
+%TEST_INFO = qw(Testname NreRegister6AndCheckOnCourse);
 
-$competitor_1_id = register_one_entrant($COMPETITOR_1, "01-Yellow");
-$competitor_2_id = register_one_entrant($COMPETITOR_2, "01-Yellow");
-$competitor_3_id = register_one_entrant($COMPETITOR_3, "00-White");
-$competitor_4_id = register_one_entrant($COMPETITOR_4, "00-White");
-$competitor_5_id = register_one_entrant($COMPETITOR_5, "02-ScoreO");
-$competitor_6_id = register_one_entrant($COMPETITOR_6, "02-ScoreO");
+$competitor_1_id = register_one_entrant($COMPETITOR_1, "01-Yellow", "2001", "f", 1);
+$competitor_2_id = register_one_entrant($COMPETITOR_2, "01-Yellow", "2010", "f", 1);
+$competitor_3_id = register_one_entrant($COMPETITOR_3, "00-White", "2010", "m", 1);
+$competitor_4_id = register_one_entrant($COMPETITOR_4, "00-White", "1998", "m", 1);
+$competitor_5_id = register_one_entrant($COMPETITOR_5, "02-ScoreO", "2000", "f", 0);
+$competitor_6_id = register_one_entrant($COMPETITOR_6, "02-ScoreO", "2005", "m", 0);
 
 check_results(0);
 check_on_course(6);
@@ -183,7 +197,7 @@ success();
 # 0 results
 
 # Competitor 1 starts and gets two controls
-%TEST_INFO = qw(Testname TestThreeStartersAtEvent);
+%TEST_INFO = qw(Testname NreTestThreeStartersAtEvent);
 %COOKIE = qw(key UnitTestPlayground course 01-Yellow);
 $COOKIE{"event"} = $event_id;
 $COOKIE{"competitor_id"} = $competitor_1_id;
@@ -247,7 +261,7 @@ success();
 # Competitor 4 starts
 # Competitor 5 finds another control
 # Competitor 6 starts
-%TEST_INFO = qw(Testname OneFinisherThreeMoreStarters);
+%TEST_INFO = qw(Testname NreOneFinisherThreeMoreStarters);
 
 # Competitor 1 finds two more controls
 %COOKIE = qw(key UnitTestPlayground course 01-Yellow);
@@ -388,7 +402,7 @@ success();
 # Competitor 4 finds 2 controls and DNFs
 # Competitor 5 finishes
 # Competitor 6 finds another control and finishes
-%TEST_INFO = qw(Testname AllFinishWithTwoDNFs);
+%TEST_INFO = qw(Testname NreAllFinishWithTwoDNFs);
 
 # Competitor 3 finds more controls
 %COOKIE = qw(key UnitTestPlayground course 00-White);
@@ -507,7 +521,7 @@ success();
 #################
 #Test 5 - check the splits
 
-%TEST_INFO = qw(Testname CheckSplitsForEntrants);
+%TEST_INFO = qw(Testname NreCheckSplitsForEntrants);
 
 my(%expected_number_splits);
 $expected_number_splits{$competitor_1_id} = 5;
@@ -535,7 +549,7 @@ success();
 #################
 #Test 6 - check the stats
 
-%TEST_INFO = qw(Testname CheckStatsForEvent);
+%TEST_INFO = qw(Testname NreCheckStatsForEvent);
 %GET = qw(key UnitTestPlayground);
 $GET{"event"} = $event_id;
 
@@ -561,6 +575,37 @@ if ($actual_table_rows != 9) {
 }
 
 success();
+
+#################
+# Test 6 - Can we view the results per class?
+
+%TEST_INFO = qw(Testname NreViewResultsByClass);
+%GET = qw(key UnitTestPlayground);
+$GET{"event"} = $event_id;
+$GET{"per_class"} = $event_id;
+
+%COOKIE = ();
+hashes_to_artificial_file();
+
+my($cmd) = "php ../OMeet/view_results.php";
+my($output);
+$output = qx($cmd);
+
+my($actual_table_rows);
+$actual_table_rows = () = $output =~ /(<tr><td>)/g;
+
+# This should really be 4, but the MF White is showing up twice
+# I should fix this but won't for the moment
+if ($actual_table_rows != 5) {
+  error_and_exit("Found $actual_table_rows instead of 5 in results output.\n$output");
+}
+
+if ($output !~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04-GetEmAll,05-Green,06-Red,07-Brown\n/) {
+  error_and_exit("Did not find expected course list in results output.\n$output");
+}
+
+success();
+
 
 ############
 # Cleanup

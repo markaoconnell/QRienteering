@@ -1,0 +1,68 @@
+#Format is
+#Course being run,gender,min age,max age,QR coding allowed,class
+#This file should be ordered so that the first match is the preferred option
+#As the classifications may overlap
+#Blank lines and lines beginning with # should be ignored
+#Gender is m or f or o - for the moment anything other than m or f will go into the Open courses
+#Age is determined as current year - birth year
+
+#Course being run,gender,min age,max age,QR coding allowed,class
+White,f,0,10,y,F-10
+White,f,0,12,y,F-12
+White,m,0,10,y,M-10
+White,m,0,12,y,M-12
+
+Yellow,f,0,14,y,F-14
+Yellow,m,0,14,y,M-14
+
+Orange,f,0,16,y,F-16
+Orange,m,0,16,y,M-16
+
+Brown,f,0,18,n,F-18
+Brown,f,90,200,n,F90+
+Brown,f,85,200,n,F85+
+Brown,f,80,200,n,F80+
+Brown,f,75,200,n,F75+
+Brown,f,70,200,n,F70+
+Brown,f,65,200,n,F65+
+Brown,f,60,200,n,F60+
+Brown,f,55,200,n,F55+
+
+Brown,m,90,200,n,M90+
+Brown,m,85,200,n,M85+
+Brown,m,80,200,n,M80+
+Brown,m,75,200,n,M75+
+Brown,m,70,200,n,M70+
+Brown,m,65,200,n,M65+
+
+Green,f,0,20,n,F-20
+Green,f,50,200,n,F50+
+Green,f,45,200,n,F45+
+Green,f,40,200,n,F40+
+Green,f,35,200,n,F35+
+
+Green,m,0,18,n,M-18
+Green,m,60,200,n,M60+
+Green,m,55,200,n,M55+
+Green,m,50,200,n,M50+
+
+Red,f,0,200,n,F-21+
+Red,m,0,20,n,M-20
+Red,m,45,200,n,M45+
+Red,m,40,200,n,M40+
+Red,m,35,200,n,M35+
+
+Blue,f,0,200,n,M-21+
+Blue,m,0,200,n,M-21+
+
+White,f,0,200,y,MF White
+White,m,0,200,y,MF White
+Yellow,f,0,200,y,F Yellow
+Yellow,m,0,200,y,M Yellow
+Orange,f,0,200,y,F Orange
+Orange,m,0,200,y,M Orange
+Brown,f,0,200,n,F Brown
+Brown,m,0,200,n,M Brown
+Green,f,0,200,n,F Green
+Green,m,0,200,n,M Green
+Red,m,0,200,n,M Red

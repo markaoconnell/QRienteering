@@ -13,12 +13,33 @@ $has_preset_id = isset($_GET["member_id"]);
 $member_id = $_GET["member_id"];
 $key = $_GET["key"];
 $event = isset($_GET["event"]) ? $_GET["event"] : "";
+$classification_info = isset($_GET["classification_info"]) ? $_GET["classification_info"] : "";
+$classification_info_supplied = ($classification_info != "");
+$classification_info_hash = array();
+if ($classification_info_supplied) {
+  $classification_info_hash = decode_entrant_classification_info($classification_info);
+}
+
 
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
 
+if ($event == "") {
+  error_and_exit("Unknown event (empty), are you using an authorized link?\n");
+}
+
+$event_path = get_event_path($event, $key, "..");
+if (!is_dir($event_path) || !file_exists("{$event_path}/description")) {
+  error_and_exit("<p>ERROR: Bad event \"{$event}\", was this created properly?" . get_error_info_string());
+}
+
+if (file_exists("{$base_path}/{$event}/done")) {
+  error_and_exit("Event " . file_get_contents("{$base_path}/{$event}/description") . " has completed and registrations are no longer possible.\n");
+}
+
 $is_preregistered_checkin = isset($_GET["checkin"]) && ($_GET["checkin"] == "true");
+$using_nre_classes = event_is_using_nre_classes($event, $key);
 
 $saved_registration_info = array();
 if (isset($_COOKIE["{$key}-safety_info"])) {
@@ -83,7 +104,6 @@ echo "<p class=title><u>Safety information</u>\n";
 echo "<form action=\"./finalize_registration.php\">\n";
 if ($is_preregistered_checkin) {
   echo "<input type=hidden name=\"checkin\" value=\"true\">\n";
-  echo "<input type=hidden name=\"event\" value=\"{$event}\">\n";
 }
 
 if ($has_preset_id) {
@@ -96,6 +116,10 @@ else {
 }
 echo "<input type=hidden name=\"si_stick\" value=\"{$si_stick}\">\n";
 echo "<input type=hidden name=\"key\" value=\"{$key}\">\n";
+echo "<input type=hidden name=\"event\" value=\"{$event}\">\n";
+if ($classification_info_supplied) {
+  echo "<input type=hidden name=\"classification_info\" value=\"{$classification_info}\">\n";
+}
 
 
 // Warn the user if they entered a SI unit number but selected QR code orienteering
@@ -193,6 +217,40 @@ if ($is_member) {
 
 echo "<br><p>(Optional) If you would like results emailed to you, please supply a valid email address<br>\n";
 echo "<input type=\"text\" size=50 name=\"email\" {$presupplied_email_address} ><br><br>\n";
+
+//
+if ($using_nre_classes && (!$classification_info_supplied || ($classification_info_hash["CLASS"] == ""))) {
+  echo "<br><br><p>If you would like your time to count for national ranking purposes, please enter your birth year and gender.\n";
+  echo "<p>Please leave blank if you are orienteering recreationally or going out in a group (more than 1 person).\n";
+
+  echo "<p>(Optional) Birth year (for ranking purposes), please use 4 digits, e.g. 1973, 2001, etc.<br>\n";
+  if ($classification_info_supplied && ($classification_info_hash["BY"] != "")) {
+    $presupplied_birth_year = "value=\"{$classification_info_hash["BY"]}\"";
+  }
+  else {
+    $presupplied_birth_year = "value=\"\"";
+  }
+  echo "<input type=\"text\" size=50 name=\"birth_year\" {$presupplied_birth_year} ><br><br>\n";
+
+  $male_checked = "";
+  $female_checked = "";
+  $other_checked = "";
+  if ($classification_info_supplied) {
+    if ($classification_info_hash["G"] == "m") {
+      $male_checked = "checked";
+    }
+    if ($classification_info_hash["G"] == "f") {
+      $female_checked = "checked";
+    }
+    if ($classification_info_hash["G"] == "o") {
+      $other_checked = "checked";
+    }
+  }
+  echo "<p>(Optional) Gender (for ranking purposes): <br>";
+  echo "<input type=radio name=\"gender\" value=\"f\" {$female_checked} >  Female<br>\n";
+  echo "<input type=radio name=\"gender\" value=\"m\" {$male_checked} >  Male<br>\n";
+  echo "<input type=radio name=\"gender\" value=\"o\" {$other_checked} >  Other<br>\n";
+}
 ?>
 
 <input type="submit" value="Choose course">

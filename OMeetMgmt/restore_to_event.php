@@ -74,6 +74,14 @@ foreach ($competitor_list as $competitor) {
         if (substr($this_entry, 0, $prefix_length) == "ResultEntry-") {
           $result_entry = substr($this_entry, $prefix_length); 
 	  rename("{$removed_competitor_path}/{$competitor}/{$this_entry}", "{$results_path}/{$result_entry}");
+
+          if (event_is_using_nre_classes($event, $key)) {
+            if (competitor_has_class("{$removed_competitor_path}/{$competitor}")) {
+              $results_per_class_path = get_results_per_class_path($event, $key);
+              $competitor_class = get_class_for_competitor("{$removed_competitor_path}/{$competitor}");
+              file_put_contents("{$results_per_class_path}/{$competitor_class}/{$result_entry}", "");
+	    }
+	  }
 	  break;
 	}
       }

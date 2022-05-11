@@ -21,8 +21,8 @@ function name_to_registration_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
   return ("<li>{$event_fullname}<ul><li><a href={$base_path_for_links}/OMeetRegistration/register.php?event=${event_id}&key={$key}>BYOM Registration</a>" .
-                                   "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}&member=1>Member meet Registration</a>" .
-                                   "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}>Non-member meet Registration</a></ul>\n");
+                                   "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}&event={$event_id}&member=1>Member meet Registration</a>" .
+                                   "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}&event={$event_id}>Non-member meet Registration</a></ul>\n");
 }
 
 function name_to_results_link($event_id) {
@@ -80,7 +80,10 @@ if (!key_is_valid($key)) {
 
 $base_path = get_base_path($key, "..");
 if (!is_dir($base_path)) {
-  error_and_exit("No event directory found, please contact administrator to create \"{$base_path}\"");
+  // Note: This will not create the full directory path, only the bottom directory if it does not exist
+  // Not sure if I want to change this or not, I'll leave it alone for the moment
+  mkdir($base_path);
+  #error_and_exit("No event directory found, please contact administrator to create \"{$base_path}\"");
 }
 
 

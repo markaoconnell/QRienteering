@@ -76,7 +76,15 @@ foreach ($competitor_list as $competitor) {
           # remove this entry
           if ($is_confirmed) {
             rename("{$results_path}/{$this_result}", "{$competitor_directory}/{$competitor}/ResultEntry-{$this_result}");
-            $entry_output .= ", finish marker {$this_result}";
+	    $entry_output .= ", finish marker {$this_result}";
+
+	    if (event_is_using_nre_classes($event, $key)) {
+              if (competitor_has_class("{$competitor_directory}/{$competitor}")) {
+                $results_per_class_path = get_results_per_class_path($event, $key);
+		$competitor_class = get_class_for_competitor("{$competitor_directory}/{$competitor}");
+                unlink("{$results_per_class_path}/{$competitor_class}/{$this_result}");
+	      }
+	    }
           }
           break;
         }

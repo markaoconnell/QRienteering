@@ -188,6 +188,19 @@ if (!file_exists("{$controls_found_path}/finish")) {
 
   $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $competitor_id);
   file_put_contents("{$results_path}/${course}/${result_filename}", "");
+
+  if (event_is_using_nre_classes($event, $key) && competitor_has_class($competitor_path)) {
+    $results_per_class_path = get_results_per_class_path($event, $key);
+    $result_class = get_class_for_competitor($competitor_path);
+    if (!file_exists($results_per_class_path)) {
+      mkdir($results_per_class_path);
+    }
+    if (!file_exists("{$results_per_class_path}/{$result_class}")) {
+      mkdir("{$results_per_class_path}/{$result_class}");
+    }
+    file_put_contents("{$results_per_class_path}/${result_class}/${result_filename}", "");
+    $parseable_result_string .= "\n####,CLASS,{$result_class}\n";
+  }
 }
 else {
   $error_string .= "<p>Second scan of finish?  Finish time not updated.\n";
@@ -232,8 +245,8 @@ if ($score_course && ($score_penalty_msg != "")) {
 }
 
 echo "{$parseable_result_string}\n-->\n";
-echo show_results($event, $key, $course, $score_course, $max_score, "..");
-echo get_all_course_result_links($event, $key, "..");
+echo show_results($event, $key, $course, "", $score_course, $max_score);
+echo get_all_course_result_links($event, $key);
 
 // echo "<p>Course started at ${course_started_at}, course finished at ${now}, difference is ${time_taken}.\n";
 
