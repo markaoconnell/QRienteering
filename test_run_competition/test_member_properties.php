@@ -12,7 +12,7 @@ function error_and_exit_from_test($error_string) {
 
 function create_member_properties($member_properties) {
   $member_properties_list = array_map(function($member_props_key) use ($member_properties)
-                                        { return "{$member_props_key} : {$member_properties{$member_props_key}}"; }, array_keys($member_properties));
+                                        { return "{$member_props_key} : {$member_properties[$member_props_key]}"; }, array_keys($member_properties));
 
   file_put_contents("./member_properties.txt", implode("\n", $member_properties_list));
 }
