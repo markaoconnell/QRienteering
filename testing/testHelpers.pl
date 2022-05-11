@@ -188,7 +188,7 @@ sub create_key_file {
   $keys{"UnitTestAlternate"} = "NewDirectory_foo";
   $xlt_keys{"UnitTestXlt"} = "UnitTestPlayground";
   $xlt_keys{"UnitTestAltXlt"} = "UnitTestAlternate";
-  $xlt_keys{"UnitTestPlayground"} = "UnitTestKeyDoesNotExist";
+  #$xlt_keys{"UnitTestPlayground"} = "UnitTestKeyDoesNotExist";
   $xlt_keys{"UnitTestBad"} = "no_way_no_how";
 
   open(KEY_FILE, ">../keys");
