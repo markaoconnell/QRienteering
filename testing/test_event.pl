@@ -595,6 +595,38 @@ if ($actual_table_rows != 9) {
 
 success();
 
+#################
+#Test 7 - check the stats after rescanning for members
+
+%TEST_INFO = qw(Testname CheckStatsForEventWithMemberRescan);
+%GET = qw(key UnitTestPlayground rescan_for_members 1);
+$GET{"event"} = $event_id;
+
+hashes_to_artificial_file();
+
+my($cmd) = "php ../OMeetMgmt/meet_statistics.php";
+my($output);
+$output = qx($cmd);
+
+if ($output !~ /6 unique/) {
+  error_and_exit("Did not find 6 unique entrants in output.\n$output");
+}
+
+if ($output !~ /15 total participants/) {
+  error_and_exit("Did not find 15 total participants in output.\n$output");
+}
+
+my($actual_table_rows);
+$actual_table_rows = () = $output =~ /(<tr><td>)/g;
+
+if ($actual_table_rows != 9) {
+  error_and_exit("Found $actual_table_rows instead of 9 rows in results output.\n$output");
+}
+
+success();
+
+exit 0;
+
 ############
 # Cleanup
 
