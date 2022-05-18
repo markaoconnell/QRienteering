@@ -307,7 +307,13 @@ if (file_exists("{$competitor_path}/registration_info")) {
       else {
         $subject = "Orienteering Results";
       }
-      $email_send_result = mail($email_addr, $subject, $body_string, $header_string);
+
+      if (isset($email_properties["extra_params"]) && ($email_properties["extra_params"] != "")) {
+        $email_send_result = mail($email_addr, $subject, $body_string, $header_string, $email_properties["extra_params"]);
+      }
+      else {
+        $email_send_result = mail($email_addr, $subject, $body_string, $header_string);
+      }
 
       if ($email_send_result) {
         echo "<p>Mail: Sent results to {$email_addr}.\n";
