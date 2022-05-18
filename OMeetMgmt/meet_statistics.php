@@ -261,5 +261,9 @@ echo "<p>Overall meet statistics for: <strong>{$event_name}</strong>\n";
 
 echo $results_string;
 
+if (!$download_csv) {
+  echo "<p><p><a href=\"./meet_statistics.php?key={$key}&event={$event}&rescan_for_members=1\">Check participant names to see if in member database (may take a little while)</a>\n";
+}
+
 echo get_web_page_footer();
 ?>

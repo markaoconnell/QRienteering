@@ -633,7 +633,11 @@ def registration_window(user_info):
         button.configure(state=tk.DISABLED)
 
     registration_frame = tk.Tk()
-    registration_frame.geometry("300x300")
+    if len(discovered_courses) < 8:
+      registration_frame.geometry("300x300")
+    else:
+      frame_height = (len(discovered_courses) * 30) + 100
+      registration_frame.geometry(f"300x{frame_height}")
     registration_frame.title("Register entrant")
 
     localFont = font.Font(root = registration_frame)
@@ -1130,8 +1134,13 @@ def initialize_fake_results():
   if results_initialized: return
   results_initialized = True
 
+  if filename_of_fake_results != "":
+      filename = filename_of_fake_results
+  else:
+      filename = "fake_entries_for_manage_event"
+
   try:
-    with open("fake_entries_for_manage_event", "r") as FAKE_ENTRIES:
+    with open(filename, "r") as FAKE_ENTRIES:
       for line in FAKE_ENTRIES:
         line = line.strip()
         if line.startswith("#"): # Ignore comment lines
@@ -1142,10 +1151,31 @@ def initialize_fake_results():
           value = line.split(",")
           #print (f"The line is --{line}--")
           #print (f"It has {len(value)} entries.")
-          if (len(value) > 3):
-            simulated_entries.append({SI_STICK_KEY : int(value[0]), SI_START_KEY : int(value[1]), SI_FINISH_KEY : int(value[2]), SI_CONTROLS_KEY : value[3:]})
+          first_entry_pieces = value[0].split(";")
+          if (len(first_entry_pieces) > 1):
+            # log entry format from a real SI unit download
+            # 503555;0,start:0,finish:0
+            # 24680;1000,start:1000,finish:2000,151:1100,152:1500,155:1600,151:1680
+            si_stick = int(first_entry_pieces[0])
+            start = int(value[1].split(":")[1])
+            finish = int(value[2].split(":")[1])
           else:
-            simulated_entries.append({SI_STICK_KEY : int(value[0]), SI_START_KEY : int(value[1]), SI_FINISH_KEY : int(value[2]), SI_CONTROLS_KEY : []})
+            # Entry format easier for a human to enter
+            # stick,start,finish,controls
+            # 24680,1000,2000,151:1100,152:1500,155:1600,151:1680
+            si_stick = int(value[0])
+            start = int(value[1])
+            finish = int(value[2])
+
+          if replay_si_stick:
+            if stick_to_replay != "":
+                if int(stick_to_replay) != si_stick:
+                    continue;
+
+          if (len(value) > 3):
+             simulated_entries.append({SI_STICK_KEY : si_stick, SI_START_KEY : start, SI_FINISH_KEY : finish, SI_CONTROLS_KEY : value[3:]})
+          else:
+             simulated_entries.append({SI_STICK_KEY : si_stick, SI_START_KEY : start, SI_FINISH_KEY : finish, SI_CONTROLS_KEY : []})
   except FileNotFoundError:
     pass  # Fine if the file is not there, we'll just use the pre-coded fake entries
 
@@ -1346,9 +1376,11 @@ if ("font_size" in initializations):
   myFont.config(size=font_size)
 
 replay_si_stick = 0
+stick_to_replay = ""
+filename_of_fake_results = ""
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], "e:k:u:s:fcdvtrh")
+  opts, args = getopt.getopt(sys.argv[1:], "e:k:u:s:f:cdvtr:h")
 except getopt.GetoptError:
   print("Parse error on command line.")
   usage()
@@ -1369,6 +1401,7 @@ for opt, arg in opts:
   elif opt == "-f":
     use_fake_read_results = True
     use_real_sireader = False
+    filename_of_fake_results = arg
   elif opt == "-c":
     continuous_testing = True
   elif opt == "-d":
@@ -1379,6 +1412,7 @@ for opt, arg in opts:
     testing_run = 1
   elif opt == "-r":
     replay_si_stick = 1
+    stick_to_replay = arg
   else:
     print (f"ERROR: Unknown option {opt}.")
     usage()
