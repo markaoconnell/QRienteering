@@ -131,10 +131,11 @@ function set_page_title($new_title) {
 
 
 $bg_color = "";
+$font_color_override = "";
 
 // Print out the default headers
 function get_web_page_header($paragraph_style, $table_style, $form_style) {
-  global $bg_color, $page_title;
+  global $bg_color, $page_title, $font_color_override;
 
   $headers_to_show = <<<END_OF_HEADERS
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -151,6 +152,10 @@ END_OF_HEADERS;
 
   if ($bg_color != "") {
     $headers_to_show .= get_bg_color_element($bg_color);
+  }
+
+  if ($font_color_override != "") {
+    $headers_to_show .= $font_color_override;
   }
 
   if ($paragraph_style) {
@@ -186,8 +191,9 @@ function set_success_background() {
 }
 
 function set_error_background() {
-  global $bg_color;
+  global $bg_color, $font_color_override;
   $bg_color = "#cc3300";
+  $font_color_override = "<style>\np {\ncolor: yellow ;\n}\n";
 }
 
 
