@@ -189,6 +189,7 @@ if (!$error) {
 
       if ($entrant_class != "") {
         set_class_for_competitor($competitor_path, $entrant_class);
+        $parseable_result_string .= "\n####,CLASS,{$entrant_class}\n";
       }
 
       // Now lookup to see what the class is, if necessary

@@ -625,8 +625,6 @@ if ($actual_table_rows != 9) {
 
 success();
 
-exit 0;
-
 ############
 # Cleanup
 

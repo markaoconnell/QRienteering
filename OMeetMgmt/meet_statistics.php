@@ -37,6 +37,7 @@ $key = isset($_GET["key"]) ? $_GET["key"] : "";
 $download_csv_flag = isset($_GET["download_csv"]) ? $_GET["download_csv"] : "";
 $download_csv = ($download_csv_flag != "");
 $rescan_for_members = isset($_GET["rescan_for_members"]);
+$rescan_non_members = isset($_GET["rescan_non_members"]);
 
 
 if (!key_is_valid($key)) {
@@ -98,7 +99,7 @@ if ($rescan_for_members) {
       $registration_info = array();
     }
 
-    if (!isset($registration_info["is_member"])) {
+    if (!isset($registration_info["is_member"]) || ($rescan_non_members && ($registration_info["is_member"] == "no"))) {
       // Look up the name and see if this person could be a member
       $competitor_name_pieces = explode(" ", $competitor_name);
       $found_member = false;
@@ -263,6 +264,7 @@ echo $results_string;
 
 if (!$download_csv) {
   echo "<p><p><a href=\"./meet_statistics.php?key={$key}&event={$event}&rescan_for_members=1\">Check participant names to see if in member database (may take a little while)</a>\n";
+  echo "<p><p><a href=\"./meet_statistics.php?key={$key}&event={$event}&rescan_for_members=1&rescan_non_members=1\">Recheck non-member participant names to see if in member database (may take a little while)</a>\n";
 }
 
 echo get_web_page_footer();
