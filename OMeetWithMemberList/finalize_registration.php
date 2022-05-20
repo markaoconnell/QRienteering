@@ -25,8 +25,8 @@ if (!is_dir($event_path) || !file_exists("{$event_path}/description")) {
   error_and_exit("<p>ERROR: Bad event \"{$event}\", was this created properly?" . get_error_info_string());
 }
 
-if (file_exists("{$base_path}/{$event}/done")) {
-  error_and_exit("Event " . file_get_contents("{$base_path}/{$event}/description") . " has completed and registrations are no longer possible.\n");
+if (file_exists("{$event_path}/done")) {
+  error_and_exit("Event " . file_get_contents("{$event_path}/description") . " has completed and registrations are no longer possible.\n");
 }
 
 $classification_info = isset($_GET["classification_info"]) ? $_GET["classification_info"] : "";
@@ -49,7 +49,7 @@ if ($has_preset_id) {
     $first_name = $entrant_info["first_name"];
     $last_name = $entrant_info["last_name"];
 
-    $pass_info_to_registration="&course={$entrant_info["course"]}&event={$event}";
+    $pass_info_to_registration="&course={$entrant_info["course"]}";
 
     if (($entrant_info["member_id"] != "not_a_member") && ($entrant_info["member_id"] != "")) {
       $member_properties = get_member_properties(get_base_path($key));

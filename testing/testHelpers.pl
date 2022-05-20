@@ -258,11 +258,30 @@ sub hash_to_registration_info_string {
 }
 
 ########################
+# Decode a registration info string back to the original hash
+sub registration_info_string_to_hash {
+  my($registration_info_string) = @_;
+
+  my(%registration_hash);
+  my(@registration_pieces) = split(",", $registration_info_string);
+  my($i);
+
+  for ($i = 0; $i < @registration_pieces; $i += 2) {
+    $registration_hash{$registration_pieces[$i]} = decode_base64($registration_pieces[$i + 1]);
+  }
+
+  return(%registration_hash);
+}
+
+########################
 # Create the classification information string
 sub values_to_classification_info {
   my($birth_year, $gender, $preset_class) = @_;
 
-  return("BY:" . encode_base64($birth_year) . ",G:" . encode_base64("GenderId:" . $gender) . ",CLASS:" . encode_base64($preset_class));
+  # For some reason, there is a newline at the end of the encoded string - strip them out
+  my($classification_info) = "BY:" . encode_base64($birth_year) . ",G:" . encode_base64("GenderId:" . $gender) . ",CLASS:" . encode_base64($preset_class);
+  $classification_info =~ s/\n//g;
+  return($classification_info);
 }
 
 ########################

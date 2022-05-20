@@ -29,13 +29,13 @@ if ($event == "") {
   error_and_exit("Unknown event (empty), are you using an authorized link?\n");
 }
 
-$event_path = get_event_path($event, $key, "..");
+$event_path = get_event_path($event, $key);
 if (!is_dir($event_path) || !file_exists("{$event_path}/description")) {
   error_and_exit("<p>ERROR: Bad event \"{$event}\", was this created properly?" . get_error_info_string());
 }
 
-if (file_exists("{$base_path}/{$event}/done")) {
-  error_and_exit("Event " . file_get_contents("{$base_path}/{$event}/description") . " has completed and registrations are no longer possible.\n");
+if (file_exists("{$event_path}/done")) {
+  error_and_exit("Event " . file_get_contents("{$event_path}/description") . " has completed and registrations are no longer possible.\n");
 }
 
 $is_preregistered_checkin = isset($_GET["checkin"]) && ($_GET["checkin"] == "true");
@@ -137,7 +137,7 @@ else {
   $entrant_info = array();
 }
 
-$base_path = get_base_path($key, "..");
+$base_path = get_base_path($key);
 if (isset($entrant_info["waiver_signed"]) && (strtolower($entrant_info["waiver_signed"]) == "yes")) {
   echo "<p><input type=hidden name=\"waiver_signed\" value=\"signed\"><br>";
 }
