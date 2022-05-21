@@ -212,7 +212,7 @@ sub remove_key_file {
 
 # This too should be based on the key and the keyfile - leave it alone for now
 sub get_base_path {
-  my($key) = @_;  # Ignored for the moment, should really pay attention to this
+  my($key) = @_; 
   return("../OMeetData/" . $keys{$key});
 }
 
@@ -242,6 +242,20 @@ sub set_no_redirects_for_event {
   my($path) = get_base_path($key);
 
   open(NO_REDIRECTS, ">${path}/${event}/no_redirects"); close(NO_REDIRECTS);
+}
+
+#####################
+# 
+sub set_xlation_for_control {
+  my($event, $key, $control, $xlation) = @_;
+
+  my($path) = get_base_path($key);
+
+  if (! -d "${path}/${event}/xlations") {
+    mkdir("${path}/${event}/xlations");
+  }
+
+  open(XLATION_FILE, ">${path}/${event}/xlations/${control}"); print XLATION_FILE $xlation; close(XLATION_FILE);
 }
 
 ########################

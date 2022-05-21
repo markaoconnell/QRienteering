@@ -23,7 +23,7 @@ function format_si_time($time_in_seconds) {
 // Return a string with the elapsed time in seconds pretty printed
 function formatted_time($time_in_seconds) {
   $hours = floor($time_in_seconds / 3600);
-  $mins = floor(($time_in_seconds / 60) % 60);
+  $mins = floor($time_in_seconds / 60) % 60;
 //  $hours = 0;
 //  $mins = floor($time_in_seconds / 60);
   $secs = ($time_in_seconds % 60);

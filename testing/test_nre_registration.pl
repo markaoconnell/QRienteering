@@ -329,7 +329,7 @@ if ($output !~ /registration_info=([^&"]*)[&"]/) {
 }
 
 my($found_registration_info) = $1;
-print "Found registration info is: $found_registration_info.\n";
+#print "Found registration info is: $found_registration_info.\n";
 
 my(%forwarded_info) = registration_info_string_to_hash($found_registration_info);
 #print "Classification info is: " . $forwarded_info{"classification_info"} . "\n";
