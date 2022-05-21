@@ -6,7 +6,8 @@ ck_testing();
 
 $event = $_COOKIE["event"];
 $key = $_COOKIE["key"];
-$control_id = $_GET["control"];
+$control_id = isset($_GET["control"]) ? $_GET["control"] : "no-such-control";
+$control_id_for_display = xlate_control_id_for_display($key, $event, $control_id);
 $competitor_id = $_COOKIE["competitor_id"];
 $course = $_COOKIE["course"];
 $time_now = time();
@@ -75,6 +76,7 @@ if (!file_exists(get_event_path($event, $key, "..") . "/no_redirects") && ($_GET
 if (isset($_GET["mumble"]) && ($_GET["mumble"] != "")) {
   $pieces = explode(",", base64_decode($_GET["mumble"]));
   $control_id = $pieces[0];
+  $control_id_for_display = xlate_control_id_for_display($key, $event, $control_id);
   $encoded_competitor_id = $pieces[1];
   $time_of_page_access = $pieces[2];
   $skip_adding_control_as_extra = ($pieces[3] == "redo");
@@ -154,10 +156,10 @@ if ($score_course) {
   if ($found_control) {
     $control_found_filename = "{$controls_found_path}/" . sprintf("%010d", $time_now) . ",{$control_id}";
     file_put_contents($control_found_filename, "");
-    $success_msg = "<p>Reached {$control_id} on " . ltrim($course, "0..9-") . ", earned {$points_for_control} points.\n";
+    $success_msg = "<p>Reached {$control_id_for_display} on " . ltrim($course, "0..9-") . ", earned {$points_for_control} points.\n";
   }
   else {
-    $error_string .= "<p>Found wrong control, control {$control_id} not on course " . ltrim($course, "0..9-") . "\n";
+    $error_string .= "<p>Found wrong control, control {$control_id_for_display} not on course " . ltrim($course, "0..9-") . "\n";
     $extra_control_string = sprintf("%010d", $time_now) . ",{$control_id}\n";
     file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
   }
@@ -182,8 +184,9 @@ if ($score_course) {
 
   $remaining_controls_list = array_diff(array_map(function ($element) { return $element[0]; }, $control_list), $unique_controls_array);
   sort($remaining_controls_list);
-  $extra_info_msg .= "<p>Controls remaining: " . join(",", array_map(function ($elt) use ($controls_points_hash)
-                                                                              { return ("{$elt} => " . $controls_points_hash[$elt] . " pts"); },
+  $extra_info_msg .= "<p>Controls remaining: " . join(",", array_map(function ($elt) use ($controls_points_hash, $key, $event)
+                                                                         { return (xlate_control_id_for_display($key, $event, $elt) . " => "
+                                                                             . $controls_points_hash[$elt] . " pts"); },
                                                                      $remaining_controls_list));
   $extra_info_msg .= "<p>Controls done: " . join(",", $unique_controls_array) . "\n";
 }
@@ -204,13 +207,13 @@ else {
     // Possible that we scanned the last control twice - check for that
     $append_finish_message = true;
     if ($control_id != $control_list[count($control_list) - 1][0]) {
-      $error_string .= "<p>Found wrong control: {$control_id}, course " . ltrim($course, "0..9-") . ", control #" . ($number_controls_found + 1) .
+      $error_string .= "<p>Found wrong control: {$control_id_for_display}, course " . ltrim($course, "0..9-") . ", control #" . ($number_controls_found + 1) .
                           ", expected to finish course.\n";
       $extra_control_string = sprintf("%010d", $time_now) . ",{$control_id}\n";
       file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
     }
     else {
-      $success_msg = "<p>Control {$control_id} correct but already scanned on " . ltrim($course, "0..9-") . "\n" .
+      $success_msg = "<p>Control {$control_id_for_display} correct but already scanned on " . ltrim($course, "0..9-") . "\n" .
                      "<p>0 more to find, next is Finish.\n";
     }
   }
@@ -225,8 +228,8 @@ else {
     }
   
     if ($control_id != $prior_control) {
-      $error_string .= "<p>Found wrong control: {$control_id}, course " . ltrim($course, "0..9-") . ", control #" . ($number_controls_found + 1) .
-                          ", expected control " . $control_list[$number_controls_found][0] . "\n";
+      $error_string .= "<p>Found wrong control: {$control_id_for_display}, course " . ltrim($course, "0..9-") . ", control #" . ($number_controls_found + 1) .
+                          ", expected control " . xlate_control_id_for_display($key, $event, $control_list[$number_controls_found][0]) . "\n";
       $extra_control_string = sprintf("%010d", $time_now) . ",{$control_id}\n";
       file_put_contents($competitor_path . "/extra", $extra_control_string, FILE_APPEND);
       // echo "<p>This looks like it also wasn't the prior control\n";
@@ -278,9 +281,9 @@ else {
         $next_control = $control_list[$number_controls_found][0];
       }
     $control_number_for_printing = $number_controls_found;
-    $success_msg = "<p>Control {$control_id} correct but already scanned." .
+    $success_msg = "<p>Control {$control_id_for_display} correct but already scanned." .
                    "<p>Control #{$control_number_for_printing} on " . ltrim($course, "0..9-") . "\n" .
-                   "<p>{$remaining_controls} more to find, next is {$next_control}.\n";
+                   "<p>{$remaining_controls} more to find, next is " . xlate_control_id_for_display($key, $event, $next_control) . ".\n";
     }
   }
   else {
@@ -306,8 +309,8 @@ else {
       $next_control = $control_list[$number_controls_found + 1][0];
     }
     $control_number_for_printing = $number_controls_found + 1;
-    $success_msg = "<p>Correct!  Reached {$control_id}, control #{$control_number_for_printing} on " . ltrim($course, "0..9-") . "\n" .
-                   "<p>{$remaining_controls} more to find, next is {$next_control}.\n";
+    $success_msg = "<p>Correct!  Reached {$control_id_for_display}, control #{$control_number_for_printing} on " . ltrim($course, "0..9-") . "\n" .
+                   "<p>{$remaining_controls} more to find, next is " . xlate_control_id_for_display($key, $event, $next_control) . ".\n";
     // echo "<p>Saved to the file ${competitor_path}/${number_controls_found}.\n";
   }
 
