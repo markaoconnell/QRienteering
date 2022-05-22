@@ -35,14 +35,14 @@ if ($event == "") {
   // No event specified - show a list
   // If there is only one, then auto-choose it
   $event_list = scandir($base_path);
-  $event_list = array_filter($event_list, is_event);
+  $event_list = array_filter($event_list, "is_event");
   if (count($event_list) == 1) {
     $event = basename(current($event_list));
   }
   else if (count($event_list) > 1) {
 
     echo get_web_page_header(true, true, false);
-    $event_output_array = array_map(name_to_link, $event_list);
+    $event_output_array = array_map("name_to_link", $event_list);
     echo "<p>Choose your event:<p>\n<ul>\n" . implode("\n", $event_output_array) . "</ul>";
     echo get_web_page_footer();
 

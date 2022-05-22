@@ -79,7 +79,7 @@ if (strcmp($event, "") == 0) {
     //echo "Identified event as ${event}\n<p>";
   }
   else if (count($event_list) > 1) {
-    $event_output_array = array_map(name_to_link, $event_list);
+    $event_output_array = array_map("name_to_link", $event_list);
     echo "<p>Choose your event:<p>\n<ul>\n" . implode("\n", $event_output_array) . "</ul>";
     return;
   }

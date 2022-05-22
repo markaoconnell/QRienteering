@@ -34,8 +34,8 @@ $base_path = get_base_path($key, "..");
 
 if (strcmp($event_name, "") == 0) {
   $event_list = scandir($base_path);
-  $event_list = array_filter($event_list, is_event_open);
-  $event_output_array = array_map(name_to_link, $event_list);
+  $event_list = array_filter($event_list, "is_event_open");
+  $event_output_array = array_map("name_to_link", $event_list);
   if (count($event_output_array) > 0) {
     echo "<p>Choose your event:<p>\n<ul>\n" . implode("\n", $event_output_array) . "</ul>";
   }
