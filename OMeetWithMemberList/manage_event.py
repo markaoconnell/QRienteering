@@ -70,6 +70,7 @@ USER_MISSED_FINISH = r"no_finish_punch"
 USER_CELL = r"cell_phone"
 USER_COURSE = r"course"   # Only for preregistered entrants
 USER_NRE_INFO = r"nre_info"  # Only for events with NRE ranking
+USER_DOWNLOAD_NOT_POSSIBLE = r"stick_was_cleared"
 MISSED_FINISH_PUNCH_SPLIT = 600
 MISSED_FINISH_PUNCH_MESSAGE = "No finish punch detected, recorded finish split of 10m"
 
@@ -283,7 +284,7 @@ def upload_results(user_info, event_key, event):
       if nre_class_match != None:
           upload_status_string += f"({nre_class_match.group(1)}) - "
   else:
-      upload_status_string = f"Error, download of {user_info[USER_STICK]} failed - "
+      upload_status_string = f"Error, download of {user_info[USER_STICK]} failed"
 
   error_list = re.findall(r"####,ERROR,.*", output)
   if (len(error_list) == 0):
@@ -306,7 +307,15 @@ def upload_initial_results(user_info, event_key, event):
       possible_member_info = lookup_si_unit(user_info[USER_STICK])
       if possible_member_info[USER_NAME] != None:
           user_info.update(possible_member_info)
-          new_result_tuple = (result_tuple[0] + f"\nIdentified member {user_info[USER_NAME]}", result_tuple[1])
+          extra_status = f"\nIdentified member {user_info[USER_NAME]}\n"
+          extra_status += "If finishing - use the register button to register for a course, then download the results\n"
+          extra_status += "If registering for a new course - use the register button, then clear and check"
+          new_result_tuple = (result_tuple[0] + extra_status, result_tuple[1])
+          result_tuple = new_result_tuple
+      else:
+          extra_status = "\nIf finishing - register via a SmartPhone, then download again\n"
+          extra_status += "If registering for a new course - register via a SmartPhone, then clear and check"
+          new_result_tuple = (result_tuple[0] + extra_status, result_tuple[1])
           result_tuple = new_result_tuple
 
   make_status(user_info, result_tuple[0], result_tuple[1])
@@ -557,16 +566,24 @@ def make_status_on_mainloop(user_info, message, is_error, is_connected):
         stick_status["fg"] = "green"
 
     stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy, font=myFont)
-    stick_register = tk.Button(button_frame, text="Register for new course", font=myFont)
+    stick_register = tk.Button(button_frame, text="Register for course", font=myFont)
     stick_replay = tk.Button(button_frame, text="Download stick info", font=myFont)
     user_info[USER_BUTTONS] = [stick_ack, stick_register, stick_replay]
     user_info[USER_REG_BUTTON] = stick_register
     user_info[USER_STATUS] = stick_status
     stick_replay.configure(command=lambda: replay_stick(user_info))
     stick_register.configure(command=lambda: registration_window(user_info))
-    if user_info[USER_NAME] == None:
+
+    if (user_info[USER_NAME] == None) and (USER_DOWNLOAD_NOT_POSSIBLE in user_info):
+        stick_register.configure(state = tk.DISABLED)
+        stick_replay.configure(state = tk.DISABLED)
+        user_info[USER_BUTTONS] = [ stick_ack ]
+    elif user_info[USER_NAME] == None:
         stick_register.configure(state = tk.DISABLED)
         user_info[USER_BUTTONS] = [ stick_ack, stick_replay ]
+    elif USER_DOWNLOAD_NOT_POSSIBLE in user_info:
+        stick_replay.configure(state = tk.DISABLED)
+        user_info[USER_BUTTONS] = [ stick_ack, stick_register ]
 
     if not is_connected:
         stick_register.configure(state = tk.DISABLED)
@@ -1268,13 +1285,19 @@ def sireader_main():
               user_info[USER_RESULTS] = qr_result_string
               if (user_info[USER_NAME] != None):
                   message = f"Recognized member {user_info[USER_NAME]} with SI unit {user_info[USER_STICK]}"
+                  message += "\nIf registering, use the register button."
               else:
                   display_as_error = True
-                  message = f"Could not find member for SI unit {user_info[USER_STICK]}"
+                  message = f"Could not find member for SI unit {user_info[USER_STICK]}\n"
+                  message += "If registering - use SmartPhone based registration instead."
 
-              if (current_mode == DOWNLOAD_MODE) and forced_registration:
-                  message += "\nNo punches found - was stick cleared?"
-                  display_as_error = True
+              if forced_registration:
+                  message += "\nIf finishing, SI unit has no information - use self reporting to record a time."
+                  user_info[USER_DOWNLOAD_NOT_POSSIBLE] = True
+                  if current_mode == DOWNLOAD_MODE:
+                      display_as_error = True
+              else:
+                  message += "\nIf finishing, use the download button"
 
               if finish_adjusted:
                   user_info[USER_MISSED_FINISH] = True
