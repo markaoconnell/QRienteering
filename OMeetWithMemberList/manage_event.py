@@ -912,8 +912,7 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
                              "club_name", base64.standard_b64encode(club_name.encode("utf-8")).decode("utf-8"),
                              "si_stick", base64.standard_b64encode(str(stick).encode("utf-8")).decode("utf-8"),
                              "email_address", base64.standard_b64encode(found_email.encode("utf-8")).decode("utf-8"),
-                             "safety_info", base64.standard_b64encode("On file".encode("utf-8")).decode("utf-8"),
-                             "registration", base64.standard_b64encode("Optimized registration".encode("utf-8")).decode("utf-8"),
+                             "registration", base64.standard_b64encode("SI unit".encode("utf-8")).decode("utf-8"),
                              "member_id", base64.standard_b64encode(found_id.encode("utf-8")).decode("utf-8"),
                              "cell_phone", base64.standard_b64encode(cell_phone.encode("utf-8")).decode("utf-8"),
                              "is_member", base64.standard_b64encode("yes".encode("utf-8")).decode("utf-8") ]
