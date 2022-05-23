@@ -353,11 +353,31 @@ function get_csv_results($event, $key, $course, $result_class, $show_points, $ma
       $points_value = "";
     }
 
+    $nre_info = ";;;;";
+    if (file_exists("{$competitor_path}/registration_info")) {
+      $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
+      if (isset($registration_info["classification_info"])) {
+        if ($registration_info["classification_info"] != "") {
+          $classification_info = decode_entrant_classification_info($registration_info["classification_info"]);
+          $nre_info = ";{$classification_info["BY"]};{$classification_info["G"]};{$classification_info["CLASS"]};";
+        }
+
+      }
+      if (isset($registration_info["club_name"])) {
+        $nre_info .= "{$registration_info["club_name"]};";
+      }
+      else {
+        $nre_info .= ";";
+      }
+    }
+
     if (!file_exists("{$competitor_path}/dnf")) {
-      $result_string .= "{$readable_course_name}{$class_for_results};{$competitor_name};" . csv_formatted_time($result_pieces[1]) . ";{$points_value}\n";
+      // 1 is a valid result
+      $result_string .= "{$readable_course_name}{$class_for_results};{$competitor_name};" . csv_formatted_time($result_pieces[1]) . ";OK;1;{$points_value}{$nre_info}\n";
     }
     else {
-      $result_string .= "{$readable_course_name}{$class_for_results};{$competitor_name};DNF;{$points_value}\n";
+      // 2 is a DNF, 3 is a MissedPunch, manually adjust these afterwards
+      $result_string .= "{$readable_course_name}{$class_for_results};{$competitor_name};". csv_formatted_time($result_pieces[1]) . ";DNF;2;{$points_value}{$nre_info}\n";
     }
   }
   return($result_string);
