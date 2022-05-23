@@ -198,7 +198,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
     if (!file_exists("{$results_per_class_path}/{$result_class}")) {
       mkdir("{$results_per_class_path}/{$result_class}");
     }
-    file_put_contents("{$results_per_class_path}/${result_class}/${result_filename}", "");
+    file_put_contents("{$results_per_class_path}/{$result_class}/{$result_filename}", "");
     $parseable_result_string .= "\n####,CLASS,{$result_class}\n";
   }
 }
