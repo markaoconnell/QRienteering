@@ -22,6 +22,7 @@ open_frames = []
 root = None
 status_frame = None
 scrollable_status_frame = None
+web_site_timeout = 10
 
 
 
@@ -79,6 +80,10 @@ DOWNLOAD_MODE = 1
 REGISTER_MODE = 2
 MASS_START_MODE = 3
 current_mode = DOWNLOAD_MODE
+
+# raised when the website fails to respond in time
+class UrlTimeoutException(Exception):
+    pass
 
 def usage():
   print("Usage: " + sys.argv[0])
@@ -139,9 +144,13 @@ def read_ini_file():
 ############################################################################
 def get_event(current_event_key):
   global event_key
-  output = make_url_call(MANAGE_EVENTS, "key=" + current_event_key + "&recent_event_timeout=12h")
-  #output = make_url_call(MANAGE_EVENTS, "key=" + current_event_key + "&recent_event_timeout=120d")
-  #print (f"Call to manage_events returned {output}")
+  try:
+    output = make_url_call(MANAGE_EVENTS, "key=" + current_event_key + "&recent_event_timeout=12h")
+    #output = make_url_call(MANAGE_EVENTS, "key=" + current_event_key + "&recent_event_timeout=120d")
+    #print (f"Call to manage_events returned {output}")
+  except UrlTimeoutException:
+      output = ""
+
   event_matches_list = re.findall(r"####,[A-Z]*_EVENT,.*", output)
   key_match = re.search(r"####,XLATED_KEY,(.*)", output);
   if key_match != None:
@@ -214,25 +223,27 @@ def have_event(choice_frame, event_list, chosen_event):
 ###############################################################
 def get_courses(event, event_key):
     global discovered_courses
-    output = make_url_call(VIEW_RESULTS, "event={}&key={}".format(event, event_key))
+    try:
+        output = make_url_call(VIEW_RESULTS, "event={}&key={}".format(event, event_key))
+    except UrlTimeoutException:
+        output = ""
+        
     if (re.search("####,", output) == None):
         print(f"Event {event} not found, please check if event {event} and key {event_key} are valid.")
-        sys.exit(1)
 
     if re.search(f"####,Event,{event},", output) == None:
         print(f"Event {event} not found, please check if event {event} and key {event_key} are valid.")
-        sys.exit(1)
 
     match = re.search("(####,CourseList,.*)", output)
     if match == None:
         print(f"Cannot find course list for {event}, is it a valid event?")
-        sys.exit(1)
+        mode_label.configure(text="Connectivity error")
+    else:
+        courses = match.group(1).split(",")[2:]
+        discovered_courses = list(map(lambda entry: (entry.lstrip("0123456789-"), entry), courses))
 
-    courses = match.group(1).split(",")[2:]
-    discovered_courses = list(map(lambda entry: (entry.lstrip("0123456789-"), entry), courses))
-
-    mode_label.configure(text="In Download mode")
-    mode_button.configure(state=tk.NORMAL)
+        mode_label.configure(text="In Download mode")
+        mode_button.configure(state=tk.NORMAL)
 
     if verbose: print ("\n".join(map(lambda s: s[0] + " -> " + s[1], discovered_courses)) + "\n")
 
@@ -255,7 +266,12 @@ def upload_results(user_info, event_key, event):
   web_site_string = re.sub("\n", "", web_site_string)
   web_site_string = re.sub(r"=", "%3D", web_site_string)
 
-  output = make_url_call(FINISH_COURSE, "event={}&key={}&si_stick_finish={}".format(event, event_key, web_site_string))
+  try:
+      output = make_url_call(FINISH_COURSE, "event={}&key={}&si_stick_finish={}".format(event, event_key, web_site_string))
+      is_timeout = False
+  except UrlTimeoutException:
+      output = r"####,ERROR,Timed out contacting web site, validate internet connectivity and web site status"
+      is_timeout = True
 
   name = "Unknown"
   match = re.search(r"####,RESULT,(.*)", output)
@@ -295,28 +311,42 @@ def upload_results(user_info, event_key, event):
       is_error = True
       upload_status_string += "\n" + "\n".join(error_list)
 
-  return(upload_status_string, is_error)
+  return(upload_status_string, is_error, is_timeout)
 
 ###############################################################
 def upload_initial_results(user_info, event_key, event):
   result_tuple = upload_results(user_info, event_key, event)
 
-  # If the username is still None, then there was no registered entry found
-  # See if the person is a member and could be quickly registered
-  if user_info[USER_NAME] == None:
-      possible_member_info = lookup_si_unit(user_info[USER_STICK])
-      if possible_member_info[USER_NAME] != None:
-          user_info.update(possible_member_info)
-          extra_status = f"\nIdentified member {user_info[USER_NAME]}\n"
-          extra_status += "If finishing - use the register button to register for a course, then download the results\n"
-          extra_status += "If registering for a new course - use the register button, then clear and check"
+  # result_tuple[2] specifies if the upload call timed out or not
+  # Handle it a little specially in the case of a timeout
+  if result_tuple[2]:
+      extra_status = "\nConnectivity error - please validate internet connectivity and site status\n"
+      extra_status += "If finishing - use the download button to retry\n"
+      extra_status += "If registering - use the register button to retry"
+      new_result_tuple = (result_tuple[0] + extra_status, result_tuple[1])
+      result_tuple = new_result_tuple
+  elif user_info[USER_NAME] == None:
+     # If the username is still None, then there was no registered entry found
+     # See if the person is a member and could be quickly registered
+      try:
+          possible_member_info = lookup_si_unit(user_info[USER_STICK])
+          if possible_member_info[USER_NAME] != None:
+              user_info.update(possible_member_info)
+              extra_status = f"\nIdentified member {user_info[USER_NAME]}\n"
+              extra_status += "If finishing - use the register button to register for a course, then download the results\n"
+              extra_status += "If registering for a new course - use the register button, then clear and check"
+              new_result_tuple = (result_tuple[0] + extra_status, result_tuple[1])
+              result_tuple = new_result_tuple
+          else:
+              extra_status = "\nIf finishing - register via a SmartPhone, then download again\n"
+              extra_status += "If registering for a new course - register via a SmartPhone, then clear and check"
+              new_result_tuple = (result_tuple[0] + extra_status, result_tuple[1])
+              result_tuple = new_result_tuple
+      except UrlTimeoutException:
+          extra_status = "\nConnectivity error - please validate internet connectivity and site status"
           new_result_tuple = (result_tuple[0] + extra_status, result_tuple[1])
           result_tuple = new_result_tuple
-      else:
-          extra_status = "\nIf finishing - register via a SmartPhone, then download again\n"
-          extra_status += "If registering for a new course - register via a SmartPhone, then clear and check"
-          new_result_tuple = (result_tuple[0] + extra_status, result_tuple[1])
-          result_tuple = new_result_tuple
+
 
   make_status(user_info, result_tuple[0], result_tuple[1])
 
@@ -462,7 +492,10 @@ def read_results(si_reader):
 
 
 ##################################################################
+# May raise UrlTimeoutException
 def make_url_call(php_script_to_call, params):
+  global web_site_timeout
+
   if (testing_run and os.path.isfile("../" + php_script_to_call)):
     param_pair_list = re.split("&", params)
     param_kv_list = map(lambda param_pair: re.split("=", param_pair), param_pair_list)
@@ -472,7 +505,9 @@ def make_url_call(php_script_to_call, params):
       output_file.write(artificial_get_file_content)
     cmd = "php ../{}".format(php_script_to_call)
   else:
-    cmd = "curl -s \"{}/{}?{}\"".format(url, php_script_to_call, params)
+    # 10 second timeout on calls to the web site
+    #cmd = "curl -m 10 -s \"{}/{}?{}\"".format(url, php_script_to_call, params)
+    cmd = f"curl -m {web_site_timeout} -s \"{url}/{php_script_to_call}?{params}\""
 
   if (debug):
     print("Running " + cmd)
@@ -485,8 +520,14 @@ def make_url_call(php_script_to_call, params):
   if (debug):
     print("Command output is: " + output.decode("utf-8"))
 
+  decoded_output = output.decode("utf-8")
+  found_closing_tag = re.search(r"</html>", decoded_output)
+  if found_closing_tag == None:
+      # No output, the command must have timed out
+      raise UrlTimeoutException
+
   # convert to character representation before returning it
-  return output.decode("utf-8")
+  return decoded_output
 
 ###################################################################
 class ScrollableFrame(ttk.Frame):
@@ -846,6 +887,7 @@ def kill_change_font_size_frame(change_font_size_frame):
     remove_frame(change_font_size_frame)
 
 #######################################################################################
+# May raise a UrlTimeoutException
 def lookup_si_unit(stick):
     global event_allows_preregistration
 
@@ -860,6 +902,7 @@ def lookup_si_unit(stick):
 
 
 #######################################################################################
+# May raise a UrlTimeoutException
 def make_lookup_si_unit_call(stick, check_preregistration):
   if check_preregistration:
       extra_params = "&checkin=true"
@@ -928,7 +971,10 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
   if debug: print("Attempting to register {} with params {}.".format(found_name, registration_params))
         
   if exit_all_threads: return
-  output = make_url_call(REGISTER_COMPETITOR, registration_params)
+  try:
+      output = make_url_call(REGISTER_COMPETITOR, registration_params)
+  except UrlTimeoutException:
+      output = r"####,ERROR,Connecitivity error - validate internet connectivity and site status"
   if exit_all_threads: return
   if debug: print ("Results of web call {}.".format(output))
               
@@ -984,7 +1030,10 @@ def send_mass_start_command(user_info, courses_to_start, start_seconds):
   if debug: print(f"Attempting to mass start with params {mass_start_params}.")
         
   if exit_all_threads: return
-  output = make_url_call(MASS_START, mass_start_params)
+  try:
+      output = make_url_call(MASS_START, mass_start_params)
+  except UrlTimeoutException:
+      output = r"####,ERROR,Timed out connecting to web site, validate internet connectivity and site status"
   if exit_all_threads: return
   if debug: print (f"Results of web call {output}.")
               
@@ -1280,16 +1329,22 @@ def sireader_main():
               make_mass_start_status(user_info, event_key, event)
           elif (current_mode == REGISTER_MODE) or forced_registration:
               display_as_error = False
-              user_info = lookup_si_unit(si_stick_entry[SI_STICK_KEY])
-              user_info[USER_RESULTS] = qr_result_string
-              if (user_info[USER_NAME] != None):
-                  message = f"Recognized member {user_info[USER_NAME]} with SI unit {user_info[USER_STICK]}"
-                  message += "\nIf registering, use the register button."
-              else:
+              try:
+                  user_info = lookup_si_unit(si_stick_entry[SI_STICK_KEY])
+                  user_info[USER_RESULTS] = qr_result_string
+                  if (user_info[USER_NAME] != None):
+                      message = f"Recognized member {user_info[USER_NAME]} with SI unit {user_info[USER_STICK]}"
+                      message += "\nIf registering, use the register button."
+                  else:
+                      display_as_error = True
+                      message = f"Could not find member for SI unit {user_info[USER_STICK]}\n"
+                      message += "If registering - use SmartPhone based registration instead."
+              except UrlTimeoutException:
                   display_as_error = True
-                  message = f"Could not find member for SI unit {user_info[USER_STICK]}\n"
-                  message += "If registering - use SmartPhone based registration instead."
-
+                  user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
+                  message = f"Could not contact website about {user_info[USER_STICK]}\nValidate connectivity and site status\n"
+                  message += "If registering - reinsert the stick into the reader."
+    
               if forced_registration:
                   message += "\nIf finishing, SI unit has no information - use self reporting to record a time."
                   user_info[USER_DOWNLOAD_NOT_POSSIBLE] = True
@@ -1392,6 +1447,9 @@ if ("testing_run" in initializations):
 
 if ("serial_port" in initializations):
   serial_port = initializations["serial_port"]
+
+if ("web_site_timeout" in initializations):
+  web_site_timeout = initializations["web_site_timeout"]
 
 if ("font_size" in initializations):
   font_size = int(initializations["font_size"])
