@@ -776,6 +776,12 @@ function get_extra_prompts($key) {
   return (array());
 }
 
+function enable_event_nre_classes($event, $key) {
+  if (!file_exists(get_event_path($event, $key) . "/using_nre_classes")) {
+    file_put_contents(get_event_path($event, $key) . "/using_nre_classes", "");
+  }
+}
+
 function event_is_using_nre_classes($event, $key) {
   return(file_exists(get_event_path($event, $key) . "/using_nre_classes"));
 }
