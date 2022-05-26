@@ -42,6 +42,12 @@ function name_to_add_course_link($event_id) {
           "<a href={$base_path_for_links}/OMeetMgmt/create_event.php?clone_event={$event_id}&key={$key}>create a copy of this event</a>)");
 }
 
+function name_to_manage_event_link($event_id) {
+  global $base_path, $key, $base_path_for_links;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/event_management.php?event={$event_id}&key={$key}>Manage preregistrations for {$event_fullname} (also to enable NRE support)</a>\n");
+}
+
 function name_to_remove_course_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
@@ -123,6 +129,7 @@ $closed_event_list = array_filter($event_list, "is_event_recently_closed");
 $open_event_links = array_map("name_to_registration_link", $open_event_list);
 $add_course_links = array_map("name_to_add_course_link", $open_event_list);
 $add_course_links2 = array_map("name_to_clone_course_link", $closed_event_list);
+$manage_event_links = array_map("name_to_manage_event_link", $open_event_list);
 $remove_course_links = array_map("name_to_remove_course_link", $open_event_list);
 $open_event_result_links = array_map("name_to_results_link", $open_event_list);
 $qrcode_links = array_map("name_to_get_qrcodes_link", $open_event_list);
@@ -170,6 +177,11 @@ echo "\n-->\n";
 <li> Get a registration link: 
 <ul>
 <?php echo implode("\n", $open_event_links); ?>
+</ul>
+
+<li> Enable/Manage preregistration
+<ul>
+<?php echo implode("\n", $manage_event_links); ?>
 </ul>
 
 <li> Get QR codes
