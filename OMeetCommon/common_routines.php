@@ -956,7 +956,9 @@ function get_control_xlations($key, $event) {
   if (is_dir($control_xlation_dir)) {
     $xlation_entries = scandir($control_xlation_dir);
     $xlation_entries = array_diff($xlation_entries, array(".", ".."));
-    return($xlation_entries);
+    $xlation_hash = array();
+    array_map(function ($elt) use (&$xlation_hash, $control_xlation_dir) { $xlation_hash[$elt] = file_get_contents("{$control_xlation_dir}/{$elt}"); }, $xlation_entries);
+    return($xlation_hash);
   }
   else {
     return(array());
