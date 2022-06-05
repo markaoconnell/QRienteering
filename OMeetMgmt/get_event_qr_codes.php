@@ -122,7 +122,7 @@ echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Member registration") .
                           "\" value=\"{$url_prefix}/OMeetWithMemberList/competition_register.php?member=1&{$add_orig_key_string}\">Member registration\n";
 echo "</ul>\n";
-echo "<li><strong>On-course QR codes</strong> (resuable across events/courses)\n";
+echo "<li><strong>On-course QR codes</strong> (reusable across events/courses)\n";
 echo "<ul>\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Start") . "\" value=\"{$url_prefix}/OMeet/start_course.php\">Start\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Finish") . "\" value=\"{$url_prefix}/OMeet/finish_course.php\">Finish\n";
@@ -133,7 +133,7 @@ foreach ($sorted_control_list as $one_control) {
                         "\" value=\"{$url_prefix}/OMeet/reach_control.php?control={$one_control}\">Control {$one_control}\n";
 }
 echo "</ul>\n";
-echo "<li><strong>Result QR codes</strong> (non-resuable across events)\n";
+echo "<li><strong>Result QR codes</strong> (non-reusable across events)\n";
 echo "<ul>\n";
 echo "<li><input type=checkbox {$registration_links_checked} name=\"qr-" . base64_encode("{$existing_event_name} results") .
                           "\" value=\"{$url_prefix}/OMeet/view_results.php?{$add_key_string}&{$add_event_string}\">View results of {$existing_event_name}\n";
@@ -149,7 +149,7 @@ echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Competitors still running") .
                           "\" value=\"{$url_prefix}/OMeet/on_course.php?{$add_orig_key_string}\">View competitors still running for any open event (reusable)\n";
 echo "<li><input type=checkbox {$checked_by_default} name=\"qr-" . base64_encode("Self report a result") .
-                          "\" value=\"{$url_prefix}/OMeetRegistration/self_report_1.php?{$add_orig_key_string}\">Self report a result (resuable)\n";
+                          "\" value=\"{$url_prefix}/OMeetRegistration/self_report_1.php?{$add_orig_key_string}\">Self report a result (reusable)\n";
 echo "</ul>\n";
 echo "</ul>\n";
 ?>
