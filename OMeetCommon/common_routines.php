@@ -400,7 +400,7 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);
     $competitor_path = get_competitor_path($result_pieces[2], $event, $key);
-    $competitor_name = file_get_contents("${competitor_path}/name");
+    $competitor_name = file_get_contents("{$competitor_path}/name");
     if ($show_points) {
       $points_value = $max_points - $result_pieces[0];
     }
