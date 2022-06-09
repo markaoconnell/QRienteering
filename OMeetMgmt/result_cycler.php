@@ -38,13 +38,26 @@ $results = get_column_data($prior_page_end);
 $prior_page_end = $results[0];
 $column_data = $results[1];
 
-if ($columns > 1) {
+// results[2] is either true or false.  True if we have reached the end of the results
+// and should just stop, false if there are more results to show
+$results_are_complete = $results[2];
+for ($i = 1; $i < $columns; $i++) {
+  if ($results_are_complete) {
+    break;
+  }
   $results = get_column_data($prior_page_end);
   $prior_page_end = $results[0];
   $column_data = array_map(function ($e1, $e2) { return ("{$e1}<td width=30></td><td width=30></td>{$e2}"); }, $column_data, $results[1]);
+  $results_are_complete = $results[2];
 }
 
-$displayable_data = array_map(function ($elt) { return ("<tr>{$elt}</tr>"); }, $column_data);
+$displayable_data = array_map(function ($elt) { return ("<tr height=20>{$elt}</tr>"); }, $column_data);
+
+if (!$initial_run) {
+  set_redirect("\n<meta http-equiv=\"refresh\" content=\"{$time_delay}; url=./result_cycler.php?key={$key}&event={$event}&" .
+                                                                                   "lines_to_show={$lines_to_show}&columns={$columns}&time_delay={$time_delay}&" .
+                                                                                   "prior_page_cookie={$prior_page_end}\"/>");
+}
 
 echo get_web_page_header(true, true, false);
 
@@ -76,8 +89,8 @@ function get_column_data($prior_page_end) {
 
   # Include the header
   $current_output = array();
-  $current_output[] = "<td></td><td>{$readable_course_name}</td><td></td><td></td>\n";
-  $current_output[] = "<td>Pl</td><td>Name</td><td>Time</td><td>{$label_points_column}</td>\n";
+  $current_output[] = "<td></td><td><strong><u>{$readable_course_name}</u></strong></td><td></td><td width=20></td>\n";
+  $current_output[] = "<td><strong>Pl</strong></td><td><strong>Name</strong></td><td><strong>Time</strong></td><td><strong>{$label_points_column}</strong></td>\n";
   $current_lines = 2;
 
   $results_array = get_results_as_array($event, $key, $course_to_show, $score_course, $max_score);
@@ -100,8 +113,9 @@ function get_column_data($prior_page_end) {
       }
 
       if ($found_course) {
-	if (($current_lines + 3) >= $lines_to_show) {   # Only start showing the next course if we can show at least one entry
-          return(array("{$course_to_show},0", $current_output));  # Start with the next course
+	if (($current_lines + 4) >= $lines_to_show) {   # Only start showing the next course if we can show at least one entry
+          $current_output = array_pad($current_output, $lines_to_show, "<td></td><td></td><td></td><td></td>\n");
+          return(array("{$course_to_show},0", $current_output, false));  # Start with the next course
 	}
 
         $readable_course_name = ltrim($course_to_show, "0..9-");
@@ -113,15 +127,17 @@ function get_column_data($prior_page_end) {
           $max_score = $course_properties[$MAX_SCORE_FIELD];
           $label_points_column = "Pts";
         }
-        $current_output[] = "<td></td><td>{$readable_course_name}</td><td></td><td></td>\n";
-        $current_output[] = "<td>Pl</td><td>Name</td><td>Time</td><td>{$label_points_column}</td>\n";
-        $current_lines += 2;
+        $current_output[] = "<td></td><td></td><td></td><td></td>\n";
+        $current_output[] = "<td></td><td><strong><u>{$readable_course_name}</u></strong></td><td></td><td width=20></td>\n";
+        $current_output[] = "<td><strong>Pl</strong></td><td><strong>Name</strong></td><td><strong>Time</strong></td><td><strong>{$label_points_column}</strong></td>\n";
+        $current_lines += 3;
 	$results_array = get_results_as_array($event, $key, $course_to_show, $score_course, $max_score);
 	$next_place_to_show = 0;
 	continue;
       }
       else {
-        return(array("{$course_list[0]},0", $current_output));  # Start over next time
+        $current_output = array_pad($current_output, $lines_to_show, "<td></td><td></td><td></td><td></td>\n");
+        return(array("{$course_list[0]},0", $current_output, true));  # Start over next time
       }
     }
 
@@ -147,7 +163,31 @@ function get_column_data($prior_page_end) {
   }
 
 
-  return(array("{$course_to_show},{$next_place_to_show}", $current_output));  # Marker of where to start next
+  // If we have just finished a course at the end of the column,
+  // move on to the next one
+  if ($next_place_to_show >= count($results_array)) {
+    $pick_next_course = false;
+    $found_course = false;
+    foreach ($course_list as $one_course) {
+      if ($pick_next_course) {   # Need to decide what to do about removed courses here
+        $found_course = true;
+	  $course_to_show = $one_course;
+	  break;
+	}
+
+      if ($one_course == $course_to_show) {
+        $pick_next_course = true;
+      }
+    }
+
+    if ($found_course) {
+      return(array("{$course_to_show},0", $current_output, false));  # Start with the next course
+    }
+    else {
+      return(array("{$course_list[0]},0", $current_output, true));  # Start over next time
+    }
+  }
+  return(array("{$course_to_show},{$next_place_to_show}", $current_output, false));  # Marker of where to start next
 }
 
 ?>
