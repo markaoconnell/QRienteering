@@ -26,34 +26,46 @@ $time_delay = isset($_GET["time_delay"]) ? $_GET["time_delay"] : 30;  # Delay in
 $initial_run = isset($_GET["initial_run"]);
 $prior_page_end = isset($_GET["prior_page_cookie"]) ? $_GET["prior_page_cookie"] : "";
 
-$course_list = scandir($courses_path);
-$course_list = array_diff($course_list, array(".", ".."));
-$course_list = array_values($course_list);  # Make the keys 0 based
+$output = "<p>Results for " . file_get_contents(get_event_path($event, $key) . "/description") . "\n";
 
-if ($prior_page_end == "") {
-  $prior_page_end = "{$course_list[0]},0";
+if ($initial_run) {
+  $output .= "<form action=\"./result_cycler.php\">\n";
+  $output .= "<input type=hidden name=key value=\"{$key}\">\n";
+  $output .= "<input type=hidden name=event value=\"{$event}\">\n";
+  $output .= "<p>Number of columns of output: <input type=text name=columns value=2>\n";
+  $output .= "<p>Number of lines of output: <input type=text name=lines_to_show value=15>\n";
+  $output .= "<p>Seconds of delay between refreshes: <input type=text name=time_delay value=30>\n";
+  $output .= "<p><input type=submit value=\"Show results\">\n";
+  $output .= "<p></form>\n";
 }
-
-$results = get_column_data($prior_page_end);
-$prior_page_end = $results[0];
-$column_data = $results[1];
-
-// results[2] is either true or false.  True if we have reached the end of the results
-// and should just stop, false if there are more results to show
-$results_are_complete = $results[2];
-for ($i = 1; $i < $columns; $i++) {
-  if ($results_are_complete) {
-    break;
+else {
+  $course_list = scandir($courses_path);
+  $course_list = array_diff($course_list, array(".", ".."));
+  $course_list = array_values($course_list);  # Make the keys 0 based
+  
+  if ($prior_page_end == "") {
+    $prior_page_end = "{$course_list[0]},0";
   }
+  
   $results = get_column_data($prior_page_end);
   $prior_page_end = $results[0];
-  $column_data = array_map(function ($e1, $e2) { return ("{$e1}<td width=30></td><td width=30></td>{$e2}"); }, $column_data, $results[1]);
+  $column_data = $results[1];
+  
+  // results[2] is either true or false.  True if we have reached the end of the results
+  // and should just stop, false if there are more results to show
   $results_are_complete = $results[2];
-}
-
-$displayable_data = array_map(function ($elt) { return ("<tr height=20>{$elt}</tr>"); }, $column_data);
-
-if (!$initial_run) {
+  for ($i = 1; $i < $columns; $i++) {
+    if ($results_are_complete) {
+      break;
+    }
+    $results = get_column_data($prior_page_end);
+    $prior_page_end = $results[0];
+    $column_data = array_map(function ($e1, $e2) { return ("{$e1}<td width=30></td><td width=30></td>{$e2}"); }, $column_data, $results[1]);
+    $results_are_complete = $results[2];
+  }
+  
+  $displayable_data = array_map(function ($elt) { return ("<tr height=20>{$elt}</tr>"); }, $column_data);
+  $output .= "\n<table>\n" . implode("\n", $displayable_data) . "\n</table>\n";
   set_redirect("\n<meta http-equiv=\"refresh\" content=\"{$time_delay}; url=./result_cycler.php?key={$key}&event={$event}&" .
                                                                                    "lines_to_show={$lines_to_show}&columns={$columns}&time_delay={$time_delay}&" .
                                                                                    "prior_page_cookie={$prior_page_end}\"/>");
@@ -61,9 +73,7 @@ if (!$initial_run) {
 
 echo get_web_page_header(true, true, false);
 
-echo "<table>\n";
-echo implode("\n", $displayable_data);
-echo "</table>\n";
+echo $output;
 
 echo get_web_page_footer();
 
