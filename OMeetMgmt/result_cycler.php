@@ -9,6 +9,9 @@ ck_testing();
 $event = isset($_GET["event"]) ? $_GET["event"]: "";
 $key = isset($_GET["key"]) ? $_GET["key"]: "";
 
+$color_mapping_hash = array("white" => "white", "yellow" => "yellow", "orange" => "orange",
+	"tan" => "tan", "brown" => "sienna", "green" => "lightgreen", "red" => "tomato", "blue" => "lightskyblue");
+
 if ($event == "") {
   error_and_exit("<p>ERROR: Event not specified, no results can be shown.\n");
 }
@@ -80,6 +83,7 @@ echo get_web_page_footer();
 function get_column_data($prior_page_end) {
   global $course_list, $lines_to_show, $event, $key, $courses_path;
   global $TYPE_FIELD, $SCORE_O_COURSE, $MAX_SCORE_FIELD;
+  global $color_mapping_hash;
 
   $last_marker_pieces = explode(",", $prior_page_end);
   $course_to_show = $last_marker_pieces[0];
@@ -98,8 +102,14 @@ function get_column_data($prior_page_end) {
   }
 
   # Include the header
+  if (isset($color_mapping_hash[strtolower($readable_course_name)])) {
+    $bgcolor = "bgcolor = " . $color_mapping_hash[strtolower($readable_course_name)];
+  }
+  else {
+    $bgcolor = "";
+  }
   $current_output = array();
-  $current_output[] = "<td></td><td><strong><u>{$readable_course_name}</u></strong></td><td></td><td width=20></td>\n";
+  $current_output[] = "<td></td><td {$bgcolor}><strong><u>{$readable_course_name}</u></strong></td><td></td><td width=20></td>\n";
   $current_output[] = "<td><strong>Pl</strong></td><td><strong>Name</strong></td><td><strong>Time</strong></td><td><strong>{$label_points_column}</strong></td>\n";
   $current_lines = 2;
 
@@ -137,8 +147,14 @@ function get_column_data($prior_page_end) {
           $max_score = $course_properties[$MAX_SCORE_FIELD];
           $label_points_column = "Pts";
         }
+        if (isset($color_mapping_hash[strtolower($readable_course_name)])) {
+          $bgcolor = "bgcolor = " . $color_mapping_hash[strtolower($readable_course_name)];
+        }
+        else {
+          $bgcolor = "";
+        }
         $current_output[] = "<td></td><td></td><td></td><td></td>\n";
-        $current_output[] = "<td></td><td><strong><u>{$readable_course_name}</u></strong></td><td></td><td width=20></td>\n";
+        $current_output[] = "<td></td><td {$bgcolor}><strong><u>{$readable_course_name}</u></strong></td><td></td><td width=20></td>\n";
         $current_output[] = "<td><strong>Pl</strong></td><td><strong>Name</strong></td><td><strong>Time</strong></td><td><strong>{$label_points_column}</strong></td>\n";
         $current_lines += 3;
 	$results_array = get_results_as_array($event, $key, $course_to_show, $score_course, $max_score);
