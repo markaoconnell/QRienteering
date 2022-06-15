@@ -32,7 +32,8 @@ function name_to_results_link($event_id) {
           "<ul><li><a href={$base_path_for_links}/OMeet/on_course.php?event={$event_id}&key={$key}>Still on course</a>" . 
               "<li><a href={$base_path_for_links}/OMeetMgmt/competitor_info.php?event={$event_id}&key={$key}>" .
 	                                                                                        "Meet Director view of competitors</a>" .
-	      "<li><a href={$base_path_for_links}/OMeetRegistration/self_report_1.php?event={$event_id}&key={$key}>Self report a result</a></ul>\n");
+	      "<li><a href={$base_path_for_links}/OMeetRegistration/self_report_1.php?event={$event_id}&key={$key}>Self report a result</a>\n" .
+	      "<li><a href={$base_path_for_links}/OMeetMgmt/result_cycler.php?event={$event_id}&key={$key}>Display results (continuous refresh)</a></ul>\n");
 }
 
 function name_to_add_course_link($event_id) {
