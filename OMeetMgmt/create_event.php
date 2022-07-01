@@ -21,6 +21,7 @@ $ppen_errors_found = "";
 
 if (isset($_POST["uploadppen"])) {
   $key = $_POST["key"];
+  $orig_key = $_POST["orig_key"];
   if ($_FILES["upload_file"]["size"] > 0) {
     $event_description_array = get_event_description($_FILES["upload_file"]["tmp_name"], $_POST["getemall"] == "true");
     $uploaded_ppen_file = true;
@@ -51,6 +52,7 @@ elseif (isset($_POST["submit"])) {
   echo "Name of event: " . $_POST["event_name"] . "\n<p>";
   $event_fullname = $_POST["event_name"];
   $key = $_POST["key"];
+  $orig_key = $_POST["orig_key"];
 
 //  if (!ck_valid_chars($event_name) || (substr($event_name, -5) == ".done")) {
 //    echo "<p>ERROR: Event \"{$event_name}\" can only contain letters and numbers and cannot end in \".done\".\n";
@@ -158,7 +160,7 @@ elseif (isset($_POST["submit"])) {
       //echo "<p>Server URI dirname and rel path is: " . dirname($_SERVER["REQUEST_URI"]) . "/../OMeetRegistration/register.php" . "\n";
       //echo "<p>Service URI after realpath is " . dirname(dirname($_SERVER["REQUEST_URI"])) . "/OMeetRegistration/register.php" . "\n";
       //echo "<p>Server name is " . $_SERVER["SERVER_NAME"] . "\n";
-      echo "<p>Return to the <a href=\"./manage_events.php?key={$key}\">event management page</a> to print the QR codes, get registration links, etc.\n";
+      echo "<p>Return to the <a href=\"./manage_events.php?key={$orig_key}\">event management page</a> to print the QR codes, get registration links, etc.\n";
       $event_created = true;
     }
   }
@@ -173,6 +175,7 @@ elseif (isset($_POST["submit"])) {
 }
 else {
   $key = $_GET["key"];
+  $orig_key = $_GET["orig_key"];
   if (!key_is_valid($key)) {
     error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
   }
@@ -253,6 +256,7 @@ else {
 <br><br><br><p><p>
 <input type="hidden" name="MAX_FILE_SIZE" value="1024000" />
 <input type="hidden" name="key" value="<?php echo $key ?>" />
+<input type="hidden" name="orig_key" value="<?php echo $orig_key ?>" />
 <p class="title">Enter course/control details for the event.
 <br>
 <textarea name=course_description rows=10 cols=60>

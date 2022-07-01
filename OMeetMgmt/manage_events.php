@@ -162,7 +162,7 @@ echo "\n-->\n";
 <p>Orienteering Event Management
 <p>
 <ol>
-<li> <a href=<?php echo "./create_event.php?key={$key}"; ?>>Create a new event</a>
+<li> <a href=<?php echo "./create_event.php?key={$key}&orig_key={$orig_key}"; ?>>Create a new event</a>
 <li> Manipulate existing events
 <?php
   if (count($open_event_list) > 0) {
