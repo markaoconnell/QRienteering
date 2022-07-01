@@ -21,7 +21,10 @@ ck_testing();
 $course = isset($_GET["course"]) ? $_GET["course"] : "";
 $event = isset($_GET["event"]) ? $_GET["event"] : "";
 $key = isset($_GET["key"]) ? $_GET["key"] : "";
-$key = translate_key($key);
+// Only translate the key if no event is specified - otherwise the key should be correct already
+if ($event == "") {
+    $key = translate_key($key);
+}
 $download_csv_flag = isset($_GET["download_csv"]) ? $_GET["download_csv"] : "";
 $download_csv = ($download_csv_flag != "");
 

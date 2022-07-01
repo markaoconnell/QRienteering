@@ -58,15 +58,18 @@ else {
   }
 }
 
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
 $key = isset($_GET["key"]) ? $_GET["key"] : "";
-$key = translate_key($key);
+// Only translate the key if no event is specified - otherwise the key should be correct already
+if ($event == "") {
+    $key = translate_key($key);
+}
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
 
 $base_path = get_base_path($key, "..");
 
-$event = isset($_GET["event"]) ? $_GET["event"] : "";
 //echo "event is \"${event}\"<p>";
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";
 if (strcmp($event, "") == 0) {

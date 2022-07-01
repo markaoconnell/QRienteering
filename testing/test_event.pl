@@ -53,7 +53,8 @@ sub check_results_inner {
 
   %GET = qw(key UnitTestPlayground);  # This clears the GET array, and then the key is overridden
   $GET{"key"} = $key;
-  $GET{"event"} = $event_id;
+  #$GET{"event"} = $event_id;   # Should only be one event during this test...
+                                #  Specifying the event disables the key translation
   %COOKIE = ();
   hashes_to_artificial_file();
 
@@ -88,7 +89,8 @@ sub check_on_course_inner {
 
   %GET = qw(key UnitTestPlayground);
   $GET{"key"} = $key;
-  $GET{"event"} = $event_id;
+  #$GET{"event"} = $event_id;   # There should only be one event during this test...
+                                #  Specifying the event disables the key translation
   %COOKIE = ();
   hashes_to_artificial_file();
 
@@ -119,7 +121,7 @@ sub check_competitor_on_course_inner {
 
   %GET = qw(key UnitTestPlayground include_competitor_id 1);
   $GET{"key"} = $key;
-  $GET{"event"} = $event_id;
+  #$GET{"event"} = $event_id;     # See comments earlier - there should only be one event for this test to work
   %COOKIE = ();
   hashes_to_artificial_file();
 
