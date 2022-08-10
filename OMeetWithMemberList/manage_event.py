@@ -38,7 +38,7 @@ use_real_sireader = True
 run_offline = False
 
 if (not 'NO_SI_READER_IMPORT' in os.environ) and use_real_sireader:
-  from sireader2 import SIReader, SIReaderReadout, SIReaderControl, SIReaderException
+  from sireader2 import SIReader, SIReaderReadout, SIReaderControl, SIReaderException, SIReaderTimeout, SIReaderCardChanged
 
 # URLs for the web site
 VIEW_RESULTS = "OMeet/view_results.php"
@@ -56,6 +56,7 @@ SI_STICK_KEY = r"si_stick"
 SI_START_KEY = r"start_timestamp"
 SI_FINISH_KEY = r"finish_timestamp"
 SI_CONTROLS_KEY = r"qr_controls"
+SI_BAD_DOWNLOAD = r"si_download_error"
 
 # Keys for the entry information dict
 USER_NAME = r"name"
@@ -426,7 +427,7 @@ def read_results(si_reader):
       return({SI_STICK_KEY : None})
   except SIReaderException as sire:
     si_reader.ack_sicard()
-    print (f"Bad card download, error {sire}.")
+    #print (f"Bad card download, error {sire}.")
     return ({SI_STICK_KEY : None})
 
 # some properties are now set
@@ -434,13 +435,11 @@ def read_results(si_reader):
   card_type = si_reader.cardtype
 
 # read out card data
-  no_data = False
   try:
     card_data = si_reader.read_sicard()
-  except SIReaderException as sire:
-    print (f"Bad card ({card_number}) download, error {sire}.")
-    no_data = True
-    return({SI_STICK_KEY : None})
+  except (SIReaderException, SIReaderTimeout, SIReaderCardChanged) as sire:
+    #print (f"Bad card ({card_number}) download, error {sire}.")
+    return({SI_STICK_KEY : card_number, SI_BAD_DOWNLOAD : True})
 
 # beep
   si_reader.ack_sicard()
@@ -449,10 +448,6 @@ def read_results(si_reader):
   while not si_reader.poll_sicard():
     time.sleep(1)
 
-  if no_data:
-    print (f"No data found on stick {card_number}.")
-    return({SI_STICK_KEY : None})
-  
 
 # Convert to the format expected by the rest of the program
 # Check for old sticks which only use 12 hour time, which have some trouble if
@@ -1292,7 +1287,14 @@ def sireader_main():
         time_tuple = time.localtime(None)
         progress_label.configure(text="Awaiting new results at: {:02d}:{:02d}:{:02d}".format(time_tuple.tm_hour, time_tuple.tm_min, time_tuple.tm_sec))
     
-      if si_stick_entry[SI_STICK_KEY] != None:
+      if si_stick_entry[SI_STICK_KEY] == None:
+        pass
+      elif SI_BAD_DOWNLOAD in si_stick_entry:
+        user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None , USER_DOWNLOAD_NOT_POSSIBLE : True }
+        message = f"Prematurely removed SI unit {user_info[USER_STICK]} from download station\n"
+        message += "Please reinsert and wait until the unit beeps."
+        make_status(user_info, message, True)
+      else:  # Process a valid stick download
         if verbose: print(f"\nFound new key: {si_stick_entry[SI_STICK_KEY]}")
     
         qr_result_string = get_and_log_results_string(event, si_stick_entry)
