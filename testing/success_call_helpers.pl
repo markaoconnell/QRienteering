@@ -11,7 +11,7 @@ my(@directory_contents);
 
 ###########
 sub reach_control_ok {
-  my($duplicate, $score_course, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  my($duplicate, $score_course, $control_num_on_course, $display_value, $get_ref, $cookie_ref, $test_info_ref) = @_;
 
   $competitor_id = $cookie_ref->{"competitor_id"};
   $test_info_ref->{"subroutine"} = "reach_control";
@@ -33,19 +33,23 @@ sub reach_control_ok {
     $control = $test_info_ref->{"control"};
   }
   my($control_num_for_print_string) = $control_num_on_course + 1;
+
+  if ($display_value eq "") {
+    $display_value = $control;
+  }
   
   if ($score_course) {
-    if ($output !~ /Reached $control on $course, earned [0-9]+ points/) {
+    if ($output !~ /Reached $display_value on $course, earned [0-9]+ points/) {
       error_and_exit("Web page output wrong, correct control string not found for score course (duplicate=$duplicate).\n$output");
     }
   }
   elsif ($duplicate) {
-    if ($output !~ /Control $control correct but already scanned.<p>Control #$control_num_for_print_string/) {
+    if ($output !~ /Control $display_value correct but already scanned.<p>Control #$control_num_for_print_string/) {
       error_and_exit("Web page output wrong, correct control string not found for duplicate control.\n$output");
     }
   }
   else {
-    if ($output !~ /Correct!  Reached $control, control #$control_num_for_print_string/) {
+    if ($output !~ /Correct!  Reached $display_value, control #$control_num_for_print_string/) {
       error_and_exit("Web page output wrong, correct control string not found.\n$output");
     }
   }
@@ -173,26 +177,32 @@ sub reach_control_with_skip {
 ############
 sub reach_control_successfully {
   my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
-  reach_control_ok(0, 0, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref);
+  reach_control_ok(0, 0, $control_num_on_course, "", $get_ref, $cookie_ref, $test_info_ref);
+}
+
+############
+sub reach_xlated_control {
+  my($control_num_on_course, $display_value, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  reach_control_ok(0, 0, $control_num_on_course, $display_value, $get_ref, $cookie_ref, $test_info_ref);
 }
 
 ############
 sub reach_control_again {
   my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
-  reach_control_ok(1, 0, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref);
+  reach_control_ok(1, 0, $control_num_on_course, "", $get_ref, $cookie_ref, $test_info_ref);
 }
 
 
 ############
 sub reach_score_control_successfully {
   my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
-  reach_control_ok(0, 1, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref);
+  reach_control_ok(0, 1, $control_num_on_course, "", $get_ref, $cookie_ref, $test_info_ref);
 }
 
 ############
 sub reach_score_control_again {
   my($control_num_on_course, $get_ref, $cookie_ref, $test_info_ref) = @_;
-  reach_control_ok(1, 1, $control_num_on_course, $get_ref, $cookie_ref, $test_info_ref);
+  reach_control_ok(1, 1, $control_num_on_course, "", $get_ref, $cookie_ref, $test_info_ref);
 }
 
 

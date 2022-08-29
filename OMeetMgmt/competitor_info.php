@@ -61,6 +61,32 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
   return($competitor_string);
 }
 
+function recent_finisher_info($competitor_base_path, $competitor_id) {
+  global $include_competitor_id, $show_removed_competitors, $is_nre_event, $include_date, $key, $event; 
+
+  $competitor_string = "<li>\n";
+  $competitor_name = file_get_contents("{$competitor_base_path}/{$competitor_id}/name");
+  $is_self_reported = file_exists("{$competitor_base_path}/{$competitor_id}/self_reported");
+  $competitor_course = ltrim(file_get_contents("{$competitor_base_path}/{$competitor_id}/course"), "0..9-");
+
+  $competitor_string .= "{$competitor_name} - {$competitor_course}\n";
+  if ($include_competitor_id) {
+    $competitor_string .= " ({$competitor_id})";
+  }
+ 
+  if ($is_self_reported || $show_removed_competitors) {
+    $competitor_string .= "<ul><li>No splits</ul>\n";
+  }
+  else {
+    $competitor_string .= "<ul><li><a href=\"../OMeet/show_splits.php?event={$event}&key={$key}&entry=0,0,{$competitor_id}\">Formatted splits</a> / \n";
+    $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}\">Raw splits</a> / \n";
+    $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}&allow_editing=1\">Edit splits</a>\n";
+    $competitor_string .= "</ul>";
+  }
+
+  return($competitor_string);
+}
+
 // Get the submitted info
 // echo "<p>\n";
 if (!isset($_GET["TIME_LIMIT"])) {
@@ -68,6 +94,13 @@ if (!isset($_GET["TIME_LIMIT"])) {
 }
 else {
   $TIME_LIMIT = intval($_GET["TIME_LIMIT"]);
+}
+
+if (!isset($_GET["RECENT_FINISHER_WINDOW"])) {
+  $RECENT_FINISHER_WINDOW = 900;  // 15 minutes in seconds
+}
+else {
+  $RECENT_FINISHER_WINDOW = intval($_GET["RECENT_FINISHER_WINDOW"]);
 }
 
 $event = isset($_GET["event"]) ? $_GET["event"] : "";
@@ -110,6 +143,9 @@ $event_name = file_get_contents(get_event_path($event, $key) . "/description");
 $current_time = time();
 $name_hash = array();
 $obsolete_registrations = array();
+$recent_finishers = array();
+$total_outstanding_runners = 0;
+$recent_finisher_cutoff = time() - $RECENT_FINISHER_WINDOW;
 
 
 $competitor_outputs = array();
@@ -158,6 +194,9 @@ foreach ($competitor_list as $competitor) {
       // Weed out people who's registration time is too old (one day in seconds)
       if (($current_time - $file_info["mtime"]) < $TIME_LIMIT) {
         $competitor_outputs[] = $competitor_info;
+        if (!$has_finished) {
+          $total_outstanding_runners++;
+        }
       }
     }
     else {
@@ -165,7 +204,17 @@ foreach ($competitor_list as $competitor) {
       // Weed out people who started more than one day ago
       if (($current_time - $start_time) < $TIME_LIMIT) {
         $competitor_outputs[] = $competitor_info;
+        if (!$has_finished) {
+          $total_outstanding_runners++;
+        }
       }
+    }
+  }
+
+  if (!$is_self_reported && $has_finished && !$show_removed_competitors) {
+    $finish_file_modification_time = stat("{$competitor_directory}/{$competitor}/controls_found/finish")["mtime"];
+    if ($finish_file_modification_time > $recent_finisher_cutoff) {
+      $recent_finishers[] = recent_finisher_info($competitor_directory, $competitor);
     }
   }
 
@@ -204,12 +253,19 @@ $time_limit_string .= "<p>Show removed competitors? <input type=checkbox name=\"
 $time_limit_string .= "<p>Show time of registration? <input type=checkbox name=\"include_date\" value=\"1\"" . ($include_date ? " checked " : "")  . ">\n";
 $time_limit_string .= "<p><input type=submit value=\"Update competitor list\"></form>\n";
 
+$recent_finishers_string = "";
+if (count($recent_finishers) > 0) {
+  $recent_finishers_string .= "<p>Recent finishers:<p><ul>\n";
+  $recent_finishers_string .= implode("\n", $recent_finishers);
+  $recent_finishers_string .= "</ul>\n";
+}
 
-$results_string = "<p>Competitors for {$event_name}<p><p>\n";
 if ($show_removed_competitors) {
+  $results_string = "<p>Removed competitors for {$event_name}<p><p>\n";
   $results_string .= "<form action=\"../OMeetMgmt/restore_to_event.php\">\n";
 }
 else {
+  $results_string = "<p>Competitors for {$event_name} ({$total_outstanding_runners} runners still on course)<p><p>\n";
   $results_string .= "<form action=\"../OMeetMgmt/remove_from_event.php\">\n";
 }
 $results_string .= "<input type=hidden name=\"key\" value=\"${key}\">\n";
@@ -229,6 +285,8 @@ $results_string .= "\n</table>\n</form>\n";
 echo get_web_page_header(true, true, true);
 
 echo $time_limit_string;
+
+echo $recent_finishers_string;
 
 echo $results_string;
 

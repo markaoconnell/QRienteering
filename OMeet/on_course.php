@@ -20,8 +20,12 @@ function non_empty($string_value) {
 
 ck_testing();
 
-$event = $_GET["event"];
-$key = $_GET["key"];
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
+$key = isset($_GET["key"]) ?  $_GET["key"] : "";
+// Only translate the key if no event is specified - otherwise the key should be correct already
+if ($event == "") {
+    $key = translate_key($key);
+}
 
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
@@ -32,14 +36,14 @@ if ($event == "") {
   // No event specified - show a list
   // If there is only one, then auto-choose it
   $event_list = scandir($base_path);
-  $event_list = array_filter($event_list, is_event);
+  $event_list = array_filter($event_list, "is_event");
   if (count($event_list) == 1) {
     $event = basename(current($event_list));
   }
   else if (count($event_list) > 1) {
 
     echo get_web_page_header(true, true, false);
-    $event_output_array = array_map(name_to_link, $event_list);
+    $event_output_array = array_map("name_to_link", $event_list);
     echo "<p>Choose your event:<p>\n<ul>\n" . implode("\n", $event_output_array) . "</ul>";
     echo get_web_page_footer();
 
@@ -186,7 +190,7 @@ foreach (array_keys($on_course) as $course) {
       // report this
       if (file_exists("{$competitor_path}/extra")) {
         $extra_controls = explode("\n", file_get_contents("{$competitor_path}/extra"));
-        $extra_controls = array_values(array_filter($extra_controls, non_empty));
+        $extra_controls = array_values(array_filter($extra_controls, "non_empty"));
         $num_extra_controls = count($extra_controls);
         $last_extra_control_info = $extra_controls[$num_extra_controls - 1];
         $last_extra_control_pieces = explode(",", $last_extra_control_info);   // Format is time,control-id

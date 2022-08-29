@@ -7,7 +7,8 @@ ck_testing();
 
 echo get_web_page_header(true, false, true);
 
-$key = $_GET["key"];
+$key = isset($_GET["key"]) : $_GET["key"] : "";
+$key = translate_key($key);
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
@@ -43,7 +44,7 @@ if (strcmp($event, "") == 0) {
     //echo "Identified event as ${event}\n<p>";
   }
   else if (count($event_list) > 1) {
-    $event_output_array = array_map(name_to_link, $event_list);
+    $event_output_array = array_map("name_to_link", $event_list);
     echo "<p>Choose your event:<p>\n<ul>\n" . implode("\n", $event_output_array) . "</ul>";
     return;
   }

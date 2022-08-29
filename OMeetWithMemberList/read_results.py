@@ -210,7 +210,7 @@ def replay_stick_results(event_key, event, stick_to_replay):
 
         found_stick = True
         web_results = upload_results(event_key, event, result_line.strip())  # Remove the trailing newline
-        print "\n".join(web_results)
+        print ("\n".join(web_results))
 
 
   if not found_stick:
@@ -283,7 +283,7 @@ def get_sireader(serial_port_name, verbose):
   except SIReaderException as sire:
     si = None
     if verbose:
-      print "Cannot find si download station, reason: {}".format(sire)
+      print ("Cannot find si download station, reason: {}".format(sire))
 
   return si
 
@@ -295,7 +295,7 @@ def read_results(si_reader):
       return({SI_STICK_KEY : None})
   except SIReaderException as sire:
     si_reader.ack_sicard()
-    print "Bad card download, error {}.".format(sire)
+    print ("Bad card download, error {}.".format(sire))
     return ({SI_STICK_KEY : None})
 
 # some properties are now set
@@ -307,7 +307,7 @@ def read_results(si_reader):
   try:
     card_data = si_reader.read_sicard()
   except SIReaderException as sire:
-    print "Bad card ({}) download, error {}.".format(card_number, sire)
+    print ("Bad card ({}) download, error {}.".format(card_number, sire))
     no_data = True
     return({SI_STICK_KEY : None})
 
@@ -319,7 +319,7 @@ def read_results(si_reader):
     time.sleep(1)
 
   if no_data:
-    print "No data found on stick {}.".format(card_number)
+    print ("No data found on stick {}.".format(card_number))
     return({SI_STICK_KEY : None})
   
 
@@ -335,7 +335,7 @@ def read_results(si_reader):
     finish_timestamp = get_24hour_timestamp(card_data['finish'])
   else:
     finish_timestamp = 0
-    print "No finish timestamp on stick {} - please scan finish and then download.".format(card_number)
+    print ("No finish timestamp on stick {} - please scan finish and then download.".format(card_number))
 	
   array_of_punches = []
   if ((finish_timestamp < start_timestamp) and (finish_timestamp < TWELVE_HOURS_IN_SECONDS)):
@@ -349,7 +349,7 @@ def read_results(si_reader):
     orig_punches = map(lambda punch: (punch[0], get_24hour_timestamp(punch[1])), card_data['punches'])
     new_punches = map(lambda punch: (punch[0], punch[1] + TWELVE_HOURS_IN_SECONDS if (punch[1] < start_timestamp) else punch[1]), orig_punches)
     array_of_punches = map(lambda punch: "{}:{}".format(str(punch[0]), str(punch[1])), new_punches)
-    if verbose: print "Adjusting some times for {} by twelve hours.".format(card_number)
+    if verbose: print ("Adjusting some times for {} by twelve hours.".format(card_number))
   else:
     array_of_punches = map(lambda punch: "{}:{}".format(str(punch[0]), str(get_24hour_timestamp(punch[1]))), card_data['punches'])
 
@@ -488,12 +488,12 @@ if ((event == "") or (event_key == "")):
         while retry_count < 1000:
           backup_file = "{}-{}-{:02d}-{:02d}-{}-results.log".format(fake_offline_event, dlm_tuple.tm_year, dlm_tuple.tm_mon, dlm_tuple.tm_mday, retry_count)
           if not os.path.exists(backup_file):
-            if verbose or debug: print "Backing up existing results file as {}".format(backup_file)
+            if verbose or debug: print ("Backing up existing results file as {}".format(backup_file))
             os.rename(fake_offline_event + "-results.log", backup_file)
             break
           retry_count += 1
       else:
-        if verbose or debug: print "Appending results to {}-results.log".format(fake_offline_event)
+        if verbose or debug: print ("Appending results to {}-results.log".format(fake_offline_event))
   else:
     usage()
     sys.exit(1)
@@ -510,7 +510,7 @@ if (replay_si_stick):
   si_stick_to_replay = raw_input("Enter the si stick to replay, or offline to reply offline downloads: ")
   si_stick_to_replay = si_stick_to_replay.strip()
   if (si_stick_to_replay == ""):
-    print "ERROR: Must enter si stick when using the -r option, re-run program to try again."
+    print ("ERROR: Must enter si stick when using the -r option, re-run program to try again.")
     sys.exit(1)
   else:
     replay_stick_results(event_key, event, si_stick_to_replay)
@@ -520,9 +520,9 @@ if (replay_si_stick):
 if not testing_run:
   si_reader = get_sireader(serial_port, verbose)
   if (si_reader == None):
-    print "ERROR: Cannot find si download station, is it plugged in?"
+    print ("ERROR: Cannot find si download station, is it plugged in?")
     if (serial_port != ""):
-      print "\tAttempted to read from {}".format(serial_port)
+      print ("\tAttempted to read from {}".format(serial_port))
     sys.exit(1)
 else:
   si_reader = None
@@ -553,7 +553,7 @@ while True:
     upload_entry_list.extend(si_stick_entry[SI_CONTROLS_KEY])
     qr_result_string = ",".join(upload_entry_list)
     if verbose:
-      print "Got results {} for si_stick {}.".format(qr_result_string, si_stick_entry[SI_STICK_KEY])
+      print ("Got results {} for si_stick {}.".format(qr_result_string, si_stick_entry[SI_STICK_KEY]))
 
     with open("{}-results.log".format(event), "a") as LOGFILE:
       LOGFILE.write(qr_result_string + "\n")
@@ -564,17 +564,17 @@ while True:
     if (si_stick_entry[SI_FINISH_KEY] != 0):
       if not run_offline:
         results = upload_results(event_key, event, qr_result_string)
-        print "\n".join(results)
+        print ("\n".join(results))
         sys.stdout.flush()
       else:
         total_time = si_stick_entry[SI_FINISH_KEY] - si_stick_entry[SI_START_KEY]
         hours = total_time / 3600
         minutes = (total_time - (hours * 3600)) / 60
         seconds = (total_time - (hours * 3600) - (minutes * 60))
-        print "Downloaded results for si_stick {}, time was {}h:{}m:{}s ({}).".format(si_stick_entry[SI_STICK_KEY], hours, minutes, seconds, total_time)
+        print ("Downloaded results for si_stick {}, time was {}h:{}m:{}s ({}).".format(si_stick_entry[SI_STICK_KEY], hours, minutes, seconds, total_time))
         sys.stdout.flush()
     else:
-      print "Splits downloaded but no finish time found - punch finish and download again."
+      print ("Splits downloaded but no finish time found - punch finish and download again.")
       sys.stdout.flush()
 
   if testing_run and not continuous_testing:

@@ -182,14 +182,22 @@ sub remove_member_properties {
 
 
 my(%keys);
+my(%xlt_keys);
 sub create_key_file {
   $keys{"UnitTestPlayground"} = "TestingDirectory";
   $keys{"UnitTestAlternate"} = "NewDirectory_foo";
+  $xlt_keys{"UnitTestXlt"} = "UnitTestPlayground";
+  $xlt_keys{"UnitTestAltXlt"} = "UnitTestAlternate";
+  #$xlt_keys{"UnitTestPlayground"} = "UnitTestKeyDoesNotExist";
+  $xlt_keys{"UnitTestBad"} = "no_way_no_how";
 
   open(KEY_FILE, ">../keys");
   my($element);
   foreach $element (keys(%keys)) {
     print KEY_FILE join(",", $element, $keys{$element}, "no_password") . "\n";
+  }
+  foreach $element (keys(%xlt_keys)) {
+    print KEY_FILE join(",", "XLT:" . $element, $xlt_keys{$element}) . "\n";
   }
   close(KEY_FILE);
 
@@ -204,7 +212,7 @@ sub remove_key_file {
 
 # This too should be based on the key and the keyfile - leave it alone for now
 sub get_base_path {
-  my($key) = @_;  # Ignored for the moment, should really pay attention to this
+  my($key) = @_; 
   return("../OMeetData/" . $keys{$key});
 }
 
@@ -236,6 +244,20 @@ sub set_no_redirects_for_event {
   open(NO_REDIRECTS, ">${path}/${event}/no_redirects"); close(NO_REDIRECTS);
 }
 
+#####################
+# 
+sub set_xlation_for_control {
+  my($event, $key, $control, $xlation) = @_;
+
+  my($path) = get_base_path($key);
+
+  if (! -d "${path}/${event}/xlations") {
+    mkdir("${path}/${event}/xlations");
+  }
+
+  open(XLATION_FILE, ">${path}/${event}/xlations/${control}"); print XLATION_FILE $xlation; close(XLATION_FILE);
+}
+
 ########################
 # Turn a hash into the information for the registration script
 sub hash_to_registration_info_string {
@@ -250,11 +272,30 @@ sub hash_to_registration_info_string {
 }
 
 ########################
+# Decode a registration info string back to the original hash
+sub registration_info_string_to_hash {
+  my($registration_info_string) = @_;
+
+  my(%registration_hash);
+  my(@registration_pieces) = split(",", $registration_info_string);
+  my($i);
+
+  for ($i = 0; $i < @registration_pieces; $i += 2) {
+    $registration_hash{$registration_pieces[$i]} = decode_base64($registration_pieces[$i + 1]);
+  }
+
+  return(%registration_hash);
+}
+
+########################
 # Create the classification information string
 sub values_to_classification_info {
   my($birth_year, $gender, $preset_class) = @_;
 
-  return("BY:" . encode_base64($birth_year) . ",G:" . encode_base64("GenderId:" . $gender) . ",CLASS:" . encode_base64($preset_class));
+  # For some reason, there is a newline at the end of the encoded string - strip them out
+  my($classification_info) = "BY:" . encode_base64($birth_year) . ",G:" . encode_base64("GenderId:" . $gender) . ",CLASS:" . encode_base64($preset_class);
+  $classification_info =~ s/\n//g;
+  return($classification_info);
 }
 
 ########################

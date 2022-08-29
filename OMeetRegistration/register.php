@@ -58,14 +58,18 @@ else {
   }
 }
 
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
 $key = isset($_GET["key"]) ? $_GET["key"] : "";
+// Only translate the key if no event is specified - otherwise the key should be correct already
+if ($event == "") {
+    $key = translate_key($key);
+}
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
 
 $base_path = get_base_path($key, "..");
 
-$event = isset($_GET["event"]) ? $_GET["event"] : "";
 //echo "event is \"${event}\"<p>";
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";
 if (strcmp($event, "") == 0) {
@@ -78,7 +82,7 @@ if (strcmp($event, "") == 0) {
     //echo "Identified event as ${event}\n<p>";
   }
   else if (count($event_list) > 1) {
-    $event_output_array = array_map(name_to_link, $event_list);
+    $event_output_array = array_map("name_to_link", $event_list);
     echo "<p>Choose your event:<p>\n<ul>\n" . implode("\n", $event_output_array) . "</ul>";
     return;
   }

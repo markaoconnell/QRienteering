@@ -16,13 +16,13 @@ if ($event == "") {
   error_and_exit("Unknown event (empty), are you using an authorized link?\n");
 }
 
-$event_path = get_event_path($event, $key, "..");
+$event_path = get_event_path($event, $key);
 if (!is_dir($event_path) || !file_exists("{$event_path}/description")) {
   error_and_exit("<p>ERROR: Bad event \"{$event}\", was this created properly?" . get_error_info_string());
 }
 
-if (file_exists("{$base_path}/{$event}/done")) {
-  error_and_exit("Event " . file_get_contents("{$base_path}/{$event}/description") . " has completed and registrations are no longer possible.\n");
+if (file_exists("{$event_path}/done")) {
+  error_and_exit("Event " . file_get_contents("{$event_path}/description") . " has completed and registrations are no longer possible.\n");
 }
 
 $using_nre_classes = event_is_using_nre_classes($event, $key);

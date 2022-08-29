@@ -32,7 +32,8 @@ function name_to_results_link($event_id) {
           "<ul><li><a href={$base_path_for_links}/OMeet/on_course.php?event={$event_id}&key={$key}>Still on course</a>" . 
               "<li><a href={$base_path_for_links}/OMeetMgmt/competitor_info.php?event={$event_id}&key={$key}>" .
 	                                                                                        "Meet Director view of competitors</a>" .
-	      "<li><a href={$base_path_for_links}/OMeetRegistration/self_report_1.php?event={$event_id}&key={$key}>Self report a result</a></ul>\n");
+	      "<li><a href={$base_path_for_links}/OMeetRegistration/self_report_1.php?event={$event_id}&key={$key}>Self report a result</a>\n" .
+	      "<li><a href={$base_path_for_links}/OMeetMgmt/result_cycler.php?event={$event_id}&key={$key}&initial_run=1>Display results (continuous refresh)</a></ul>\n");
 }
 
 function name_to_add_course_link($event_id) {
@@ -40,6 +41,13 @@ function name_to_add_course_link($event_id) {
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
   return ("<li><a href={$base_path_for_links}/OMeetMgmt/add_course_to_event.php?event={$event_id}&key={$key}>Add new course to {$event_fullname}</a> -- (" . 
           "<a href={$base_path_for_links}/OMeetMgmt/create_event.php?clone_event={$event_id}&key={$key}>create a copy of this event</a>)");
+}
+
+function name_to_manage_event_link($event_id) {
+  global $base_path, $key, $base_path_for_links;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li>{$event_fullname}: <a href={$base_path_for_links}/OMeetMgmt/event_management.php?event={$event_id}&key={$key}>Preregistrations & NRE support</a> / " .
+                                 "<a href={$base_path_for_links}/OMeetMgmt/control_xlations.php?event={$event_id}&key={$key}>Control translations</a>\n");
 }
 
 function name_to_remove_course_link($event_id) {
@@ -68,12 +76,13 @@ function name_to_stats_links($event_id) {
 }
 
 function name_to_get_qrcodes_link($event_id) {
-  global $base_path, $key, $base_path_for_links;
+  global $base_path, $key, $orig_key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
-  return ("<li><a href={$base_path_for_links}/OMeetMgmt/get_event_qr_codes.php?event={$event_id}&key={$key}> Get QR codes for {$event_fullname}</a>");
+  return ("<li><a href={$base_path_for_links}/OMeetMgmt/get_event_qr_codes.php?event={$event_id}&key={$key}&orig_key={$orig_key}> Get QR codes for {$event_fullname}</a>");
 }
 
-$key = $_GET["key"];
+$orig_key = isset($_GET["key"]) ? $_GET["key"] : "";
+$key = translate_key($orig_key);
 if (!key_is_valid($key)) {
   error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
 }
@@ -122,6 +131,7 @@ $closed_event_list = array_filter($event_list, "is_event_recently_closed");
 $open_event_links = array_map("name_to_registration_link", $open_event_list);
 $add_course_links = array_map("name_to_add_course_link", $open_event_list);
 $add_course_links2 = array_map("name_to_clone_course_link", $closed_event_list);
+$manage_event_links = array_map("name_to_manage_event_link", $open_event_list);
 $remove_course_links = array_map("name_to_remove_course_link", $open_event_list);
 $open_event_result_links = array_map("name_to_results_link", $open_event_list);
 $qrcode_links = array_map("name_to_get_qrcodes_link", $open_event_list);
@@ -145,13 +155,14 @@ echo implode("\n", array_map(function ($elt) use ($base_path, $key)
                              { return ("####,CLOSED_EVENT,{$elt}," . base64_encode(file_get_contents("{$base_path}/{$elt}/description")) .
                                                  "," . (preregistrations_allowed($elt, $key) ? "Preregistration" : "no")); },
                              $closed_event_list));
+echo "\n####,XLATED_KEY,{$key}\n";
 echo "\n-->\n";
 ?>
 <br>
 <p>Orienteering Event Management
 <p>
 <ol>
-<li> <a href=<?php echo "./create_event.php?key={$key}"; ?>>Create a new event</a>
+<li> <a href=<?php echo "./create_event.php?key={$key}&orig_key={$orig_key}"; ?>>Create a new event</a>
 <li> Manipulate existing events
 <?php
   if (count($open_event_list) > 0) {
@@ -168,6 +179,11 @@ echo "\n-->\n";
 <li> Get a registration link: 
 <ul>
 <?php echo implode("\n", $open_event_links); ?>
+</ul>
+
+<li> Enable/Manage preregistration
+<ul>
+<?php echo implode("\n", $manage_event_links); ?>
 </ul>
 
 <li> Get QR codes

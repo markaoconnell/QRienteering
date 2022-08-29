@@ -1,6 +1,7 @@
 <?php
 require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/course_properties.php';
+require '../OMeetWithMemberList/name_matcher.php';
 
 function is_event($filename) {
   global $base_path;
@@ -35,6 +36,8 @@ $event = isset($_GET["event"]) ? $_GET["event"] : "";
 $key = isset($_GET["key"]) ? $_GET["key"] : "";
 $download_csv_flag = isset($_GET["download_csv"]) ? $_GET["download_csv"] : "";
 $download_csv = ($download_csv_flag != "");
+$rescan_for_members = isset($_GET["rescan_for_members"]);
+$rescan_non_members = isset($_GET["rescan_non_members"]);
 
 
 if (!key_is_valid($key)) {
@@ -46,14 +49,14 @@ if ($event == "") {
   // No event specified - show a list
   // If there is only one, then auto-choose it
   $event_list = scandir($base_path);
-  $event_list = array_filter($event_list, is_event);
+  $event_list = array_filter($event_list, "is_event");
   if (count($event_list) == 1) {
     $event = basename(current($event_list));
   }
   else if (count($event_list) > 1) {
 
     echo get_web_page_header(true, true, false);
-    $event_output_array = array_map(name_to_link, $event_list);
+    $event_output_array = array_map("name_to_link", $event_list);
     echo "<p>Choose your event:<p>\n<ul>\n" . implode("\n", $event_output_array) . "</ul>";
     echo get_web_page_footer();
 
@@ -71,6 +74,62 @@ $results_path = get_results_path($event, $key);
 $courses_path = get_courses_path($event, $key, "..");
 if (!file_exists($courses_path)) {
   error_and_exit("<p>ERROR: No such event found {$event} (or bad location key {$key}).\n");
+}
+
+if ($rescan_for_members) {
+  $competitor_directory = get_competitor_directory($event, $key, "..");
+
+  if (is_dir($competitor_directory)) {
+    $competitor_list = scandir("${competitor_directory}");
+    $competitor_list = array_diff($competitor_list, array(".", ".."));
+  }
+  else {
+    $competitor_list = array();
+  }
+
+  $member_properties = get_member_properties(get_base_path($key));
+  $matching_info = read_names_info(get_members_path($key, $member_properties), get_nicknames_path($key, $member_properties));
+
+  foreach ($competitor_list as $competitor) {
+    $competitor_name = file_get_contents("{$competitor_directory}/{$competitor}/name");
+    if (file_exists("{$competitor_directory}/{$competitor}/registration_info")) {
+      $registration_info = parse_registration_info(file_get_contents("{$competitor_directory}/{$competitor}/registration_info"));
+    }
+    else {
+      $registration_info = array();
+    }
+
+    if (!isset($registration_info["is_member"]) || ($rescan_non_members && ($registration_info["is_member"] == "no"))) {
+      // Look up the name and see if this person could be a member
+      $competitor_name_pieces = explode(" ", $competitor_name);
+      $found_member = false;
+      for ($split_point = 1; $split_point < count($competitor_name_pieces); $split_point++) {
+        $first_name = implode(" ", array_slice($competitor_name_pieces, 0, $split_point));
+        $last_name = implode(" ", array_slice($competitor_name_pieces, $split_point));
+
+        $possible_member_ids = find_best_name_match($matching_info, $first_name, $last_name);
+
+        if (count($possible_member_ids) == 1) {
+          $registration_info["is_member"] = "yes";
+          $registration_info["member_first_name_for_lookup"] = $first_name;
+          $registration_info["member_last_name_for_lookup"] = $last_name;
+          $registration_info["member_name"] = get_full_name($possible_member_ids[0], $matching_info);
+          $registration_info["member_id"] = $possible_member_ids[0];
+          $found_member = true;
+          break;
+        }
+      }
+
+      if (!$found_member) {
+        $registration_info["is_member"] = "no";
+      }
+
+      // Base64 encode the values in preparation for saving this
+      $implodeable_registration_info = array_map(function ($key) use ($registration_info) { return ("{$key}," . base64_encode($registration_info[$key])); }, array_keys($registration_info));
+      $registration_info_string = implode(",", $implodeable_registration_info);
+      file_put_contents("{$competitor_directory}/{$competitor}/registration_info", $registration_info_string);
+    }
+  }
 }
 
 set_timezone($key);
@@ -202,6 +261,11 @@ echo get_web_page_header(true, true, false);
 echo "<p>Overall meet statistics for: <strong>{$event_name}</strong>\n";
 
 echo $results_string;
+
+if (!$download_csv) {
+  echo "<p><p><a href=\"./meet_statistics.php?key={$key}&event={$event}&rescan_for_members=1\">Check participant names to see if in member database (may take a little while)</a>\n";
+  echo "<p><p><a href=\"./meet_statistics.php?key={$key}&event={$event}&rescan_for_members=1&rescan_non_members=1\">Recheck non-member participant names to see if in member database (may take a little while)</a>\n";
+}
 
 echo get_web_page_footer();
 ?>

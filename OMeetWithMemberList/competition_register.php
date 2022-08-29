@@ -21,7 +21,8 @@ function name_to_link($event_id) {
 
 echo "<p>\n";
 
-$key = $_GET["key"];
+$key = isset($_GET["key"]) ? $_GET["key"] : "";
+$key = translate_key($key);
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
@@ -48,7 +49,7 @@ if (strcmp($event, "") == 0) {
     $event = basename(current($event_list));
   }
   else if (count($event_list) > 1) {
-    $event_output_array = array_map(name_to_link, $event_list);
+    $event_output_array = array_map("name_to_link", $event_list);
     echo "<p>Choose your event:<p>\n<ul>\n" . implode("\n", $event_output_array) . "</ul>";
     echo get_web_page_footer();
     return;

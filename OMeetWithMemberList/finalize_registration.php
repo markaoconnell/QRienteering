@@ -25,8 +25,8 @@ if (!is_dir($event_path) || !file_exists("{$event_path}/description")) {
   error_and_exit("<p>ERROR: Bad event \"{$event}\", was this created properly?" . get_error_info_string());
 }
 
-if (file_exists("{$base_path}/{$event}/done")) {
-  error_and_exit("Event " . file_get_contents("{$base_path}/{$event}/description") . " has completed and registrations are no longer possible.\n");
+if (file_exists("{$event_path}/done")) {
+  error_and_exit("Event " . file_get_contents("{$event_path}/description") . " has completed and registrations are no longer possible.\n");
 }
 
 $classification_info = isset($_GET["classification_info"]) ? $_GET["classification_info"] : "";
@@ -49,7 +49,7 @@ if ($has_preset_id) {
     $first_name = $entrant_info["first_name"];
     $last_name = $entrant_info["last_name"];
 
-    $pass_info_to_registration="&course={$entrant_info["course"]}&event={$event}";
+    $pass_info_to_registration="&course={$entrant_info["course"]}";
 
     if (($entrant_info["member_id"] != "not_a_member") && ($entrant_info["member_id"] != "")) {
       $member_properties = get_member_properties(get_base_path($key));
@@ -135,10 +135,6 @@ if ($using_nre_classes) {
   if (($gender != "") && ($gender != "m") && ($gender != "f") && ($gender != "o")) {
     error_and_exit("Gender ({$gender}) has an unexpected value, please see the administrator or go back and re-enter.\n");
   }
-
-  if (($gender == "") != ($birth_year == "")) {
-    error_and_exit("Must specify both birth_year (\"{$birth_year}\") and gender (\"{$gender}\") or neither, please go back and re-enter.\n");
-  }
 }
 
 $success_string = "";
@@ -152,14 +148,19 @@ $registration_pieces = array("first_name", base64_encode($first_name),
                               "member_id", base64_encode($is_member ? $member_id : ""),
 			      "is_member", base64_encode($is_member ? "yes" : "no"));
 if ($using_nre_classes) {
-  if (($birth_year != "") && ($gender != "")) {
+  if (($birth_year != "") || ($gender != "")) {
     $classification_info_hash = array();
     if ($classification_info_supplied) {
       $classification_info_hash = decode_entrant_classification_info($classification_info);
     }
 
-    $classification_info_hash["BY"] = $birth_year;
-    $classification_info_hash["G"] = $gender;
+    if ($birth_year != "") {
+      $classification_info_hash["BY"] = $birth_year;
+    }
+
+    if ($gender != "") {
+      $classification_info_hash["G"] = $gender;
+    }
 
     $classification_info = encode_entrant_classification_info($classification_info_hash["BY"],
 	                                                      $classification_info_hash["G"],

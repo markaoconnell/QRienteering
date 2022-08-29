@@ -29,13 +29,13 @@ if ($event == "") {
   error_and_exit("Unknown event (empty), are you using an authorized link?\n");
 }
 
-$event_path = get_event_path($event, $key, "..");
+$event_path = get_event_path($event, $key);
 if (!is_dir($event_path) || !file_exists("{$event_path}/description")) {
   error_and_exit("<p>ERROR: Bad event \"{$event}\", was this created properly?" . get_error_info_string());
 }
 
-if (file_exists("{$base_path}/{$event}/done")) {
-  error_and_exit("Event " . file_get_contents("{$base_path}/{$event}/description") . " has completed and registrations are no longer possible.\n");
+if (file_exists("{$event_path}/done")) {
+  error_and_exit("Event " . file_get_contents("{$event_path}/description") . " has completed and registrations are no longer possible.\n");
 }
 
 $is_preregistered_checkin = isset($_GET["checkin"]) && ($_GET["checkin"] == "true");
@@ -137,7 +137,7 @@ else {
   $entrant_info = array();
 }
 
-$base_path = get_base_path($key, "..");
+$base_path = get_base_path($key);
 if (isset($entrant_info["waiver_signed"]) && (strtolower($entrant_info["waiver_signed"]) == "yes")) {
   echo "<p><input type=hidden name=\"waiver_signed\" value=\"signed\"><br>";
 }
@@ -221,7 +221,7 @@ echo "<input type=\"text\" size=50 name=\"email\" {$presupplied_email_address} >
 //
 if ($using_nre_classes && (!$classification_info_supplied || ($classification_info_hash["CLASS"] == ""))) {
   echo "<br><br><p>If you would like your time to count for national ranking purposes, please enter your birth year and gender.\n";
-  echo "<p>Please leave blank if you are orienteering recreationally or going out in a group (more than 1 person).\n";
+  echo "<p>Please leave blank (unspecified) if you are orienteering recreationally or going out in a group (more than 1 person).\n";
 
   echo "<p>(Optional) Birth year (for ranking purposes), please use 4 digits, e.g. 1973, 2001, etc.<br>\n";
   if ($classification_info_supplied && ($classification_info_hash["BY"] != "")) {
@@ -250,6 +250,7 @@ if ($using_nre_classes && (!$classification_info_supplied || ($classification_in
   echo "<input type=radio name=\"gender\" value=\"f\" {$female_checked} >  Female<br>\n";
   echo "<input type=radio name=\"gender\" value=\"m\" {$male_checked} >  Male<br>\n";
   echo "<input type=radio name=\"gender\" value=\"o\" {$other_checked} >  Other<br>\n";
+  echo "<input type=radio name=\"gender\" value=\"\" >  Unspecified<br>\n";
 }
 ?>
 

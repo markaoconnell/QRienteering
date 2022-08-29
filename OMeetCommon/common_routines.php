@@ -12,7 +12,7 @@ function ck_testing() {
 // (for displaying si unit times)
 function format_si_time($time_in_seconds) {
   $hours = floor($time_in_seconds / 3600);
-  $mins = floor(($time_in_seconds / 60) % 60);
+  $mins = floor($time_in_seconds / 60) % 60;
 //  $hours = 0;
 //  $mins = floor($time_in_seconds / 60);
   $secs = ($time_in_seconds % 60);
@@ -23,7 +23,7 @@ function format_si_time($time_in_seconds) {
 // Return a string with the elapsed time in seconds pretty printed
 function formatted_time($time_in_seconds) {
   $hours = floor($time_in_seconds / 3600);
-  $mins = floor(($time_in_seconds / 60) % 60);
+  $mins = floor($time_in_seconds / 60) % 60;
 //  $hours = 0;
 //  $mins = floor($time_in_seconds / 60);
   $secs = ($time_in_seconds % 60);
@@ -131,10 +131,17 @@ function set_page_title($new_title) {
 
 
 $bg_color = "";
+$font_color_override = "";
+$redirect = "";
+
+function set_redirect($redirection_string) {
+  global $redirect;
+  $redirect = $redirection_string;
+}
 
 // Print out the default headers
 function get_web_page_header($paragraph_style, $table_style, $form_style) {
-  global $bg_color, $page_title;
+  global $bg_color, $page_title, $font_color_override, $redirect;
 
   $headers_to_show = <<<END_OF_HEADERS
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -149,8 +156,16 @@ function get_web_page_header($paragraph_style, $table_style, $form_style) {
 
 END_OF_HEADERS;
 
+  if ($redirect != "") {
+    $headers_to_show .= $redirect;
+  }
+
   if ($bg_color != "") {
     $headers_to_show .= get_bg_color_element($bg_color);
+  }
+
+  if ($font_color_override != "") {
+    $headers_to_show .= $font_color_override;
   }
 
   if ($paragraph_style) {
@@ -186,8 +201,9 @@ function set_success_background() {
 }
 
 function set_error_background() {
-  global $bg_color;
+  global $bg_color, $font_color_override;
   $bg_color = "#cc3300";
+  $font_color_override = "<style>\np {\ncolor: yellow ;\n}\n";
 }
 
 
@@ -347,11 +363,31 @@ function get_csv_results($event, $key, $course, $result_class, $show_points, $ma
       $points_value = "";
     }
 
+    $nre_info = ";;;;";
+    if (file_exists("{$competitor_path}/registration_info")) {
+      $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
+      if (isset($registration_info["classification_info"])) {
+        if ($registration_info["classification_info"] != "") {
+          $classification_info = decode_entrant_classification_info($registration_info["classification_info"]);
+          $nre_info = ";{$classification_info["BY"]};{$classification_info["G"]};{$classification_info["CLASS"]};";
+        }
+
+      }
+      if (isset($registration_info["club_name"])) {
+        $nre_info .= "{$registration_info["club_name"]};";
+      }
+      else {
+        $nre_info .= ";";
+      }
+    }
+
     if (!file_exists("{$competitor_path}/dnf")) {
-      $result_string .= "{$readable_course_name}{$class_for_results};{$competitor_name};" . csv_formatted_time($result_pieces[1]) . ";{$points_value}\n";
+      // 1 is a valid result
+      $result_string .= "{$readable_course_name}{$class_for_results};{$competitor_name};" . csv_formatted_time($result_pieces[1]) . ";OK;1;{$points_value}{$nre_info}\n";
     }
     else {
-      $result_string .= "{$readable_course_name}{$class_for_results};{$competitor_name};DNF;{$points_value}\n";
+      // 2 is a DNF, 3 is a MissedPunch, manually adjust these afterwards
+      $result_string .= "{$readable_course_name}{$class_for_results};{$competitor_name};". csv_formatted_time($result_pieces[1]) . ";DNF;2;{$points_value}{$nre_info}\n";
     }
   }
   return($result_string);
@@ -374,7 +410,7 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);
     $competitor_path = get_competitor_path($result_pieces[2], $event, $key);
-    $competitor_name = file_get_contents("${competitor_path}/name");
+    $competitor_name = file_get_contents("{$competitor_path}/name");
     if ($show_points) {
       $points_value = $max_points - $result_pieces[0];
     }
@@ -550,6 +586,7 @@ function parse_registration_info($raw_info_string) {
 // Functions to return the paths to commonly used areas
 $keys_read = false;
 $keys_hash = array();
+$key_translation_hash = array();
 
 // For testing purposes only
 function key_reset() {
@@ -557,18 +594,34 @@ function key_reset() {
 
   $keys_read = false;
   $keys_hash = array();
+  $key_translation_hash = array();
 }
 
-function key_is_valid($key) {
-  global $keys_read, $keys_hash;
+function read_key_file() {
+  global $keys_read, $keys_hash, $key_translation_hash;
 
   if (!$keys_read) {
     if (file_exists("../keys")) {
       $key_file_lines = file("../keys", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
       foreach ($key_file_lines as $key_line) {
         // Format is key, path, password
+        // or xlation_key, real_key  (xlation_key must begin with XLT:)
         $line_pieces = explode(",", $key_line);
-        $keys_hash[trim($line_pieces[0])] = array(trim($line_pieces[1]), trim($line_pieces[2]));
+        $number_pieces = count($line_pieces);
+        if ($number_pieces == 3) {
+          $keys_hash[trim($line_pieces[0])] = array(trim($line_pieces[1]), trim($line_pieces[2]));
+        }
+        else if ($number_pieces == 2) {
+          if (substr($line_pieces[0], 0, 4) == "XLT:") {
+            $key_translation_hash[substr($line_pieces[0], 4)] = $line_pieces[1];
+          }
+          else {
+          // Do nothing and skip this entry - should really figure out a way to report this somewhere
+          }
+        }
+        else {
+          // Do nothing and skip this entry - should really figure out a way to report this somewhere
+        }
       }
 
       $keys_read = true;
@@ -576,6 +629,31 @@ function key_is_valid($key) {
     else {
       $keys_read = true;
     }
+  }
+
+  return;
+}
+
+function translate_key($key) {
+  global $keys_read, $key_translation_hash;
+
+  if (!$keys_read) {
+    read_key_file();
+  }
+
+  if (isset($key_translation_hash[$key])) {
+    return ($key_translation_hash[$key]);
+  }
+  else {
+    return($key);
+  }
+}
+
+function key_is_valid($key) {
+  global $keys_read, $keys_hash;
+
+  if (!$keys_read) {
+    read_key_file();
   }
 
   return(isset($keys_hash[$key]));
@@ -706,6 +784,12 @@ function get_extra_prompts($key) {
 
   // No additional prompts
   return (array());
+}
+
+function enable_event_nre_classes($event, $key) {
+  if (!file_exists(get_event_path($event, $key) . "/using_nre_classes")) {
+    file_put_contents(get_event_path($event, $key) . "/using_nre_classes", "");
+  }
 }
 
 function event_is_using_nre_classes($event, $key) {
@@ -847,6 +931,48 @@ function get_http_port_spec() {
 
 function redirect_to_secure_http_if_no_key_cookie() {
   return(file_exists("../try_secure_http"));
+}
+
+function xlate_control_id_for_display($key, $event, $control_id) {
+  $control_xlation_path = get_event_path($event, $key) . "/xlations/{$control_id}";
+  if (file_exists($control_xlation_path)) {
+    return(file_get_contents($control_xlation_path));
+  }
+  else {
+    return($control_id);
+  }
+}
+
+function set_xlation_for_control($key, $event, $control_id, $xlation) {
+  $control_xlation_dir = get_event_path($event, $key) . "/xlations";
+  $control_xlation_path = "{$control_xlation_dir}/{$control_id}";
+  if (!is_dir($control_xlation_dir)) {
+    mkdir($control_xlation_dir);
+  }
+
+  file_put_contents($control_xlation_path, $xlation);
+}
+
+function remove_xlation_for_control($key, $event, $control_id) {
+  $control_xlation_dir = get_event_path($event, $key) . "/xlations";
+  $control_xlation_path = "{$control_xlation_dir}/{$control_id}";
+  if (file_exists($control_xlation_path)) {
+    unlink($control_xlation_path);
+  }
+}
+
+function get_control_xlations($key, $event) {
+  $control_xlation_dir = get_event_path($event, $key) . "/xlations";
+  if (is_dir($control_xlation_dir)) {
+    $xlation_entries = scandir($control_xlation_dir);
+    $xlation_entries = array_diff($xlation_entries, array(".", ".."));
+    $xlation_hash = array();
+    array_map(function ($elt) use (&$xlation_hash, $control_xlation_dir) { $xlation_hash[$elt] = file_get_contents("{$control_xlation_dir}/{$elt}"); }, $xlation_entries);
+    return($xlation_hash);
+  }
+  else {
+    return(array());
+  }
 }
 
 ?>

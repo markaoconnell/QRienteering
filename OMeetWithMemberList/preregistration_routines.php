@@ -47,6 +47,16 @@ function enable_preregistration($event, $key) {
   }
 }
 
+function disable_preregistration($event, $key) {
+  if (file_exists("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations/Prereg.csv")) {
+    unlink("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations/Prereg.csv");
+  }
+
+  if (is_dir("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations")) {
+    rmdir("../OMeetData/" . key_to_path($key) . "/{$event}/Preregistrations");
+  }
+}
+
 
 function encode_preregistered_entrant($preregistered_entrant) {
   $entrant_pieces = array_map(function ($elt) use ($preregistered_entrant) { return("{$elt}," . base64_encode($preregistered_entrant[$elt])); },

@@ -287,5 +287,7 @@ echo get_web_page_header(true, true, false);
 
 echo $output_string;
 
+echo "<p><p><a href=\"./competitor_info.php?key={$key}&event={$event}\">Back to meet director information page</a>\n";
+
 echo get_web_page_footer();
 ?>
