@@ -130,5 +130,9 @@ if (count($errors_array) > 0) {
   echo "</ul>\n";
 }
 
+if ($is_confirmed) {
+  echo "<p><a href=\"./competitor_info.php?key={$key}&event={$event}\">Return to meet directors view of competitors</a>\n";
+}
+
 echo get_web_page_footer();
 ?>

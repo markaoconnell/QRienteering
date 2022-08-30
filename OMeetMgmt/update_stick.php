@@ -46,6 +46,20 @@ if (!$new_stick_provided) {
 else {
   $output_string = "<p>Updating Si unit for {$competitor_name}\n";
   if ($new_stick != "none") {
+    if (!file_exists("{$competitor_path}/si_stick")) {
+      // User was a QR runner - remove the start time if it is there, error if there are any punches
+      $punches = scandir("{$competitor_path}/controls_found");
+      $punches = array_diff($punches, array(".", "..", "start"));
+      if (count($punches) != 0) {
+        error_and_exit("User is a QR code user with active punches, cannot add a SI stick now.");
+      }
+      else {
+        if (file_exists("{$competitor_path}/controls_found/start")) {
+	   unlink("{$competitor_path}/controls_found/start");
+        }
+      }
+    }
+
     file_put_contents("{$competitor_path}/si_stick", $new_stick);
   }
   else {
