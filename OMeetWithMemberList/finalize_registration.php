@@ -177,5 +177,5 @@ if ($using_nre_classes) {
 $registration_info_string = implode(",", $registration_pieces);
 
 // Redirect to the main registration screens
-echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../OMeetRegistration/register.php?key={$key}&event={$event}&registration_info=${registration_info_string}{$pass_info_to_registration}\" /></head></html>";
+echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../OMeetRegistration/register.php?key={$key}&event={$event}&registration_info=${registration_info_string}{$pass_info_to_registration}&show_reregister_link=1\" /></head></html>";
 ?>
