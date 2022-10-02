@@ -22,7 +22,12 @@ function name_to_link($event_id) {
 echo "<p>\n";
 
 $key = isset($_GET["key"]) ? $_GET["key"] : "";
-$key = translate_key($key);
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
+
+// Only translate the key if the event is not specified, otherwise the key should be correct already
+if ($event == "") {
+  $key = translate_key($key);
+}
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
@@ -41,7 +46,6 @@ else {
 
 $base_path = get_base_path($key, "..");
 
-$event = isset($_GET["event"]) ? $_GET["event"] : "";
 if (strcmp($event, "") == 0) {
   $event_list = scandir($base_path);
   $event_list = array_filter($event_list, "is_event_open");
