@@ -5,8 +5,8 @@ require '../OMeetWithMemberList/preregistration_routines.php';
 ck_testing();
 
 function validate_name($string) {
-  if (!preg_match("/^[a-zA-Z '\"]+$/", $string)) {
-    return ("Name field may only contain alphabetic characters, apostrophe, quote, and space");
+  if (!preg_match("/^[-a-zA-Z '\".]+$/", $string)) {
+    return ("Name field may only contain alphabetic characters, apostrophe, quote, space, hyphen, and period");
   }
   return("");
 }
@@ -33,8 +33,8 @@ function validate_cell_phone($string) {
 }
 
 function validate_email($string) {
-  if (!preg_match("/^[a-zA-Z0-9_]+@[a-zA-Z0-9_.]+$/", $string)) {
-    return ("Email field looks malformatted, should be like foo@bar.gmail");
+  if (!preg_match("/^[a-zA-Z0-9_.]+@[a-zA-Z0-9_.]+$/", $string)) {
+    return ("Email field looks malformatted, should be like foo.bill@bar.gmail");
   }
   return("");
 }
@@ -55,7 +55,7 @@ function validate_birth_year($string) {
 
 function validate_gender($string) {
   if (!preg_match("/^[mfo]$/", $string)) {
-    return ("Birth year must be 4 digits");
+    return ("Gender must be m, f, or o (lower case)");
   }
   return("");
 }

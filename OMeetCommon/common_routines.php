@@ -428,6 +428,7 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
       $competitor_result_array["si_stick"] = file_get_contents("{$competitor_path}/si_stick");
     }
     $competitor_result_array["scoreo_points"] = $points_value;
+    $competitor_result_array["competitive_class"] = get_class_for_competitor($competitor_path);
     $result_array[] = $competitor_result_array;
   }
   return($result_array);

@@ -93,7 +93,7 @@ foreach ($course_list as $one_course) {
     $csv_array[] = "";  // NuC1
     $csv_array[] = "";  // NuC2
     $csv_array[] = "";  // NuC3
-    $csv_array[] = "\"\"";  // Text1
+    $csv_array[] = $this_result["competitive_class"];  // Text1
     $csv_array[] = "\"\"";  // Text2
     $csv_array[] = "\"\"";  // Text3
     $csv_array[] = "\"\"";  // Address name
