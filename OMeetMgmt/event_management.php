@@ -33,7 +33,7 @@ function validate_cell_phone($string) {
 }
 
 function validate_email($string) {
-  if (!preg_match("/^[a-zA-Z0-9_.]+@[a-zA-Z0-9_.]+$/", $string)) {
+  if (!preg_match("/^[a-zA-Z0-9_.-]+@[a-zA-Z0-9_.-]+$/", $string)) {
     return ("Email field looks malformatted, should be like foo.bill@bar.gmail");
   }
   return("");
