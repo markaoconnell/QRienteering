@@ -124,6 +124,7 @@ foreach ($course_list as $one_course) {
       else {
         $classes_for_course = array_filter($classification_info, function ($elt) use ($course_readable_name) { return ($elt[0] == $course_readable_name); });
         $classes_for_course = array_map(function ($elt) { return ($elt[5]); }, $classes_for_course);
+        $classes_for_course = array_unique($classes_for_course);
       }
     }
     else {

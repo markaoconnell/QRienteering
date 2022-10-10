@@ -176,6 +176,11 @@ if ($error_string == "") {
         $si_stick = file_get_contents("{$competitor_path}/si_stick");
         file_put_contents("{$new_competitor_path}/si_stick", $si_stick);
       }
+
+      // Preserve the NRE classification info, if it is present
+      if (event_is_using_nre_classes($event, $key) && competitor_has_class($competitor_path)) {
+        set_class_for_competitor($new_competitor_path, get_class_for_competitor($competitor_path));
+      }
     }
 
     global $TYPE_FIELD, $SCORE_O_COURSE;

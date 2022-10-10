@@ -112,7 +112,8 @@ function validate_and_save_results($event, $key, $competitor, $si_stick, $start_
       file_put_contents("{$competitor_path}/controls_found/{$time_6_digits},{$control_pieces[0]}", "");
     }
     else {
-      $extra_controls_string .= "{$control_pieces[1]},{$control_pieces[0]}\n";
+      $time_6_digits = sprintf("%06d", $control_pieces[1]);
+      $extra_controls_string .= "{$time_6_digits},{$control_pieces[0]}\n";
     }
   }
 
