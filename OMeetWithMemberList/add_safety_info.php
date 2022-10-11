@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/course_properties.php';
 require 'preregistration_routines.php';
 
 ck_testing();
@@ -47,6 +48,7 @@ if (isset($_COOKIE["{$key}-safety_info"])) {
 }
 
 $stick_override_msg = "";
+$db_si_stick = isset($_GET["db_si_stick"]) ? $_GET["db_si_stick"] : "";
 if ($has_preset_id) {
   if (!isset($_GET["using_stick"])) {
     error_and_exit("No value found for SI unit usage - error in scripting?  Please restart registration.\n");
@@ -251,6 +253,20 @@ if ($using_nre_classes && (!$classification_info_supplied || ($classification_in
   echo "<input type=radio name=\"gender\" value=\"m\" {$male_checked} >  Male<br>\n";
   echo "<input type=radio name=\"gender\" value=\"o\" {$other_checked} >  Other<br>\n";
   echo "<input type=radio name=\"gender\" value=\"\" >  Unspecified<br>\n";
+}
+
+// If the person is a member doing normal checkin, see if they are using a new stick
+// and would like to register it with the club
+if (!$is_preregistered_checkin && $has_preset_id) {
+  if (($si_stick != "") && ($db_si_stick != $si_stick)) {
+    // check the properties - see if allowing stick registration before prompting
+    $email_properties = get_email_properties($base_path);
+    $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]);
+    if ($email_enabled && ($email_properties["email_to_register_stick"] != "")) {
+      echo "<p>(Optional) Check the box to register SI unit {$si_stick} with the club for future meets.\n";
+      echo "<input type=checkbox name=\"email_si_stick\" value=\"{$si_stick}\"><br>\n";
+    }
+  }
 }
 ?>
 

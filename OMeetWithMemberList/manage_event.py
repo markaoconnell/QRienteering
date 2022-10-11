@@ -969,7 +969,7 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
   try:
       output = make_url_call(REGISTER_COMPETITOR, registration_params)
   except UrlTimeoutException:
-      output = r"####,ERROR,Connecitivity error - validate internet connectivity and site status"
+      output = r"####,ERROR,Connectivity error - validate internet connectivity and site status"
   if exit_all_threads: return
   if debug: print ("Results of web call {}.".format(output))
               

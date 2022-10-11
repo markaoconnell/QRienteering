@@ -134,6 +134,7 @@ $success_string .= <<<END_OF_FORM
 <input type=hidden name="key" value="{$key}"/>
 <input type=hidden name="event" value="{$event}"/>
 <input type=hidden name="registered_si_stick" value="yes"/>
+<input type=hidden name="db_si_stick" value="{$si_stick}"/>
 {$pass_preregistration_marker}
 {$classification_form_entry}
 <p> How are you orienteering today? <br>
