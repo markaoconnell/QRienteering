@@ -65,7 +65,15 @@ function name_to_clone_course_link($event_id) {
 function name_to_download_links($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  if (event_is_using_nre_classes($event_id, $key)) {
+    $ousa_results_download_link = "<a href=\"{$base_path_for_links}/OMeetMgmt/download_results_ousacsv.php?event={$event_id}&key=${key}\"> OUSA NRE results </a> / ";
+  }
+  else {
+    $ousa_results_download_link = "";
+  }
+
   return ("<li>Download <a href={$base_path_for_links}/OMeetMgmt/download_results_csv.php?event={$event_id}&key={$key}> winsplits </a> / " .
+	  $ousa_results_download_link . 
           "<a href={$base_path_for_links}/OMeetMgmt/download_results_iofxml.php?event={$event_id}&key={$key}> IOF XML 3.0 </a> results for {$event_fullname}");
 }
 
