@@ -272,12 +272,21 @@ function get_splits_dnf($competitor, $event, $key) {
       unset($missed_controls_positions_hash[$control_num_on_course]);
     }
   }
-  
-  $output_string .= "<tr><td>Finish</td><td></td><td></td><td></td><td>" . format_split_time($splits_array["finish"], $using_si_timing, true) . "</td></tr>\n";
+
+  // Don't forget the split to finish
+  if (count($controls_found) > 0) {
+    $finish_split = $splits_array["finish"] - $controls_found[count($controls_found) - 1]["raw_time"];
+  }
+  else {
+    $finish_split = $splits_array["finish"] - $splits_array["start"];
+  }
+  $finish_time_string = formatted_time($splits_array["finish"] - $splits_array["start"]);
+
+  $output_string .= "<tr><td>Finish</td><td></td><td>" . formatted_time($finish_split) .
+	            "</td><td>{$finish_time_string}</td><td>" . format_split_time($splits_array["finish"], $using_si_timing, true) . "</td></tr>\n";
   $output_string .= "</table>\n";
     
-  $finish_time = $splits_array["finish"] - $splits_array["start"];
-  $output_string .= "<p>Total Time: " . formatted_time($finish_time) . "\n";
+  $output_string .= "<p>Total Time: {$finish_time_string}\n";
 
   return (array("error" => $error_string, "output" => $output_string));
 }
