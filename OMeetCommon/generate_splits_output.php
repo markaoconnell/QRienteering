@@ -98,7 +98,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
   
   $table_string = "";
   $table_string .= "<p class=\"title\">Splits for ${competitor_name} on " . ltrim($course, "0..9-") . "\n";
-  $table_string .= "<table border=1><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of Day</th></tr>\n";
+  $table_string .= "<table border=1 style=\"border-collapse: collapse\"><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of Day</th></tr>\n";
   $table_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . format_split_time($start_time, $using_si_timing, true) . "</td></tr>\n";
   $controls_found_list = array();  // De-dup controls found if on a scoreO
   for ($i = 0; $i < $number_controls_found; $i++){
@@ -223,7 +223,7 @@ function get_splits_dnf($competitor, $event, $key) {
   
     
   $output_string = "<p class=\"title\">Splits for {$competitor_name} on " . ltrim($course, "0..9-") . ($score_course ? " (ScoreO)" : "") . "\n";
-  $output_string .= "<p><table><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of day</th></tr>\n";
+  $output_string .= "<p><table border=1 style=\"border-collapse: collapse\"><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of day</th></tr>\n";
   $output_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . format_split_time($splits_array["start"], $using_si_timing, true) . "</td></tr>\n";
   
   $control_num_on_course = 0;
