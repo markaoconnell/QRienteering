@@ -24,7 +24,7 @@ function get_node_value($node_list, $node_name) {
 
 function get_event_description($ppen_file, $include_get_em_all) {
 
-  $event_descrption_string = "";
+  $event_description_string = "";
 
   $doc = new DOMDocument();
   $doc->load($ppen_file);
@@ -43,10 +43,24 @@ $controls = array();
 $courses = array();
 $course_controls = array();
 
+$IS_NORMAL = 0;
+$CONTROL_CODE = 1;
+$CONTROL_TYPE = 2;
+
+$COURSE_NAME = 0;
+$COURSE_FIRST_CONTROL = 1;
+$COURSE_TYPE = 2;
+
+$COURSE_CONTROL_ID = 0;
+$COURSE_CONTROL_NEXT = 1;
+$COURSE_CONTROL_POINTS = 2;
+
 foreach ($child_list as $top_level_child) {
   $name = $top_level_child->nodeName;
-  //echo "Found {$top_level_child->nodeName} with value {$top_level_child->nodeValue}\n";
-  //echo "Found {$top_level_child->nodeName}\n";
+  if ($verbose) {
+    echo "Found {$top_level_child->nodeName} with value {$top_level_child->nodeValue}\n";
+    echo "Found {$top_level_child->nodeName}\n";
+  }
   $attrs = $top_level_child->attributes;
   
   if ($attrs != NULL) {
@@ -89,10 +103,10 @@ foreach ($child_list as $top_level_child) {
         echo "Control id {$id} has code {$code} and kind {$kind}\n";
       }
       if ($kind == "normal") {
-        $controls[$id] = array(true, $code);
+        $controls[$id] = array(true, $code, $kind);
       }
       else {
-        $controls[$id] = array(false, $kind);
+        $controls[$id] = array(false, $code, $kind);
       }
     }
   
@@ -124,38 +138,46 @@ foreach ($child_list as $top_level_child) {
 $course_strings = array();
 foreach ($courses as $one_course) {
   if ($verbose) {
-    echo "{$one_course[0]} starts at {$controls[$course_controls[$one_course[1]][0]][1]}\n";
+    echo "{$one_course[$COURSE_NAME]} starts at {$controls[$course_controls[$one_course[$COURSE_FIRST_CONTROL]][$COURSE_CONTROL_ID]][$CONTROL_CODE]}\n";
   }
   $course_array = array();
   $score_course = false;
-  if ($one_course[2] == "normal") {
-    $course_array[] = "l:{$one_course[0]}";
+  if ($one_course[$COURSE_TYPE] == "normal") {
+    $course_array[] = "l:{$one_course[$COURSE_NAME]}";
   }
-  elseif ($one_course[2] == "score") {
+  elseif ($one_course[$COURSE_TYPE] == "score") {
     $score_course = true;
-    $course_array[] = "s:{$one_course[0]}:0:0";
+    $course_array[] = "s:{$one_course[$COURSE_NAME]}:0:0";
   }
   else {
-    echo "Unknown course type {$one_course[2]}, assuming regular (linear) course.\n";
-    $course_array[] = "l:{$one_course[0]}";
+    echo "Unknown course type {$one_course[$COURSE_TYPE]}, assuming regular (linear) course.\n";
+    $course_array[] = "l:{$one_course[$COURSE_NAME]}";
   }
-  $next_control = $course_controls[$one_course[1]][1];
-  while ($next_control != "Finish") {
-    $next_control_code = $controls[$course_controls[$next_control][0]];
-    if ($next_control_code[0]) {  // Is this a printable (normal) control?
+
+  $next_course_control_id = $one_course[$COURSE_FIRST_CONTROL];
+  if ($verbose) {
+    echo "\tCourse {$one_course[$COURSE_NAME]} starts with course_control id {$next_course_control_id}\n";
+    echo "\t\tCourse " . (($controls[$course_controls[$next_course_control_id][$COURSE_CONTROL_ID]][$CONTROL_TYPE] == "start") ? "has" : "lacks") .
+	  " the start control\n";
+  }
+
+  while ($next_course_control_id != "Finish") {
+    $next_control_entry = $controls[$course_controls[$next_course_control_id][$COURSE_CONTROL_ID]];
+    if ($next_control_entry[$IS_NORMAL]) {  // Is this a printable (normal) control?
       if ($score_course) {
-        $course_array[] = "{$next_control_code[1]}:{$course_controls[$next_control][2]}";
+        $course_array[] = "{$next_control_entry[$CONTROL_CODE]}:{$course_controls[$next_course_control_id][$COURSE_CONTROL_POINTS]}";
       }
       else {
-        $course_array[] = $next_control_code[1];
+        $course_array[] = $next_control_entry[$CONTROL_CODE];
       }
     }
     if ($verbose) {
-      echo "\tNext Control is {$controls[$course_controls[$next_control][0]]}\n";
+      echo "\tNext Control is {$controls[$course_controls[$next_course_control_id][$COURSE_CONTROL_ID]][$CONTROL_CODE]}" . 
+              ", {$controls[$course_controls[$next_course_control_id][$COURSE_CONTROL_ID]][$CONTROL_TYPE]}\n";
     }
-    $next_control = $course_controls[$next_control][1];
+    $next_course_control_id = $course_controls[$next_course_control_id][$COURSE_CONTROL_NEXT];
   }
-  $course_strings[strtolower($one_course[0])] = implode(",", $course_array);
+  $course_strings[strtolower($one_course[$COURSE_NAME])] = implode(",", $course_array);
   if ($verbose) {
     echo "\n\n" . implode(",", $course_array) . "\n\n";
   }

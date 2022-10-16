@@ -17,7 +17,11 @@ if (($key == "") && redirect_to_secure_http_if_no_key_cookie() && !isset($_SERVE
 }
 
 if (($event == "") || ($competitor_id == "")) {
-  error_and_exit("<p>ERROR: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?" . get_error_info_string());
+  error_and_exit("<p>Event and competitor cookies not found - possible causes:\n" .
+	         "<ul><li>You did not scan the registration QR code and complete the registration process.\n" .
+		 "<li>You are using a browser in incognito (or private) mode, which is not supported - please switch your browser mode.\n" .
+		 "</ul><p><p>For questions, please talk to a club member (if any are available)\n" .
+		 "<p>Details of error: Unknown event \"{$event}\" or competitor \"{$competitor_id}\", probably not registered for a course?" . get_error_info_string());
 }
 
 if (!key_is_valid($key)) {
