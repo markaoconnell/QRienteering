@@ -224,6 +224,9 @@ if (!$error) {
   }
   else {
     echo "<p>To start the course, please proceed to start and scan the start QR code there or click the \"Start course\" button below to start now.\n";
+    echo "<p style=\"color:red;\">Please make sure you are NOT in icognito / private mode in your browser!\n";
+    echo "<p style=\"color:red;\">If you are uncertain, please explicitly scan the start QR code.\n";
+
     echo "<p><form action=\"../OMeet/start_course.php\"> <input type=\"submit\" value=\"Start course\"> </form>\n";
   }
 }

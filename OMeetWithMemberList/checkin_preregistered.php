@@ -7,7 +7,7 @@ ck_testing();
 
 echo get_web_page_header(true, false, true);
 
-$key = isset($_GET["key"]) : $_GET["key"] : "";
+$key = isset($_GET["key"]) ? $_GET["key"] : "";
 $event = isset($_GET["event"]) ? $_GET["event"] : "";
 
 // Only translate the key if the event is not specified, otherwise the key should be correct already
