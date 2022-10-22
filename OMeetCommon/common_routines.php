@@ -879,6 +879,17 @@ function get_nre_classification_file($key) {
   return("../OMeetData/" . key_to_path($key) . "/default_classes.csv");
 }
 
+function get_nre_class_display_order($key) {
+  $display_order_filename = "../OMeetData/" . key_to_path($key) . "/nre_class_display_order.txt";
+  if (file_exists($display_order_filename)) {
+    return(file($display_order_filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+  }
+  else {
+    return (array());
+  }
+}
+
+
 // Get the nre classification info
 // The returned information is ordered so that the first match should be the best
 // The information comes back in an array, with each entry

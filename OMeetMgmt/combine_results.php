@@ -7,14 +7,16 @@ ck_testing();
 set_page_title("Results Combiner");
 
 function is_event_open($filename) {
-  global $base_path;
-  return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
+  global $base_path, $key;
+  return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done") &&
+          event_is_using_nre_classes($filename, $key));
 }
 
 function is_event_recently_closed($filename) {
-  global $base_path, $recent_event_cutoff;
+  global $base_path, $recent_event_cutoff, $key;
   return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && file_exists("{$base_path}/{$filename}/done") &&
-          (stat("{$base_path}/{$filename}/done")["mtime"] > $recent_event_cutoff));
+          (stat("{$base_path}/{$filename}/done")["mtime"] > $recent_event_cutoff) &&
+          event_is_using_nre_classes($filename, $key));
 }
 
 
@@ -65,7 +67,8 @@ echo implode("\n", array_map(function ($elt) use ($base_path, $key)
                              $closed_event_list));
 
 echo "</ul>\n";
-echo "<input type=submit>\n</form>\n";
+echo "<p>Suppress errors? <input type=checkbox name=suppress_errors value=1>\n";
+echo "<p><input type=submit>\n</form>\n";
 
 
 echo get_web_page_footer();
