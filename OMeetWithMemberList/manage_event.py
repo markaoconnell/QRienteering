@@ -481,7 +481,8 @@ def read_results(si_reader):
 
   #print "Here is the array of punches {}.".format(array_of_punches)
 
-  entry_to_return = {SI_STICK_KEY : card_number, SI_START_KEY : start_timestamp, SI_FINISH_KEY : finish_timestamp, SI_CONTROLS_KEY : array_of_punches}
+  entry_to_return = {SI_STICK_KEY : card_number, SI_START_KEY : start_timestamp, SI_FINISH_KEY : finish_timestamp,
+                     SI_CONTROLS_KEY : list(array_of_punches)}
   
   return(entry_to_return)
 
