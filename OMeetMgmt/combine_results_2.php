@@ -29,8 +29,11 @@ if (count($event_list) < 2) {
   error_and_exit("<p>Only " . count($event_list) . " events selected, must be at least 2 to combine results.\n");
 }
 
-# Get the information about the NRE classes
-$classification_info = get_nre_classes_info($key);
+// Get the information about the NRE classes
+// This is a little incorrect - this assumes that all the events being combined
+// are using the same set of classes - a reasonable assumption for practical purposes
+// but this should really be verified somehow
+$classification_info = get_nre_classes_info($event_list[0], $key);
 
 #$output_string .= "<p>Found " . count($event_list) . " events, (" . implode(",", $event_list) . ")\n";
 
@@ -150,7 +153,9 @@ $header_row = implode("", $header_elements);
 
 #$output_string .= "<p>Total of " . count($results_by_class) . " unique classes\n";
 // Get the order to print the results
-$custom_class_order = get_nre_class_display_order($key);
+// Again, this assumes that all the events being combined will print results in the
+// same order - this really should be validated somehow
+$custom_class_order = get_nre_class_display_order($event_list[0], $key);
 $named_classes = array();
 
 // Pick out the classes that are explicitly named

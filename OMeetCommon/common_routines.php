@@ -817,6 +817,17 @@ function enable_event_nre_classes($event, $key) {
   if (!file_exists(get_event_path($event, $key) . "/using_nre_classes")) {
     file_put_contents(get_event_path($event, $key) . "/using_nre_classes", "");
   }
+
+  if (file_exists("../OMeetData/" . key_to_path($key) . "/default_classes.csv")) {
+    copy("../OMeetData/" . key_to_path($key) . "/default_classes.csv", get_event_path($event, $key) . "/default_classes.csv");
+  }
+  else {
+    echo "No default classes found!\n";
+  }
+
+  if (file_exists("../OMeetData/" . key_to_path($key) . "/nre_class_display_order.txt")) {
+    copy("../OMeetData/" . key_to_path($key) . "/nre_class_display_order.txt", get_event_path($event, $key) . "/nre_class_display_order.txt");
+  }
 }
 
 function event_is_using_nre_classes($event, $key) {
@@ -875,17 +886,37 @@ function decode_entrant_classification_info($classification_info) {
   return($return_hash);
 }
 
-function get_nre_classification_file($key) {
+function get_default_nre_classification_file($key) {
   return("../OMeetData/" . key_to_path($key) . "/default_classes.csv");
 }
 
-function get_nre_class_display_order($key) {
+function get_nre_classification_file($event, $key) {
+  $event_specific_classes = get_event_path($event, $key) . "/default_classes.csv";
+  if (file_exists($event_specific_classes)) {
+    return($event_specific_classes);
+  }
+  else {
+    return(get_default_nre_classification_file($key));
+  }
+}
+
+function get_default_nre_class_display_order($key) {
   $display_order_filename = "../OMeetData/" . key_to_path($key) . "/nre_class_display_order.txt";
   if (file_exists($display_order_filename)) {
     return(file($display_order_filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
   }
   else {
     return (array());
+  }
+}
+
+function get_nre_class_display_order($event, $key) {
+  $display_order_filename = get_event_path($event, $key) . "/nre_class_display_order.txt";
+  if (file_exists($display_order_filename)) {
+    return(file($display_order_filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+  }
+  else {
+    return (get_default_nre_class_display_order($key));
   }
 }
 
@@ -899,8 +930,8 @@ function get_nre_class_display_order($key) {
 // [3] -> max age
 // [4] -> QR codes allowed
 // [5] -> classification
-function get_nre_classes_info($key) {
-  $nre_classification_file = get_nre_classification_file($key);
+function get_nre_classes_info($event, $key) {
+  $nre_classification_file = get_nre_classification_file($event, $key);
   return(read_and_parse_classification_file($nre_classification_file));
 }
 

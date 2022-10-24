@@ -67,7 +67,7 @@ if (!file_exists($courses_path)) {
 $show_per_class = isset($_GET["per_class"]) && event_is_using_nre_classes($event, $key);
 if ($show_per_class) {
   $results_path = get_results_per_class_path($event, $key);
-  $classification_info = get_nre_classes_info($key);
+  $classification_info = get_nre_classes_info($event, $key);
   $class_to_show = isset($_GET["class"]) ? $_GET["class"] : "";
 }
 else {

@@ -97,7 +97,7 @@ else {
 
   $current_class = get_class_for_competitor($competitor_path);
   
-  $classification_info = get_nre_classes_info($key);
+  $classification_info = get_nre_classes_info($event, $key);
   $possible_classes_for_course = array_filter($classification_info,
   	                                    function ($elt) use ($course_for_classification) { return ($course_for_classification == $elt[0]); });
   

@@ -232,7 +232,7 @@ else {
   $output_string .= "<input type=\"hidden\" name=\"handle_current\" value=\"replace\">\n";
 }
 
-if (!event_is_using_nre_classes($event, $key) && file_exists(get_nre_classification_file($key))) {
+if (!event_is_using_nre_classes($event, $key) && file_exists(get_default_nre_classification_file($key))) {
   $output_string .= "<p><input type=checkbox name=\"nre_classes\" value=\"use_nre_classes\">Enable results per age/gender class\n";
 }
 
