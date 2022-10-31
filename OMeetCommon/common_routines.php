@@ -39,6 +39,16 @@ function formatted_time($time_in_seconds) {
   }
 }
 
+// Return a string with the elapsed time in seconds in a compact format
+// Currently only used for OUSA results formatting
+function formatted_time_compact($time_in_seconds) {
+  $hours = floor($time_in_seconds / 3600);
+  $mins = floor($time_in_seconds / 60) % 60;
+  $secs = ($time_in_seconds % 60);
+
+  return sprintf("%02d:%02d:%02d", $hours, $mins, $secs);
+}
+
 // Convert a time limit of the form XXhYYmZZs to seconds.
 // Note - all fields are optional
 // If just a number, it is assumed to be in seconds (backwards compatability)

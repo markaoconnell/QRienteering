@@ -71,7 +71,7 @@ foreach ($course_list as $one_course) {
     $csv_array[] = $this_result["birth_year"]; // Year of Birth
     $csv_array[] = ""; // Block
     $csv_array[] = ($this_result["competitive_class"] != "") ? "0" : "1"; // NC
-    $csv_array[] = trim($this_result["time"]);
+    $csv_array[] = formatted_time_compact($this_result["raw_time"]);
     $csv_array[] = $this_result["dnf"] ? "2" : "1"; // 2 = DNF, 1 = good, 3 = MP - Classifier
     $csv_array[] = $this_result["club_name"];  // Club Name
     $csv_array[] = $this_result["competitive_class"];  // OUSA class
