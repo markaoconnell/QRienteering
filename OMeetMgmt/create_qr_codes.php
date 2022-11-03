@@ -81,7 +81,7 @@ else if ($_POST["style"] == "zipfile") {
 
   foreach (array_keys($qr_code_files) as $qr_code_name) {
     $temp_image_file = $qr_code_files[$qr_code_name];
-    $zipfile->addFile($temp_image_file, "./{$qr_code_name}.gif");
+    $zipfile->addFile($temp_image_file, "{$qr_code_name}.gif");
   }
   $zipfile->close();
   header('Content-disposition: attachment; filename=qrcodes.zip');
