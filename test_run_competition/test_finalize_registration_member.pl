@@ -87,7 +87,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&"]+)[&"]#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
@@ -116,7 +116,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&"]+)[&"]#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
@@ -144,7 +144,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&"]+)[&"]#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
@@ -175,7 +175,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
-if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"]+)"#) {
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&"]+)[&"]#) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);

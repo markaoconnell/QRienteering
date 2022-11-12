@@ -71,12 +71,17 @@ else {
   $output .= "\n<table>\n" . implode("\n", $displayable_data) . "\n</table>\n";
   set_redirect("\n<meta http-equiv=\"refresh\" content=\"{$time_delay}; url=./result_cycler.php?key={$key}&event={$event}&" .
                                                                                    "lines_to_show={$lines_to_show}&columns={$columns}&time_delay={$time_delay}&" .
-                                                                                   "prior_page_cookie={$prior_page_end}\"/>");
+										   "prior_page_cookie={$prior_page_end}\"/>");
+
+  $output .= "\n<p>Refreshing every {$time_delay} seconds or <a href=\"./result_cycler.php?key={$key}&event={$event}&" .
+                       "lines_to_show={$lines_to_show}&columns={$columns}&time_delay={$time_delay}&" .
+                       "prior_page_cookie={$prior_page_end}\">show next now</a>\n";
 }
 
 echo get_web_page_header(true, true, false);
 
 echo $output;
+
 
 echo get_web_page_footer();
 

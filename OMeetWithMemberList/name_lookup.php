@@ -123,12 +123,14 @@ else if (count($possible_member_ids) == 1) {
     $yes_checked_by_default = "checked";
     $no_checked_by_default = "";
     $pass_registered_si_stick_entry = "<input type=hidden name=\"registered_si_stick\" value=\"yes\"/>\n";
+    $pass_registered_si_stick_entry .= "<input type=hidden name=\"db_si_stick\" value=\"{$si_stick}\"/>\n";
   }
   else if (isset($saved_registration_info["si_stick"]) && ($saved_registration_info["si_stick"] != "")) {
     $si_stick = $saved_registration_info["si_stick"];
     $yes_checked_by_default = "checked";
     $no_checked_by_default = "";
     $pass_registered_si_stick_entry = "<input type=hidden name=\"registered_si_stick\" value=\"yes\"/>\n";
+    $pass_registered_si_stick_entry .= "<input type=hidden name=\"db_si_stick\" value=\"{$si_stick}\"/>\n";
   }
   else {
     $yes_checked_by_default = "";

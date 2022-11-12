@@ -98,7 +98,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
   
   $table_string = "";
   $table_string .= "<p class=\"title\">Splits for ${competitor_name} on " . ltrim($course, "0..9-") . "\n";
-  $table_string .= "<table border=1><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of Day</th></tr>\n";
+  $table_string .= "<table border=1 style=\"border-collapse: collapse\"><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of Day</th></tr>\n";
   $table_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . format_split_time($start_time, $using_si_timing, true) . "</td></tr>\n";
   $controls_found_list = array();  // De-dup controls found if on a scoreO
   for ($i = 0; $i < $number_controls_found; $i++){
@@ -223,7 +223,7 @@ function get_splits_dnf($competitor, $event, $key) {
   
     
   $output_string = "<p class=\"title\">Splits for {$competitor_name} on " . ltrim($course, "0..9-") . ($score_course ? " (ScoreO)" : "") . "\n";
-  $output_string .= "<p><table><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of day</th></tr>\n";
+  $output_string .= "<p><table border=1 style=\"border-collapse: collapse\"><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of day</th></tr>\n";
   $output_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . format_split_time($splits_array["start"], $using_si_timing, true) . "</td></tr>\n";
   
   $control_num_on_course = 0;
@@ -272,12 +272,21 @@ function get_splits_dnf($competitor, $event, $key) {
       unset($missed_controls_positions_hash[$control_num_on_course]);
     }
   }
-  
-  $output_string .= "<tr><td>Finish</td><td></td><td></td><td></td><td>" . format_split_time($splits_array["finish"], $using_si_timing, true) . "</td></tr>\n";
+
+  // Don't forget the split to finish
+  if (count($controls_found) > 0) {
+    $finish_split = $splits_array["finish"] - $controls_found[count($controls_found) - 1]["raw_time"];
+  }
+  else {
+    $finish_split = $splits_array["finish"] - $splits_array["start"];
+  }
+  $finish_time_string = formatted_time($splits_array["finish"] - $splits_array["start"]);
+
+  $output_string .= "<tr><td>Finish</td><td></td><td>" . formatted_time($finish_split) .
+	            "</td><td>{$finish_time_string}</td><td>" . format_split_time($splits_array["finish"], $using_si_timing, true) . "</td></tr>\n";
   $output_string .= "</table>\n";
     
-  $finish_time = $splits_array["finish"] - $splits_array["start"];
-  $output_string .= "<p>Total Time: " . formatted_time($finish_time) . "\n";
+  $output_string .= "<p>Total Time: {$finish_time_string}\n";
 
   return (array("error" => $error_string, "output" => $output_string));
 }

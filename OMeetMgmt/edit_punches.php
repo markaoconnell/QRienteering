@@ -279,6 +279,8 @@ else {
 
 if ($allow_editing) {
   $output_string .= "<p>Add additional control - format is control_id, time (seconds since start): <input type=text name=\"additional\">\n";
+  $output_string .= "<p><p><p>Change name (leave blank to keep original name): <input type=text name=\"new_name\">\n";
+  $output_string .= "<p>Change course (leave blank to keep original course): <input type=text name=\"new_course\">\n";
   $output_string .= "<p><input type=submit value=\"Submit changes\">\n";
   $output_string .= "</form>\n";
 }

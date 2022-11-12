@@ -75,17 +75,17 @@ foreach ($course_list as $one_course) {
     $csv_array[] = ""; // Database ID
     $csv_array[] = "\"{$last_name}\"";  // Surname
     $csv_array[] = "\"{$first_name}\"";  // First name
-    $csv_array[] = "\"\""; // Year of Birth
-    $csv_array[] = " "; // Gender
+    $csv_array[] = $this_result["birth_year"]; // Year of Birth
+    $csv_array[] = $this_result["gender"]; // Gender
     $csv_array[] = ""; // Block
-    $csv_array[] = "0"; // NC
+    $csv_array[] = ($this_result["competitive_class"] != "") ? "0" : "1"; // NC
     $csv_array[] = strftime("%T", $splits_array["start"]);  // Should be HH:MM:SS
     $csv_array[] = strftime("%T", $splits_array["finish"]); // Should be HH:MM:SS
     $csv_array[] = trim($this_result["time"]);
     $csv_array[] = $this_result["dnf"] ? "2" : "0"; // 2 = DNF, 0 = good - Classifier
     $csv_array[] = "1"; // Club number
     $csv_array[] = "\"\""; // Club name
-    $csv_array[] = "\"NEOC\"";  // City
+    $csv_array[] = $this_result["club_name"];  // City
     $csv_array[] = "\"\""; // Nationality
     $csv_array[] = "\"\""; // Class number
     $csv_array[] = $readable_course_name; // Short course name
@@ -93,7 +93,7 @@ foreach ($course_list as $one_course) {
     $csv_array[] = "";  // NuC1
     $csv_array[] = "";  // NuC2
     $csv_array[] = "";  // NuC3
-    $csv_array[] = "\"\"";  // Text1
+    $csv_array[] = $this_result["competitive_class"];  // Text1
     $csv_array[] = "\"\"";  // Text2
     $csv_array[] = "\"\"";  // Text3
     $csv_array[] = "\"\"";  // Address name

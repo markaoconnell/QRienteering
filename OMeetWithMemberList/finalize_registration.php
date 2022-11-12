@@ -10,7 +10,7 @@ function find_get_key_or_empty_string($parameter_name) {
   return(isset($_GET[$parameter_name]) ? $_GET[$parameter_name] : "");
 }
 
-$key = $_GET["key"];
+$key = isset($_GET["key"]) ? $_GET["key"] : "";
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
@@ -177,5 +177,49 @@ if ($using_nre_classes) {
 $registration_info_string = implode(",", $registration_pieces);
 
 // Redirect to the main registration screens
-echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../OMeetRegistration/register.php?key={$key}&event={$event}&registration_info=${registration_info_string}{$pass_info_to_registration}\" /></head></html>";
+echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=../OMeetRegistration/register.php?key={$key}&event={$event}&registration_info=${registration_info_string}{$pass_info_to_registration}&show_reregister_link=1\" /></head></html>";
+
+
+// If the person is a member doing normal checkin,
+// Check to see if we should email the webmaster to register the SI stick
+$email_si_stick = isset($_GET["email_si_stick"]) ? $_GET["email_si_stick"] : "";
+if (!$is_preregistered_checkin && $has_preset_id && ($email_si_stick != "")) {
+  // check the properties - see if allowing email (should have been checked already)
+  // echo "<p>Checking to email about {$email_si_stick}\n";
+  $email_properties = get_email_properties(get_base_path($key));
+  $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]);
+  // print_r($email_properties);
+  if ($email_enabled && ($email_properties["email_to_register_stick"] != "")) {
+    $name_info = get_member_name_info($member_id, $matching_info);
+    $first_name = $name_info[0];
+    $last_name = $name_info[1];
+
+    $email_addr = $email_properties["email_to_register_stick"];
+    if (preg_match("/^[a-zA-z0-9_.\-]+@[a-zA-Z0-9_.\-]+/", $email_addr)) {
+      $headers = array();
+      $headers[] = "From: " . $email_properties["from"];
+      $headers[] = "Reply-To: ". $email_properties["reply-to"];
+      $headers[] = "MIME-Version: 1.0";
+      $headers[] = "Content-type: text/html; charset=iso-8859-1";
+
+      $header_string = implode("\r\n", $headers);
+
+      $body_string = "<html><body>\r\nRegister SI {$email_si_stick}\r\nto {$first_name} {$last_name}.\r\n";
+      $body_string .= "\r\n</body></html>";
+    
+      //echo "<p>Mail: Attempting mail send to {$email_addr} with results.\n";
+      $subject = "Register SI {$email_si_stick}";
+
+      // echo "<p>Emailing to {$email_addr}\n";
+      if (isset($email_properties["extra_params"]) && ($email_properties["extra_params"] != "")) {
+        $email_send_result = mail($email_addr, $subject, $body_string, $header_string, $email_properties["extra_params"]);
+      }
+      else {
+        $email_send_result = mail($email_addr, $subject, $body_string, $header_string);
+      }
+
+      // echo "<p> Mail sent " . ($email_send_result ? " successfully" : " failure")  . "\n";
+    }
+  }
+}
 ?>

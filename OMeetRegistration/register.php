@@ -26,15 +26,16 @@ function is_event($filename) {
 }
 
 function name_to_link($event_id) {
-  global $raw_registration_info, $registration_info_supplied, $key, $base_path;
+  global $raw_registration_info, $registration_info_supplied, $show_reregister_link, $key, $base_path;
 
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  $show_reregister_string = $show_reregister_link ? "&show_reregister_link=1" : "";
 
   if (!$registration_info_supplied) {
-    return ("<li><a href=./register.php?event={$event_id}&key={$key}>{$event_fullname}</a>\n");
+    return ("<li><a href=./register.php?event={$event_id}&key={$key}{$show_reregister_string}>{$event_fullname}</a>\n");
   }
   else {
-    return ("<li><a href=./register.php?event={$event_id}&key={$key}&registration_info={$raw_registration_info}>{$event_fullname}</a>\n");
+    return ("<li><a href=./register.php?event={$event_id}&key={$key}{$show_reregister_string}&registration_info={$raw_registration_info}>{$event_fullname}</a>\n");
   }
 }
 
@@ -69,6 +70,7 @@ if (!key_is_valid($key)) {
 }
 
 $base_path = get_base_path($key, "..");
+$show_reregister_link = isset($_GET["show_reregister_link"]);
 
 //echo "event is \"${event}\"<p>";
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";
@@ -125,6 +127,9 @@ if (count($additional_prompts) > 0) {
 
 echo "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
 echo "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
+if ($show_reregister_link) {
+  echo "<input type=\"hidden\" name=\"show_reregister_link\" value=\"1\">\n";
+}
 
 
 $preselected_course = isset($_GET["course"]) ? $_GET["course"] : "";

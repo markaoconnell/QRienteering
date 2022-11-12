@@ -481,7 +481,8 @@ def read_results(si_reader):
 
   #print "Here is the array of punches {}.".format(array_of_punches)
 
-  entry_to_return = {SI_STICK_KEY : card_number, SI_START_KEY : start_timestamp, SI_FINISH_KEY : finish_timestamp, SI_CONTROLS_KEY : array_of_punches}
+  entry_to_return = {SI_STICK_KEY : card_number, SI_START_KEY : start_timestamp, SI_FINISH_KEY : finish_timestamp,
+                     SI_CONTROLS_KEY : list(array_of_punches)}
   
   return(entry_to_return)
 
@@ -969,7 +970,7 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
   try:
       output = make_url_call(REGISTER_COMPETITOR, registration_params)
   except UrlTimeoutException:
-      output = r"####,ERROR,Connecitivity error - validate internet connectivity and site status"
+      output = r"####,ERROR,Connectivity error - validate internet connectivity and site status"
   if exit_all_threads: return
   if debug: print ("Results of web call {}.".format(output))
               

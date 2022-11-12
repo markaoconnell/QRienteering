@@ -7,8 +7,13 @@ ck_testing();
 
 echo get_web_page_header(true, false, true);
 
-$key = isset($_GET["key"]) : $_GET["key"] : "";
-$key = translate_key($key);
+$key = isset($_GET["key"]) ? $_GET["key"] : "";
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
+
+// Only translate the key if the event is not specified, otherwise the key should be correct already
+if ($event == "") {
+  $key = translate_key($key);
+}
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
 }
@@ -31,7 +36,6 @@ echo "<p>\n";
 
 $base_path = get_base_path($key, "..");
 
-$event = isset($_GET["event"]) ? $_GET["event"] : "";
 //echo "event is \"${event}\"<p>";
 //echo "strcmp returns " . strcmp($event, "") . "<p>\n";
 if (strcmp($event, "") == 0) {

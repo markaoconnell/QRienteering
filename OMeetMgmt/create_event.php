@@ -225,9 +225,9 @@ if (!$event_created && !$found_error) {
 <p><p><p class="title"><u>Create a new event.</u><br>
 <form action=./create_event.php method=post enctype="multipart/form-data" >
 <?php if (!$uploaded_ppen_file) { ?>
-<p><p>BETA<br>Upload the PurplePen file to auto-initialize the event.
+<p><p>Upload the PurplePen file to auto-initialize the event.
 It is recommended to validate the information imported from PurplePen before
-finalizing the event creation, as this is still in Beta testing.
+finalizing the event creation, just in case.
 <br>Purple Pen file to upload: <input name=upload_file type=file accept=".ppen">
 <br><p>
 <input type=checkbox name="getemall" value="true">Include a "GetEmAll" course?

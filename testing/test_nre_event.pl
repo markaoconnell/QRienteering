@@ -594,10 +594,9 @@ $output = qx($cmd);
 my($actual_table_rows);
 $actual_table_rows = () = $output =~ /(<tr><td>)/g;
 
-# This should really be 4, but the MF White is showing up twice
-# I should fix this but won't for the moment
-if ($actual_table_rows != 5) {
-  error_and_exit("Found $actual_table_rows instead of 5 in results output.\n$output");
+# 4 results should appear
+if ($actual_table_rows != 4) {
+  error_and_exit("Found $actual_table_rows instead of 4 in results output.\n$output");
 }
 
 if ($output !~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04-GetEmAll,05-Green,06-Red,07-Brown\n/) {

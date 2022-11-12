@@ -199,18 +199,21 @@ if (!file_exists("{$controls_found_path}/finish")) {
       mkdir("{$results_per_class_path}/{$result_class}");
     }
     file_put_contents("{$results_per_class_path}/{$result_class}/{$result_filename}", "");
-    $parseable_result_string .= "\n####,CLASS,{$result_class}\n";
   }
 }
 else {
   $error_string .= "<p>Second scan of finish?  Finish time not updated.\n";
-  $parseable_result_string .= "\n####,ERROR,Second scan of finish\n";
+  //$parseable_result_string .= "\n####,ERROR,Second scan of finish\n";
   $suppress_email = true;
   $course_started_at = file_get_contents("{$controls_found_path}/start");
   $course_finished_at = file_get_contents("{$controls_found_path}/finish");
   $time_taken = $course_finished_at - $course_started_at;
 }
 
+if (event_is_using_nre_classes($event, $key) && competitor_has_class($competitor_path)) {
+  $result_class = get_class_for_competitor($competitor_path);
+  $parseable_result_string .= "\n####,CLASS,{$result_class}\n";
+}
 
 // Clear the cookies, ready for another course registration
 // Set them as expired a day ago

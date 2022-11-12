@@ -22,6 +22,7 @@ else {
 
 $key = $_GET["key"];
 $event = $_GET["event"];
+$show_reregister_link = isset($_GET["show_reregister_link"]);
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"{$key}\", are you using an authorized link?\n");
 }
@@ -223,8 +224,15 @@ if (!$error) {
   }
   else {
     echo "<p>To start the course, please proceed to start and scan the start QR code there or click the \"Start course\" button below to start now.\n";
+    echo "<p style=\"color:red;\">Please make sure you are NOT in icognito / private mode in your browser!\n";
+    echo "<p style=\"color:red;\">If you are uncertain, please explicitly scan the start QR code.\n";
+
     echo "<p><form action=\"../OMeet/start_course.php\"> <input type=\"submit\" value=\"Start course\"> </form>\n";
   }
+}
+
+if ($show_reregister_link) {
+  echo "<p><p><a href=\"../OMeetWithMemberList/competition_register.php?key={$key}&event={$event}&generic=1\">Register another</a>\n";
 }
 
 echo get_web_page_footer();

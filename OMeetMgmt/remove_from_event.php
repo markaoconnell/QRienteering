@@ -23,7 +23,7 @@ if (!file_exists(get_event_path($event, $key, ".."))) {
 $is_confirmed = isset($_GET["confirmed"]) && ($_GET["confirmed"] == "true");
 
 $results_string = "";
-$competitor_directory = get_competitor_directory($event, $key, "..");
+$competitor_directory = get_competitor_directory($event, $key);
 
 $current_time = time();
 
@@ -114,6 +114,9 @@ else {
 echo "<ul>\n";
 if ($is_confirmed) {
   echo implode("\n", array_map(function ($elt) { return ("<li>{$elt[1]}"); }, $output_array));
+  if (count($output_array) == 0) {
+    echo "<li>No competitors removed - please use the checkboxes on the prior screen to confirm each competitor to remove.\n";
+  }
 }
 else {
   echo implode("\n", array_map(function ($elt) { return ("<li><input type=checkbox name=\"Remove-{$elt[0]}\">{$elt[1]}"); }, $output_array));

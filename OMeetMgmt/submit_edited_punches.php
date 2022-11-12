@@ -13,6 +13,9 @@ $competitor = $_GET["competitor"];
 $allow_editing = isset($_GET["allow_editing"]);
 $start_time_adjustment = $_GET["start_time_adjustment"];
 
+$new_name = isset($_GET["new_name"]) ? $_GET["new_name"] : "";
+$new_course = isset($_GET["new_course"]) ? $_GET["new_course"] : "";
+
 if ($event == "") {
   error_and_exit("<p>ERROR: Event not specified, no results can be shown.\n");
 }
@@ -132,6 +135,25 @@ $output_string .= implode("\n<li>", $final_punch_entries);
 $output_string .= "</ul>\n";
 $output_string .= "<p>Finish at: {$finish_time}\n";
 
+// Make sure that the newly specified course, if any, is valid
+if ($new_course != "") {
+  $course_list = scandir($courses_path);
+  $course_list = array_diff($course_list, array(".", ".."));
+
+  $matching_courses_list = array_filter($course_list, function ($elt) use ($new_course) { return (ltrim($elt, "0..9-") == $new_course); });
+  if (count($matching_courses_list) == 1) {
+    // It feels like there should be a more efficient way to do this
+    // This should be rare enough that I don't care, but something to think about
+    $new_course = array_values($matching_courses_list)[0];
+  }
+  else {
+    $error_string .= "<p>No matching course found for {$new_course}, check for exact match, remember is it case sensitive.\n";
+  }
+}
+else {
+  $new_course = $course;
+}
+
 if ($error_string != "") {
   $output_string .= $error_string;
 }
@@ -143,7 +165,12 @@ if ($error_string != "") {
 // Let the user delete this competitor after making sure all is ok.
 if ($error_string == "") {
   // Generate the competitor_id and make sure it is truly unique
-  $new_competitor_name = "{$competitor_name}";
+  if ($new_name != "") {
+    $new_competitor_name = "{$new_name}";
+  }
+  else {
+    $new_competitor_name = "{$competitor_name}";
+  }
   $tries = 0;
   while ($tries < 5) {
     $new_competitor_id = uniqid();
@@ -161,12 +188,12 @@ if ($error_string == "") {
     $error = true;
   }
   else {
-    $output_string .= "<p>New entry created: " . $new_competitor_name . " on " . ltrim($course, "0..9-");
+    $output_string .= "<p>New entry created: " . $new_competitor_name . " on " . ltrim($new_course, "0..9-");
 
     // Save the information about the competitor
     fwrite($new_competitor_file, $new_competitor_name);
     fclose($new_competitor_file);
-    file_put_contents("{$new_competitor_path}/course", $course);
+    file_put_contents("{$new_competitor_path}/course", $new_course);
     mkdir("./{$new_competitor_path}/controls_found");
 
     if (file_exists("{$competitor_path}/registration_info")) {
@@ -176,6 +203,11 @@ if ($error_string == "") {
         $si_stick = file_get_contents("{$competitor_path}/si_stick");
         file_put_contents("{$new_competitor_path}/si_stick", $si_stick);
       }
+
+      // Preserve the NRE classification info, if it is present
+      if (event_is_using_nre_classes($event, $key) && competitor_has_class($competitor_path)) {
+        set_class_for_competitor($new_competitor_path, get_class_for_competitor($competitor_path));
+      }
     }
 
     global $TYPE_FIELD, $SCORE_O_COURSE;
@@ -183,12 +215,12 @@ if ($error_string == "") {
     $error_string = "";
     $result_filename = "";
 
-    $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
+    $control_list = read_controls("{$courses_path}/{$new_course}/controls.txt");
     $controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
                                           array_map(function ($element) { return $element[1]; }, $control_list));
   
     $results_path = get_results_path($event, $key, "..");
-    $course_properties = get_course_properties("{$courses_path}/{$course}");
+    $course_properties = get_course_properties("{$courses_path}/{$new_course}");
     $is_score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
     if ($is_score_course) {
       $max_score = $course_properties[$MAX_SCORE_FIELD];
@@ -277,9 +309,9 @@ if ($error_string == "") {
     }
 
     $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $new_competitor_id);
-    file_put_contents("{$results_path}/${course}/${result_filename}", "");
+    file_put_contents("{$results_path}/{$new_course}/{$result_filename}", "");
 
-    $readable_course_name = ltrim($course, "0..9-");
+    $readable_course_name = ltrim($new_course, "0..9-");
     $output_string .= "<p class=\"title\">Results for: {$new_competitor_name}, course complete ({$readable_course_name}{$dnf_string}), time taken " . formatted_time($time_taken) . "<p><p>";
 
     $output_string .= "<form action=\"./remove_from_event.php\">\n";

@@ -33,7 +33,7 @@ function get_age($birth_year) {
 
 function get_nre_class($event, $key, $gender, $birth_year, $course, $using_si_timing) {
   if (event_is_using_nre_classes($event, $key)) {
-    $classification_info = get_nre_classes_info($key);
+    $classification_info = get_nre_classes_info($event, $key);
     $age_for_classification = get_age($birth_year);
     if ($age_for_classification > 0) {
       return(find_best_class($classification_info, $gender, $age_for_classification, $course, $using_si_timing));

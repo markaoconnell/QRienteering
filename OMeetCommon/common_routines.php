@@ -39,6 +39,16 @@ function formatted_time($time_in_seconds) {
   }
 }
 
+// Return a string with the elapsed time in seconds in a compact format
+// Currently only used for OUSA results formatting
+function formatted_time_compact($time_in_seconds) {
+  $hours = floor($time_in_seconds / 3600);
+  $mins = floor($time_in_seconds / 60) % 60;
+  $secs = ($time_in_seconds % 60);
+
+  return sprintf("%02d:%02d:%02d", $hours, $mins, $secs);
+}
+
 // Convert a time limit of the form XXhYYmZZs to seconds.
 // Note - all fields are optional
 // If just a number, it is assumed to be in seconds (backwards compatability)
@@ -369,7 +379,8 @@ function get_csv_results($event, $key, $course, $result_class, $show_points, $ma
       if (isset($registration_info["classification_info"])) {
         if ($registration_info["classification_info"] != "") {
           $classification_info = decode_entrant_classification_info($registration_info["classification_info"]);
-          $nre_info = ";{$classification_info["BY"]};{$classification_info["G"]};{$classification_info["CLASS"]};";
+          $nre_info = ";{$classification_info["BY"]};{$classification_info["G"]};";
+	  $nre_info .= get_class_for_competitor($competitor_path) . ";";
         }
 
       }
@@ -428,6 +439,28 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
       $competitor_result_array["si_stick"] = file_get_contents("{$competitor_path}/si_stick");
     }
     $competitor_result_array["scoreo_points"] = $points_value;
+    $competitor_result_array["competitive_class"] = get_class_for_competitor($competitor_path);
+    $competitor_result_array["birth_year"] = "";
+    $competitor_result_array["gender"] = "\"\"";
+    $competitor_result_array["club_name"] = "\"\"";
+
+    if (event_is_using_nre_classes($event, $key)) {
+      if (file_exists("{$competitor_path}/registration_info")) {
+        $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
+        if (isset($registration_info["club_name"])) {
+          $competitor_result_array["club_name"] = $registration_info["club_name"];
+        }
+
+        if (isset($registration_info["classification_info"])) {
+          if ($registration_info["classification_info"] != "") {
+            $classification_info = decode_entrant_classification_info($registration_info["classification_info"]);
+            $competitor_result_array["birth_year"] = $classification_info["BY"];
+            $competitor_result_array["gender"] = $classification_info["G"];
+  	  }
+        }
+      }
+    }
+
     $result_array[] = $competitor_result_array;
   }
   return($result_array);
@@ -523,11 +556,15 @@ function get_all_class_result_links($event, $key, $classification_info) {
   $readable_course_list = array_keys($course_hash);
   $valid_classes_for_event = array_filter($classification_info, function ($elt) use ($readable_course_list) { return(in_array($elt[0], $readable_course_list)); });
 
+  $processed_classes = array();
   $links_string = "<p>Show results for ";
   foreach ($valid_classes_for_event as $this_class) {
-    $course_for_class = $course_hash[$this_class[0]];
-    $links_string .= "<a href=\"../OMeet/view_results.php?event={$event}&key={$key}&course={$course_for_class}&class={$this_class[5]}&per_class=1\">" .
-	             "{$this_class[0]}:{$this_class[5]}</a> \n";
+    if (!isset($processed_classes[$this_class[5]])) {
+      $course_for_class = $course_hash[$this_class[0]];
+      $links_string .= "<a href=\"../OMeet/view_results.php?event={$event}&key={$key}&course={$course_for_class}&class={$this_class[5]}&per_class=1\">" .
+	      "{$this_class[0]}:{$this_class[5]}</a> \n";
+      $processed_classes[$this_class[5]] = 1;
+    }
   }
   $links_string .= "<a href=\"../OMeet/view_results.php?event={$event}&key={$key}&per_class=1\">All Classes</a> \n";
   $links_string .= "<a href=\"../OMeet/view_results.php?event={$event}&key={$key}\">Results by course</a> \n";
@@ -790,6 +827,17 @@ function enable_event_nre_classes($event, $key) {
   if (!file_exists(get_event_path($event, $key) . "/using_nre_classes")) {
     file_put_contents(get_event_path($event, $key) . "/using_nre_classes", "");
   }
+
+  if (file_exists("../OMeetData/" . key_to_path($key) . "/default_classes.csv")) {
+    copy("../OMeetData/" . key_to_path($key) . "/default_classes.csv", get_event_path($event, $key) . "/default_classes.csv");
+  }
+  else {
+    echo "No default classes found!\n";
+  }
+
+  if (file_exists("../OMeetData/" . key_to_path($key) . "/nre_class_display_order.txt")) {
+    copy("../OMeetData/" . key_to_path($key) . "/nre_class_display_order.txt", get_event_path($event, $key) . "/nre_class_display_order.txt");
+  }
 }
 
 function event_is_using_nre_classes($event, $key) {
@@ -848,9 +896,40 @@ function decode_entrant_classification_info($classification_info) {
   return($return_hash);
 }
 
-function get_nre_classification_file($key) {
+function get_default_nre_classification_file($key) {
   return("../OMeetData/" . key_to_path($key) . "/default_classes.csv");
 }
+
+function get_nre_classification_file($event, $key) {
+  $event_specific_classes = get_event_path($event, $key) . "/default_classes.csv";
+  if (file_exists($event_specific_classes)) {
+    return($event_specific_classes);
+  }
+  else {
+    return(get_default_nre_classification_file($key));
+  }
+}
+
+function get_default_nre_class_display_order($key) {
+  $display_order_filename = "../OMeetData/" . key_to_path($key) . "/nre_class_display_order.txt";
+  if (file_exists($display_order_filename)) {
+    return(file($display_order_filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+  }
+  else {
+    return (array());
+  }
+}
+
+function get_nre_class_display_order($event, $key) {
+  $display_order_filename = get_event_path($event, $key) . "/nre_class_display_order.txt";
+  if (file_exists($display_order_filename)) {
+    return(file($display_order_filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+  }
+  else {
+    return (get_default_nre_class_display_order($key));
+  }
+}
+
 
 // Get the nre classification info
 // The returned information is ordered so that the first match should be the best
@@ -861,8 +940,8 @@ function get_nre_classification_file($key) {
 // [3] -> max age
 // [4] -> QR codes allowed
 // [5] -> classification
-function get_nre_classes_info($key) {
-  $nre_classification_file = get_nre_classification_file($key);
+function get_nre_classes_info($event, $key) {
+  $nre_classification_file = get_nre_classification_file($event, $key);
   return(read_and_parse_classification_file($nre_classification_file));
 }
 
