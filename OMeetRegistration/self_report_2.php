@@ -179,7 +179,7 @@ if ($score_course && ($score_penalty_msg != "")) {
   echo $score_penalty_msg;
 }
 
-echo show_results($event, $key, $course, "", $score_course, $max_score);
+echo show_results($event, $key, $course, "", $score_course, $max_score, array());
 echo get_all_course_result_links($event, $key);
 
 

@@ -889,7 +889,7 @@ sub create_event_successfully {
   }
   $number_courses++;   # There is normally one fewer newline than the number of courses
   
-  @directory_contents = check_directory_contents($event_path, qw(description Competitors Results Courses));
+  @directory_contents = check_directory_contents($event_path, qw(description Competitors Results Courses no_redirects));
   if (scalar(@directory_contents) != 0) {
     error_and_exit("More files exist in $event_path than expected: " . join("--", @directory_contents));
   }
@@ -921,20 +921,30 @@ sub create_event_successfully {
     my($course_name_field) = split(",", $this_course);
     my(@course_elements) = split(":", $course_name_field);
     my($course_name);
-    if (($course_elements[0] eq "l") || ($course_elements[0] eq "s")) {
+    if (($course_elements[0] eq "l") || ($course_elements[0] eq "s") || ($course_elements[0] eq "c")) {
       $course_name = sprintf("%02d-%s", $i, $course_elements[1]);
     }
     else {
       $course_name = sprintf("%02d-%s", $i, $course_elements[0]);
     }
 
-    if ($course_name_field !~ /^s:/) {
+    if (($course_name_field !~ /^s:/) && ($course_name_field !~ /^c:/)) {
       if ( -f "${event_path}/Courses/${course_name}/properties.txt") {
         error_and_exit("Found ${event_path}/Courses/${course_name}/properties.txt unexpectedly.");
       }
 
       if (! -d "${event_path}/Courses/${course_name}") {
         error_and_exit("Course directory ${event_path}/Courses/${course_name} does not exist when it should.");
+      }
+    }
+    elsif ($course_name_field =~ /^c:/) {
+      if (! -f "${event_path}/Courses/${course_name}/properties.txt") {
+        error_and_exit("Did not find ${event_path}/Courses/${course_name}/properties.txt when it should be there.");
+      }
+      my(%props_hash) = get_score_course_properties("${event_path}/Courses/${course_name}");
+      my($dummy, @courses_in_event_description) = split(",", $this_course);
+      if (join(",", @courses_in_event_description) ne $props_hash{"course_list"}) {
+        error_and_exit("Properties mismatch: " . $props_hash{"course_list"} . " derived, " . join(",", @courses_in_event_description) . " supplied.\n");
       }
     }
     else {

@@ -261,17 +261,37 @@ function get_paragraph_style_header() {
 
 
 // Show the results for a course
-function show_results($event, $key, $course, $result_class, $show_points, $max_points, $path_to_top = "..") {
+function show_results($event, $key, $course, $result_class, $show_points, $max_points, $base_course_list, $path_to_top = "..") {
   $result_string = "";
   $result_string .= "<p>Results on " . ltrim($course, "0..9-") . (($result_class != "") ? ":{$result_class}" : "") . "\n";
 
   if ($result_class == "") {
     $results_path = get_results_path($event, $key);
-    if (!is_dir("{$results_path}/${course}")) {
-      $result_string .= "<p>No Results yet<p><p><p>\n";
-      return($result_string);
+    if (count($base_course_list) == 0) {
+      if (!is_dir("{$results_path}/{$course}")) {
+        $result_string .= "<p>No Results yet<p><p><p>\n";
+        return($result_string);
+      }
+      $results_list = scandir("{$results_path}/${course}");
     }
-    $results_list = scandir("{$results_path}/${course}");
+    else {
+      $results_list = array();
+      foreach ($base_course_list as $course_to_check) {
+        if (is_dir("{$results_path}/{$course_to_check}")) {
+          $these_results = scandir("{$results_path}/{$course_to_check}");
+	  $these_results = array_diff($these_results, array(".", ".."));
+	  $results_list = array_merge($results_list, $these_results);
+	}
+      }
+
+      if (count($results_list) == 0) {
+        $result_string .= "<p>No Results yet<p><p><p>\n";
+        return($result_string);
+      }
+      else {
+        sort($results_list);
+      }
+    }
   }
   else {
     $results_path = get_results_per_class_path($event, $key);
@@ -334,7 +354,7 @@ function show_results($event, $key, $course, $result_class, $show_points, $max_p
 }
 
 // Show the results for a course as a csv
-function get_csv_results($event, $key, $course, $result_class, $show_points, $max_points, $path_to_top = "..") {
+function get_csv_results($event, $key, $course, $result_class, $show_points, $max_points, $base_course_list, $path_to_top = "..") {
   $result_string = "";
   $readable_course_name = ltrim($course, "0..9-");
   $class_for_results = "";
@@ -342,11 +362,29 @@ function get_csv_results($event, $key, $course, $result_class, $show_points, $ma
   if ($result_class == "") {
     // No results yet - .csv is empty
     $results_path = get_results_path($event, $key);
-    if (!is_dir("{$results_path}/{$course}")) {
-      return("");
+    if (count($base_course_list) == 0) {
+      if (!is_dir("{$results_path}/{$course}")) {
+        return("");
+      }
+      $results_list = scandir("{$results_path}/${course}");
     }
-  
-    $results_list = scandir("${results_path}/{$course}");
+    else {
+      $results_list = array();
+      foreach ($base_course_list as $course_to_check) {
+        if (is_dir("{$results_path}/{$course_to_check}")) {
+          $these_results = scandir("{$results_path}/{$course_to_check}");
+	  $these_results = array_diff($these_results, array(".", ".."));
+	  $results_list = array_merge($results_list, $these_results);
+	}
+      }
+
+      if (count($results_list) == 0) {
+        return("");
+      }
+      else {
+        sort($results_list);
+      }
+    }
   }
   else {
     $class_for_results = ";{$result_class}";
