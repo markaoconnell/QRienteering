@@ -200,17 +200,23 @@ else {
 
     $existing_event_description_string = "";
     foreach ($current_courses as $this_course) {
-      $control_list = read_controls("{$path_to_courses}/{$this_course}/controls.txt");
 
       $course_properties = get_course_properties("{$path_to_courses}/{$this_course}");
       $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+      $combo_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $COMBO_COURSE));
 
       if ($score_course) {
+        $control_list = read_controls("{$path_to_courses}/{$this_course}/controls.txt");
         $existing_event_description_string .=
                                      "s:" . ltrim($this_course, "0..9-") . ":" . $course_properties[$LIMIT_FIELD] . "s:" . $course_properties[$PENALTY_FIELD] . "," .
                                      implode(",", array_map(function ($elt) { return ($elt[0] . ":" . $elt[1]); }, $control_list)) . "\n";
       }
-      else {
+      else if ($combo_course) {
+        $courses = $course_properties[$COMBO_COURSE_LIST];
+	$existing_event_description_string .= "c:" . ltrim($this_course, "0..9-") . ",{$courses}\n";
+      }
+      else { // Normal (linear) course
+        $control_list = read_controls("{$path_to_courses}/{$this_course}/controls.txt");
         $existing_event_description_string .=
                                       "l:" . ltrim($this_course, "0..9-") . "," .
                                       implode(",", array_map(function ($elt) { return ($elt[0]); }, $control_list)) . "\n";
@@ -288,6 +294,9 @@ else {
   <ul><li>Example: <strong>s:ScoutScoreO:2h:2,102:10,110:20,203:30,101:10,109:15</strong>
       <li>Time limit format is XXhYYmZZs for XX hours, XX minutes, XX seconds, note no spaces
       <li>Use a time limit of 0 to indicate unlimited time</ul>
+<li>Motala style Course: c:NameOfCourse,course,course,course...
+  <ul><li>Example: <strong>c:Motala,MotalaABC,MotalaACB,MotalaBAC,MotalaBCA,MotalaCAB,MotalaCBA</strong>
+      <li>For the results, the results on the Motala will be shown as the agglomeration of all the courses following</ul>
 </ul>
 <p>Note: It is normally a good idea to type this information into a Word Doc, or a Google doc, or
 someone else, then copy-and-paste it in below - makes it much easier if you have to re-enter due to a 
