@@ -1,5 +1,8 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/nre_routines.php';
+require '../OMeetCommon/time_routines.php';
+require '../OMeetCommon/results_routines.php';
 require '../OMeetCommon/course_properties.php';
 
 function is_event($filename) {

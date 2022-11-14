@@ -605,6 +605,82 @@ if ($output !~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04
 
 success();
 
+#################
+# Test 7 - Can we get the winsplits results?
+
+%TEST_INFO = qw(Testname GetNreWinsplitsResults);
+%GET = qw(key UnitTestPlayground show_as_html 1);
+$GET{"event"} = $event_id;
+
+%COOKIE = ();
+hashes_to_artificial_file();
+
+my($cmd) = "php ../OMeetMgmt/download_results_csv.php";
+my($output);
+$output = qx($cmd);
+
+my($actual_table_rows);
+$actual_table_rows = () = $output =~ /(;[mf];;)/g;
+
+if ($output !~ /White;0;;5;2;\d+:\d+:\d+;\d+:\d+:\d+;201;0:0\d;202;0:0\d;203;-----;204;-----;205;-----;/) {
+  error_and_exit("Did not find expected splits output.\n$output");
+}
+
+# 4 results should appear
+if ($actual_table_rows != 4) {
+  error_and_exit("Found $actual_table_rows instead of 4 in results output.\n$output");
+}
+
+success();
+
+#################
+# Test 8 - Can we get the IOFXML results?
+
+%TEST_INFO = qw(Testname GetNreIofXMLResults);
+%GET = qw(key UnitTestPlayground);
+$GET{"event"} = $event_id;
+
+%COOKIE = ();
+hashes_to_artificial_file();
+
+my($cmd) = "php ../OMeetMgmt/download_results_iofxml.php";
+my($output);
+$output = qx($cmd);
+
+my($actual_control_lines);
+$actual_control_lines = () = $output =~ /(<ControlCode>)/g;
+
+# 4 results should appear
+if ($actual_control_lines != 20) {
+  error_and_exit("Found $actual_control_lines instead of 20 in results output.\n$output");
+}
+
+success();
+
+#################
+# Test 9 - Can we get the OUSA results?
+
+%TEST_INFO = qw(Testname GetNreOUSAResults);
+%GET = qw(key UnitTestPlayground);
+$GET{"event"} = $event_id;
+
+%COOKIE = ();
+hashes_to_artificial_file();
+
+my($cmd) = "php ../OMeetMgmt/download_results_ousacsv.php";
+my($output);
+$output = qx($cmd);
+
+my($actual_table_entries);
+$actual_table_entries = () = $output =~ /(,,,)/g;
+
+# 4 results should appear
+if ($actual_table_entries != 4) {
+  error_and_exit("Found $actual_table_entries instead of 4 in results output.\n$output");
+}
+
+success();
+
 
 ############
 # Cleanup

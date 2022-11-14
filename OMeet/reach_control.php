@@ -1,5 +1,7 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/time_routines.php';
+require '../OMeetCommon/control_xlation_routines.php';
 require '../OMeetCommon/course_properties.php';
 
 ck_testing();

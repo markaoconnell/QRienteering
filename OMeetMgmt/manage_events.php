@@ -1,5 +1,7 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/nre_routines.php';
+require '../OMeetCommon/time_routines.php';
 require '../OMeetWithMemberList/preregistration_routines.php';
 
 ck_testing();

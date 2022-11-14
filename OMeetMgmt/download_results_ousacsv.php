@@ -1,5 +1,8 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/time_routines.php';
+require '../OMeetCommon/nre_routines.php';
+require '../OMeetCommon/results_routines.php';
 require '../OMeetCommon/course_properties.php';
 require '../OMeetCommon/generate_splits_output.php';
 
@@ -31,6 +34,11 @@ $course_list = array_diff($course_list, array(".", ".."));
 foreach ($course_list as $one_course) {
   $readable_course_name = ltrim($one_course, "0..9-");
   $course_properties = get_course_properties("{$courses_path}/{$one_course}");
+  if (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $COMBO_COURSE)) {
+    // Combination courses are artificial and aren't reported on
+    continue;
+  }
+
   $controls_on_course = read_controls("{$courses_path}/{$one_course}/controls.txt");
   $number_controls = count($controls_on_course);
   $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));

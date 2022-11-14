@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/nre_routines.php';
 require '../OMeetRegistration/nre_class_handling.php';
 
 ck_testing();

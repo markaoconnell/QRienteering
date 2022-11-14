@@ -1,5 +1,8 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/time_routines.php';
+require '../OMeetCommon/nre_routines.php';
+require '../OMeetCommon/results_routines.php';
 require '../OMeetCommon/course_properties.php';
 require '../OMeetCommon/generate_splits_output.php';
 
@@ -67,8 +70,6 @@ $course_number = 1;
 foreach ($course_list as $one_course) {
   $readable_course_name = ltrim($one_course, "0..9-");
   $course_properties = get_course_properties("{$courses_path}/{$one_course}");
-  $controls_on_course = read_controls("{$courses_path}/{$one_course}/controls.txt");
-  $number_controls = count($controls_on_course);
   $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
   $max_score = 0;
   if ($score_course) {
@@ -140,18 +141,6 @@ foreach ($course_list as $one_course) {
       } 
       xmlwriter_end_element($xw); // SplitTime
     }
-
-//    // Need to add in controls which were not visited
-//    // Should really factor in the controls from the extra list - for later
-//    if ($number_controls > count($splits_array["controls"])) {
-//      $unvisited_controls = array_slice($controls_on_course, count($splits_array["controls"]));
-//      foreach ($unvisited_controls as $missed_control) {
-//        xmlwriter_start_element($xw, "SplitTime");
-//	add_xml_attribute($xw, "status", "Missing");
-//	add_text_element($xw, "ControlCode", $missed_control[0]);
-//	xmlwriter_end_element($xw);  // SplitTime for Missing controls
-//      }	      
-//    }
 
     xmlwriter_end_element($xw); // Result of PersonResult
     xmlwriter_end_element($xw); // PersonResult
