@@ -66,6 +66,9 @@ foreach ($event_list as $this_event) {
 						     { return ($readable_course_name == $elt[0]); });
     $possible_classes_for_course = array_map(function ($elt) { return ($elt[5]); }, $possible_classification_entries_for_course);
     $course_properties = get_course_properties("{$courses_path}/{$one_course}");
+    if (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $COMBO_COURSE)) {
+      continue;  // Motalas and the like aren't currently handled for an NRE, maybe change this later
+    }
     $controls_on_course = read_controls("{$courses_path}/{$one_course}/controls.txt");
     $number_controls = count($controls_on_course);
     $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));

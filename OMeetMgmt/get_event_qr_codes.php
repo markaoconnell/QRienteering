@@ -60,7 +60,7 @@ $current_courses = array_diff($current_courses, array(".", ".."));
 
 $all_controls = array();
 foreach ($current_courses as $this_course) {
-  if (file_exists("{$path_to_course}/{$this_course}/controls.txt")) {
+  if (file_exists("{$path_to_courses}/{$this_course}/controls.txt")) {
     $control_list = read_controls("{$path_to_courses}/{$this_course}/controls.txt");
     array_map(function ($elt) use (&$all_controls) { $all_controls[$elt[0]] = 1; }, $control_list);
   }

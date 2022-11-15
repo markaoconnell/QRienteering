@@ -1,6 +1,7 @@
 <?php
 require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/nre_routines.php';
+require '../OMeetCommon/time_routines.php';
 require '../OMeetCommon/course_properties.php';
 require '../OMeetCommon/generate_splits_output.php';
 
