@@ -82,6 +82,9 @@ REGISTER_MODE = 2
 MASS_START_MODE = 3
 current_mode = DOWNLOAD_MODE
 
+# Used in the registration dialog if the name is not known (should never really happen though)
+NAME_NOT_SET = "unknown"
+
 # raised when the website fails to respond in time
 class UrlTimeoutException(Exception):
     pass
@@ -703,13 +706,21 @@ def registration_window(user_info):
     choices_frame = tk.Frame(registration_frame)
     button_frame = tk.Frame(registration_frame)
     chosen_course = tk.StringVar(registration_frame, "unselected")
+
+    info_frame = tk.Frame(choices_frame)
+    name = tk.StringVar(choices_frame)
     registration_string = ""
     if user_info[USER_NAME] != None:
-        registration_string = f"Register {user_info[USER_NAME]} ({user_info[USER_STICK]})"
+        name.set(user_info[USER_NAME])
     else:
-        registration_string = f"Register {user_info[USER_STICK]} (name currently unknown)"
-    info_label = tk.Label(choices_frame, text=registration_string, font=localFont)
-    info_label.pack(side=tk.TOP)
+        name.set(NAME_NOT_SET)
+    info_label_1 = tk.Label(info_frame, text="Register ", font=localFont)
+    info_label_2 = tk.Entry(info_frame, textvariable = name, font=localFont)
+    info_label_3 = tk.Label(info_frame, text=f" ({user_info[USER_STICK]})", font=localFont)
+    info_label_1.pack(side=tk.LEFT)
+    info_label_2.pack(side=tk.LEFT)
+    info_label_3.pack(side=tk.LEFT)
+    info_frame.pack(side=tk.TOP)
 
     for course in discovered_courses:
         radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course, font=localFont)
@@ -727,7 +738,7 @@ def registration_window(user_info):
     cell_phone_label.pack(side=tk.TOP, anchor=tk.W)
     cell_phone_box.pack(side=tk.TOP, anchor=tk.W)
 
-    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, chosen_course, cell_phone, registration_frame), font=localFont)
+    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, name, chosen_course, cell_phone, registration_frame), font=localFont)
     cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, user_info), font=localFont)
 
     ok_button.pack(side=tk.LEFT)
@@ -740,7 +751,10 @@ def registration_window(user_info):
     return
 
 
-def register_for_course(user_info, chosen_course, cell_phone, enclosing_frame):
+def register_for_course(user_info, name, chosen_course, cell_phone, enclosing_frame):
+    if name.get() != NAME_NOT_SET:
+        user_info[USER_NAME] = name.get()
+
     if user_info[USER_NAME] != None:
         message = f"Attempting to register {user_info[USER_NAME]} ({user_info[USER_STICK]}) on " 
     else:
