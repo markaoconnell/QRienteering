@@ -79,7 +79,7 @@ sub compare_hashes {
 # Test 1 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberUsingStick);
-%GET = qw(key UnitTestPlayground member_id 31 si_stick 3959473 email karen@mkoconnell.com waiver_signed signed);
+%GET = qw(key UnitTestPlayground member_id 31 si_stick 3959473 cell_number 5083959473 email karen@mkoconnell.com waiver_signed signed quick_lookup_member_id 11-31);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -92,7 +92,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
 }
 my($info_hash_ref) = get_specified_info($1);
 my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC si_stick 3959473 member_id 31 is_member yes email_address karen@mkoconnell.com);
-$expected_hash{"cell_phone"} = "";
+$expected_hash{"cell_phone"} = "5083959473";
 $expected_hash{"car_info"} = "";
 
 my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
@@ -108,7 +108,7 @@ success();
 # Test 2 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberUsingCarAndPhone);
-%GET = qw(key UnitTestPlayground member_id 31 si_stick 141421 car_info VWFox cell_number 5083959473 waiver_signed signed);
+%GET = qw(key UnitTestPlayground member_id 31 si_stick 141421 car_info VWFox cell_number 5083959473 waiver_signed signed quick_lookup_member_id 11-31);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -135,7 +135,7 @@ success();
 # Test 3 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberNotUsingStick);
-%GET = qw(key UnitTestPlayground member_id 31 waiver_signed signed);
+%GET = qw(key UnitTestPlayground member_id 31 cell_number 5083959473 waiver_signed signed quick_lookup_member_id 11-31);
 $GET{"si_stick"} = "";
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
@@ -150,7 +150,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
 my($info_hash_ref) = get_specified_info($1);
 my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC member_id 31 is_member yes);
 $expected_hash{"email_address"} = "";
-$expected_hash{"cell_phone"} = "";
+$expected_hash{"cell_phone"} = "5083959473";
 $expected_hash{"car_info"} = "";
 $expected_hash{"si_stick"} = "";
 
@@ -166,7 +166,7 @@ success();
 # Test 4 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberOtherClubDefault);
-%GET = qw(key UnitTestPlayground member_id 41 si_stick 1421 waiver_signed signed);
+%GET = qw(key UnitTestPlayground member_id 41 cell_number 5086148225 si_stick 1421 waiver_signed signed quick_lookup_member_id 1-41);
 $GET{"event"} = $event_id;
 set_club_name("UnitTestPlayground", "BOK");
 %COOKIE = ();  # empty hash
@@ -181,7 +181,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
 my($info_hash_ref) = get_specified_info($1);
 my(%expected_hash) = qw(first_name Larry last_name Berrill club_name BOK member_id 41 is_member yes si_stick 1421);
 $expected_hash{"email_address"} = "";
-$expected_hash{"cell_phone"} = "";
+$expected_hash{"cell_phone"} = "5086148225";
 $expected_hash{"car_info"} = "";
 
 my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
@@ -202,7 +202,7 @@ success();
 # Test 5 - Failed member registration - bad stick id specified
 # 
 %TEST_INFO = qw(Testname TestMemberUsingBadStickNumber);
-%GET = qw(key UnitTestPlayground member_id 41 si_stick 14xx21 waiver_signed signed);
+%GET = qw(key UnitTestPlayground member_id 41 cell_number 123456789 si_stick 14xx21 waiver_signed signed quick_lookup_member_id 1-41);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -221,7 +221,7 @@ success();
 # Test 6 - Failed member registration - no waiver
 # 
 %TEST_INFO = qw(Testname TestMemberNoWaiver);
-%GET = qw(key UnitTestPlayground member_id 41 si_stick 1421);
+%GET = qw(key UnitTestPlayground member_id 41 cell_number 123456789 si_stick 1421 quick_lookup_member_id 1-41);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -263,7 +263,7 @@ success();
 # Test 11 - Failed member registration - bad id
 # 
 %TEST_INFO = qw(Testname TestMemberUsingBadId);
-%GET = qw(key UnitTestPlayground member_id 17100 si_stick 314159 waiver_signed signed);
+%GET = qw(key UnitTestPlayground member_id 17100 si_stick 314159 waiver_signed signed quick_lookup_member_id 1-17100);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -271,7 +271,7 @@ hashes_to_artificial_file();
 $cmd = "php ../OMeetWithMemberList/finalize_registration.php";
 $output = qx($cmd);
 
-if ($output !~ /No such member id 17100 found/) {
+if ($output !~ /Invalid \(empty\) first name/) {
   error_and_exit("Redirect URL not found.\n$output");
 }
 
@@ -281,7 +281,7 @@ success();
 # Test 12 - Failure - no event specified
 # 
 %TEST_INFO = qw(Testname TestNoEventSpecified);
-%GET = qw(key UnitTestPlayground member_id 17100 si_stick 314159 waiver_signed signed);
+%GET = qw(key UnitTestPlayground member_id 17100 si_stick 314159 waiver_signed signed quick_lookup_member_id 1-17100);
 %COOKIE = ();  # empty hash
 
 hashes_to_artificial_file();

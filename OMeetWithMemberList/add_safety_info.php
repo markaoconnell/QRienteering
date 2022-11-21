@@ -142,6 +142,7 @@ else {
   $members_file = get_members_path($key, get_member_properties(get_base_path($key)));
   $member_info = quick_get_member($quick_lookup_member_id, $members_file);
   $entrant_info = array();
+  echo "<p><input type=hidden name=\"quick_lookup_member_id\" value=\"{$quick_lookup_member_id}\">\n";
 }
 
 $base_path = get_base_path($key);
