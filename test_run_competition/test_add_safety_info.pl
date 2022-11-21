@@ -77,7 +77,7 @@ sub compare_hashes {
 # Test 1 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberUsingDefaultStick);
-%GET = qw(key UnitTestPlayground member_id 31 using_stick yes si_stick_number 3959473 member_email karen@mkoconnell.com);
+%GET = qw(key UnitTestPlayground member_id 31 using_stick yes si_stick_number 3959473 quick_lookup_member_id 11-31);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -101,14 +101,18 @@ if ($output !~ /input type="text" size=50 name="email" value="karen\@mkoconnell.
   error_and_exit("Presupplied email address not found.\n$output");
 }
 
+if ($output !~ /input type="text" size=50 name="cell_number" value="5083959473"/) {
+  error_and_exit("Presupplied email address not found.\n$output");
+}
+
 success();
 
 
 ###########
 # Test 2 - Success member registration
-# 
+# Try using a wrong optimized lookup key - should still retrieve the email
 %TEST_INFO = qw(Testname TestMemberUsingDifferentStick);
-%GET = qw(key UnitTestPlayground member_id 31 using_stick yes si_stick_number 141421);
+%GET = qw(key UnitTestPlayground member_id 31 using_stick yes si_stick_number 141421 quick_lookup_member_id 12-31);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -128,9 +132,14 @@ if ($output !~ /type=hidden name="si_stick" value="141421"/) {
   error_and_exit("Hidden input si_stick not found.\n$output");
 }
 
-if ($output !~ /input type="text" size=50 name="email"  >/) {
-  error_and_exit("Presupplied email address found.\n$output");
+if ($output !~ /input type="text" size=50 name="email" value="karen\@mkoconnell.com"/) {
+  error_and_exit("Presupplied email address not found.\n$output");
 }
+
+if ($output !~ /input type="text" size=50 name="cell_number" value="5083959473"/) {
+  error_and_exit("Presupplied email address not found.\n$output");
+}
+
 
 success();
 
@@ -138,7 +147,7 @@ success();
 # Test 3 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberWithStickSpecifiedButSaysQRienteering);
-%GET = qw(key UnitTestPlayground member_id 31 using_stick no si_stick_number 141421);
+%GET = qw(key UnitTestPlayground member_id 31 using_stick no si_stick_number 141421 quick_lookup_member_id 2-31);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -162,9 +171,14 @@ if ($output !~ /type=hidden name="si_stick" value="141421"/) {
   error_and_exit("Hidden input si_stick should have the value 141421 but did not.\n$output");
 }
 
-if ($output !~ /input type="text" size=50 name="email"  >/) {
-  error_and_exit("Presupplied email address found.\n$output");
+if ($output !~ /input type="text" size=50 name="email" value="karen\@mkoconnell.com"/) {
+  error_and_exit("Presupplied email address not found.\n$output");
 }
+
+if ($output !~ /input type="text" size=50 name="cell_number" value="5083959473"/) {
+  error_and_exit("Presupplied email address not found.\n$output");
+}
+
 
 success();
 

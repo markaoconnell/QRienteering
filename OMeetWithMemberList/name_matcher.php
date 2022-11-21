@@ -20,7 +20,8 @@ function read_names_info($member_file, $nicknames_file) {
 
   if (file_exists($member_file)) {
     $member_list = file($member_file, FILE_IGNORE_NEW_LINES);
-    foreach ($member_list as $elt) {
+    foreach (array_keys($member_list) as $elt_key) {
+      $elt = $member_list[$elt_key];
       $pieces = explode(";", $elt);
       if ($pieces[3] != "") {
         //echo "Found {$pieces[3]} for entry $elt.\n";
@@ -42,7 +43,8 @@ function read_names_info($member_file, $nicknames_file) {
 					 "email" => $email_address,
 					 "cell_phone" => $cell_phone,
 	                                 "birth_year" => $birth_year,
-	                                 "gender" => $gender);
+					 "gender" => $gender,
+	                                 "optimized_lookup_key" => $elt_key);
         $last_name_hash[strtolower($pieces[2])][] = $pieces[0]; 
         $full_name_hash[$lower_case_full_name] = $pieces[0];
       }
@@ -60,7 +62,7 @@ function read_names_info($member_file, $nicknames_file) {
 
 function read_nicknames_info($nicknames_file) {
   $nicknames_hash = array();
-  if (file_exists($nicknames_file)) {
+  if (($nicknames_file != "") && file_exists($nicknames_file)) {
     $nickname_list = file($nicknames_file, FILE_IGNORE_NEW_LINES);
     foreach ($nickname_list as $equivalent_names_csv) {
       $pieces = explode(";", strtolower($equivalent_names_csv));
@@ -72,6 +74,45 @@ function read_nicknames_info($nicknames_file) {
   }
 
   return($nicknames_hash);
+}
+
+// Format of the quick lookup id is <line>-<member id>
+function quick_get_member($quick_lookup_member_id, $member_file) {
+  $lookup_pieces = explode("-", $quick_lookup_member_id);
+  if (file_exists($member_file)) {
+    $member_list = file($member_file, FILE_IGNORE_NEW_LINES);
+    if (isset($member_list[$lookup_pieces[0]])) {
+      $pieces = explode(";", $member_list[$lookup_pieces[0]]);
+
+      // Make sure that this member is still at the same line in the file
+      // Otherwise will need to go the slow route
+      if ($pieces[0] == $lookup_pieces[1]) {
+        $si_stick = isset($pieces[3]) ? $pieces[3] : "";
+        $email_address = isset($pieces[4]) ? $pieces[4] : "";
+        $cell_phone = isset($pieces[5]) ? $pieces[5] : "";
+        $birth_year = isset($pieces[6]) ? $pieces[6] : "";
+        $gender = isset($pieces[7]) ? $pieces[7] : "";
+        return(array("first" => $pieces[1],
+                     "last" => $pieces[2],
+                     "full_name" => "{$pieces[1]} {$pieces[2]}",
+                     "si_stick"=> $si_stick,
+		     "email" => $email_address,
+                     "cell_phone" => $cell_phone,
+	             "birth_year" => $birth_year,
+                     "gender" => $gender,
+	             "optimized_lookup_key" => $lookup_pieces[0]));
+      }
+    }
+
+    // The member file was rewritten and the member is no longer at the prior offset
+    // Go the slow route
+    $matching_info = read_names_info($member_file, "");  // Don't need the nicknames
+    if (isset($matching_info["members_hash"][$lookup_pieces[1]])) {
+      return($matching_info["members_hash"][$lookup_pieces[1]]);
+    }
+  }
+
+  return(array());
 }
 
 function get_full_name($member_id, $matching_info) {
@@ -106,6 +147,10 @@ function get_member_gender($member_id, $matching_info) {
 
 function get_si_stick($member_id, $matching_info) {
   return($matching_info["members_hash"][$member_id]["si_stick"]);
+}
+
+function get_quick_lookup_member_id($member_id, $matching_info) {
+  return("{$matching_info["members_hash"][$member_id]["optimized_lookup_key"]}-$member_id");
 }
 
 function get_by_si_stick($si_stick, $matching_info) {

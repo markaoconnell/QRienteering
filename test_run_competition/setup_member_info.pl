@@ -19,7 +19,7 @@ sub setup_member_files {
 103;Issi;Finlayson;559;
 109;Victoria;Campbell;1024;tori\@nowhere.com;
 314;Mark;OConnell;2108369;mark\@mkoconnell.com;5086148225;
-31;Karen;Yeowell;3959473;karen\@mkoconnell.com);
+31;Karen;Yeowell;3959473;karen\@mkoconnell.com;5083959473);
 
   print MEMBER_FILE $file_contents;
   close(MEMBER_FILE);

@@ -94,10 +94,7 @@ else if (count($possible_member_ids) == 1) {
   if ($is_preregistered_checkin) {
     $printable_name = get_full_name($possible_member_ids[0], $prereg_matching_info);
     $si_stick = get_si_stick($possible_member_ids[0], $prereg_matching_info);
-    $member_id = $prereg_matching_info["members_hash"][$possible_member_ids[0]]["club_member_id"]; 
-    if (($member_id != "not_a_member") && ($member_id != "")) {
-      $email_address = get_member_email($member_id, $matching_info);
-    }
+    $quick_lookup_member_id = $possible_member_ids[0];
     $pass_preregistration_marker = "<input type=\"hidden\" name=\"checkin\" value=\"true\">\n";
     if ($using_nre_classes) {
       $birth_year = $prereg_matching_info["members_hash"][$possible_member_ids[0]]["entrant_info"]["birth_year"];
@@ -110,7 +107,7 @@ else if (count($possible_member_ids) == 1) {
   else {
     $printable_name = get_full_name($possible_member_ids[0], $matching_info);
     $si_stick = get_si_stick($possible_member_ids[0], $matching_info);
-    $email_address = get_member_email($possible_member_ids[0], $matching_info);
+    $quick_lookup_member_id = get_quick_lookup_member_id($possible_member_ids[0], $matching_info);
     $pass_preregistration_marker = "";
     if ($using_nre_classes) {
       $birth_year = get_member_birth_year($possible_member_ids[0], $matching_info);
@@ -142,7 +139,7 @@ else if (count($possible_member_ids) == 1) {
   $success_string .= <<<END_OF_FORM
 <form action="./add_safety_info.php">
 <input type=hidden name="member_id" value="{$possible_member_ids[0]}"/>
-<input type=hidden name="member_email" value="{$email_address}"/>
+<input type=hidden name="quick_lookup_member_id" value="{$quick_lookup_member_id}"/>
 {$pass_preregistration_marker}
 {$pass_registered_si_stick_entry}
 {$classification_form_entry}

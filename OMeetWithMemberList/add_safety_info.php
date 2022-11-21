@@ -3,6 +3,7 @@ require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/nre_routines.php';
 require '../OMeetCommon/course_properties.php';
 require 'preregistration_routines.php';
+require 'name_matcher.php';
 
 ck_testing();
 
@@ -13,7 +14,8 @@ $club_name = "";
 $si_stick = "";
 $has_preset_id = isset($_GET["member_id"]);
 $member_id = $_GET["member_id"];
-$key = $_GET["key"];
+$quick_lookup_member_id = isset($_GET["quick_lookup_member_id"]) ? $_GET["quick_lookup_member_id"] : "";
+$key = isset($_GET["key"]) ? $_GET["key"] : "";
 $event = isset($_GET["event"]) ? $_GET["event"] : "";
 $classification_info = isset($_GET["classification_info"]) ? $_GET["classification_info"] : "";
 $classification_info_supplied = ($classification_info != "");
@@ -137,6 +139,8 @@ if ($is_preregistered_checkin) {
 }
 else {
   $is_member = $has_preset_id;
+  $members_file = get_members_path($key, get_member_properties(get_base_path($key)));
+  $member_info = quick_get_member($quick_lookup_member_id, $members_file);
   $entrant_info = array();
 }
 
@@ -168,6 +172,9 @@ else {
 if ($is_preregistered_checkin && isset($entrant_info["cell_phone"])) {
   $presupplied_cell_phone = "value=\"{$entrant_info["cell_phone"]}\"";
 }
+else if ($is_member && isset($member_info["cell_phone"])) {
+  $presupplied_cell_phone = "value=\"{$member_info["cell_phone"]}\"";
+}
 else if (isset($saved_registration_info["cell_phone"])) {
   $presupplied_cell_phone = "value=\"{$saved_registration_info["cell_phone"]}\"";
 }
@@ -184,6 +191,9 @@ else {
 
 if ($is_preregistered_checkin && isset($entrant_info["email_address"])) {
   $presupplied_email_address = "value=\"{$entrant_info["email_address"]}\"";
+}
+else if ($is_member && isset($member_info["email"])) {
+  $presupplied_email_address = "value=\"{$member_info["email"]}\"";
 }
 else if (isset($saved_registration_info["email_address"]) && ($saved_registration_info["email_address"] != "")) {
   $presupplied_email_address = "value=\"{$saved_registration_info["email_address"]}\"";
@@ -209,15 +219,6 @@ if (file_exists("{$base_path}/collect_car_info")) {
 
 <p>
 <?php
-// If the member has a registered email, use this rather than the last email entered
-// Since different members may register on the same phone
-if ($is_member) {
-  $member_email = isset($_GET["member_email"]) ? $_GET["member_email"] : "";
-  if ($member_email != "") {
-    $presupplied_email_address = "value=\"{$member_email}\"";
-  }
-}
-
 echo "<br><p>(Optional) If you would like results emailed to you, please supply a valid email address<br>\n";
 echo "<input type=\"text\" size=50 name=\"email\" {$presupplied_email_address} ><br><br>\n";
 

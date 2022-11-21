@@ -82,6 +82,7 @@ if ($is_preregistered_checkin) {
   $printable_name = get_full_name($member_id, $prereg_matching_info);
   $entrant_path = get_preregistered_entrant($member_id, $event, $key);
   $entrant_info = decode_preregistered_entrant($entrant_path, $event, $key);
+  $quick_lookup_member_id = $member_id;
 
   $club_member_id = $prereg_matching_info["members_hash"][$member_id]["club_member_id"]; 
   if (($club_member_id != "not_a_member") && ($club_member_id != "")) {
@@ -93,7 +94,7 @@ if ($is_preregistered_checkin) {
     if (isset($entrant_info["email_address"])) {
       $email_address = $entrant_info["email_address"];
     }
-    if (isset($entrant_info["email_address"])) {
+    if (isset($entrant_info["cell_phone"])) {
       $cell_phone = $entrant_info["cell_phone"];
     }
     $club_name = isset($entrant_info["club_name"]) ? $entrant_info["club_name"] : "";
@@ -115,6 +116,7 @@ else {
   $email_address = get_member_email($member_id, $matching_info);
   $cell_phone = get_member_cell_phone($member_id, $matching_info);
   $club_name = get_club_name($key, $member_properties);
+  $quick_lookup_member_id = get_quick_lookup_member_id($member_id, $matching_info);
   $pass_preregistration_marker = "";
   if ($using_nre_classes) {
     $birth_year = get_member_birth_year($member_id, $matching_info);
@@ -131,7 +133,7 @@ if ($classification_info != "") {
 $success_string .= <<<END_OF_FORM
 <form action="./add_safety_info.php">
 <input type=hidden name="member_id" value="{$member_id}"/>
-<input type=hidden name="member_email" value="{$email_address}"/>
+<input type=hidden name="quick_lookup_member_id" value="{$quick_lookup_member_id}"/>
 <input type=hidden name="key" value="{$key}"/>
 <input type=hidden name="event" value="{$event}"/>
 <input type=hidden name="registered_si_stick" value="yes"/>
