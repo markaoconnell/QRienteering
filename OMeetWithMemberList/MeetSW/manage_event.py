@@ -65,8 +65,10 @@ USER_EMAIL = r"email_address"
 USER_CLUB = r"club_name"
 USER_RESULTS = r"qr_result_string"
 USER_STATUS = r"status_widget"
-USER_BUTTONS = r"buttons"
 USER_REG_BUTTON = r"register_button"
+USER_ACK_BUTTON = r"ack_button"
+USER_DOWNLOAD_BUTTON = r"download_button"
+USER_MASS_START_BUTTON = r"mass_start_button"
 USER_STICK = r"stick"
 USER_MISSED_FINISH = r"no_finish_punch"
 USER_CELL = r"cell_phone"
@@ -352,7 +354,7 @@ def upload_initial_results(user_info, event_key, event):
           result_tuple = new_result_tuple
 
 
-  make_status(user_info, result_tuple[0], result_tuple[1])
+  root.after(1, lambda: update_status_window(user_info, result_tuple[0], result_tuple[1]))
 
 
 ###############################################################
@@ -578,6 +580,35 @@ def switch_mode():
     return
 
 
+def disable_buttons(user_info):
+    user_info[USER_ACK_BUTTON].configure(state=tk.DISABLED)
+
+    if (USER_REG_BUTTON in user_info):
+        user_info[USER_REG_BUTTON].configure(state=tk.DISABLED)
+    if (USER_DOWNLOAD_BUTTON in user_info):
+        user_info[USER_DOWNLOAD_BUTTON].configure(state=tk.DISABLED)
+
+    if (USER_MASS_START_BUTTON in user_info):
+        user_info[USER_MASS_START_BUTTON].configure(state=tk.DISABLED)
+
+def enable_buttons(user_info, is_connected):
+    user_info[USER_ACK_BUTTON].configure(state=tk.NORMAL)
+
+    if (USER_MASS_START_BUTTON in user_info):
+        user_info[USER_MASS_START_BUTTON].configure(state=tk.NORMAL)
+    elif is_connected:
+        if (user_info[USER_NAME] == None) and (USER_DOWNLOAD_NOT_POSSIBLE in user_info):
+            pass
+        elif user_info[USER_NAME] == None:
+            user_info[USER_DOWNLOAD_BUTTON].configure(state=tk.NORMAL)
+        elif USER_DOWNLOAD_NOT_POSSIBLE in user_info:
+            user_info[USER_REG_BUTTON].configure(state=tk.NORMAL)
+        else:
+            user_info[USER_REG_BUTTON].configure(state=tk.NORMAL)
+            user_info[USER_DOWNLOAD_BUTTON].configure(state=tk.NORMAL)
+
+
+
 def make_mass_start_status(user_info, event_key, event):
     root.after(1, lambda: make_mass_start_status_on_mainloop(user_info, event_key, event))
     return
@@ -590,7 +621,16 @@ def make_status(user_info, message, is_error):
     root.after(1, lambda: make_status_on_mainloop(user_info, message, is_error, True))
     return
 
+def show_status_widget(user_info, status_frame):
+    root.after(1, lambda: show_status_widget_mainloop(user_info, status_frame, True))
+    return
+
 def make_status_on_mainloop(user_info, message, is_error, is_connected):
+    widget_frame = create_status_widget(user_info, message, is_error, is_connected)
+    enable_buttons(user_info, is_connected)
+    show_status_widget_mainloop(user_info, widget_frame, is_connected)
+
+def create_status_widget(user_info, message, is_error, is_connected):
     result_frame = tk.LabelFrame(status_frame)
     button_frame = tk.Frame(result_frame)
     label_frame = tk.Frame(result_frame)
@@ -608,27 +648,18 @@ def make_status_on_mainloop(user_info, message, is_error, is_connected):
     stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy, font=myFont)
     stick_register = tk.Button(button_frame, text="Register for course", font=myFont)
     stick_replay = tk.Button(button_frame, text="Download stick info", font=myFont)
-    user_info[USER_BUTTONS] = [stick_ack, stick_register, stick_replay]
     user_info[USER_REG_BUTTON] = stick_register
+    user_info[USER_ACK_BUTTON] = stick_ack
+    user_info[USER_DOWNLOAD_BUTTON] = stick_replay
     user_info[USER_STATUS] = stick_status
     stick_replay.configure(command=lambda: replay_stick(user_info))
     stick_register.configure(command=lambda: registration_window(user_info))
 
-    if (user_info[USER_NAME] == None) and (USER_DOWNLOAD_NOT_POSSIBLE in user_info):
-        stick_register.configure(state = tk.DISABLED)
-        stick_replay.configure(state = tk.DISABLED)
-        user_info[USER_BUTTONS] = [ stick_ack ]
-    elif user_info[USER_NAME] == None:
-        stick_register.configure(state = tk.DISABLED)
-        user_info[USER_BUTTONS] = [ stick_ack, stick_replay ]
-    elif USER_DOWNLOAD_NOT_POSSIBLE in user_info:
-        stick_replay.configure(state = tk.DISABLED)
-        user_info[USER_BUTTONS] = [ stick_ack, stick_register ]
+    # Buttons are disabled by default
+    stick_replay.configure(state = tk.DISABLED)
+    stick_register.configure(state = tk.DISABLED)
+    stick_ack.configure(state = tk.DISABLED)
 
-    if not is_connected:
-        stick_register.configure(state = tk.DISABLED)
-        stick_replay.configure(state = tk.DISABLED)
-        user_info[USER_BUTTONS] = [ stick_ack ]
 
     stick_label.pack(side=tk.LEFT)
     stick_status.pack(side=tk.LEFT, fill=tk.X)
@@ -638,13 +669,10 @@ def make_status_on_mainloop(user_info, message, is_error, is_connected):
     label_frame.pack(side=tk.TOP, fill=tk.X)
     button_frame.pack(side=tk.TOP, fill=tk.X)
 
-    # Display the registration window before we actually display the status frame
-    if (current_mode == REGISTER_MODE) and (user_info[USER_NAME] != None):
-        for button in user_info[USER_BUTTONS]:
-            button.configure(state=tk.DISABLED)
-        registration_window(user_info)
+    return(result_frame)
 
-    result_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
+def show_status_widget_mainloop(user_info, status_frame, is_connected):
+    status_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
 
 def make_mass_start_status_on_mainloop(user_info, event_key, event):
     result_frame = tk.LabelFrame(status_frame)
@@ -667,14 +695,10 @@ def make_mass_start_status_on_mainloop(user_info, event_key, event):
 
     stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy, font=myFont)
     stick_mass_start = tk.Button(button_frame, text="Mass start course(s)", font=myFont)
-    user_info[USER_BUTTONS] = [stick_ack, stick_mass_start]
-    user_info[USER_REG_BUTTON] = None
+    user_info[USER_ACK_BUTTON] = stick_ack
+    user_info[USER_MASS_START_BUTTON] = stick_mass_start
     user_info[USER_STATUS] = stick_status
     stick_mass_start.configure(command=lambda: mass_start_window(user_info, start_seconds, event_key, event))
-
-    #if not is_connected:
-        #stick_mass_start.configure(state = tk.DISABLED)
-        #user_info[USER_BUTTONS] = [ stick_ack ]
 
     stick_label.pack(side=tk.LEFT)
     stick_status.pack(side=tk.LEFT, fill=tk.X)
@@ -686,8 +710,7 @@ def make_mass_start_status_on_mainloop(user_info, event_key, event):
     result_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
 
 def registration_window(user_info):
-    for button in user_info[USER_BUTTONS]:
-        button.configure(state=tk.DISABLED)
+    disable_buttons(user_info)
 
     registration_frame = tk.Tk()
     if len(discovered_courses) < 8:
@@ -770,8 +793,7 @@ def register_for_course(user_info, name, chosen_course, cell_phone, enclosing_fr
 
 
 def mass_start_window(user_info, start_seconds, event_key, event):
-    for button in user_info[USER_BUTTONS]:
-        button.configure(state=tk.DISABLED)
+    disable_buttons(user_info)
 
     mass_start_frame = tk.Tk()
     mass_start_frame.geometry("300x300")
@@ -828,8 +850,7 @@ def mass_start_courses(user_info, course_choices, start_seconds, enclosing_frame
 def kill_mass_start_window(mass_start_window, user_info):
     mass_start_window.destroy()
     remove_frame(mass_start_window)
-    for button in user_info[USER_BUTTONS]:
-        button.configure(state=tk.NORMAL)
+    enable_buttons(user_info, True)
 
 
 ##############################################################################
@@ -1014,18 +1035,21 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
 
 def update_status_window(user_info, message, is_error):
     user_info[USER_STATUS].configure(text=message, fg = "red" if is_error else "green")
-    for button in user_info[USER_BUTTONS]:
-        button.configure(state=tk.NORMAL)
+    enable_buttons(user_info, True)
     return
 
+def update_status_window_and_register(user_info, message, is_error):
+    user_info[USER_STATUS].configure(text=message, fg = "red" if is_error else "green")
+    registration_window(user_info)
+
+    return
 
 
 #####################################################################
 def kill_registration_window(registration_window, user_info):
     registration_window.destroy()
     remove_frame(registration_window)
-    for button in user_info[USER_BUTTONS]:
-        button.configure(state=tk.NORMAL)
+    enable_buttons(user_info, True)
 
 
 #######################################################################################
@@ -1071,16 +1095,10 @@ def send_mass_start_command(user_info, courses_to_start, start_seconds):
 
 #####################################################################
 
-def update_status_window(user_info, message, is_error):
-    user_info[USER_STATUS].configure(text=message, fg = "red" if is_error else "green")
-    for button in user_info[USER_BUTTONS]:
-        button.configure(state=tk.NORMAL)
-    return
 
 def replay_stick(user_info):
     user_info[USER_STATUS]["text"] = f"Replaying SI results for {user_info[USER_STICK]}"
-    for button in user_info[USER_BUTTONS]:
-        button.configure(state=tk.DISABLED)
+    disable_buttons(user_info)
     replay_thread = Thread(target=replay_stick_thread, args=(user_info,))
     replay_thread.start()
     return
@@ -1097,8 +1115,7 @@ def replay_stick_thread(user_info):
         user_info[USER_STATUS]["text"] = result_tuple[0]
         user_info[USER_STATUS]["fg"] = "red" if result_tuple[1] else "green"
 
-    for button in user_info[USER_BUTTONS]:
-      button.configure(state=tk.NORMAL)
+    enable_buttons(user_info, True)
 
     return
 
@@ -1264,6 +1281,45 @@ def read_fake_results():
   else:
     return {SI_STICK_KEY : None}
 
+
+def process_si_stick(user_info, forced_registration):
+  if (current_mode == REGISTER_MODE) or forced_registration:
+      display_as_error = False
+      try:
+          discovered_user_info = lookup_si_unit(user_info[USER_STICK])
+          if (discovered_user_info[USER_NAME] != None):
+              user_info.update(discovered_user_info)
+              message = f"Recognized member {user_info[USER_NAME]} with SI unit {user_info[USER_STICK]}"
+              message += "\nIf registering, use the register button."
+          else:
+              display_as_error = True
+              message = f"Could not find member for SI unit {user_info[USER_STICK]}\n"
+              message += "If registering - use SmartPhone based registration instead."
+      except UrlTimeoutException:
+          display_as_error = True
+          message = f"Could not contact website about {user_info[USER_STICK]}\nValidate connectivity and site status\n"
+          message += "If registering - reinsert the stick into the reader."
+    
+      if forced_registration:
+          message += "\nIf finishing, SI unit has no information - use self reporting to record a time."
+          user_info[USER_DOWNLOAD_NOT_POSSIBLE] = True
+          if current_mode == DOWNLOAD_MODE:
+              display_as_error = True
+      else:
+          message += "\nIf finishing, use the download button"
+
+      if (current_mode == REGISTER_MODE) and (user_info[USER_NAME] != None):
+          root.after(1, lambda: update_status_window_and_register(user_info, message, display_as_error))
+      else:
+          root.after(1, lambda: update_status_window(user_info, message, display_as_error))
+
+
+  elif (current_mode == DOWNLOAD_MODE):
+      upload_initial_results(user_info, event_key, event)
+
+  return
+
+
 def start_sireader_thread():
     sireader_thread = Thread(target=sireader_main)
     sireader_thread.start()
@@ -1344,41 +1400,15 @@ def sireader_main():
           if current_mode == MASS_START_MODE:
               user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
               make_mass_start_status(user_info, event_key, event)
-          elif (current_mode == REGISTER_MODE) or forced_registration:
-              display_as_error = False
-              try:
-                  user_info = lookup_si_unit(si_stick_entry[SI_STICK_KEY])
-                  user_info[USER_RESULTS] = qr_result_string
-                  if (user_info[USER_NAME] != None):
-                      message = f"Recognized member {user_info[USER_NAME]} with SI unit {user_info[USER_STICK]}"
-                      message += "\nIf registering, use the register button."
-                  else:
-                      display_as_error = True
-                      message = f"Could not find member for SI unit {user_info[USER_STICK]}\n"
-                      message += "If registering - use SmartPhone based registration instead."
-              except UrlTimeoutException:
-                  display_as_error = True
-                  user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
-                  message = f"Could not contact website about {user_info[USER_STICK]}\nValidate connectivity and site status\n"
-                  message += "If registering - reinsert the stick into the reader."
-    
-              if forced_registration:
-                  message += "\nIf finishing, SI unit has no information - use self reporting to record a time."
-                  user_info[USER_DOWNLOAD_NOT_POSSIBLE] = True
-                  if current_mode == DOWNLOAD_MODE:
-                      display_as_error = True
-              else:
-                  message += "\nIf finishing, use the download button"
-
-              if finish_adjusted:
-                  user_info[USER_MISSED_FINISH] = True
-
-              make_status(user_info, message, display_as_error)
-          elif (current_mode == DOWNLOAD_MODE):
+          else:
               user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
               if finish_adjusted:
                   user_info[USER_MISSED_FINISH] = True
-              upload_initial_results(user_info, event_key, event)
+
+              status_frame = create_status_widget(user_info, f"Processing SI unit {user_info[USER_STICK]}", False, True)
+              show_status_widget(user_info, status_frame)
+              process_si_stick_thread = Thread(target=process_si_stick, args=(user_info, forced_registration))
+              process_si_stick_thread.start()
 
           if exit_all_threads: return
         else:
@@ -1538,118 +1568,3 @@ exit_all_threads = True
 
 sys.exit(1)
 
-#run_offline = False
-#if ((event == "") or (event_key == "")):
-#  answer = raw_input("No event found - type yes to run in offline mode? ")
-#  answer = answer.strip().lower()
-#  run_offline = (answer == "yes")
-#  if run_offline:
-#    event = fake_offline_event
-#    if os.path.exists(fake_offline_event + "-results.log"):
-#      # If the offline log was last modified on a different day, then move it to a backup, thereby starting a new one
-#      # otherwise just append to it, assuming it is from the same event
-#      dlm_tuple = time.localtime(os.path.getmtime(fake_offline_event + "-results.log"))
-#      today_tuple = time.localtime(None)
-#      if not ((today_tuple.tm_year == dlm_tuple.tm_year) and (today_tuple.tm_mon == dlm_tuple.tm_mon)
-#                 and (today_tuple.tm_mday == dlm_tuple.tm_mday)):
-#        retry_count = 0
-#        while retry_count < 1000:
-#          backup_file = "{}-{}-{:02d}-{:02d}-{}-results.log".format(fake_offline_event, dlm_tuple.tm_year, dlm_tuple.tm_mon, dlm_tuple.tm_mday, retry_count)
-#          if not os.path.exists(backup_file):
-#            if verbose or debug: print (f"Backing up existing results file as {backup_file}")
-#            os.rename(fake_offline_event + "-results.log", backup_file)
-#            break
-#          retry_count += 1
-#      else:
-#        if verbose or debug: print (f"Appending results to {fake_offline_event}-results.log")
-#  else:
-#    usage()
-#    sys.exit(1)
-#  
-### Ensure that the event specified is valid
-#if not run_offline:
-#  output = make_url_call(VIEW_RESULTS, "event={}&key={}".format(event, event_key))
-#  if ((re.search("No such event found {}".format(event), output) != None) or (re.search(r"Show results for", output) == None)):
-#    print(f"Event {event} not found, please check if event {event} and key {event_key} are valid.")
-#    sys.exit(1)
-#
-
-#if (replay_si_stick):
-#  si_stick_to_replay = raw_input("Enter the si stick to replay, or offline to reply offline downloads: ")
-#  si_stick_to_replay = si_stick_to_replay.strip()
-#  if (si_stick_to_replay == ""):
-#    print ("ERROR: Must enter si stick when using the -r option, re-run program to try again.")
-#    sys.exit(1)
-#  else:
-#    replay_stick_results(event_key, event, si_stick_to_replay)
-#    sys.exit(0)
-#
-
-#if not testing_run and use_real_si_reader:
-#  si_reader = get_sireader(serial_port, verbose)
-#  if (si_reader == None):
-#    print ("ERROR: Cannot find si download station, is it plugged in?")
-#    if (serial_port != ""):
-#      print (f"\tAttempted to read from {serial_port}")
-#    sys.exit(1)
-#else:
-#  si_reader = None
-#
-#loop_count = 0
-#while True:
-#  if not testing_run and use_real_si_reader:
-#    si_stick_entry = read_results(si_reader)
-#  elif use_fake_read_results:
-#    si_stick_entry = read_fake_results()
-#  else:
-#    si_stick_entry = { SI_STICK_KEY : None }
-#
-#  if ((loop_count % 60) == 0):
-#    time_tuple = time.localtime(None)
-#    sys.stdout.write("Awaiting new results at: {:02d}:{:02d}:{:02d}\r".format(time_tuple.tm_hour, time_tuple.tm_min, time_tuple.tm_sec))
-#    sys.stdout.flush()
-#
-#  if si_stick_entry[SI_STICK_KEY] != None:
-#    if verbose:
-#      print(f"\nFound new key: {si_stick_entry[SI_STICK_KEY]}")
-#    else:
-#      print("\n")
-#
-#    upload_entry_list = [ "{:d};{:d}".format(si_stick_entry[SI_STICK_KEY], si_stick_entry[SI_START_KEY]) ]
-#    upload_entry_list.append("start:{:d}".format(si_stick_entry[SI_START_KEY]))
-#    upload_entry_list.append("finish:{:d}".format(si_stick_entry[SI_FINISH_KEY]))
-#    upload_entry_list.extend(si_stick_entry[SI_CONTROLS_KEY])
-#    qr_result_string = ",".join(upload_entry_list)
-#    if verbose:
-#      print (f"Got results {qr_result_string} for si_stick {si_stick_entry[SI_STICK_KEY]}.")
-#
-#    with open("{}-results.log".format(event), "a") as LOGFILE:
-#      LOGFILE.write(qr_result_string + "\n")
-#
-#    # If the finish is 0, then the finish wasn't scanned - we've logged it but don't upload the result.
-#    # By editing the log file and replaying the SI stick, we can adjust the result afterwards if necessary.
-#    # Though the easiest is to have the competitor go and scan finish and then download again.
-#    if (si_stick_entry[SI_FINISH_KEY] != 0):
-#      if not run_offline:
-#        results = upload_results(event_key, event, qr_result_string)
-#        print ("\n".join(results))
-#        sys.stdout.flush()
-#      else:
-#        total_time = si_stick_entry[SI_FINISH_KEY] - si_stick_entry[SI_START_KEY]
-#        hours = total_time / 3600
-#        minutes = (total_time - (hours * 3600)) / 60
-#        seconds = (total_time - (hours * 3600) - (minutes * 60))
-#        print (f"Downloaded results for si_stick {si_stick_entry[SI_STICK_KEY]}, time was {hours}h:{minutes}m:{seconds}s ({total_time}).")
-#        sys.stdout.flush()
-#    else:
-#      print ("Splits downloaded but no finish time found - punch finish and download again.")
-#      sys.stdout.flush()
-#
-#  if testing_run and not continuous_testing:
-#    break   # While testing, no need to wait for more results
-#
-#  time.sleep(1)
-#  loop_count += 1
-#
-#
-#
