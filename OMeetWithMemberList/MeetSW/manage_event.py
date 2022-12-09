@@ -12,6 +12,7 @@ import base64
 from datetime import datetime
 from collections import Counter
 import urllib.parse
+from status_widget import status_widget, offline_status_widget, mass_start_status_widget
 
 progress_label = None
 mode_label = None
@@ -64,11 +65,7 @@ USER_MEMBER_ID = r"member_id"
 USER_EMAIL = r"email_address"
 USER_CLUB = r"club_name"
 USER_RESULTS = r"qr_result_string"
-USER_STATUS = r"status_widget"
-USER_REG_BUTTON = r"register_button"
-USER_ACK_BUTTON = r"ack_button"
-USER_DOWNLOAD_BUTTON = r"download_button"
-USER_MASS_START_BUTTON = r"mass_start_button"
+USER_WIDGET = r"widget"
 USER_STICK = r"stick"
 USER_MISSED_FINISH = r"no_finish_punch"
 USER_CELL = r"cell_phone"
@@ -354,7 +351,10 @@ def upload_initial_results(user_info, event_key, event):
           result_tuple = new_result_tuple
 
 
-  root.after(1, lambda: update_status_window(user_info, result_tuple[0], result_tuple[1]))
+  user_info[USER_WIDGET].set_can_register(user_info[USER_NAME] != None)
+  user_info[USER_WIDGET].set_can_replay(True)
+  user_info[USER_WIDGET].show_as_error(result_tuple[1])
+  user_info[USER_WIDGET].update(result_tuple[0])
 
 
 ###############################################################
@@ -580,137 +580,9 @@ def switch_mode():
     return
 
 
-def disable_buttons(user_info):
-    user_info[USER_ACK_BUTTON].configure(state=tk.DISABLED)
-
-    if (USER_REG_BUTTON in user_info):
-        user_info[USER_REG_BUTTON].configure(state=tk.DISABLED)
-    if (USER_DOWNLOAD_BUTTON in user_info):
-        user_info[USER_DOWNLOAD_BUTTON].configure(state=tk.DISABLED)
-
-    if (USER_MASS_START_BUTTON in user_info):
-        user_info[USER_MASS_START_BUTTON].configure(state=tk.DISABLED)
-
-def enable_buttons(user_info, is_connected):
-    user_info[USER_ACK_BUTTON].configure(state=tk.NORMAL)
-
-    if (USER_MASS_START_BUTTON in user_info):
-        user_info[USER_MASS_START_BUTTON].configure(state=tk.NORMAL)
-    elif is_connected:
-        if (user_info[USER_NAME] == None) and (USER_DOWNLOAD_NOT_POSSIBLE in user_info):
-            pass
-        elif user_info[USER_NAME] == None:
-            user_info[USER_DOWNLOAD_BUTTON].configure(state=tk.NORMAL)
-        elif USER_DOWNLOAD_NOT_POSSIBLE in user_info:
-            user_info[USER_REG_BUTTON].configure(state=tk.NORMAL)
-        else:
-            user_info[USER_REG_BUTTON].configure(state=tk.NORMAL)
-            user_info[USER_DOWNLOAD_BUTTON].configure(state=tk.NORMAL)
-
-
-
-def make_mass_start_status(user_info, event_key, event):
-    root.after(1, lambda: make_mass_start_status_on_mainloop(user_info, event_key, event))
-    return
-
-def make_offline_status(user_info, message, is_error):
-    root.after(1, lambda: make_status_on_mainloop(user_info, message, is_error, False))
-    return
-
-def make_status(user_info, message, is_error):
-    root.after(1, lambda: make_status_on_mainloop(user_info, message, is_error, True))
-    return
-
-def show_status_widget(user_info, status_frame):
-    root.after(1, lambda: show_status_widget_mainloop(user_info, status_frame, True))
-    return
-
-def make_status_on_mainloop(user_info, message, is_error, is_connected):
-    widget_frame = create_status_widget(user_info, message, is_error, is_connected)
-    enable_buttons(user_info, is_connected)
-    show_status_widget_mainloop(user_info, widget_frame, is_connected)
-
-def create_status_widget(user_info, message, is_error, is_connected):
-    result_frame = tk.LabelFrame(status_frame)
-    button_frame = tk.Frame(result_frame)
-    label_frame = tk.Frame(result_frame)
-    stick_label = tk.Label(label_frame, text=user_info[USER_STICK], borderwidth=2, relief=tk.SUNKEN, font=myFont)
-
-    stick_status = tk.Label(label_frame, text=message, font=myFont)
-    if USER_MISSED_FINISH in user_info:
-        stick_status.configure(text=message + "\n" + MISSED_FINISH_PUNCH_MESSAGE)
-        stick_status["fg"] = "red"
-    elif is_error:
-        stick_status["fg"] = "red"
-    else:
-        stick_status["fg"] = "green"
-
-    stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy, font=myFont)
-    stick_register = tk.Button(button_frame, text="Register for course", font=myFont)
-    stick_replay = tk.Button(button_frame, text="Download stick info", font=myFont)
-    user_info[USER_REG_BUTTON] = stick_register
-    user_info[USER_ACK_BUTTON] = stick_ack
-    user_info[USER_DOWNLOAD_BUTTON] = stick_replay
-    user_info[USER_STATUS] = stick_status
-    stick_replay.configure(command=lambda: replay_stick(user_info))
-    stick_register.configure(command=lambda: registration_window(user_info))
-
-    # Buttons are disabled by default
-    stick_replay.configure(state = tk.DISABLED)
-    stick_register.configure(state = tk.DISABLED)
-    stick_ack.configure(state = tk.DISABLED)
-
-
-    stick_label.pack(side=tk.LEFT)
-    stick_status.pack(side=tk.LEFT, fill=tk.X)
-    stick_replay.pack(side=tk.LEFT)
-    stick_register.pack(side=tk.LEFT, padx=5)
-    stick_ack.pack(side=tk.RIGHT, padx=5)
-    label_frame.pack(side=tk.TOP, fill=tk.X)
-    button_frame.pack(side=tk.TOP, fill=tk.X)
-
-    return(result_frame)
-
-def show_status_widget_mainloop(user_info, status_frame, is_connected):
-    status_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
-
-def make_mass_start_status_on_mainloop(user_info, event_key, event):
-    result_frame = tk.LabelFrame(status_frame)
-    button_frame = tk.Frame(result_frame)
-    label_frame = tk.Frame(result_frame)
-    stick_label = tk.Label(label_frame, text=user_info[USER_STICK], borderwidth=2, relief=tk.SUNKEN, font=myFont)
-
-    # Get the start time from the result string
-    qr_result_entries = user_info[USER_RESULTS].split(",")
-    start_entry = qr_result_entries[1].split(":")
-    start_seconds = int(start_entry[1])
-
-    hours = start_seconds // 3600
-    minutes = (start_seconds - (hours * 3600)) // 60
-    seconds = (start_seconds - (hours * 3600) - (minutes * 60))
-    status_message = f"Use mass start time of: {hours:02d}h:{minutes:02d}m:{seconds:02d}s ({start_seconds})."
-
-    stick_status = tk.Label(label_frame, text=status_message, font=myFont)
-    stick_status["fg"] = "green"
-
-    stick_ack = tk.Button(button_frame, text="Close notification", command=result_frame.destroy, font=myFont)
-    stick_mass_start = tk.Button(button_frame, text="Mass start course(s)", font=myFont)
-    user_info[USER_ACK_BUTTON] = stick_ack
-    user_info[USER_MASS_START_BUTTON] = stick_mass_start
-    user_info[USER_STATUS] = stick_status
-    stick_mass_start.configure(command=lambda: mass_start_window(user_info, start_seconds, event_key, event))
-
-    stick_label.pack(side=tk.LEFT)
-    stick_status.pack(side=tk.LEFT, fill=tk.X)
-    stick_mass_start.pack(side=tk.LEFT)
-    stick_ack.pack(side=tk.RIGHT, padx=5)
-    label_frame.pack(side=tk.TOP, fill=tk.X)
-    button_frame.pack(side=tk.TOP, fill=tk.X)
-
-    result_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
 
 def registration_window(user_info):
-    disable_buttons(user_info)
+    user_info[USER_WIDGET].disable_buttons()
 
     registration_frame = tk.Tk()
     if len(discovered_courses) < 8:
@@ -783,7 +655,7 @@ def register_for_course(user_info, name, chosen_course, cell_phone, enclosing_fr
     else:
         message = f"Attempting to register member with SI unit {user_info[USER_STICK]} on "
 
-    user_info[USER_STATUS]["text"] = message + chosen_course.get().lstrip("0123456789-")
+    user_info[USER_WIDGET].update(message + chosen_course.get().lstrip("0123456789-"))
     enclosing_frame.destroy()
     remove_frame(enclosing_frame)
 
@@ -793,7 +665,7 @@ def register_for_course(user_info, name, chosen_course, cell_phone, enclosing_fr
 
 
 def mass_start_window(user_info, start_seconds, event_key, event):
-    disable_buttons(user_info)
+    user_info[USER_WIDGET].disable_buttons()
 
     mass_start_frame = tk.Tk()
     mass_start_frame.geometry("300x300")
@@ -835,11 +707,12 @@ def mass_start_courses(user_info, course_choices, start_seconds, enclosing_frame
 
     if len(courses_to_start) != 0:
         printable_courses_to_start = list(map(lambda elt: elt.lstrip("0123456789-"), courses_to_start))
-        user_info[USER_STATUS]["text"] = "Starting courses: " + ", ".join(printable_courses_to_start)
+        user_info[USER_WIDGET].update("Starting courses: " + ", ".join(printable_courses_to_start))
+        user_info[USER_WIDGET].disable_buttons()
         mass_start_thread = Thread(target=send_mass_start_command, args=(user_info, courses_to_start, start_seconds))
         mass_start_thread.start()
     else:
-        user_info[USER_STATUS]["text"] = "No courses chosen for mass start"
+        user_info[USER_WIDGET].update("No courses chosen for mass start")
 
     enclosing_frame.destroy()
     remove_frame(enclosing_frame)
@@ -850,7 +723,7 @@ def mass_start_courses(user_info, course_choices, start_seconds, enclosing_frame
 def kill_mass_start_window(mass_start_window, user_info):
     mass_start_window.destroy()
     remove_frame(mass_start_window)
-    enable_buttons(user_info, True)
+    user_info[USER_WIDGET].enable_buttons()
 
 
 ##############################################################################
@@ -973,7 +846,8 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
 
   if user_info[USER_NAME] == None:
     message = f"SI unit {user_info[USER_STICK]} not registered to a known member, registration canceled"
-    root.after(1, lambda: update_status_window(user_info, message, True))
+    user_info[USER_WIDGET].update(message)
+    user_info[USER_WIDGET].show_as_error(True)
     return
   
   found_name = user_info[USER_NAME]
@@ -1027,39 +901,22 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
       output_message += "\n".join(errors)
       error_found = True
 
-  root.after(1, lambda: update_status_window(user_info, output_message, error_found))
+  user_info[USER_WIDGET].show_as_error(error_found)
+  user_info[USER_WIDGET].update(output_message)
 
   return
-
-#####################################################################
-
-def update_status_window(user_info, message, is_error):
-    user_info[USER_STATUS].configure(text=message, fg = "red" if is_error else "green")
-    enable_buttons(user_info, True)
-    return
-
-def update_status_window_and_register(user_info, message, is_error):
-    user_info[USER_STATUS].configure(text=message, fg = "red" if is_error else "green")
-    registration_window(user_info)
-
-    return
 
 
 #####################################################################
 def kill_registration_window(registration_window, user_info):
     registration_window.destroy()
     remove_frame(registration_window)
-    enable_buttons(user_info, True)
+    user_info[USER_WIDGET].enable_buttons()
 
 
 #######################################################################################
 def send_mass_start_command(user_info, courses_to_start, start_seconds):
 
-  #if user_info[USER_NAME] == None:
-    #message = f"SI unit {user_info[USER_STICK]} not registered to a known member, registration canceled"
-    #root.after(1, lambda: update_status_window(user_info, message, True))
-    #return
-  
   mass_start_params = f"key={event_key}&event={event}&si_stick_time={start_seconds}&courses_to_start=" + ",".join(courses_to_start)
   if debug: print(f"Attempting to mass start with params {mass_start_params}.")
         
@@ -1089,7 +946,8 @@ def send_mass_start_command(user_info, courses_to_start, start_seconds):
       output_message += "\n".join(errors)
       error_found = True
 
-  root.after(1, lambda: update_status_window(user_info, output_message, error_found))
+  user_info[USER_WIDGET].show_as_error(error_found)
+  user_info[USER_WIDGET].update(output_message)
 
   return
 
@@ -1097,8 +955,9 @@ def send_mass_start_command(user_info, courses_to_start, start_seconds):
 
 
 def replay_stick(user_info):
-    user_info[USER_STATUS]["text"] = f"Replaying SI results for {user_info[USER_STICK]}"
-    disable_buttons(user_info)
+    user_info[USER_WIDGET].update(f"Replaying SI results for {user_info[USER_STICK]}")
+    user_info[USER_WIDGET].disable_buttons()
+
     replay_thread = Thread(target=replay_stick_thread, args=(user_info,))
     replay_thread.start()
     return
@@ -1109,13 +968,11 @@ def replay_stick_thread(user_info):
     if exit_all_threads: return
 
     if USER_MISSED_FINISH in user_info:
-        user_info[USER_STATUS].configure(text=result_tuple[0] + "\n" + MISSED_FINISH_PUNCH_MESSAGE)
-        user_info[USER_STATUS]["fg"] = "red"
+        user_info[USER_WIDGET].show_as_error(True)
+        user_info[USER_WIDGET].update(result_tuple[0] + "\n" + MISSED_FINISH_PUNCH_MESSAGE)
     else:
-        user_info[USER_STATUS]["text"] = result_tuple[0]
-        user_info[USER_STATUS]["fg"] = "red" if result_tuple[1] else "green"
-
-    enable_buttons(user_info, True)
+        user_info[USER_WIDGET].show_as_error(result_tuple[1])
+        user_info[USER_WIDGET].update(result_tuple[0])
 
     return
 
@@ -1308,10 +1165,18 @@ def process_si_stick(user_info, forced_registration):
       else:
           message += "\nIf finishing, use the download button"
 
+      if USER_MISSED_FINISH in user_info:
+          message = message + "\n" + MISSED_FINISH_PUNCH_MESSAGE
+          display_as_error = True
+
+      user_info[USER_WIDGET].set_can_register(user_info[USER_NAME] != None)
+      user_info[USER_WIDGET].set_can_replay(not forced_registration)
+      user_info[USER_WIDGET].show_as_error(display_as_error)
+      user_info[USER_WIDGET].update(message)
+
       if (current_mode == REGISTER_MODE) and (user_info[USER_NAME] != None):
-          root.after(1, lambda: update_status_window_and_register(user_info, message, display_as_error))
-      else:
-          root.after(1, lambda: update_status_window(user_info, message, display_as_error))
+          user_info[USER_WIDGET].disable_buttons()
+          root.after(1, lambda: registration_window(user_info))
 
 
   elif (current_mode == DOWNLOAD_MODE):
@@ -1362,9 +1227,13 @@ def sireader_main():
         pass
       elif SI_BAD_DOWNLOAD in si_stick_entry:
         user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None , USER_DOWNLOAD_NOT_POSSIBLE : True }
+        user_info[USER_WIDGET] = offline_status_widget(user_info[USER_STICK], myFont)
         message = f"Prematurely removed SI unit {user_info[USER_STICK]} from download station\n"
         message += "Please reinsert and wait until the unit beeps."
-        make_status(user_info, message, True)
+        user_info[USER_WIDGET].create(status_frame, message)
+        user_info[USER_WIDGET].show_as_error(True)
+        user_info[USER_WIDGET].enable_buttons()
+        user_info[USER_WIDGET].show(root)
       else:  # Process a valid stick download
         if verbose: print(f"\nFound new key: {si_stick_entry[SI_STICK_KEY]}")
     
@@ -1398,15 +1267,28 @@ def sireader_main():
         if not run_offline:
           if exit_all_threads: return
           if current_mode == MASS_START_MODE:
+              # Get the start time from the result string
+              start_seconds = si_stick_entry[SI_START_KEY]
+
+              hours = start_seconds // 3600
+              minutes = (start_seconds - (hours * 3600)) // 60
+              seconds = (start_seconds - (hours * 3600) - (minutes * 60))
+              status_message = f"Use mass start time of: {hours:02d}h:{minutes:02d}m:{seconds:02d}s ({start_seconds})."
+
               user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
-              make_mass_start_status(user_info, event_key, event)
+              user_info[USER_WIDGET] = mass_start_status_widget(user_info[USER_STICK], myFont, user_info, mass_start_window, start_seconds, event_key, event)
+              user_info[USER_WIDGET].create(status_frame, status_message)
+              user_info[USER_WIDGET].enable_buttons()
+              user_info[USER_WIDGET].show(root)
           else:
               user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
               if finish_adjusted:
                   user_info[USER_MISSED_FINISH] = True
 
-              status_frame = create_status_widget(user_info, f"Processing SI unit {user_info[USER_STICK]}", False, True)
-              show_status_widget(user_info, status_frame)
+              user_info[USER_WIDGET] = status_widget(user_info[USER_STICK], myFont, user_info, replay_stick, registration_window) 
+              user_info[USER_WIDGET].create(status_frame, f"Processing SI unit {user_info[USER_STICK]}")
+              user_info[USER_WIDGET].show(root)
+
               process_si_stick_thread = Thread(target=process_si_stick, args=(user_info, forced_registration))
               process_si_stick_thread.start()
 
@@ -1420,9 +1302,12 @@ def sireader_main():
           status_message = f"Downloaded results for si_stick {si_stick_entry[SI_STICK_KEY]}, time was {hours}h:{minutes}m:{seconds}s ({total_time})."
           if finish_adjusted:
               user_info[USER_MISSED_FINISH] = True
-          make_offline_status(user_info, status_message, False)
-          print (status_message)
-          sys.stdout.flush()
+              status_message = status_message + "\n" + MISSED_FINISH_PUNCH_MESSAGE
+
+          user_info[USER_WIDGET] = offline_status_widget(user_info[USER_STICK], myFont)
+          user_info[USER_WIDGET].create(staus_frame, status_message)
+          user_info[USER_WIDGET].enable_buttons()
+          user_info[USER_WIDGET].show(root)
     
       if testing_run and not continuous_testing:
         break   # While testing, no need to wait for more results
