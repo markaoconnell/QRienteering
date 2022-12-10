@@ -13,6 +13,7 @@ from datetime import datetime
 from collections import Counter
 import urllib.parse
 from status_widget import status_widget, offline_status_widget, mass_start_status_widget
+from user_info import stick_info, found_user_info
 
 progress_label = None
 mode_label = None
@@ -59,19 +60,6 @@ SI_FINISH_KEY = r"finish_timestamp"
 SI_CONTROLS_KEY = r"qr_controls"
 SI_BAD_DOWNLOAD = r"si_download_error"
 
-# Keys for the entry information dict
-USER_NAME = r"name"
-USER_MEMBER_ID = r"member_id"
-USER_EMAIL = r"email_address"
-USER_CLUB = r"club_name"
-USER_RESULTS = r"qr_result_string"
-USER_WIDGET = r"widget"
-USER_STICK = r"stick"
-USER_MISSED_FINISH = r"no_finish_punch"
-USER_CELL = r"cell_phone"
-USER_COURSE = r"course"   # Only for preregistered entrants
-USER_NRE_INFO = r"nre_info"  # Only for events with NRE ranking
-USER_DOWNLOAD_NOT_POSSIBLE = r"stick_was_cleared"
 MISSED_FINISH_PUNCH_SPLIT = 600
 MISSED_FINISH_PUNCH_MESSAGE = "No finish punch detected, recorded finish split of 10m"
 
@@ -265,7 +253,7 @@ def run_in_offline_mode(enclosing_frame):
 
 ###############################################################
 def upload_results(user_info, event_key, event):
-  web_site_string = base64.standard_b64encode(user_info[USER_RESULTS].encode("utf-8")).decode("utf-8")
+  web_site_string = base64.standard_b64encode(user_info.qr_result_string.encode("utf-8")).decode("utf-8")
   web_site_string = re.sub("\n", "", web_site_string)
   web_site_string = re.sub(r"=", "%3D", web_site_string)
 
@@ -281,10 +269,13 @@ def upload_results(user_info, event_key, event):
   if match != None:
       finish_entries = match.group(1).split(",")
       name = base64.standard_b64decode(finish_entries[0]).decode("utf-8")
-      if user_info[USER_NAME] != name:
-          if user_info[USER_NAME] != None:
-              if verbose: print (f"Updating entry from {user_info[USER_NAME]} to {name} based on result download.\n")
-          user_info[USER_NAME] = name
+      if (user_info.get_lookup_info() == None) or (user_info.get_lookup_info().name != name):
+          if user_info.get_lookup_info() == None:
+              registered_user_info = found_user_info(name=name, stick=user_info.stick_number)
+              user_info.add_lookup_info(registered_user_info)
+          else:
+              if verbose: print (f"Updating entry from {user_info.get_lookup_info().name} to {name} based on result download.\n")
+              user_info.get_lookup_info().name = name
       course = finish_entries[1]
       time_taken = int(finish_entries[2])
 
@@ -303,7 +294,7 @@ def upload_results(user_info, event_key, event):
       if nre_class_match != None:
           upload_status_string += f"({nre_class_match.group(1)}) - "
   else:
-      upload_status_string = f"Error, download of {user_info[USER_STICK]} failed"
+      upload_status_string = f"Error, download of {user_info.stick_number} failed"
 
   error_list = re.findall(r"####,ERROR,.*", output)
   if (len(error_list) == 0):
@@ -328,14 +319,14 @@ def upload_initial_results(user_info, event_key, event):
       extra_status += "If registering - use the register button to retry"
       new_result_tuple = (result_tuple[0] + extra_status, result_tuple[1])
       result_tuple = new_result_tuple
-  elif user_info[USER_NAME] == None:
+  elif user_info.get_lookup_info() == None:
      # If the username is still None, then there was no registered entry found
      # See if the person is a member and could be quickly registered
       try:
-          possible_member_info = lookup_si_unit(user_info[USER_STICK])
-          if possible_member_info[USER_NAME] != None:
-              user_info.update(possible_member_info)
-              extra_status = f"\nIdentified member {user_info[USER_NAME]}\n"
+          possible_member_info = lookup_si_unit(user_info.stick_number)
+          if possible_member_info != None:
+              user_info.add_lookup_info(possible_member_info)
+              extra_status = f"\nIdentified member {user_info.get_lookup_info().name}\n"
               extra_status += "If finishing - use the register button to register for a course, then download the results\n"
               extra_status += "If registering for a new course - use the register button, then clear and check"
               new_result_tuple = (result_tuple[0] + extra_status, result_tuple[1])
@@ -351,43 +342,12 @@ def upload_initial_results(user_info, event_key, event):
           result_tuple = new_result_tuple
 
 
-  user_info[USER_WIDGET].set_can_register(user_info[USER_NAME] != None)
-  user_info[USER_WIDGET].set_can_replay(True)
-  user_info[USER_WIDGET].show_as_error(result_tuple[1])
-  user_info[USER_WIDGET].update(result_tuple[0])
+  user_info.get_widget().set_can_register(user_info.get_lookup_info() != None)
+  user_info.get_widget().set_can_replay(True)
+  user_info.get_widget().show_as_error(result_tuple[1])
+  user_info.get_widget().update(result_tuple[0])
 
 
-###############################################################
-def replay_stick_results(event_key, event, stick_to_replay):
-# logline format is:
-#   2108369;1200,start:1200,finish:1600,101:1210,102:1260,104:1350,106:1480,110:1568
-# So the si stick matches at the start of the line, adding the semicolon to eliminate partial matches
-  found_stick = False
-  stick_at_log_start = "{};".format(stick_to_replay)
-  processing_offline_results = (stick_to_replay == "offline")
-  
-  # read from either the event log or the offline log
-  if processing_offline_results:
-    logfile_name = fake_offline_event + "-results.log"
-  else:
-    logfile_name = "{}-results.log".format(event)
-
-  with open(logfile_name, "r") as LOGFILE:
-    for result_line in LOGFILE:
-      if debug:
-        print ("Checking {}.".format(result_line))
-
-      if (processing_offline_results or result_line.startswith(stick_at_log_start)):
-        if debug and not processing_offline_results:
-          print("Found match with {}.".format(stick_at_log_start))
-
-        found_stick = True
-        web_results = upload_results(stick_to_replay, event_key, event, result_line.strip())  # Remove the trailing newline
-        print ("\n".join(web_results))
-
-
-  if not found_stick:
-    print("ERROR: No results found for SI stick {}.".format(stick_to_replay))
 
 ###############################################################
 def get_24hour_timestamp(punch_time):
@@ -399,16 +359,6 @@ def get_24hour_timestamp(punch_time):
 
 ###############################################################
 def get_sireader(serial_port_name, verbose):
-#SIReader only supports the so called "Extended Protocol" mode. If your
-#base station is not in this mode you have to change the protocol mode
-#first::
-#
-#  # change to extended protocol mode
-#  si.set_extended_protocol()
-#
-#To use a SportIdent base station for card readout::
-
-
 # connect to base station, the station is automatically detected,
 # if this does not work, give the path to the port as an argument
 # see the pyserial documentation for further information.
@@ -582,7 +532,7 @@ def switch_mode():
 
 
 def registration_window(user_info):
-    user_info[USER_WIDGET].disable_buttons()
+    user_info.get_widget().disable_buttons()
 
     registration_frame = tk.Tk()
     if len(discovered_courses) < 8:
@@ -605,13 +555,13 @@ def registration_window(user_info):
     info_frame = tk.Frame(choices_frame)
     name = tk.StringVar(choices_frame)
     registration_string = ""
-    if user_info[USER_NAME] != None:
-        name.set(user_info[USER_NAME])
+    if user_info.get_lookup_info() != None:
+        name.set(user_info.get_lookup_info().name)
     else:
         name.set(NAME_NOT_SET)
     info_label_1 = tk.Label(info_frame, text="Register ", font=localFont)
     info_label_2 = tk.Entry(info_frame, textvariable = name, font=localFont)
-    info_label_3 = tk.Label(info_frame, text=f" ({user_info[USER_STICK]})", font=localFont)
+    info_label_3 = tk.Label(info_frame, text=f" ({user_info.stick_number})", font=localFont)
     info_label_1.pack(side=tk.LEFT)
     info_label_2.pack(side=tk.LEFT)
     info_label_3.pack(side=tk.LEFT)
@@ -620,13 +570,13 @@ def registration_window(user_info):
     for course in discovered_courses:
         radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course, font=localFont)
         radio_button.pack(side=tk.TOP, anchor=tk.W)
-        if USER_COURSE in user_info:
-            if (user_info[USER_COURSE] != None) and (user_info[USER_COURSE] == course[0]):
+        if user_info.get_lookup_info().course != None:
+            if user_info.get_lookup_info().course == course[0]:
                 chosen_course.set(course[1])
 
     cell_phone = tk.StringVar(registration_frame, "")
-    if USER_CELL in user_info:
-      cell_phone.set(user_info[USER_CELL])
+    if user_info.get_lookup_info().cell_phone != None:
+      cell_phone.set(user_info.get_lookup_info().cell_phone)
       
     cell_phone_label = tk.Label(choices_frame, text="Verify cell phone (re-enter if incorrect):", font=localFont)
     cell_phone_box = tk.Entry(choices_frame, textvariable = cell_phone, font=localFont)
@@ -647,15 +597,17 @@ def registration_window(user_info):
 
 
 def register_for_course(user_info, name, chosen_course, cell_phone, enclosing_frame):
+    # The user changed their name from what we have in the registration and/or member database
+    # Update the name now
     if name.get() != NAME_NOT_SET:
-        user_info[USER_NAME] = name.get()
+        user_info.get_lookup_info().name = name.get()
 
-    if user_info[USER_NAME] != None:
-        message = f"Attempting to register {user_info[USER_NAME]} ({user_info[USER_STICK]}) on " 
+    if user_info.get_lookup_info() != None:
+        message = f"Attempting to register {user_info.get_lookup_info().name} ({user_info.stick_number}) on " 
     else:
-        message = f"Attempting to register member with SI unit {user_info[USER_STICK]} on "
+        message = f"Attempting to register member with SI unit {user_info.stick_number} on "
 
-    user_info[USER_WIDGET].update(message + chosen_course.get().lstrip("0123456789-"))
+    user_info.get_widget().update(message + chosen_course.get().lstrip("0123456789-"))
     enclosing_frame.destroy()
     remove_frame(enclosing_frame)
 
@@ -665,7 +617,7 @@ def register_for_course(user_info, name, chosen_course, cell_phone, enclosing_fr
 
 
 def mass_start_window(user_info, start_seconds, event_key, event):
-    user_info[USER_WIDGET].disable_buttons()
+    user_info.get_widget().disable_buttons()
 
     mass_start_frame = tk.Tk()
     mass_start_frame.geometry("300x300")
@@ -707,12 +659,12 @@ def mass_start_courses(user_info, course_choices, start_seconds, enclosing_frame
 
     if len(courses_to_start) != 0:
         printable_courses_to_start = list(map(lambda elt: elt.lstrip("0123456789-"), courses_to_start))
-        user_info[USER_WIDGET].update("Starting courses: " + ", ".join(printable_courses_to_start))
-        user_info[USER_WIDGET].disable_buttons()
+        user_info.get_widget().update("Starting courses: " + ", ".join(printable_courses_to_start))
+        user_info.get_widget().disable_buttons()
         mass_start_thread = Thread(target=send_mass_start_command, args=(user_info, courses_to_start, start_seconds))
         mass_start_thread.start()
     else:
-        user_info[USER_WIDGET].update("No courses chosen for mass start")
+        user_info.get_widget().update("No courses chosen for mass start")
 
     enclosing_frame.destroy()
     remove_frame(enclosing_frame)
@@ -723,7 +675,7 @@ def mass_start_courses(user_info, course_choices, start_seconds, enclosing_frame
 def kill_mass_start_window(mass_start_window, user_info):
     mass_start_window.destroy()
     remove_frame(mass_start_window)
-    user_info[USER_WIDGET].enable_buttons()
+    user_info.get_widget().enable_buttons()
 
 
 ##############################################################################
@@ -795,11 +747,11 @@ def kill_change_font_size_frame(change_font_size_frame):
 def lookup_si_unit(stick):
     global event_allows_preregistration
 
-    lookup_results = { USER_NAME : None, USER_STICK : stick }
+    lookup_results = None
     if event_allows_preregistration:
         lookup_results = make_lookup_si_unit_call(stick, True)
 
-    if lookup_results[USER_NAME] == None:
+    if lookup_results == None:
         lookup_results = make_lookup_si_unit_call(stick, False)
 
     return lookup_results
@@ -822,7 +774,7 @@ def make_lookup_si_unit_call(stick, check_preregistration):
   
   member_match = re.search(r"####,MEMBER_ENTRY,(.*)", output)
   if member_match == None:
-      return({ USER_NAME : None , USER_STICK : stick})
+      return None
 
   member_elements = member_match.group(1).split(",")
   found_name = base64.standard_b64decode(member_elements[0]).decode("utf-8")
@@ -839,22 +791,22 @@ def make_lookup_si_unit_call(stick, check_preregistration):
   if nre_info_match != None:
       nre_info = nre_info_match.group(1)
 
-  return({ USER_NAME : found_name, USER_MEMBER_ID : found_id, USER_EMAIL : found_email, USER_CLUB : club_name, USER_STICK : stick , USER_CELL : cell_phone , USER_COURSE : course , USER_NRE_INFO : nre_info})
+  return (found_user_info(name = found_name, member_id = found_id, email = found_email, club = club_name, stick = stick, cell_phone = cell_phone, course = course, nre_info = nre_info))
 
 #######################################################################################
 def register_by_si_unit(user_info, chosen_course, cell_phone):
 
-  if user_info[USER_NAME] == None:
-    message = f"SI unit {user_info[USER_STICK]} not registered to a known member, registration canceled"
-    user_info[USER_WIDGET].update(message)
-    user_info[USER_WIDGET].show_as_error(True)
+  if user_info.get_lookup_info() == None:
+    message = f"SI unit {user_info.stick_number} not registered to a known member, registration canceled"
+    user_info.get_widget().update(message)
+    user_info.get_widget().show_as_error(True)
     return
   
-  found_name = user_info[USER_NAME]
-  stick = user_info[USER_STICK]
-  club_name = user_info[USER_CLUB] if USER_CLUB in user_info else ""
-  found_email = user_info[USER_EMAIL] if USER_EMAIL in user_info else ""
-  found_id = user_info[USER_MEMBER_ID] if USER_MEMBER_ID in user_info else ""
+  found_name = user_info.get_lookup_info().name
+  stick = user_info.stick_number
+  club_name = user_info.get_lookup_info().club if user_info.get_lookup_info().club != None else ""
+  found_email = user_info.get_lookup_info().email if user_info.get_lookup_info().email != None else ""
+  found_id = user_info.get_lookup_info().member_id if user_info.get_lookup_info().member_id != None else ""
   registration_list = ["first_name", base64.standard_b64encode(found_name.encode("utf-8")).decode("utf-8"),
                              "last_name", base64.standard_b64encode("".encode("utf-8")).decode("utf-8"),
                              "club_name", base64.standard_b64encode(club_name.encode("utf-8")).decode("utf-8"),
@@ -864,10 +816,9 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
                              "member_id", base64.standard_b64encode(found_id.encode("utf-8")).decode("utf-8"),
                              "cell_phone", base64.standard_b64encode(cell_phone.encode("utf-8")).decode("utf-8"),
                              "is_member", base64.standard_b64encode("yes".encode("utf-8")).decode("utf-8") ]
-  if USER_NRE_INFO in user_info:
-      if user_info[USER_NRE_INFO] != None:
-          registration_list.append("classification_info")
-          registration_list.append(base64.standard_b64encode(user_info[USER_NRE_INFO].encode("utf-8")).decode("utf-8"))
+  if user_info.get_lookup_info().nre_info != None:
+      registration_list.append("classification_info")
+      registration_list.append(base64.standard_b64encode(user_info.get_lookup_info().nre_info.encode("utf-8")).decode("utf-8"))
 
   quoted_course = urllib.parse.quote(chosen_course.encode("utf-8"))
   quoted_name = urllib.parse.quote(found_name.encode("utf-8"))
@@ -901,8 +852,8 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
       output_message += "\n".join(errors)
       error_found = True
 
-  user_info[USER_WIDGET].show_as_error(error_found)
-  user_info[USER_WIDGET].update(output_message)
+  user_info.get_widget().show_as_error(error_found)
+  user_info.get_widget().update(output_message)
 
   return
 
@@ -911,7 +862,7 @@ def register_by_si_unit(user_info, chosen_course, cell_phone):
 def kill_registration_window(registration_window, user_info):
     registration_window.destroy()
     remove_frame(registration_window)
-    user_info[USER_WIDGET].enable_buttons()
+    user_info.get_widget().enable_buttons()
 
 
 #######################################################################################
@@ -946,8 +897,8 @@ def send_mass_start_command(user_info, courses_to_start, start_seconds):
       output_message += "\n".join(errors)
       error_found = True
 
-  user_info[USER_WIDGET].show_as_error(error_found)
-  user_info[USER_WIDGET].update(output_message)
+  user_info.get_widget().show_as_error(error_found)
+  user_info.get_widget().update(output_message)
 
   return
 
@@ -955,8 +906,8 @@ def send_mass_start_command(user_info, courses_to_start, start_seconds):
 
 
 def replay_stick(user_info):
-    user_info[USER_WIDGET].update(f"Replaying SI results for {user_info[USER_STICK]}")
-    user_info[USER_WIDGET].disable_buttons()
+    user_info.get_widget().update(f"Replaying SI results for {user_info.stick_number}")
+    user_info.get_widget().disable_buttons()
 
     replay_thread = Thread(target=replay_stick_thread, args=(user_info,))
     replay_thread.start()
@@ -967,12 +918,12 @@ def replay_stick_thread(user_info):
     result_tuple = upload_results(user_info, event_key, event)
     if exit_all_threads: return
 
-    if USER_MISSED_FINISH in user_info:
-        user_info[USER_WIDGET].show_as_error(True)
-        user_info[USER_WIDGET].update(result_tuple[0] + "\n" + MISSED_FINISH_PUNCH_MESSAGE)
+    if user_info.get_missed_finish():
+        user_info.get_widget().show_as_error(True)
+        user_info.get_widget().update(result_tuple[0] + "\n" + MISSED_FINISH_PUNCH_MESSAGE)
     else:
-        user_info[USER_WIDGET].show_as_error(result_tuple[1])
-        user_info[USER_WIDGET].update(result_tuple[0])
+        user_info.get_widget().show_as_error(result_tuple[1])
+        user_info.get_widget().update(result_tuple[0])
 
     return
 
@@ -1030,54 +981,9 @@ def get_and_log_results_string(event, stick_values):
     return qr_result_string
     
 
-###############################################################
-
-fake_entries = []
-fake_entries.append({SI_STICK_KEY : 271828, SI_START_KEY : 300, SI_FINISH_KEY : 0, SI_CONTROLS_KEY : [ ]})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : 141421, SI_START_KEY : 0, SI_FINISH_KEY : 0, SI_CONTROLS_KEY : ["101:1210", "102:1260", "104:1350", "106:1480", "110:1568"]})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : 314159, SI_START_KEY : 1200, SI_FINISH_KEY : 0, SI_CONTROLS_KEY : ["101:1210", "102:1260", "104:1350", "106:1480", "110:1568"]})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : 5086148225, SI_START_KEY : 1200, SI_FINISH_KEY : 1600, SI_CONTROLS_KEY : ["101:1210", "102:1260", "104:1350", "106:1480", "110:1568"]})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : 5083959473, SI_START_KEY : 1200, SI_FINISH_KEY : 1600, SI_CONTROLS_KEY : ["101:1210", "102:1260", "104:1350", "106:1480", "110:1568"]})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : 2108369, SI_START_KEY : 200, SI_FINISH_KEY : 600, SI_CONTROLS_KEY : ["101:210", "102:260", "104:350", "106:480", "110:568"]})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : 2108369, SI_START_KEY : 1200, SI_FINISH_KEY : 1600, SI_CONTROLS_KEY : ["101:1210", "102:1260", "104:1350", "106:1480", "110:1568"]})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
-fake_entries.append({SI_STICK_KEY : None})
 simulated_entries = []
 results_initialized = False
+
 def initialize_fake_results():
   global results_initialized
   if results_initialized: return
@@ -1143,39 +1049,39 @@ def process_si_stick(user_info, forced_registration):
   if (current_mode == REGISTER_MODE) or forced_registration:
       display_as_error = False
       try:
-          discovered_user_info = lookup_si_unit(user_info[USER_STICK])
-          if (discovered_user_info[USER_NAME] != None):
-              user_info.update(discovered_user_info)
-              message = f"Recognized member {user_info[USER_NAME]} with SI unit {user_info[USER_STICK]}"
+          discovered_user_info = lookup_si_unit(user_info.stick_number)
+          if (discovered_user_info != None):
+              user_info.add_lookup_info(discovered_user_info)
+              message = f"Recognized member {user_info.get_lookup_info().name} with SI unit {user_info.stick_number}"
               message += "\nIf registering, use the register button."
           else:
               display_as_error = True
-              message = f"Could not find member for SI unit {user_info[USER_STICK]}\n"
+              message = f"Could not find member for SI unit {user_info.stick_number}\n"
               message += "If registering - use SmartPhone based registration instead."
       except UrlTimeoutException:
           display_as_error = True
-          message = f"Could not contact website about {user_info[USER_STICK]}\nValidate connectivity and site status\n"
+          message = f"Could not contact website about {user_info.stick_number}\nValidate connectivity and site status\n"
           message += "If registering - reinsert the stick into the reader."
     
       if forced_registration:
           message += "\nIf finishing, SI unit has no information - use self reporting to record a time."
-          user_info[USER_DOWNLOAD_NOT_POSSIBLE] = True
+          user_info.set_download_possible(False)
           if current_mode == DOWNLOAD_MODE:
               display_as_error = True
       else:
           message += "\nIf finishing, use the download button"
 
-      if USER_MISSED_FINISH in user_info:
+      if user_info.get_missed_finish():
           message = message + "\n" + MISSED_FINISH_PUNCH_MESSAGE
           display_as_error = True
 
-      user_info[USER_WIDGET].set_can_register(user_info[USER_NAME] != None)
-      user_info[USER_WIDGET].set_can_replay(not forced_registration)
-      user_info[USER_WIDGET].show_as_error(display_as_error)
-      user_info[USER_WIDGET].update(message)
+      user_info.get_widget().set_can_register(user_info.get_lookup_info() != None)
+      user_info.get_widget().set_can_replay(not forced_registration)
+      user_info.get_widget().show_as_error(display_as_error)
+      user_info.get_widget().update(message)
 
-      if (current_mode == REGISTER_MODE) and (user_info[USER_NAME] != None):
-          user_info[USER_WIDGET].disable_buttons()
+      if (current_mode == REGISTER_MODE) and (user_info.get_lookup_info() != None):
+          user_info.get_widget().disable_buttons()
           root.after(1, lambda: registration_window(user_info))
 
 
@@ -1226,14 +1132,15 @@ def sireader_main():
       if si_stick_entry[SI_STICK_KEY] == None:
         pass
       elif SI_BAD_DOWNLOAD in si_stick_entry:
-        user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None , USER_DOWNLOAD_NOT_POSSIBLE : True }
-        user_info[USER_WIDGET] = offline_status_widget(user_info[USER_STICK], myFont)
-        message = f"Prematurely removed SI unit {user_info[USER_STICK]} from download station\n"
+        user_info = stick_info(si_stick_entry[SI_STICK_KEY], "")
+        user_info.set_download_possible(False)
+        user_info.add_widget(offline_status_widget(user_info.stick_number, myFont))
+        message = f"Prematurely removed SI unit {user_info.stick_number} from download station\n"
         message += "Please reinsert and wait until the unit beeps."
-        user_info[USER_WIDGET].create(status_frame, message)
-        user_info[USER_WIDGET].show_as_error(True)
-        user_info[USER_WIDGET].enable_buttons()
-        user_info[USER_WIDGET].show(root)
+        user_info.get_widget().create(status_frame, message)
+        user_info.get_widget().show_as_error(True)
+        user_info.get_widget().enable_buttons()
+        user_info.get_widget().show(root)
       else:  # Process a valid stick download
         if verbose: print(f"\nFound new key: {si_stick_entry[SI_STICK_KEY]}")
     
@@ -1275,19 +1182,20 @@ def sireader_main():
               seconds = (start_seconds - (hours * 3600) - (minutes * 60))
               status_message = f"Use mass start time of: {hours:02d}h:{minutes:02d}m:{seconds:02d}s ({start_seconds})."
 
-              user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
-              user_info[USER_WIDGET] = mass_start_status_widget(user_info[USER_STICK], myFont, user_info, mass_start_window, start_seconds, event_key, event)
-              user_info[USER_WIDGET].create(status_frame, status_message)
-              user_info[USER_WIDGET].enable_buttons()
-              user_info[USER_WIDGET].show(root)
-          else:
-              user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
-              if finish_adjusted:
-                  user_info[USER_MISSED_FINISH] = True
+              user_info = stick_info(si_stick_entry[SI_STICK_KEY], qr_result_string)
 
-              user_info[USER_WIDGET] = status_widget(user_info[USER_STICK], myFont, user_info, replay_stick, registration_window) 
-              user_info[USER_WIDGET].create(status_frame, f"Processing SI unit {user_info[USER_STICK]}")
-              user_info[USER_WIDGET].show(root)
+              user_info.add_widget(mass_start_status_widget(user_info.stick_number, myFont, user_info, mass_start_window, start_seconds, event_key, event))
+              user_info.get_widget().create(status_frame, status_message)
+              user_info.get_widget().enable_buttons()
+              user_info.get_widget().show(root)
+          else:
+              user_info = stick_info(si_stick_entry[SI_STICK_KEY], qr_result_string)
+              if finish_adjusted:
+                  user_info.set_missed_finish(True)
+
+              user_info.add_widget(status_widget(user_info.stick_number, myFont, user_info, replay_stick, registration_window))
+              user_info.get_widget().create(status_frame, f"Processing SI unit {user_info.stick_number}")
+              user_info.get_widget().show(root)
 
               process_si_stick_thread = Thread(target=process_si_stick, args=(user_info, forced_registration))
               process_si_stick_thread.start()
@@ -1298,16 +1206,20 @@ def sireader_main():
           hours = total_time // 3600
           minutes = (total_time - (hours * 3600)) // 60
           seconds = (total_time - (hours * 3600) - (minutes * 60))
-          user_info = { USER_STICK : si_stick_entry[SI_STICK_KEY], USER_NAME : None, USER_RESULTS : qr_result_string }
+
+          user_info = stick_info(si_stick_entry[SI_STICK_KEY], qr_result_string)
+          if finish_adjusted:
+              user_info.set_missed_finish(True)
+
           status_message = f"Downloaded results for si_stick {si_stick_entry[SI_STICK_KEY]}, time was {hours}h:{minutes}m:{seconds}s ({total_time})."
           if finish_adjusted:
-              user_info[USER_MISSED_FINISH] = True
+              user_info.set_missed_finish(True)
               status_message = status_message + "\n" + MISSED_FINISH_PUNCH_MESSAGE
 
-          user_info[USER_WIDGET] = offline_status_widget(user_info[USER_STICK], myFont)
-          user_info[USER_WIDGET].create(staus_frame, status_message)
-          user_info[USER_WIDGET].enable_buttons()
-          user_info[USER_WIDGET].show(root)
+          user_info.add_widget(offline_status_widget(user_info.stick_number, myFont))
+          user_info.get_widget().create(staus_frame, status_message)
+          user_info.get_widget().enable_buttons()
+          user_info.get_widget().show(root)
     
       if testing_run and not continuous_testing:
         break   # While testing, no need to wait for more results
