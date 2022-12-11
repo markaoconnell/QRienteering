@@ -14,17 +14,22 @@ from collections import Counter
 import urllib.parse
 from status_widget import status_widget, offline_status_widget, mass_start_status_widget
 from user_info import stick_info, found_user_info
+from registration_flow import register_user
+from mass_start_flow import mass_start_flow
+from si_reader import si_processor, real_si_reader, fake_si_reader
+from url_caller import url_caller, UrlTimeoutException
 
 progress_label = None
 mode_label = None
 mode_button = None
 exit_all_threads = False
 discovered_courses = [ ]
-open_frames = []
+long_running_classes = []
 root = None
 status_frame = None
 scrollable_status_frame = None
 web_site_timeout = 10
+change_font_size_frame = None
 
 
 
@@ -34,31 +39,9 @@ debug = 0
 testing_run = 0
 continuous_testing = 0
 url = "http://www.mkoconnell.com/OMeet/not_there"
-fake_offline_event = "offline_downloads"
 use_fake_read_results = False
-use_real_sireader = True
 run_offline = False
 
-if (not 'NO_SI_READER_IMPORT' in os.environ) and use_real_sireader:
-  from sireader2 import SIReader, SIReaderReadout, SIReaderControl, SIReaderException, SIReaderTimeout, SIReaderCardChanged
-
-# URLs for the web site
-VIEW_RESULTS = "OMeet/view_results.php"
-FINISH_COURSE = "OMeet/finish_course.php"
-REGISTER_COURSE = "OMeetRegistration/register.php"
-MANAGE_EVENTS = "OMeetMgmt/manage_events.php"
-REGISTER_COMPETITOR = "OMeetRegistration/register_competitor.php"
-SI_LOOKUP = "OMeetWithMemberList/stick_lookup.php"
-MASS_START = "OMeetMgmt/mass_start_courses.php"
-
-TWELVE_HOURS_IN_SECONDS = (12 * 3600)
-
-# Keys for the si_stick dict (should really convert this to a named tuple)
-SI_STICK_KEY = r"si_stick"
-SI_START_KEY = r"start_timestamp"
-SI_FINISH_KEY = r"finish_timestamp"
-SI_CONTROLS_KEY = r"qr_controls"
-SI_BAD_DOWNLOAD = r"si_download_error"
 
 MISSED_FINISH_PUNCH_SPLIT = 600
 MISSED_FINISH_PUNCH_MESSAGE = "No finish punch detected, recorded finish split of 10m"
@@ -72,10 +55,6 @@ current_mode = DOWNLOAD_MODE
 # Used in the registration dialog if the name is not known (should never really happen though)
 NAME_NOT_SET = "unknown"
 
-# raised when the website fails to respond in time
-class UrlTimeoutException(Exception):
-    pass
-
 def usage():
   print("Usage: " + sys.argv[0])
   print("Usage: " + sys.argv[0] + " [-e event] [-k key] [-u url_of_QR_web_site] [-s serial port for si download station] [-djvrt]")
@@ -86,7 +65,6 @@ def usage():
   print("\t-j:\tRun in local mode - save si stick information to a local file for later replay (rarely useful)")
   print("\t-d:\tDebug - show extra debugging information (not normally useful)")
   print("\t-v:\tVerbose - show extra information about the workings of the program (sometimes useful)")
-  print("\t-r:\tReplay a si stick - useful for a competitor who misregistered")
   print("\t-t:\tTesting run - only use in test environments")
 
 
@@ -134,24 +112,10 @@ def read_ini_file():
 
 ############################################################################
 def get_event(current_event_key):
-  global event_key
-  try:
-    output = make_url_call(MANAGE_EVENTS, "key=" + current_event_key + "&recent_event_timeout=12h")
-    #output = make_url_call(MANAGE_EVENTS, "key=" + current_event_key + "&recent_event_timeout=120d")
-    #print (f"Call to manage_events returned {output}")
-  except UrlTimeoutException:
-      output = ""
 
-  event_matches_list = re.findall(r"####,[A-Z]*_EVENT,.*", output)
-  key_match = re.search(r"####,XLATED_KEY,(.*)", output);
-  if key_match != None:
-    event_key = key_match.group(1);
-    current_event_key = key_match.group(1);
+  possible_event_list = url_caller.get_event_list(current_event_key)
 
-  if (debug):
-    print("Found " + str(len(event_matches_list)) + " events from the website.")
-
-  if (len(event_matches_list) == 0):
+  if (len(possible_event_list) == 0):
     if (verbose or debug):
       print("No currently open (actively ongoing) events found.")
     no_event_frame = tk.Frame(root)
@@ -161,8 +125,8 @@ def get_event(current_event_key):
     no_event_button.pack(side=tk.TOP)
     no_event_frame.pack(side=tk.TOP)
     return
-  elif (len(event_matches_list) == 1):
-    elements = event_matches_list[0].split(",")
+  elif (len(possible_event_list) == 1):
+    elements = possible_event_list[0].split(",")
     #match = re.search(r"(event-[0-9a-f]+).*>Results for (.*?)<", event_matches_list[0])
     if (verbose or debug):
       print("Found single matching event (" + elements[2] + ") named " + elements[3] + ".")
@@ -170,7 +134,7 @@ def get_event(current_event_key):
   else:
      #event_ids = map(lambda event_possible_match: re.search(r"(event-[0-9a-f]+)", event_possible_match).group(1), event_matches_list)
      #event_names = map(lambda event_possible_match: re.search(r">Results for (.*?)<", event_possible_match).group(1), event_matches_list)
-     event_ids = list(map(lambda event_comment: event_comment.split(","), event_matches_list))
+     event_ids = list(map(lambda event_comment: event_comment.split(","), possible_event_list))
 
      if debug:
        event_strings = map(lambda event_from_site: f"{event_from_site[2]} -> " + base64.standard_b64decode(event_from_site[3]).decode("utf-8"), event_ids)
@@ -203,7 +167,7 @@ def have_event(choice_frame, event_list, chosen_event):
         mode_label.configure(text="Validating event and associated courses")
         event = event_list[chosen_event][2]
         event_allows_preregistration = (event_list[chosen_event][4] == "Preregistration")
-        root.after(1, lambda: get_courses(event, event_key))
+        root.after(1, lambda: get_courses(event))
     else:
         root.title("QRienteering download station - no event selected")
         error_label = tk.Label(root, text = "No event selected, exiting").pack(side=tk.TOP)
@@ -212,34 +176,21 @@ def have_event(choice_frame, event_list, chosen_event):
 
 
 ###############################################################
-def get_courses(event, event_key):
+def get_courses(event):
     global discovered_courses
-    try:
-        output = make_url_call(VIEW_RESULTS, "event={}&key={}".format(event, event_key))
-    except UrlTimeoutException:
-        output = ""
+    discovered_courses = url_caller.get_courses(event, url_caller.get_xlated_key())
         
-    if (re.search("####,", output) == None):
-        print(f"Event {event} not found, please check if event {event} and key {event_key} are valid.")
-
-    if re.search(f"####,Event,{event},", output) == None:
-        print(f"Event {event} not found, please check if event {event} and key {event_key} are valid.")
-
-    match = re.search("(####,CourseList,.*)", output)
-    if match == None:
+    if discovered_courses == None:
         print(f"Cannot find course list for {event}, is it a valid event?")
         mode_label.configure(text="Connectivity error")
     else:
-        courses = match.group(1).split(",")[2:]
-        discovered_courses = list(map(lambda entry: (entry.lstrip("0123456789-"), entry), courses))
-
         mode_label.configure(text="In Download mode")
         mode_button.configure(state=tk.NORMAL)
 
     if verbose: print ("\n".join(map(lambda s: s[0] + " -> " + s[1], discovered_courses)) + "\n")
 
     create_status_frame()
-    root.after(1, start_sireader_thread)
+    root.after(1, sireader_main)
 
 ###############################################################
 def run_in_offline_mode(enclosing_frame):
@@ -249,67 +200,12 @@ def run_in_offline_mode(enclosing_frame):
     create_status_frame()
     root.title(f"QRienteering download station: offline mode")
     mode_label.configure(text="In Download mode")
-    root.after(1, start_sireader_thread)
+    root.after(1, sireader_main)
+
 
 ###############################################################
-def upload_results(user_info, event_key, event):
-  web_site_string = base64.standard_b64encode(user_info.qr_result_string.encode("utf-8")).decode("utf-8")
-  web_site_string = re.sub("\n", "", web_site_string)
-  web_site_string = re.sub(r"=", "%3D", web_site_string)
-
-  try:
-      output = make_url_call(FINISH_COURSE, "event={}&key={}&si_stick_finish={}".format(event, event_key, web_site_string))
-      is_timeout = False
-  except UrlTimeoutException:
-      output = r"####,ERROR,Timed out contacting web site, validate internet connectivity and web site status"
-      is_timeout = True
-
-  name = "Unknown"
-  match = re.search(r"####,RESULT,(.*)", output)
-  if match != None:
-      finish_entries = match.group(1).split(",")
-      name = base64.standard_b64decode(finish_entries[0]).decode("utf-8")
-      if (user_info.get_lookup_info() == None) or (user_info.get_lookup_info().name != name):
-          if user_info.get_lookup_info() == None:
-              registered_user_info = found_user_info(name=name, stick=user_info.stick_number)
-              user_info.add_lookup_info(registered_user_info)
-          else:
-              if verbose: print (f"Updating entry from {user_info.get_lookup_info().name} to {name} based on result download.\n")
-              user_info.get_lookup_info().name = name
-      course = finish_entries[1]
-      time_taken = int(finish_entries[2])
-
-      output_string = ""
-      if time_taken > 3600:
-          hours = time_taken // 3600
-          time_taken %= 3600
-          output_string += f"{hours:02d}h:"
-      if (time_taken > 60) or (output_string != ""):
-          minutes = time_taken // 60
-          time_taken %= 60
-          output_string += f"{minutes:02d}m:"
-      output_string += f"{time_taken:02d}s"
-      upload_status_string = f"{name} finished {course} in {output_string} - "
-      nre_class_match = re.search(r"####,CLASS,(.*)", output)
-      if nre_class_match != None:
-          upload_status_string += f"({nre_class_match.group(1)}) - "
-  else:
-      upload_status_string = f"Error, download of {user_info.stick_number} failed"
-
-  error_list = re.findall(r"####,ERROR,.*", output)
-  if (len(error_list) == 0):
-      is_error = False
-      upload_status_string += "OK"
-  else:
-      error_list = list(map(lambda entry: entry.split(",")[2], error_list))
-      is_error = True
-      upload_status_string += "\n" + "\n".join(error_list)
-
-  return(upload_status_string, is_error, is_timeout)
-
-###############################################################
-def upload_initial_results(user_info, event_key, event):
-  result_tuple = upload_results(user_info, event_key, event)
+def upload_initial_results(user_info, event):
+  result_tuple = url_caller.upload_results(user_info, url_caller.get_xlated_key(), event)
 
   # result_tuple[2] specifies if the upload call timed out or not
   # Handle it a little specially in the case of a timeout
@@ -323,7 +219,7 @@ def upload_initial_results(user_info, event_key, event):
      # If the username is still None, then there was no registered entry found
      # See if the person is a member and could be quickly registered
       try:
-          possible_member_info = lookup_si_unit(user_info.stick_number)
+          possible_member_info = url_caller.lookup_si_unit(user_info.stick_number, event, event_allows_preregistration)
           if possible_member_info != None:
               user_info.add_lookup_info(possible_member_info)
               extra_status = f"\nIdentified member {user_info.get_lookup_info().name}\n"
@@ -347,138 +243,6 @@ def upload_initial_results(user_info, event_key, event):
   user_info.get_widget().show_as_error(result_tuple[1])
   user_info.get_widget().update(result_tuple[0])
 
-
-
-###############################################################
-def get_24hour_timestamp(punch_time):
-# Take a datetime object, from reading the si card, and convert to seconds since midnight
-  #print "Datetime object looks like: {}".format(dir(punch_time))
-  #return (datetime.timestamp(punch_time))
-  return ((punch_time.hour * 3600) + (punch_time.minute * 60) + punch_time.second)
-  
-
-###############################################################
-def get_sireader(serial_port_name, verbose):
-# connect to base station, the station is automatically detected,
-# if this does not work, give the path to the port as an argument
-# see the pyserial documentation for further information.
-  try:
-    if (serial_port_name != ""):
-      si = SIReaderReadout(port=serial_port_name)
-    else:
-      si = SIReaderReadout()
-  except SIReaderException as sire:
-    si = None
-    if verbose:
-      print (f"Cannot find si download station, reason: {sire}")
-
-  return si
-
-#################################################################
-def read_results(si_reader):
-# wait for a card to be inserted into the reader
-  try:
-    if not si_reader.poll_sicard():
-      return({SI_STICK_KEY : None})
-  except SIReaderException as sire:
-    si_reader.ack_sicard()
-    #print (f"Bad card download, error {sire}.")
-    return ({SI_STICK_KEY : None})
-
-# some properties are now set
-  card_number = si_reader.sicard
-  card_type = si_reader.cardtype
-
-# read out card data
-  try:
-    card_data = si_reader.read_sicard()
-  except (SIReaderException, SIReaderTimeout, SIReaderCardChanged) as sire:
-    #print (f"Bad card ({card_number}) download, error {sire}.")
-    return({SI_STICK_KEY : card_number, SI_BAD_DOWNLOAD : True})
-
-# beep
-  si_reader.ack_sicard()
-  
-# Wait for the card to be removed from the reader
-  while not si_reader.poll_sicard():
-    time.sleep(1)
-
-
-# Convert to the format expected by the rest of the program
-# Check for old sticks which only use 12 hour time, which have some trouble if
-# the event starts before noon and ends after noon
-  if card_data['start'] != None:
-    start_timestamp = get_24hour_timestamp(card_data['start'])
-  else:
-     start_timestamp = 0
-
-  if card_data['finish'] != None:
-    finish_timestamp = get_24hour_timestamp(card_data['finish'])
-  else:
-    finish_timestamp = 0
-    if debug: print (f"No finish timestamp on stick {card_number} - please scan finish and then download.")
-	
-  array_of_punches = []
-  if ((finish_timestamp < start_timestamp) and (finish_timestamp < TWELVE_HOURS_IN_SECONDS)):
-    # Anomaly detected!  Adjust any timestamp less than the start forward by 12 hours
-    # First convert the tuples of datetime objects to just a value in seconds
-    # Then adjust the appropriate entries (those less than the start timestamp) by 12 hours
-    # Then format it as : separated string items
-    if (finish_timestamp != 0): finish_timestamp += TWELVE_HOURS_IN_SECONDS
-    orig_punches = []
-    new_punches = []
-    orig_punches = map(lambda punch: (punch[0], get_24hour_timestamp(punch[1])), card_data['punches'])
-    new_punches = map(lambda punch: (punch[0], punch[1] + TWELVE_HOURS_IN_SECONDS if (punch[1] < start_timestamp) else punch[1]), orig_punches)
-    array_of_punches = map(lambda punch: "{}:{}".format(str(punch[0]), str(punch[1])), new_punches)
-    if verbose: print (f"Adjusting some times for {card_number} by twelve hours.")
-  else:
-    array_of_punches = map(lambda punch: "{}:{}".format(str(punch[0]), str(get_24hour_timestamp(punch[1]))), card_data['punches'])
-
-  #print "Here is the array of punches {}.".format(array_of_punches)
-
-  entry_to_return = {SI_STICK_KEY : card_number, SI_START_KEY : start_timestamp, SI_FINISH_KEY : finish_timestamp,
-                     SI_CONTROLS_KEY : list(array_of_punches)}
-  
-  return(entry_to_return)
-
-
-##################################################################
-# May raise UrlTimeoutException
-def make_url_call(php_script_to_call, params):
-  global web_site_timeout
-
-  if (testing_run and os.path.isfile("../" + php_script_to_call)):
-    param_pair_list = re.split("&", params)
-    param_kv_list = map(lambda param_pair: re.split("=", param_pair), param_pair_list)
-    artificial_get_line_list = map(lambda param_kv: "GET {} {}".format(param_kv[0], param_kv[1]), param_kv_list)
-    artificial_get_file_content = "\n".join(artificial_get_line_list)
-    with open("./artificial_input", "w") as output_file:
-      output_file.write(artificial_get_file_content)
-    cmd = "php ../{}".format(php_script_to_call)
-  else:
-    # 10 second timeout on calls to the web site
-    #cmd = "curl -m 10 -s \"{}/{}?{}\"".format(url, php_script_to_call, params)
-    cmd = f"curl -m {web_site_timeout} -s \"{url}/{php_script_to_call}?{params}\""
-
-  if (debug):
-    print("Running " + cmd)
-
-  try:
-    output = subprocess.check_output(cmd, shell=True)
-  except subprocess.CalledProcessError as cpe:
-    output = cpe.output
-
-  if (debug):
-    print("Command output is: " + output.decode("utf-8"))
-
-  decoded_output = output.decode("utf-8")
-  found_closing_tag = re.search(r"</html>", decoded_output)
-  if found_closing_tag == None:
-      # No output, the command must have timed out
-      raise UrlTimeoutException
-
-  # convert to character representation before returning it
-  return decoded_output
 
 ###################################################################
 class ScrollableFrame(ttk.Frame):
@@ -531,158 +295,12 @@ def switch_mode():
 
 
 
-def registration_window(user_info):
-    user_info.get_widget().disable_buttons()
-
-    registration_frame = tk.Tk()
-    if len(discovered_courses) < 8:
-      registration_frame.geometry("300x300")
-    else:
-      frame_height = (len(discovered_courses) * 30) + 100
-      registration_frame.geometry(f"300x{frame_height}")
-    registration_frame.title("Register entrant")
-
-    localFont = font.Font(root = registration_frame)
-    if font_size != None:
-        localFont.config(size=font_size)
-
-    add_frame_and_font(registration_frame, localFont)
-
-    choices_frame = tk.Frame(registration_frame)
-    button_frame = tk.Frame(registration_frame)
-    chosen_course = tk.StringVar(registration_frame, "unselected")
-
-    info_frame = tk.Frame(choices_frame)
-    name = tk.StringVar(choices_frame)
-    registration_string = ""
-    if user_info.get_lookup_info() != None:
-        name.set(user_info.get_lookup_info().name)
-    else:
-        name.set(NAME_NOT_SET)
-    info_label_1 = tk.Label(info_frame, text="Register ", font=localFont)
-    info_label_2 = tk.Entry(info_frame, textvariable = name, font=localFont)
-    info_label_3 = tk.Label(info_frame, text=f" ({user_info.stick_number})", font=localFont)
-    info_label_1.pack(side=tk.LEFT)
-    info_label_2.pack(side=tk.LEFT)
-    info_label_3.pack(side=tk.LEFT)
-    info_frame.pack(side=tk.TOP)
-
-    for course in discovered_courses:
-        radio_button = tk.Radiobutton(choices_frame, text=course[0], value=course[1], variable=chosen_course, font=localFont)
-        radio_button.pack(side=tk.TOP, anchor=tk.W)
-        if user_info.get_lookup_info().course != None:
-            if user_info.get_lookup_info().course == course[0]:
-                chosen_course.set(course[1])
-
-    cell_phone = tk.StringVar(registration_frame, "")
-    if user_info.get_lookup_info().cell_phone != None:
-      cell_phone.set(user_info.get_lookup_info().cell_phone)
-      
-    cell_phone_label = tk.Label(choices_frame, text="Verify cell phone (re-enter if incorrect):", font=localFont)
-    cell_phone_box = tk.Entry(choices_frame, textvariable = cell_phone, font=localFont)
-    cell_phone_label.pack(side=tk.TOP, anchor=tk.W)
-    cell_phone_box.pack(side=tk.TOP, anchor=tk.W)
-
-    ok_button = tk.Button(button_frame, text="Register for course", command=lambda: register_for_course(user_info, name, chosen_course, cell_phone, registration_frame), font=localFont)
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_registration_window(registration_frame, user_info), font=localFont)
-
-    ok_button.pack(side=tk.LEFT)
-    cancel_button.pack(side=tk.LEFT)
-
-    choices_frame.pack(side=tk.TOP)
-    button_frame.pack(side=tk.TOP)
-
-    registration_frame.protocol("WM_DELETE_WINDOW", lambda: kill_registration_window(registration_frame, user_info))
-    return
-
-
-def register_for_course(user_info, name, chosen_course, cell_phone, enclosing_frame):
-    # The user changed their name from what we have in the registration and/or member database
-    # Update the name now
-    if name.get() != NAME_NOT_SET:
-        user_info.get_lookup_info().name = name.get()
-
-    if user_info.get_lookup_info() != None:
-        message = f"Attempting to register {user_info.get_lookup_info().name} ({user_info.stick_number}) on " 
-    else:
-        message = f"Attempting to register member with SI unit {user_info.stick_number} on "
-
-    user_info.get_widget().update(message + chosen_course.get().lstrip("0123456789-"))
-    enclosing_frame.destroy()
-    remove_frame(enclosing_frame)
-
-    registration_thread = Thread(target=register_by_si_unit, args=(user_info, chosen_course.get(), cell_phone.get()))
-    registration_thread.start()
-    return
-
-
-def mass_start_window(user_info, start_seconds, event_key, event):
-    user_info.get_widget().disable_buttons()
-
-    mass_start_frame = tk.Tk()
-    mass_start_frame.geometry("300x300")
-    mass_start_frame.title("Mass Start course(s)")
-
-    localFont = font.Font(root = mass_start_frame)
-    if font_size != None:
-        localFont.config(size=font_size)
-
-    add_frame_and_font(mass_start_frame, localFont)
-
-    choices_frame = tk.Frame(mass_start_frame)
-    button_frame = tk.Frame(mass_start_frame)
-    info_label = tk.Label(choices_frame, text="Choose course(s) to start:", font=localFont)
-    info_label.pack(side=tk.TOP)
-
-    course_choices = [ ]
-    for course in discovered_courses:
-        chosen_course = tk.StringVar(mass_start_frame, "unselected")
-        course_choices.append(chosen_course)
-        radio_button = tk.Checkbutton(choices_frame, text=course[0], onvalue=course[1], offvalue="unselected", variable=chosen_course, font=localFont)
-        radio_button.pack(side=tk.TOP, anchor=tk.W)
-
-    ok_button = tk.Button(button_frame, text="Mass start course(s)", command=lambda: mass_start_courses(user_info, course_choices, start_seconds, mass_start_frame), font=localFont)
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_mass_start_window(mass_start_frame, user_info), font=localFont)
-
-    ok_button.pack(side=tk.LEFT)
-    cancel_button.pack(side=tk.LEFT)
-
-    choices_frame.pack(side=tk.TOP)
-    button_frame.pack(side=tk.TOP)
-
-    mass_start_frame.protocol("WM_DELETE_WINDOW", lambda: kill_mass_start_window(mass_start_frame, user_info))
-    return
-
-def mass_start_courses(user_info, course_choices, start_seconds, enclosing_frame):
-    courses_to_start = list(filter(lambda elt: elt.get() != "unselected", course_choices))
-    courses_to_start = list(map(lambda elt: elt.get(), courses_to_start))
-
-    if len(courses_to_start) != 0:
-        printable_courses_to_start = list(map(lambda elt: elt.lstrip("0123456789-"), courses_to_start))
-        user_info.get_widget().update("Starting courses: " + ", ".join(printable_courses_to_start))
-        user_info.get_widget().disable_buttons()
-        mass_start_thread = Thread(target=send_mass_start_command, args=(user_info, courses_to_start, start_seconds))
-        mass_start_thread.start()
-    else:
-        user_info.get_widget().update("No courses chosen for mass start")
-
-    enclosing_frame.destroy()
-    remove_frame(enclosing_frame)
-
-    return
-
-#####################################################################
-def kill_mass_start_window(mass_start_window, user_info):
-    mass_start_window.destroy()
-    remove_frame(mass_start_window)
-    user_info.get_widget().enable_buttons()
-
-
 ##############################################################################
 def change_font_size():
     root.after(1, lambda: change_font_size_on_mainloop())
 
 def change_font_size_on_mainloop():
+    global change_font_size_frame
     change_font_size_frame = tk.Tk()
     change_font_size_frame.geometry("300x300")
     change_font_size_frame.title("Change font size")
@@ -690,8 +308,6 @@ def change_font_size_on_mainloop():
     localFont = font.Font(root = change_font_size_frame)
     if font_size != None:
         localFont.config(size=font_size)
-
-    add_frame_and_font(change_font_size_frame, localFont)
 
     choices_frame = tk.Frame(change_font_size_frame)
     button_frame = tk.Frame(change_font_size_frame)
@@ -706,8 +322,8 @@ def change_font_size_on_mainloop():
     font_size_box.pack(side=tk.TOP, anchor=tk.W)
 
 
-    ok_button = tk.Button(button_frame, text="Change font size", command=lambda: make_font_size_change(change_font_size_frame, info_label, new_font_size), font=localFont)
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_change_font_size_frame(change_font_size_frame), font=localFont)
+    ok_button = tk.Button(button_frame, text="Change font size", command=lambda: make_font_size_change(info_label, new_font_size), font=localFont)
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_change_font_size_frame(), font=localFont)
 
     ok_button.pack(side=tk.LEFT)
     cancel_button.pack(side=tk.LEFT)
@@ -719,7 +335,7 @@ def change_font_size_on_mainloop():
     return
 
 #####################################################################
-def make_font_size_change(change_font_size_frame, info_label, new_font_size):
+def make_font_size_change(info_label, new_font_size):
     global font_size
     new_font_size_int = -1
     try:
@@ -730,177 +346,20 @@ def make_font_size_change(change_font_size_frame, info_label, new_font_size):
     if new_font_size_int != -1:
         font_size = new_font_size_int
         myFont.config(size=font_size)
-        propagate_font_size_change_to_all_frames(font_size)
-        kill_change_font_size_frame(change_font_size_frame)
+        propagate_font_size_change(font_size)
+        kill_change_font_size_frame()
     else:
         info_label.configure(text="Please enter a valid font size:")
 
 
 
 #####################################################################
-def kill_change_font_size_frame(change_font_size_frame):
+def kill_change_font_size_frame():
+    global change_font_size_frame
     change_font_size_frame.destroy()
-    remove_frame(change_font_size_frame)
-
-#######################################################################################
-# May raise a UrlTimeoutException
-def lookup_si_unit(stick):
-    global event_allows_preregistration
-
-    lookup_results = None
-    if event_allows_preregistration:
-        lookup_results = make_lookup_si_unit_call(stick, True)
-
-    if lookup_results == None:
-        lookup_results = make_lookup_si_unit_call(stick, False)
-
-    return lookup_results
+    change_font_size_frame = None
 
 
-#######################################################################################
-# May raise a UrlTimeoutException
-def make_lookup_si_unit_call(stick, check_preregistration):
-  if check_preregistration:
-      extra_params = "&checkin=true"
-  else:
-      extra_params = ""
-
-  if exit_all_threads: return({ USER_NAME : None , USER_STICK : stick})
-  output = make_url_call(SI_LOOKUP, f"key={event_key}&event={event}&si_stick={stick}{extra_params}")
-  if exit_all_threads: return({ USER_NAME : None , USER_STICK : stick})
-
-  if debug or verbose:
-    print ("Got results from si lookup: {}".format(output))
-  
-  member_match = re.search(r"####,MEMBER_ENTRY,(.*)", output)
-  if member_match == None:
-      return None
-
-  member_elements = member_match.group(1).split(",")
-  found_name = base64.standard_b64decode(member_elements[0]).decode("utf-8")
-  found_id = member_elements[1]
-  found_email = member_elements[2]
-  cell_phone = member_elements[3]
-  club_name = member_elements[4]
-  course = None
-  if (len(member_elements) > 5):
-      course = member_elements[5]
-
-  nre_info = None
-  nre_info_match = re.search(r"####,CLASSIFICATION_INFO,(.*)", output)
-  if nre_info_match != None:
-      nre_info = nre_info_match.group(1)
-
-  return (found_user_info(name = found_name, member_id = found_id, email = found_email, club = club_name, stick = stick, cell_phone = cell_phone, course = course, nre_info = nre_info))
-
-#######################################################################################
-def register_by_si_unit(user_info, chosen_course, cell_phone):
-
-  if user_info.get_lookup_info() == None:
-    message = f"SI unit {user_info.stick_number} not registered to a known member, registration canceled"
-    user_info.get_widget().update(message)
-    user_info.get_widget().show_as_error(True)
-    return
-  
-  found_name = user_info.get_lookup_info().name
-  stick = user_info.stick_number
-  club_name = user_info.get_lookup_info().club if user_info.get_lookup_info().club != None else ""
-  found_email = user_info.get_lookup_info().email if user_info.get_lookup_info().email != None else ""
-  found_id = user_info.get_lookup_info().member_id if user_info.get_lookup_info().member_id != None else ""
-  registration_list = ["first_name", base64.standard_b64encode(found_name.encode("utf-8")).decode("utf-8"),
-                             "last_name", base64.standard_b64encode("".encode("utf-8")).decode("utf-8"),
-                             "club_name", base64.standard_b64encode(club_name.encode("utf-8")).decode("utf-8"),
-                             "si_stick", base64.standard_b64encode(str(stick).encode("utf-8")).decode("utf-8"),
-                             "email_address", base64.standard_b64encode(found_email.encode("utf-8")).decode("utf-8"),
-                             "registration", base64.standard_b64encode("SI unit".encode("utf-8")).decode("utf-8"),
-                             "member_id", base64.standard_b64encode(found_id.encode("utf-8")).decode("utf-8"),
-                             "cell_phone", base64.standard_b64encode(cell_phone.encode("utf-8")).decode("utf-8"),
-                             "is_member", base64.standard_b64encode("yes".encode("utf-8")).decode("utf-8") ]
-  if user_info.get_lookup_info().nre_info != None:
-      registration_list.append("classification_info")
-      registration_list.append(base64.standard_b64encode(user_info.get_lookup_info().nre_info.encode("utf-8")).decode("utf-8"))
-
-  quoted_course = urllib.parse.quote(chosen_course.encode("utf-8"))
-  quoted_name = urllib.parse.quote(found_name.encode("utf-8"))
-  registration_params = "key={}&event={}&course={}&registration_info={}&competitor_name={}"\
-                               .format(event_key, event, quoted_course, ",".join(registration_list), quoted_name)
-  if debug: print("Attempting to register {} with params {}.".format(found_name, registration_params))
-        
-  if exit_all_threads: return
-  try:
-      output = make_url_call(REGISTER_COMPETITOR, registration_params)
-  except UrlTimeoutException:
-      output = r"####,ERROR,Connectivity error - validate internet connectivity and site status"
-  if exit_all_threads: return
-  if debug: print ("Results of web call {}.".format(output))
-              
-  registration_result = re.search(r"####,RESULT,(.*)", output)
-  nre_class_result = re.search(r"####,CLASS,(.*)", output)
-  errors = re.findall(r"####,ERROR,(.*)", output)
-
-  output_message = ""
-  if registration_result == None:
-      output_message = "Registration failed: "
-      error_found = True
-  else:
-      output_message = registration_result.group(1) + " "
-      if nre_class_result != None:
-          output_message += f"({nre_class_result.group(1)}) "
-      error_found = False
-
-  if (len(errors) > 0):
-      output_message += "\n".join(errors)
-      error_found = True
-
-  user_info.get_widget().show_as_error(error_found)
-  user_info.get_widget().update(output_message)
-
-  return
-
-
-#####################################################################
-def kill_registration_window(registration_window, user_info):
-    registration_window.destroy()
-    remove_frame(registration_window)
-    user_info.get_widget().enable_buttons()
-
-
-#######################################################################################
-def send_mass_start_command(user_info, courses_to_start, start_seconds):
-
-  mass_start_params = f"key={event_key}&event={event}&si_stick_time={start_seconds}&courses_to_start=" + ",".join(courses_to_start)
-  if debug: print(f"Attempting to mass start with params {mass_start_params}.")
-        
-  if exit_all_threads: return
-  try:
-      output = make_url_call(MASS_START, mass_start_params)
-  except UrlTimeoutException:
-      output = r"####,ERROR,Timed out connecting to web site, validate internet connectivity and site status"
-  if exit_all_threads: return
-  if debug: print (f"Results of web call {output}.")
-              
-  mass_start_results = re.findall(r"####,STARTED,(.*)", output)
-  errors = re.findall(r"####,ERROR,(.*)", output)
-
-  output_message = ""
-  if len(mass_start_results) == 0:
-      output_message = "Mass start failed: no competitors_started"
-      error_found = True
-  else:
-      courses_started_list = map(lambda elt: elt.split(",")[1], mass_start_results)
-      started_histogram = Counter(courses_started_list)
-      starts_by_course = map(lambda elt: elt.lstrip("0123456789-") + ":" + (str(started_histogram[elt]) if elt in started_histogram else "0"), courses_to_start)
-      output_message = "Mass starts on course(s): " + ", ".join(starts_by_course)
-      error_found = False
-
-  if (len(errors) > 0):
-      output_message += "\n".join(errors)
-      error_found = True
-
-  user_info.get_widget().show_as_error(error_found)
-  user_info.get_widget().update(output_message)
-
-  return
 
 #####################################################################
 
@@ -915,7 +374,7 @@ def replay_stick(user_info):
 
 def replay_stick_thread(user_info):
     if exit_all_threads: return
-    result_tuple = upload_results(user_info, event_key, event)
+    result_tuple = url_caller.upload_results(user_info, event_key, event)
     if exit_all_threads: return
 
     if user_info.get_missed_finish():
@@ -927,6 +386,20 @@ def replay_stick_thread(user_info):
 
     return
 
+def mass_start_window(user_info, start_seconds, event_key, event):
+    mass_start_courses = mass_start_flow(user_info, discovered_courses)
+    add_long_running_class(mass_start_courses)
+    mass_start_courses.add_completion_callback(remove_long_running_class)
+    mass_start_courses.create_mass_start_window(start_seconds, event_key, event, font_size)
+    return
+
+def registration_window(user_info):
+    registration_flow = register_user(user_info, discovered_courses)
+    add_long_running_class(registration_flow)
+    registration_flow.add_completion_callback(remove_long_running_class)
+    registration_flow.create_registration_window(font_size)
+    return
+
 def interruptible_sleep(time_to_sleep):
     i = 0
     while (i < time_to_sleep):
@@ -935,28 +408,27 @@ def interruptible_sleep(time_to_sleep):
         i += 1
     return
 
-def propagate_font_size_change_to_all_frames(font_size):
-    global open_frames
-    for frame_and_font in open_frames:
-        frame_and_font[1].config(size=font_size)
+def propagate_font_size_change(font_size):
+    for long_running_class in long_running_classes:
+        long_running_class.set_font_size(font_size)
 
-def add_frame_and_font(frame, font):
-    global open_frames
-    open_frames.append((frame, font))
+def add_long_running_class(long_running_class):
+    long_running_classes.append(long_running_class)
 
-def remove_frame(frame):
-    global open_frames
-    for frame_and_font in open_frames:
-        if frame_and_font[0] == frame:
-            open_frames.remove(frame_and_font)
-            return
+def remove_long_running_class(long_running_class):
+    long_running_classes.remove(long_running_class)
+    return
 
 def kill_all_windows():
     global exit_all_threads, root
 
     exit_all_threads = True
-    for frame_and_font in open_frames:
-        frame_and_font[0].destroy()
+    for long_running_class in long_running_classes:
+        long_running_class.force_exit()
+
+    if change_font_size_frame != None:
+        change_font_size_frame.destroy()
+
     root.destroy()
 
 def create_status_frame():
@@ -966,90 +438,12 @@ def create_status_frame():
     status_frame = scrollable_status_frame.scrollable_frame
 
 
-def get_and_log_results_string(event, stick_values):
-    upload_entry_list = [ "{:d};{:d}".format(stick_values[SI_STICK_KEY], stick_values[SI_START_KEY]) ]
-    upload_entry_list.append("start:{:d}".format(stick_values[SI_START_KEY]))
-    upload_entry_list.append("finish:{:d}".format(stick_values[SI_FINISH_KEY]))
-    upload_entry_list.extend(stick_values[SI_CONTROLS_KEY])
-    qr_result_string = ",".join(upload_entry_list)
-    if verbose:
-      print (f"Got results {qr_result_string} for si_stick {stick_values[SI_STICK_KEY]}.")
-
-    with open("{}-results.log".format(event), "a") as LOGFILE:
-      LOGFILE.write(qr_result_string + "\n")
-
-    return qr_result_string
-    
-
-simulated_entries = []
-results_initialized = False
-
-def initialize_fake_results():
-  global results_initialized
-  if results_initialized: return
-  results_initialized = True
-
-  if filename_of_fake_results != "":
-      filename = filename_of_fake_results
-  else:
-      filename = "fake_entries_for_manage_event"
-
-  try:
-    with open(filename, "r") as FAKE_ENTRIES:
-      for line in FAKE_ENTRIES:
-        line = line.strip()
-        if line.startswith("#"): # Ignore comment lines
-          continue
-        if line == "":
-          simulated_entries.append({SI_STICK_KEY : None})
-        else:
-          value = line.split(",")
-          #print (f"The line is --{line}--")
-          #print (f"It has {len(value)} entries.")
-          first_entry_pieces = value[0].split(";")
-          if (len(first_entry_pieces) > 1):
-            # log entry format from a real SI unit download
-            # 503555;0,start:0,finish:0
-            # 24680;1000,start:1000,finish:2000,151:1100,152:1500,155:1600,151:1680
-            si_stick = int(first_entry_pieces[0])
-            start = int(value[1].split(":")[1])
-            finish = int(value[2].split(":")[1])
-          else:
-            # Entry format easier for a human to enter
-            # stick,start,finish,controls
-            # 24680,1000,2000,151:1100,152:1500,155:1600,151:1680
-            si_stick = int(value[0])
-            start = int(value[1])
-            finish = int(value[2])
-
-          if replay_si_stick:
-            if stick_to_replay != "":
-                if int(stick_to_replay) != si_stick:
-                    continue;
-
-          if (len(value) > 3):
-             simulated_entries.append({SI_STICK_KEY : si_stick, SI_START_KEY : start, SI_FINISH_KEY : finish, SI_CONTROLS_KEY : value[3:]})
-          else:
-             simulated_entries.append({SI_STICK_KEY : si_stick, SI_START_KEY : start, SI_FINISH_KEY : finish, SI_CONTROLS_KEY : []})
-  except FileNotFoundError:
-    pass  # Fine if the file is not there, we'll just use the pre-coded fake entries
-
-  if len(simulated_entries) == 0:
-    simulated_entries.extend(fake_entries)
-  
-def read_fake_results():
-  initialize_fake_results()
-  if len(simulated_entries) > 0:
-    return simulated_entries.pop()
-  else:
-    return {SI_STICK_KEY : None}
-
 
 def process_si_stick(user_info, forced_registration):
   if (current_mode == REGISTER_MODE) or forced_registration:
       display_as_error = False
       try:
-          discovered_user_info = lookup_si_unit(user_info.stick_number)
+          discovered_user_info = url_caller.lookup_si_unit(user_info.stick_number, event, event_allows_preregistration)
           if (discovered_user_info != None):
               user_info.add_lookup_info(discovered_user_info)
               message = f"Recognized member {user_info.get_lookup_info().name} with SI unit {user_info.stick_number}"
@@ -1082,57 +476,43 @@ def process_si_stick(user_info, forced_registration):
 
       if (current_mode == REGISTER_MODE) and (user_info.get_lookup_info() != None):
           user_info.get_widget().disable_buttons()
-          root.after(1, lambda: registration_window(user_info))
-
+          registration_window(user_info)
 
   elif (current_mode == DOWNLOAD_MODE):
-      upload_initial_results(user_info, event_key, event)
+      upload_initial_results(user_info, event)
 
   return
 
 
-def start_sireader_thread():
-    sireader_thread = Thread(target=sireader_main)
-    sireader_thread.start()
-
 def sireader_main():
-    global event
     if exit_all_threads: return
-    if not testing_run and use_real_sireader:
-      si_reader = get_sireader(serial_port, verbose)
-      if (si_reader == None):
-        progress_label.configure(text="ERROR: Cannot find si download station, is it plugged in?")
-        if (serial_port != ""):
-          print (f"\tAttempted to read from {serial_port}")
-        return
-    else:
-      si_reader = None
+    found_reader = (si_reader.get() != None)
+    if not found_reader:
+      progress_label.configure(text="ERROR: Cannot find si download station, is it plugged in?")
+      if (serial_port != ""):
+        print (f"\tAttempted to read from {serial_port}")
+      return
     
     if run_offline:
         time_tuple = time.localtime(None)
         event = f"event-offline-{time_tuple.tm_year:04d}-{time_tuple.tm_mon:02d}-{time_tuple.tm_mday:02d}-"
 
-    loop_count = 0
-    while True:
+
+    si_continuous_reader = si_processor(si_reader, found_stick_callback, status_update_callback)
+    add_long_running_class(si_continuous_reader)
+    si_continuous_reader.start()
+
+def status_update_callback(si_continuous_reader):
+    time_tuple = time.localtime(None)
+    progress_label.configure(text="Awaiting new results at: {:02d}:{:02d}:{:02d}".format(time_tuple.tm_hour, time_tuple.tm_min, time_tuple.tm_sec))
+
+
+def found_stick_callback(si_continuous_reader, read_stick):
       forced_registration = False
       finish_adjusted = False
-      if exit_all_threads: return
 
-      if not testing_run and use_real_sireader:
-        si_stick_entry = read_results(si_reader)
-      elif use_fake_read_results:
-        si_stick_entry = read_fake_results()
-      else:
-        si_stick_entry = { SI_STICK_KEY : None }
-    
-      if ((loop_count % 60) == 0):
-        time_tuple = time.localtime(None)
-        progress_label.configure(text="Awaiting new results at: {:02d}:{:02d}:{:02d}".format(time_tuple.tm_hour, time_tuple.tm_min, time_tuple.tm_sec))
-    
-      if si_stick_entry[SI_STICK_KEY] == None:
-        pass
-      elif SI_BAD_DOWNLOAD in si_stick_entry:
-        user_info = stick_info(si_stick_entry[SI_STICK_KEY], "")
+      if read_stick.bad_download:
+        user_info = stick_info(read_stick.stick)
         user_info.set_download_possible(False)
         user_info.add_widget(offline_status_widget(user_info.stick_number, myFont))
         message = f"Prematurely removed SI unit {user_info.stick_number} from download station\n"
@@ -1142,9 +522,9 @@ def sireader_main():
         user_info.get_widget().enable_buttons()
         user_info.get_widget().show(root)
       else:  # Process a valid stick download
-        if verbose: print(f"\nFound new key: {si_stick_entry[SI_STICK_KEY]}")
+        if verbose: print(f"\nFound new key: {read_stick.stick}")
     
-        qr_result_string = get_and_log_results_string(event, si_stick_entry)
+        qr_result_string = si_continuous_reader.get_and_log_results_string(read_stick, event)
     
         # If the finish is 0, then the finish wasn't scanned - we've logged it already so we have the raw data
         # By editing the log file and replaying the SI stick, we can adjust the result afterwards if necessary.
@@ -1154,42 +534,43 @@ def sireader_main():
         # If start was also not scanned, then the stick was likely cleared and this is probably a registration
         # If start was scanned, then assign a finish split of 10 minutes (something ridiculous) and allow the entry
         # The competitor can always go back and punch finish and then download again
-        if si_stick_entry[SI_FINISH_KEY] == 0:
-            if si_stick_entry[SI_START_KEY] == 0:
+        if read_stick.finish_timestamp == 0:
+            if read_stick.start_timestamp == 0:
                 forced_registration = True
             else:
-                punch_times = list(map(lambda punch: int(punch.split(":")[1]), si_stick_entry[SI_CONTROLS_KEY]))
+                punch_times = list(map(lambda punch: int(punch.split(":")[1]), read_stick.controls_list))
                 if len(punch_times) > 0:
                     last_punch = max(punch_times)
                 else:
                     last_punch = 0
 
-                if last_punch > si_stick_entry[SI_START_KEY]:
-                    si_stick_entry[SI_FINISH_KEY] = last_punch + MISSED_FINISH_PUNCH_SPLIT
+                if last_punch > read_stick.start_timestamp:
+                    read_stick.finish_timestamp = last_punch + MISSED_FINISH_PUNCH_SPLIT
                 else:
-                    si_stick_entry[SI_FINISH_KEY] = si_stick_entry[SI_START_KEY] + MISSED_FINISH_PUNCH_SPLIT
-                qr_result_string = get_and_log_results_string(event, si_stick_entry)
+                    read_stick.finish_timestamp = read_stick.start_timestamp + MISSED_FINISH_PUNCH_SPLIT
+                qr_result_string = si_continuous_reader.get_and_log_results_string(read_stick, event)
                 finish_adjusted = True
 
         if not run_offline:
           if exit_all_threads: return
           if current_mode == MASS_START_MODE:
               # Get the start time from the result string
-              start_seconds = si_stick_entry[SI_START_KEY]
+              start_seconds = read_stick.start_timestamp
 
               hours = start_seconds // 3600
               minutes = (start_seconds - (hours * 3600)) // 60
               seconds = (start_seconds - (hours * 3600) - (minutes * 60))
               status_message = f"Use mass start time of: {hours:02d}h:{minutes:02d}m:{seconds:02d}s ({start_seconds})."
 
-              user_info = stick_info(si_stick_entry[SI_STICK_KEY], qr_result_string)
+              user_info = stick_info(read_stick.stick, qr_result_string)
 
-              user_info.add_widget(mass_start_status_widget(user_info.stick_number, myFont, user_info, mass_start_window, start_seconds, event_key, event))
+              user_info.add_widget(mass_start_status_widget(user_info.stick_number, myFont, user_info,
+                                                mass_start_window, start_seconds, url_caller.get_xlated_key(), event))
               user_info.get_widget().create(status_frame, status_message)
               user_info.get_widget().enable_buttons()
               user_info.get_widget().show(root)
           else:
-              user_info = stick_info(si_stick_entry[SI_STICK_KEY], qr_result_string)
+              user_info = stick_info(read_stick.stick, qr_result_string)
               if finish_adjusted:
                   user_info.set_missed_finish(True)
 
@@ -1197,21 +578,22 @@ def sireader_main():
               user_info.get_widget().create(status_frame, f"Processing SI unit {user_info.stick_number}")
               user_info.get_widget().show(root)
 
+              # Do this off the main si reader thread so that the next stick can be read
               process_si_stick_thread = Thread(target=process_si_stick, args=(user_info, forced_registration))
               process_si_stick_thread.start()
 
           if exit_all_threads: return
         else:
-          total_time = si_stick_entry[SI_FINISH_KEY] - si_stick_entry[SI_START_KEY]
+          total_time = read_stick.finish_timestamp - read_stick.start_timestamp
           hours = total_time // 3600
           minutes = (total_time - (hours * 3600)) // 60
           seconds = (total_time - (hours * 3600) - (minutes * 60))
 
-          user_info = stick_info(si_stick_entry[SI_STICK_KEY], qr_result_string)
+          user_info = stick_info(read_stick.stick, qr_result_string)
           if finish_adjusted:
               user_info.set_missed_finish(True)
 
-          status_message = f"Downloaded results for si_stick {si_stick_entry[SI_STICK_KEY]}, time was {hours}h:{minutes}m:{seconds}s ({total_time})."
+          status_message = f"Downloaded results for si_stick {read_stick.stick}, time was {hours}h:{minutes}m:{seconds}s ({total_time})."
           if finish_adjusted:
               user_info.set_missed_finish(True)
               status_message = status_message + "\n" + MISSED_FINISH_PUNCH_MESSAGE
@@ -1221,11 +603,6 @@ def sireader_main():
           user_info.get_widget().enable_buttons()
           user_info.get_widget().show(root)
     
-      if testing_run and not continuous_testing:
-        break   # While testing, no need to wait for more results
-    
-      time.sleep(1)
-      loop_count += 1
 
 
 #########################################################
@@ -1299,8 +676,6 @@ if ("font_size" in initializations):
   font_size = int(initializations["font_size"])
   myFont.config(size=font_size)
 
-replay_si_stick = 0
-stick_to_replay = ""
 filename_of_fake_results = ""
 
 try:
@@ -1324,7 +699,6 @@ for opt, arg in opts:
     serial_port = arg
   elif opt == "-f":
     use_fake_read_results = True
-    use_real_sireader = False
     filename_of_fake_results = arg
   elif opt == "-c":
     continuous_testing = True
@@ -1334,9 +708,6 @@ for opt, arg in opts:
     verbose = 1
   elif opt == "-t":
     testing_run = 1
-  elif opt == "-r":
-    replay_si_stick = 1
-    stick_to_replay = arg
   else:
     print (f"ERROR: Unknown option {opt}.")
     usage()
@@ -1352,8 +723,14 @@ if (event_key == ""):
   usage()
   sys.exit(1)
 
-#status_reader_thread = Thread(target=slowly_add_status)
-#status_reader_thread.start()
+url_caller = url_caller(url, web_site_timeout)
+if use_fake_read_results:
+    si_reader = fake_si_reader()
+    si_reader.initialize(filename_of_fake_results)
+else:
+    si_reader = real_si_reader()
+    if serial_port != "":
+        si_reader.set_serial_port(serial_port)
 
 if event != "":
     root.after(1000, lambda: have_event(None, (None, None, event, event), 0))
