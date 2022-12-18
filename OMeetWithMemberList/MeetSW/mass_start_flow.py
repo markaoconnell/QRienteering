@@ -37,11 +37,11 @@ class mass_start_flow(LongRunningClass):
     def create_mass_start_window(self, start_seconds, event_key, event, font_size):
         self.user_info.get_widget().disable_buttons()
     
-        self.mass_start_frame = tk.Tk()
+        self.mass_start_frame = tk.Toplevel()
         self.mass_start_frame.geometry("300x300")
         self.mass_start_frame.title("Mass Start course(s)")
     
-        localFont = font.Font(root = mass_start_frame)
+        localFont = font.Font(root = self.mass_start_frame)
         if font_size != None:
             localFont.config(size=font_size)
     
@@ -51,8 +51,8 @@ class mass_start_flow(LongRunningClass):
         info_label.pack(side=tk.TOP)
     
         course_choices = [ ]
-        for course in discovered_courses:
-            chosen_course = tk.StringVar(mass_start_frame, "unselected")
+        for course in self.course_list:
+            chosen_course = tk.StringVar(self.mass_start_frame, "unselected")
             course_choices.append(chosen_course)
             radio_button = tk.Checkbutton(choices_frame, text=course[0], onvalue=course[1], offvalue="unselected", variable=chosen_course, font=localFont)
             radio_button.pack(side=tk.TOP, anchor=tk.W)
@@ -136,8 +136,5 @@ class mass_start_flow(LongRunningClass):
 
     def force_exit(self):
         super().force_exit()
-        if self.mass_start_frame != None:
-            self.mass_start_frame.destroy()
-            self.mass_start_frame = None
         self.force_exit_called = True
     

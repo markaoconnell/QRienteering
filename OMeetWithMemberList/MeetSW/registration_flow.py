@@ -29,7 +29,7 @@ class register_user(LongRunningClass):
     def create_registration_window(self, font_size):
         self.user_info.get_widget().disable_buttons()
     
-        self.registration_frame = tk.Tk()
+        self.registration_frame = tk.Toplevel()
         if len(self.course_list) < 8:
           self.registration_frame.geometry("300x300")
         else:
@@ -187,8 +187,5 @@ class register_user(LongRunningClass):
 
     def force_exit(self):
         super().force_exit()
-        if self.registration_frame != None:
-            self.registration_frame.destroy()
-            self.registration_frame = None
         self.force_exit_called = True
     
