@@ -301,29 +301,25 @@ def change_font_size():
 
 def change_font_size_on_mainloop():
     global change_font_size_frame
-    change_font_size_frame = tk.Tk()
+    change_font_size_frame = tk.Toplevel()
     change_font_size_frame.geometry("300x300")
     change_font_size_frame.title("Change font size")
 
-    localFont = font.Font(root = change_font_size_frame)
-    if font_size != None:
-        localFont.config(size=font_size)
-
     choices_frame = tk.Frame(change_font_size_frame)
     button_frame = tk.Frame(change_font_size_frame)
-    info_label = tk.Label(choices_frame, text="Enter new font size:", font=localFont)
+    info_label = tk.Label(choices_frame, text="Enter new font size:", font=myFont)
     info_label.pack(side=tk.TOP, anchor=tk.W)
 
     new_font_size = tk.StringVar(choices_frame, "")
     if font_size != None:
       new_font_size.set(str(font_size))
       
-    font_size_box = tk.Entry(choices_frame, textvariable = new_font_size, font=localFont)
+    font_size_box = tk.Entry(choices_frame, textvariable = new_font_size, font=myFont)
     font_size_box.pack(side=tk.TOP, anchor=tk.W)
 
 
-    ok_button = tk.Button(button_frame, text="Change font size", command=lambda: make_font_size_change(info_label, new_font_size), font=localFont)
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_change_font_size_frame(), font=localFont)
+    ok_button = tk.Button(button_frame, text="Change font size", command=lambda: make_font_size_change(info_label, new_font_size), font=myFont)
+    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_change_font_size_frame(), font=myFont)
 
     ok_button.pack(side=tk.LEFT)
     cancel_button.pack(side=tk.LEFT)
@@ -346,7 +342,6 @@ def make_font_size_change(info_label, new_font_size):
     if new_font_size_int != -1:
         font_size = new_font_size_int
         myFont.config(size=font_size)
-        propagate_font_size_change(font_size)
         kill_change_font_size_frame()
     else:
         info_label.configure(text="Please enter a valid font size:")
@@ -387,17 +382,17 @@ def replay_stick_thread(user_info):
     return
 
 def mass_start_window(user_info, start_seconds, event_key, event):
-    mass_start_courses = mass_start_flow(user_info, discovered_courses)
+    mass_start_courses = mass_start_flow(user_info, discovered_courses, myFont)
     add_long_running_class(mass_start_courses)
     mass_start_courses.add_completion_callback(remove_long_running_class)
-    mass_start_courses.create_mass_start_window(start_seconds, event_key, event, font_size)
+    mass_start_courses.create_mass_start_window(start_seconds, event_key, event)
     return
 
 def registration_window(user_info):
-    registration_flow = register_user(user_info, discovered_courses)
+    registration_flow = register_user(user_info, discovered_courses, myFont)
     add_long_running_class(registration_flow)
     registration_flow.add_completion_callback(remove_long_running_class)
-    registration_flow.create_registration_window(font_size)
+    registration_flow.create_registration_window()
     return
 
 def interruptible_sleep(time_to_sleep):
@@ -407,10 +402,6 @@ def interruptible_sleep(time_to_sleep):
         time.sleep(1)
         i += 1
     return
-
-def propagate_font_size_change(font_size):
-    for long_running_class in long_running_classes:
-        long_running_class.set_font_size(font_size)
 
 def add_long_running_class(long_running_class):
     long_running_classes.append(long_running_class)

@@ -17,48 +17,41 @@ from LongRunningClass import LongRunningClass
 
 class mass_start_flow(LongRunningClass):
 
-    def __init__(self, user_info, course_list):
+    def __init__(self, user_info, course_list, font):
         super().__init__()
         self.user_info = user_info
         self.course_list = course_list
         self.mass_start_frame = None
-        self.local_font = None
+        self.local_font = font
         self.force_exit_called = False
         self.completion_callback = None
         pass
-
-    def set_font_size(self, new_font_size):
-        self.local_font.config(size = new_font_size)
 
     def add_completion_callback(self, callback):
         self.completion_callback = callback
 
     
-    def create_mass_start_window(self, start_seconds, event_key, event, font_size):
+    def create_mass_start_window(self, start_seconds, event_key, event):
         self.user_info.get_widget().disable_buttons()
     
         self.mass_start_frame = tk.Toplevel()
         self.mass_start_frame.geometry("300x300")
         self.mass_start_frame.title("Mass Start course(s)")
     
-        localFont = font.Font(root = self.mass_start_frame)
-        if font_size != None:
-            localFont.config(size=font_size)
-    
         choices_frame = tk.Frame(self.mass_start_frame)
         button_frame = tk.Frame(self.mass_start_frame)
-        info_label = tk.Label(choices_frame, text="Choose course(s) to start:", font=localFont)
+        info_label = tk.Label(choices_frame, text="Choose course(s) to start:", font=self.local_font)
         info_label.pack(side=tk.TOP)
     
         course_choices = [ ]
         for course in self.course_list:
             chosen_course = tk.StringVar(self.mass_start_frame, "unselected")
             course_choices.append(chosen_course)
-            radio_button = tk.Checkbutton(choices_frame, text=course[0], onvalue=course[1], offvalue="unselected", variable=chosen_course, font=localFont)
+            radio_button = tk.Checkbutton(choices_frame, text=course[0], onvalue=course[1], offvalue="unselected", variable=chosen_course, font=self.local_font)
             radio_button.pack(side=tk.TOP, anchor=tk.W)
     
-        ok_button = tk.Button(button_frame, text="Mass start course(s)", command=lambda: self.mass_start_courses(course_choices, start_seconds), font=localFont)
-        cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: self.exit_mass_start_flow(), font=localFont)
+        ok_button = tk.Button(button_frame, text="Mass start course(s)", command=lambda: self.mass_start_courses(course_choices, start_seconds), font=self.local_font)
+        cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: self.exit_mass_start_flow(), font=self.local_font)
     
         ok_button.pack(side=tk.LEFT)
         cancel_button.pack(side=tk.LEFT)

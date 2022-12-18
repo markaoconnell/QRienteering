@@ -10,23 +10,20 @@ from url_caller import UrlTimeoutException, url_caller
 
 class register_user(LongRunningClass):
 
-    def __init__(self, user_info, course_list):
+    def __init__(self, user_info, course_list, font):
         super().__init__()
         self.user_info = user_info
         self.course_list = course_list
         self.registration_frame = None
-        self.local_font = None
+        self.local_font = font
         self.force_exit_called = False
         self.completion_callback = None
         pass
 
-    def set_font_size(self, new_font_size):
-        self.local_font.config(size = new_font_size)
-
     def add_completion_callback(self, callback):
         self.completion_callback = callback
 
-    def create_registration_window(self, font_size):
+    def create_registration_window(self):
         self.user_info.get_widget().disable_buttons()
     
         self.registration_frame = tk.Toplevel()
@@ -36,10 +33,6 @@ class register_user(LongRunningClass):
           frame_height = (len(self.course_list) * 30) + 100
           self.registration_frame.geometry(f"300x{frame_height}")
         self.registration_frame.title("Register entrant")
-    
-        self.local_font = font.Font(root = self.registration_frame)
-        if font_size != None:
-            self.local_font.config(size=font_size)
     
         choices_frame = tk.Frame(self.registration_frame)
         button_frame = tk.Frame(self.registration_frame)
