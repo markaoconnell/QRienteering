@@ -18,6 +18,7 @@ from registration_flow import register_user
 from mass_start_flow import mass_start_flow
 from si_reader import si_processor, real_si_reader, fake_si_reader
 from url_caller import url_caller, UrlTimeoutException
+from font_size_change_flow import change_font_size_flow
 
 progress_label = None
 mode_label = None
@@ -194,8 +195,10 @@ def get_courses(event):
 
 ###############################################################
 def run_in_offline_mode(enclosing_frame):
-    global run_offline
+    global run_offline, event
     run_offline = True
+    time_tuple = time.localtime(None)
+    event = f"event-offline-{time_tuple.tm_year:04d}-{time_tuple.tm_mon:02d}-{time_tuple.tm_mday:02d}"
     enclosing_frame.destroy()
     create_status_frame()
     root.title(f"QRienteering download station: offline mode")
@@ -295,64 +298,13 @@ def switch_mode():
 
 
 
-##############################################################################
-def change_font_size():
-    root.after(1, lambda: change_font_size_on_mainloop())
-
-def change_font_size_on_mainloop():
-    global change_font_size_frame
-    change_font_size_frame = tk.Toplevel()
-    change_font_size_frame.geometry("300x300")
-    change_font_size_frame.title("Change font size")
-
-    choices_frame = tk.Frame(change_font_size_frame)
-    button_frame = tk.Frame(change_font_size_frame)
-    info_label = tk.Label(choices_frame, text="Enter new font size:", font=myFont)
-    info_label.pack(side=tk.TOP, anchor=tk.W)
-
-    new_font_size = tk.StringVar(choices_frame, "")
-    if font_size != None:
-      new_font_size.set(str(font_size))
-      
-    font_size_box = tk.Entry(choices_frame, textvariable = new_font_size, font=myFont)
-    font_size_box.pack(side=tk.TOP, anchor=tk.W)
-
-
-    ok_button = tk.Button(button_frame, text="Change font size", command=lambda: make_font_size_change(info_label, new_font_size), font=myFont)
-    cancel_button = tk.Button(button_frame, text="Cancel", command=lambda: kill_change_font_size_frame(), font=myFont)
-
-    ok_button.pack(side=tk.LEFT)
-    cancel_button.pack(side=tk.LEFT)
-
-    choices_frame.pack(side=tk.TOP)
-    button_frame.pack(side=tk.TOP)
-
-    change_font_size_frame.protocol("WM_DELETE_WINDOW", lambda: kill_change_font_size_frame(change_font_size_frame))
-    return
 
 #####################################################################
-def make_font_size_change(info_label, new_font_size):
+def set_new_font_size(font_size_change_window):
     global font_size
-    new_font_size_int = -1
-    try:
-        new_font_size_int = int(new_font_size.get())
-    except ValueError:
-        pass
-
-    if new_font_size_int != -1:
-        font_size = new_font_size_int
-        myFont.config(size=font_size)
-        kill_change_font_size_frame()
-    else:
-        info_label.configure(text="Please enter a valid font size:")
-
-
-
-#####################################################################
-def kill_change_font_size_frame():
-    global change_font_size_frame
-    change_font_size_frame.destroy()
-    change_font_size_frame = None
+    font_size = font_size_change_window.get_new_font_size()
+    myFont.config(size = font_size_change_window.get_new_font_size())
+    remove_long_running_class(font_size_change_window)
 
 
 
@@ -395,12 +347,11 @@ def registration_window(user_info):
     registration_flow.create_registration_window()
     return
 
-def interruptible_sleep(time_to_sleep):
-    i = 0
-    while (i < time_to_sleep):
-        if exit_all_threads: return
-        time.sleep(1)
-        i += 1
+def change_font_size_window():
+    change_font_size = change_font_size_flow(myFont)
+    add_long_running_class(change_font_size)
+    change_font_size.add_completion_callback(set_new_font_size)
+    change_font_size.create_font_size_change_window(font_size)
     return
 
 def add_long_running_class(long_running_class):
@@ -416,9 +367,6 @@ def kill_all_windows():
     exit_all_threads = True
     for long_running_class in long_running_classes:
         long_running_class.force_exit()
-
-    if change_font_size_frame != None:
-        change_font_size_frame.destroy()
 
     root.destroy()
 
@@ -590,7 +538,7 @@ def found_stick_callback(si_continuous_reader, read_stick):
               status_message = status_message + "\n" + MISSED_FINISH_PUNCH_MESSAGE
 
           user_info.add_widget(offline_status_widget(user_info.stick_number, myFont))
-          user_info.get_widget().create(staus_frame, status_message)
+          user_info.get_widget().create(status_frame, status_message)
           user_info.get_widget().enable_buttons()
           user_info.get_widget().show(root)
     
@@ -611,7 +559,7 @@ myFont = font.Font()
 menubar = tk.Menu(root)
 options_menu = tk.Menu(menubar, tearoff = 0)
 options_menu.add_command(label = "Mass start from SI unit", command = switch_to_mass_start_mode)
-options_menu.add_command(label = "Change font size", command = change_font_size)
+options_menu.add_command(label = "Change font size", command = change_font_size_window)
 menubar.add_cascade(label = "Options", menu = options_menu)
 root.config(menu = menubar)
 
