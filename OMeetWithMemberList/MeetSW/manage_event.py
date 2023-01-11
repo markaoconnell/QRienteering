@@ -432,11 +432,6 @@ def sireader_main():
         print (f"\tAttempted to read from {serial_port}")
       return
     
-    if run_offline:
-        time_tuple = time.localtime(None)
-        event = f"event-offline-{time_tuple.tm_year:04d}-{time_tuple.tm_mon:02d}-{time_tuple.tm_mday:02d}-"
-
-
     si_continuous_reader = si_processor(si_reader, found_stick_callback, status_update_callback)
     add_long_running_class(si_continuous_reader)
     si_continuous_reader.start()
