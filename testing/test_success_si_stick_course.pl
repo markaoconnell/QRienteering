@@ -48,6 +48,11 @@ $GET{"competitor_name"} = $COMPETITOR_NAME;
 register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
 $competitor_id = $TEST_INFO{"competitor_id"};
 
+my($cached_competitor) = get_stick_xlation($GET{"key"}, $GET{"event"}, "5086148225");
+if ($cached_competitor ne $competitor_id) {
+  error_and_exit("Cached competitor for stick 5086148225 does not match expected competitor, got ${cached_competitor}.\n");
+}
+
 success();
 
 
@@ -65,7 +70,7 @@ $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
 $GET{"si_stick_finish"} = $base_64_results;
 
 
-finish_with_stick_successfully($competitor_id, "00-White", \%GET, \%COOKIE, \%TEST_INFO);
+finish_with_stick_successfully($competitor_id, "5086148225", "00-White", \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
 validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000210,201");
 validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000300,202");
@@ -100,7 +105,7 @@ $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
 $GET{"si_stick_finish"} = $base_64_results;
 
 
-finish_with_stick_dnf($competitor_id, "00-White", \%GET, \%COOKIE, \%TEST_INFO);
+finish_with_stick_dnf($competitor_id, "3291200", "00-White", \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
 validate_file_present("${path}/Competitors/${competitor_id}/dnf");
 validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000510,201");
@@ -132,7 +137,7 @@ $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
 $GET{"si_stick_finish"} = $base_64_results;
 
 
-finish_with_stick_successfully($competitor_id, "01-Yellow", \%GET, \%COOKIE, \%TEST_INFO);
+finish_with_stick_successfully($competitor_id, "4371408", "01-Yellow", \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
 validate_file_present("${path}/Competitors/${competitor_id}/extra");
 validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000910,202");
@@ -170,7 +175,7 @@ $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
 $GET{"si_stick_finish"} = $base_64_results;
 
 
-finish_scoreO_with_stick_successfully($competitor_id, "02-ScoreO", 120 - 11, \%GET, \%COOKIE, \%TEST_INFO);
+finish_scoreO_with_stick_successfully($competitor_id, "1221", "02-ScoreO", 120 - 11, \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
 validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001734,304");
 validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001812,302");

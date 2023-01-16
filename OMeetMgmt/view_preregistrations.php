@@ -55,6 +55,7 @@ function register_competitor($entrant_info) {
   fclose($competitor_file);
   file_put_contents("{$competitor_path}/course", $course_hash[$entrant_info["course"]]);
   file_put_contents("{$competitor_path}/si_stick", $entrant_info["stick"]);
+  put_stick_xlation($event, $key, $competitor_id, $entrant_info["stick"]);
   mkdir("./{$competitor_path}/controls_found");
 
   // Add the registration information

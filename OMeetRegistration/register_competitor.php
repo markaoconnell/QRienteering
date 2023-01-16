@@ -110,7 +110,7 @@ if (!$error) {
     // Save the information about the competitor
     fwrite($competitor_file, $saved_competitor_name);
     fclose($competitor_file);
-    file_put_contents($competitor_path . "/course", $course);
+    file_put_contents("{$competitor_path}/course", $course);
     mkdir("./{$competitor_path}/controls_found");
 
     $current_time = time();
@@ -121,6 +121,7 @@ if (!$error) {
       setcookie("{$key}-safety_info", $raw_registration_info, $current_time + 3600 * 4, $cookie_path);
       if ($registration_info["si_stick"] != "") {
         file_put_contents("{$competitor_path}/si_stick", $registration_info["si_stick"]);
+        put_stick_xlation($event, $key, $competitor_id, $registration_info["si_stick"]);
         $using_si_stick = true;
       }
 

@@ -358,6 +358,13 @@ sub register_member_successfully_inner {
   if ($#directory_contents != -1) {
     error_and_exit("More files exist in $path than expected: " . join("--", @directory_contents));
   }
+
+  if ($has_stick) {
+    my($cached_id) = get_stick_xlation($get_ref->{"key"}, $get_ref->{"event"}, $registration_info_ref->{"si_stick"});
+    if ($cached_id ne $competitor_id) {
+      error_and_exit("SI stick registration failed, cached \"${cached_id}\" vs \"${competitor_id}\" expected.\n");
+    }
+  }
   
   @directory_contents = check_directory_contents("$path/controls_found", qw());
   if ($#directory_contents != -1) {
@@ -509,13 +516,23 @@ sub finish_successfully {
 ###########
 # Finish the course successfully
 sub finish_with_stick_successfully {
-  my($competitor_id, $course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  my($competitor_id, $stick, $course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+
+  my($cached_competitor) = get_stick_xlation($get_ref->{"key"}, $get_ref->{"event"}, $stick);
+  if ($cached_competitor ne $competitor_id) {
+    error_and_exit("Finish failed - cached competitor \"${cached_competitor}\" does not match competitor \"${competitor_id}\".\n");
+  }
 
   $test_info_ref->{"subroutine"} = "finish_with_stick_successfully";
   hashes_to_artificial_file();
   $cmd = "php ../OMeet/finish_course.php";
   $output = qx($cmd);
   
+  my($post_cached_competitor) = get_stick_xlation($get_ref->{"key"}, $get_ref->{"event"}, $stick);
+  if ($post_cached_competitor ne "") {
+    error_and_exit("Finish failed - cached competitor not cleared, is \"${post_cached_competitor}\" vs competitor \"${competitor_id}\".\n$output");
+  }
+
   my($readable_course_name) = $course;
   $readable_course_name =~ s/^[0-9]+-//;
 
@@ -641,13 +658,25 @@ sub finish_score_successfully {
 ###########
 # Finish the course successfully
 sub finish_scoreO_with_stick_successfully {
-  my($competitor_id, $course, $expected_points, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  my($competitor_id, $stick, $course, $expected_points, $get_ref, $cookie_ref, $test_info_ref) = @_;
+
+  my($cached_competitor) = get_stick_xlation($get_ref->{"key"}, $get_ref->{"event"}, $stick);
+  if ($cached_competitor ne $competitor_id) {
+    error_and_exit("Finish failed - cached competitor \"${cached_competitor}\" does not match competitor \"${competitor_id}\".\n");
+  }
+
 
   $test_info_ref->{"subroutine"} = "finish_scoreO_with_stick_successfully";
   hashes_to_artificial_file();
   $cmd = "php ../OMeet/finish_course.php";
   $output = qx($cmd);
   
+
+  my($post_cached_competitor) = get_stick_xlation($get_ref->{"key"}, $get_ref->{"event"}, $stick);
+  if ($post_cached_competitor ne "") {
+    error_and_exit("Finish failed - cached competitor not cleared, is \"${post_cached_competitor}\" vs competitor \"${competitor_id}\".\n$output");
+  }
+
   my($readable_course_name) = $course;
   $readable_course_name =~ s/^[0-9]+-//;
 
@@ -779,12 +808,24 @@ sub finish_with_dnf {
 ###########
 # Finish the course with a DNF
 sub finish_with_stick_dnf {
-  my($competitor_id, $course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  my($competitor_id, $stick, $course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+
+  my($cached_competitor) = get_stick_xlation($get_ref->{"key"}, $get_ref->{"event"}, $stick);
+  if ($cached_competitor ne $competitor_id) {
+    error_and_exit("Finish failed - cached competitor \"${cached_competitor}\" does not match competitor \"${competitor_id}\".\n");
+  }
 
   $test_info_ref->{"subroutine"} = "finish_with_stick_dnf";
   hashes_to_artificial_file();
   $cmd = "php ../OMeet/finish_course.php";
   $output = qx($cmd);
+
+
+  my($post_cached_competitor) = get_stick_xlation($get_ref->{"key"}, $get_ref->{"event"}, $stick);
+  if ($post_cached_competitor ne "") {
+    error_and_exit("Finish failed - cached competitor not cleared, is \"${post_cached_competitor}\" vs competitor \"${competitor_id}\".\n");
+  }
+
   
   my($readable_course_name) = $course;
   $readable_course_name =~ s/^[0-9]+-//;
@@ -889,7 +930,7 @@ sub create_event_successfully {
   }
   $number_courses++;   # There is normally one fewer newline than the number of courses
   
-  @directory_contents = check_directory_contents($event_path, qw(description Competitors Results Courses no_redirects));
+  @directory_contents = check_directory_contents($event_path, qw(description Competitors Results Courses no_redirects StickXlations));
   if (scalar(@directory_contents) != 0) {
     error_and_exit("More files exist in $event_path than expected: " . join("--", @directory_contents));
   }

@@ -222,6 +222,7 @@ function create_event($key, $event_description) {
   mkdir("{$event_path}/Competitors");
   mkdir("{$event_path}/Courses");
   mkdir("{$event_path}/Results");
+  mkdir("{$event_path}/StickXlations");
   file_put_contents("{$event_path}/description", $event_description);
   file_put_contents("{$event_path}/no_redirects", "");
 

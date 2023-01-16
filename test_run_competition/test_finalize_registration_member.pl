@@ -294,6 +294,24 @@ if ($output !~ /Unknown event \(empty\)/) {
 
 success();
 
+###########
+# Test 13 - Failed member registration - no cell phone
+# 
+%TEST_INFO = qw(Testname TestMemberNoCellPhone);
+%GET = qw(key UnitTestPlayground member_id 41 si_stick 314159 waiver_signed signed quick_lookup_member_id 1-41);
+$GET{"event"} = $event_id;
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
+$output = qx($cmd);
+
+if ($output !~ /Invalid \(empty\) cell phone number/) {
+  error_and_exit("Missing cell phone error not found.\n$output");
+}
+
+success();
+
 
 #################
 # End the test successfully

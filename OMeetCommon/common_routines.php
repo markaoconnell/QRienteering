@@ -275,6 +275,31 @@ function get_results_per_class_path($event, $key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key) . "/{$event}/ResultsPerClass");
 }
 
+function get_stick_xlation_path($event, $key) {
+  return("../OMeetData/" . key_to_path($key) . "/{$event}/StickXlations");
+}
+
+function get_stick_xlation($event, $key, $stick) {
+  $event_path = get_event_path($event, $key);
+  if (file_exists("{$event_path}/StickXlations/{$stick}")) {
+    return (file_get_contents("{$event_path}/StickXlations/{$stick}"));
+  }
+  return("");
+}
+
+function put_stick_xlation($event, $key, $competitor_id, $stick) {
+  $event_path = get_event_path($event, $key);
+  file_put_contents("{$event_path}/StickXlations/{$stick}", $competitor_id);
+}
+
+function clear_stick_xlation($event, $key, $stick) {
+  $event_path = get_event_path($event, $key);
+
+  if (file_exists("{$event_path}/StickXlations/{$stick}")) {
+    unlink("{$event_path}/StickXlations/{$stick}");
+  }
+}
+
 function get_event_path($event, $key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key) . "/{$event}");
 }

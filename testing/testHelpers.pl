@@ -345,4 +345,16 @@ sub get_competitor_mass_start_time {
   return($mass_start_time);
 }
 
+sub get_stick_xlation {
+  my($key, $event_id, $stick) = @_;
+  my($pathname) = get_base_path($key) . "/${event_id}/StickXlations/${stick}";
+
+  if (-f $pathname) {
+    return(file_get_contents($pathname));
+  }
+  else {
+    return ("");
+  }
+}
+
 1;
