@@ -53,9 +53,6 @@ REGISTER_MODE = 2
 MASS_START_MODE = 3
 current_mode = DOWNLOAD_MODE
 
-# Used in the registration dialog if the name is not known (should never really happen though)
-NAME_NOT_SET = "unknown"
-
 def usage():
   print("Usage: " + sys.argv[0])
   print("Usage: " + sys.argv[0] + " [-e event] [-k key] [-u url_of_QR_web_site] [-s serial port for si download station] [-djvrt]")
@@ -334,17 +331,17 @@ def replay_stick_thread(user_info):
     return
 
 def mass_start_window(user_info, start_seconds, event_key, event):
-    mass_start_courses = mass_start_flow(user_info, discovered_courses, myFont)
+    mass_start_courses = mass_start_flow(user_info, url_caller, discovered_courses, myFont)
     add_long_running_class(mass_start_courses)
     mass_start_courses.add_completion_callback(remove_long_running_class)
     mass_start_courses.create_mass_start_window(start_seconds, event_key, event)
     return
 
 def registration_window(user_info):
-    registration_flow = register_user(user_info, discovered_courses, myFont)
+    registration_flow = register_user(user_info, url_caller, discovered_courses, myFont)
     add_long_running_class(registration_flow)
     registration_flow.add_completion_callback(remove_long_running_class)
-    registration_flow.create_registration_window()
+    registration_flow.create_registration_window(event_key, event)
     return
 
 def change_font_size_window():

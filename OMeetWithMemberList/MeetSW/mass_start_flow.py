@@ -17,7 +17,7 @@ from LongRunningClass import LongRunningClass
 
 class mass_start_flow(LongRunningClass):
 
-    def __init__(self, user_info, course_list, font):
+    def __init__(self, user_info, url_caller, course_list, font):
         super().__init__()
         self.user_info = user_info
         self.course_list = course_list
@@ -25,6 +25,9 @@ class mass_start_flow(LongRunningClass):
         self.local_font = font
         self.force_exit_called = False
         self.completion_callback = None
+        self.url_caller = url_caller
+        self.debug = False
+        self.verbose = False
         pass
 
     def add_completion_callback(self, callback):
@@ -33,6 +36,9 @@ class mass_start_flow(LongRunningClass):
     
     def create_mass_start_window(self, start_seconds, event_key, event):
         self.user_info.get_widget().disable_buttons()
+
+        self.event_key = event_key
+        self.event = event
     
         self.mass_start_frame = tk.Toplevel()
         self.mass_start_frame.geometry("300x300")
@@ -77,19 +83,19 @@ class mass_start_flow(LongRunningClass):
             self.user_info.get_widget().update("No courses chosen for mass start")
     
         self.mass_start_frame.destroy()
-        remove_frame(self.mass_start_frame)
+        self.mass_start_frame = None
     
         return
     
     #######################################################################################
     def send_mass_start_command(self, courses_to_start, start_seconds):
     
-      mass_start_params = f"key={event_key}&event={event}&si_stick_time={start_seconds}&courses_to_start=" + ",".join(courses_to_start)
+      mass_start_params = f"key={self.event_key}&event={self.event}&si_stick_time={start_seconds}&courses_to_start=" + ",".join(courses_to_start)
       if self.debug: print(f"Attempting to mass start with params {mass_start_params}.")
             
       if self.force_exit_called: return
       try:
-          output = make_url_call(url_caller.MASS_START, mass_start_params)
+          output = self.url_caller.make_url_call(url_caller.MASS_START, mass_start_params)
       except UrlTimeoutException:
           output = r"####,ERROR,Timed out connecting to web site, validate internet connectivity and site status"
       if self.force_exit_called: return

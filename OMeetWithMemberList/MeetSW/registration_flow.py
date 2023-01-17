@@ -3,14 +3,18 @@ import tkinter.ttk as ttk
 import tkinter.font as font
 from threading import Thread
 import urllib.parse
+import base64
+import re
 from LongRunningClass import LongRunningClass
 from url_caller import UrlTimeoutException, url_caller
 
 
+# Used in the registration dialog if the name is not known (should never really happen though)
+NAME_NOT_SET = "unknown"
 
 class register_user(LongRunningClass):
 
-    def __init__(self, user_info, course_list, font):
+    def __init__(self, user_info, url_caller, course_list, font):
         super().__init__()
         self.user_info = user_info
         self.course_list = course_list
@@ -18,14 +22,20 @@ class register_user(LongRunningClass):
         self.local_font = font
         self.force_exit_called = False
         self.completion_callback = None
+        self.url_caller = url_caller
+        self.debug = False
+        self.verbose = False
         pass
 
     def add_completion_callback(self, callback):
         self.completion_callback = callback
 
-    def create_registration_window(self):
+    def create_registration_window(self, event_key, event):
         self.user_info.get_widget().disable_buttons()
     
+        self.event_key = event_key
+        self.event = event
+
         self.registration_frame = tk.Toplevel()
         if len(self.course_list) < 8:
           self.registration_frame.geometry("300x300")
@@ -94,7 +104,7 @@ class register_user(LongRunningClass):
             message = f"Attempting to register member with SI unit {self.user_info.stick_number} on "
     
         self.user_info.get_widget().update(message + chosen_course.get().lstrip("0123456789-"))
-        self.registraion_frame.destroy()
+        self.registration_frame.destroy()
         self.registration_frame = None
     
         registration_thread = Thread(target=self.register_by_si_unit, args=(chosen_course.get(), cell_phone.get()))
@@ -132,12 +142,12 @@ class register_user(LongRunningClass):
       quoted_course = urllib.parse.quote(chosen_course.encode("utf-8"))
       quoted_name = urllib.parse.quote(found_name.encode("utf-8"))
       registration_params = "key={}&event={}&course={}&registration_info={}&competitor_name={}"\
-                                   .format(event_key, event, quoted_course, ",".join(registration_list), quoted_name)
+                                   .format(self.event_key, self.event, quoted_course, ",".join(registration_list), quoted_name)
       if self.debug: print("Attempting to register {} with params {}.".format(found_name, registration_params))
             
       if self.force_exit_called: return
       try:
-          output = make_url_call(url_caller.REGISTER_COMPETITOR, registration_params)
+          output = self.url_caller.make_url_call(url_caller.REGISTER_COMPETITOR, registration_params)
       except UrlTimeoutException:
           output = r"####,ERROR,Connectivity error - validate internet connectivity and site status"
       if self.force_exit_called: return
