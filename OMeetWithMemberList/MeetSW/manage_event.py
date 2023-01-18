@@ -443,7 +443,7 @@ def found_stick_callback(si_continuous_reader, read_stick):
       finish_adjusted = False
 
       if read_stick.bad_download:
-        user_info = stick_info(read_stick.stick)
+        user_info = stick_info(read_stick.stick, None)
         user_info.set_download_possible(False)
         user_info.add_widget(offline_status_widget(user_info.stick_number, myFont))
         message = f"Prematurely removed SI unit {user_info.stick_number} from download station\n"
@@ -524,7 +524,7 @@ def found_stick_callback(si_continuous_reader, read_stick):
           if finish_adjusted:
               user_info.set_missed_finish(True)
 
-          status_message = f"Downloaded results for si_stick {read_stick.stick}, time was {hours}h:{minutes}m:{seconds}s ({total_time})."
+          status_message = f"Downloaded results for si_stick {read_stick.stick}, time was {hours}h:{minutes:02d}m:{seconds:02d}s ({total_time})."
           if finish_adjusted:
               user_info.set_missed_finish(True)
               status_message = status_message + "\n" + MISSED_FINISH_PUNCH_MESSAGE

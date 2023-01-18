@@ -12,6 +12,7 @@ import urllib.parse
 from sireader2 import SIReader, SIReaderReadout, SIReaderControl, SIReaderException, SIReaderTimeout, SIReaderCardChanged
 from LongRunningClass import LongRunningClass
 
+TWELVE_HOURS_IN_SECONDS = (12 * 3600)
 
 class si_stick_contents:
     def __init__(self):
@@ -99,8 +100,6 @@ class generic_si_reader:
 
 class real_si_reader(generic_si_reader):
 
-    TWELVE_HOURS_IN_SECONDS = (12 * 3600)
-
     def __init__(self):
         self.verbose = False
         self.debug = False
@@ -128,16 +127,17 @@ class real_si_reader(generic_si_reader):
       self.si_reader = si
       return si
     
+  
     #################################################################
     def read_results(self):
     # wait for a card to be inserted into the reader
       try:
         if not self.si_reader.poll_sicard():
-          return({SI_STICK_KEY : None})
+          return(si_stick_contents())
       except SIReaderException as sire:
         self.si_reader.ack_sicard()
         #print (f"Bad card download, error {sire}.")
-        return ({SI_STICK_KEY : None})
+        return (si_stick_contents())
     
     # some properties are now set
       card_number = self.si_reader.sicard
@@ -148,7 +148,10 @@ class real_si_reader(generic_si_reader):
         card_data = self.si_reader.read_sicard()
       except (SIReaderException, SIReaderTimeout, SIReaderCardChanged) as sire:
         #print (f"Bad card ({card_number}) download, error {sire}.")
-        return({SI_STICK_KEY : card_number, SI_BAD_DOWNLOAD : True})
+        bad_stick_values = si_stick_contents()
+        bad_stick_values.set_stick(card_number)
+        bad_stick_values.set_bad_download()
+        return(bad_stick_values)
     
     # beep
       self.si_reader.ack_sicard()
@@ -162,12 +165,12 @@ class real_si_reader(generic_si_reader):
     # Check for old sticks which only use 12 hour time, which have some trouble if
     # the event starts before noon and ends after noon
       if card_data['start'] != None:
-        start_timestamp = get_24hour_timestamp(card_data['start'])
+        start_timestamp = self.get_24hour_timestamp(card_data['start'])
       else:
          start_timestamp = 0
     
       if card_data['finish'] != None:
-        finish_timestamp = get_24hour_timestamp(card_data['finish'])
+        finish_timestamp = self.get_24hour_timestamp(card_data['finish'])
       else:
         finish_timestamp = 0
         if self.debug: print (f"No finish timestamp on stick {card_number} - please scan finish and then download.")
@@ -181,12 +184,12 @@ class real_si_reader(generic_si_reader):
         if (finish_timestamp != 0): finish_timestamp += TWELVE_HOURS_IN_SECONDS
         orig_punches = []
         new_punches = []
-        orig_punches = map(lambda punch: (punch[0], get_24hour_timestamp(punch[1])), card_data['punches'])
+        orig_punches = map(lambda punch: (punch[0], self.get_24hour_timestamp(punch[1])), card_data['punches'])
         new_punches = map(lambda punch: (punch[0], punch[1] + TWELVE_HOURS_IN_SECONDS if (punch[1] < start_timestamp) else punch[1]), orig_punches)
         array_of_punches = map(lambda punch: "{}:{}".format(str(punch[0]), str(punch[1])), new_punches)
         if self.verbose: print (f"Adjusting some times for {card_number} by twelve hours.")
       else:
-        array_of_punches = map(lambda punch: "{}:{}".format(str(punch[0]), str(get_24hour_timestamp(punch[1]))), card_data['punches'])
+        array_of_punches = map(lambda punch: "{}:{}".format(str(punch[0]), str(self.get_24hour_timestamp(punch[1]))), card_data['punches'])
     
       #print "Here is the array of punches {}.".format(array_of_punches)
     
