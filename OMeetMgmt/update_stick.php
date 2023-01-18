@@ -59,6 +59,9 @@ else {
         }
       }
     }
+    else {
+      clear_stick_xlation($event, $key, file_get_contents("{$competitor_path}/si_stick"));
+    }
 
     file_put_contents("{$competitor_path}/si_stick", $new_stick);
     put_stick_xlation($event, $key, $competitor_id, $new_stick);
