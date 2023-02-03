@@ -210,6 +210,7 @@ class real_si_reader(generic_si_reader):
 class fake_si_reader(generic_si_reader):
     def __init__(self):
       self.simulated_entries = []
+      self.verbose = False
     
     def initialize(self, filename_of_fake_results):
     
@@ -254,8 +255,14 @@ class fake_si_reader(generic_si_reader):
                  fake_stick.set_stick_info(start = start, finish = finish, controls_list = [])
               self.simulated_entries.append(fake_stick)
       except FileNotFoundError:
-        pass  # Fine if the file is not there, we'll just do nothing
+        # Fine if the file is not there, we'll just do nothing
+        if self.verbose:
+          print (f"File {filename} not found, no entries available.")
     
+      if self.verbose:
+          print (f"Found {len(self.simulated_entries)} entries to process.")
+
+
     def get(self):
         return self
       
