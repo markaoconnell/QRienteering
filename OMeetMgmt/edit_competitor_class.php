@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/nre_routines.php';
 
 ck_testing();
 
@@ -76,7 +77,6 @@ if (isset($_GET["new_competitor_class"])) {
           mkdir("{$results_per_class_path}/{$new_class}");
         }
         file_put_contents("{$results_per_class_path}/{$new_class}/{$finish_entry_marker}", "");
-        file_put_contents("{$results_per_class_path}/{$new_class}/{$finish_entry_marker}", "");
       }
     }
   }
@@ -118,13 +118,13 @@ else {
   
   if (count($possible_classes_for_course) > 0) {
     $output_string .= "<optgroup label=\"Classes appropriate for {$course_for_classification}\">\n";
-    $elements = array_map(function ($elt) { return ("<option value=\"{$elt[5]}\">{$elt[5]}</option>\n"); }, $possible_classes_for_course);
+    $elements = array_unique(array_map(function ($elt) { return ("<option value=\"{$elt[5]}\">{$elt[5]}</option>\n"); }, $possible_classes_for_course));
     $output_string .= implode("\n", $elements);
     $output_string .= "</optgroup>\n";
   }
   
   $output_string .= "<optgroup label=\"All classes\">\n";
-  $elements = array_map(function ($elt) { return ("<option value=\"{$elt[5]}\">{$elt[5]}</option>\n"); }, $classification_info);
+  $elements = array_unique(array_map(function ($elt) { return ("<option value=\"{$elt[5]}\">{$elt[5]}</option>\n"); }, $classification_info));
   $output_string .= implode("\n", $elements);
   $output_string .= "</optgroup>\n";
   $output_string .= "<br/><input type=submit value=\"Save new class\">\n";

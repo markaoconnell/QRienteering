@@ -31,42 +31,60 @@ function record_finish_by_si_stick($event, $key, $si_results_string) {
   $return_info["si_stick"] = $si_stick;
 
   // Find the competitor with this si_stick
-  $competitor_directory = get_competitor_directory($event, $key, ".."); 
-  $competitor_list = scandir("{$competitor_directory}", SCANDIR_SORT_DESCENDING);
-  $competitor_list = array_diff($competitor_list, array(".", ".."));
+  // Try the optimized stick lookup first
+  $found_competitor = False;
+  $competitor = get_stick_xlation($event, $key, $si_stick);
+  if ($competitor != "") {
+    $found_competitor = True;
+    clear_stick_xlation($event, $key, $si_stick);  // Clear the xlation entry, no longer needed
+  }
+  else {
+    // we need to go the slow route and look through all the competitors
+    $competitor_directory = get_competitor_directory($event, $key, ".."); 
+    $competitor_list = scandir("{$competitor_directory}", SCANDIR_SORT_DESCENDING);
+    $competitor_list = array_diff($competitor_list, array(".", ".."));
 
-  foreach ($competitor_list as $competitor) {
-    if (file_exists("{$competitor_directory}/{$competitor}/si_stick")) {
-      $competitor_stick = file_get_contents("{$competitor_directory}/{$competitor}/si_stick");
-      if ($competitor_stick == $si_stick) {
-        if (!file_exists("{$competitor_directory}/{$competitor}/controls_found/start")) {
-          $save_error = validate_and_save_results($event, $key, $competitor, $si_stick, $start_pieces, $finish_pieces, $result_pieces);
-          if ($save_error == "") {
-            $return_info["competitor_id"] = $competitor;
-            $return_info["course"] = file_get_contents("{$competitor_directory}/{$competitor}/course");
+    foreach ($competitor_list as $competitor) {
+      if (file_exists("{$competitor_directory}/{$competitor}/si_stick")) {
+        $competitor_stick = file_get_contents("{$competitor_directory}/{$competitor}/si_stick");
+        if ($competitor_stick == $si_stick) {
+          if (!file_exists("{$competitor_directory}/{$competitor}/controls_found/start")) {
+            // We found the correct entry!
+            $found_competitor = True;
+            break;
           }
           else {
-            $return_info["error"] = $save_error;
-          }
-          return ($return_info);
-        }
-        else {
-          $competitor_start = file_get_contents("{$competitor_directory}/{$competitor}/controls_found/start");
-          if ($competitor_start != $start_timestamp) {
-            // This si stick must have been reused and this is the earlier competitor, just move on
-          }
-          else {
-            // We've processed this result already, we're done
-            $return_info["competitor_id"] = $competitor;
-            $return_info["course"] = file_get_contents("{$competitor_directory}/{$competitor}/course");
-            return($return_info);
+            $competitor_start = file_get_contents("{$competitor_directory}/{$competitor}/controls_found/start");
+            if ($competitor_start != $start_timestamp) {
+              // This si stick must have been reused and this is the earlier competitor, just move on
+            }
+            else {
+              // We've processed this result already, we're done
+              $return_info["competitor_id"] = $competitor;
+              $return_info["course"] = file_get_contents("{$competitor_directory}/{$competitor}/course");
+              return($return_info);
+            }
           }
         }
       }
     }
   }
 
-  $return_info["error"] = "No registered competitor found with SI unit \"{$si_stick}\"";
+  if ($found_competitor) {
+    $save_error = validate_and_save_results($event, $key, $competitor, $si_stick, $start_pieces, $finish_pieces, $result_pieces);
+    if ($save_error == "") {
+      $competitor_directory = get_competitor_directory($event, $key); 
+      $return_info["competitor_id"] = $competitor;
+      $return_info["course"] = file_get_contents("{$competitor_directory}/{$competitor}/course");
+    }
+    else {
+      $return_info["error"] = $save_error;
+    }
+  }
+  else {
+    $return_info["error"] = "No registered competitor found with SI unit \"{$si_stick}\"";
+  }
+
   return($return_info);
 }
 

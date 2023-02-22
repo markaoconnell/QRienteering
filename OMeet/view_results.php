@@ -1,5 +1,8 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/nre_routines.php';
+require '../OMeetCommon/time_routines.php';
+require '../OMeetCommon/results_routines.php';
 require '../OMeetCommon/course_properties.php';
 
 function is_event($filename) {
@@ -107,13 +110,37 @@ foreach ($course_list as $one_course) {
     }
   }
 
-  if ($show_course || isset($_GET["show_all_courses"])) {
+  // For the external registration program, only show the courses that actually allow registration
+  // So no removed courses and no combination courses
+  if (!file_exists("{$courses_path}/{$one_course}/removed") && !file_exists("{$courses_path}/{$one_course}/no_registrations")) {
     $courses_for_parsing[] = $one_course;
+  }
+
+  if ($show_course || isset($_GET["show_all_courses"])) {
     $course_properties = get_course_properties("{$courses_path}/{$one_course}");
     $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
     $max_score = 0;
     if ($score_course) {
       $max_score = $course_properties[$MAX_SCORE_FIELD];
+    }
+
+    $is_combo_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $COMBO_COURSE));
+    if ($is_combo_course) {
+      $all_courses = scandir($courses_path);
+      $all_courses = array_diff($all_courses, array(".", ".."));
+      $specified_courses = explode(",", $course_properties[$COMBO_COURSE_LIST]);
+      // Convert the specified courses list, which is just the human readable name, into the full name which is used as the unique identifier
+      $base_course_list = array();
+      foreach ($all_courses as $course_unique_name) {
+	foreach ($specified_courses as $base_course) {
+          if (ltrim($course_unique_name, "0..9-") == $base_course) {
+            $base_course_list[] = $course_unique_name;
+	  }
+	}
+      }
+    }
+    else {
+      $base_course_list = array();
     }
 
     if ($show_per_class) {
@@ -133,10 +160,10 @@ foreach ($course_list as $one_course) {
 
     foreach ($classes_for_course as $this_class) {
       if ($download_csv) {
-        $results_string .= get_csv_results($event, $key, $one_course, $this_class, $score_course, $max_score);
+        $results_string .= get_csv_results($event, $key, $one_course, $this_class, $score_course, $max_score, $base_course_list);
       }
       else {
-        $results_string .= show_results($event, $key, $one_course, $this_class, $score_course, $max_score);
+        $results_string .= show_results($event, $key, $one_course, $this_class, $score_course, $max_score, $base_course_list);
       }
     }
   }

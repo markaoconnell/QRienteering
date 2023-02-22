@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/results_routines.php';
 require '../OMeetCommon/course_properties.php';
 require '../OMeetWithMemberList/name_matcher.php';
 
@@ -155,6 +156,12 @@ $course_stats = array();
 $unique_names = array();
 
 foreach ($course_list as $one_course) {
+  // Don't show statistics for "artificial" courses which don't allow registation (e.g. Motala)
+  if (file_exists("{$courses_path}/{$one_course}/no_registrations")) {
+    continue;
+  }
+
+
   $show_course = true;
   if (file_exists("{$courses_path}/{$one_course}/removed")) {
     // Show a removed course if there are finishers
@@ -169,13 +176,6 @@ foreach ($course_list as $one_course) {
   }
 
   if ($show_course || isset($_GET["show_all_courses"])) {
-    $course_properties = get_course_properties("{$courses_path}/{$one_course}");
-    $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
-    $max_score = 0;
-    if ($score_course) {
-      $max_score = $course_properties[$MAX_SCORE_FIELD];
-    }
-
     $course_stats_array = get_course_stats($event, $key, $one_course);
     $totals_array["starts"] += $course_stats_array["starts"];
     $totals_array["members"] += $course_stats_array["members"];

@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/nre_routines.php';
 require '../OMeetWithMemberList/preregistration_routines.php';
 
 ck_testing();
@@ -61,8 +62,8 @@ function validate_gender($string) {
 }
 
 function validate_class($string) {
-  if (!preg_match("/^[0-9 A-Za-z+-]+$/", $string)) {
-    return ("Class can only contain letters, numbers, space, +, and -");
+  if (!preg_match("/^[0-9A-Za-z][0-9 A-Za-z+-]*$/", $string)) {
+    return ("Class can only contain letters, numbers, space, +, and -, must begin with a letter or number");
   }
   return("");
 }

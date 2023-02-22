@@ -1,70 +1,8 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/control_xlation_routines.php';
 
 ck_testing();
-
-function validate_name($string) {
-  if (!preg_match("/^[a-zA-Z '\"]+$/", $string)) {
-    return ("Name field may only contain alphabetic characters, apostrophe, quote, and space");
-  }
-  return("");
-}
-
-function validate_course($string) {
-  if (!preg_match("/^[a-zA-Z0-9]+$/", $string)) {
-    return ("Course field may only contain alphabetic characters and numbers");
-  }
-  return("");
-}
-
-function validate_stick($string) {
-  if (!preg_match("/^[0-9]+$/", $string)) {
-    return ("SI unit field may only contain numbers");
-  }
-  return("");
-}
-
-function validate_cell_phone($string) {
-  if (!preg_match("/^\+?[0-9-]+$/", $string)) {
-    return ("Cell phone field looks malformatted, should be like +1-508-123-4567 (no parens)");
-  }
-  return("");
-}
-
-function validate_email($string) {
-  if (!preg_match("/^[a-zA-Z0-9_]+@[a-zA-Z0-9_.]+$/", $string)) {
-    return ("Email field looks malformatted, should be like foo@bar.gmail");
-  }
-  return("");
-}
-
-function validate_waiver($string) {
-  if ($string != "yes") {
-    return ("Waiver field should be \"yes\" or blank");
-  }
-  return("");
-}
-
-function validate_birth_year($string) {
-  if (!preg_match("/^\d\d\d\d$/", $string)) {
-    return ("Birth year must be 4 digits");
-  }
-  return("");
-}
-
-function validate_gender($string) {
-  if (!preg_match("/^[mfo]$/", $string)) {
-    return ("Birth year must be 4 digits");
-  }
-  return("");
-}
-
-function validate_class($string) {
-  if (!preg_match("/^[0-9 A-Za-z+-]+$/", $string)) {
-    return ("Class can only contain letters, numbers, space, +, and -");
-  }
-  return("");
-}
 
 $output_string = "";
 

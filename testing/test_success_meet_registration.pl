@@ -160,7 +160,7 @@ $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
 $GET{"si_stick_finish"} = $base_64_results;
 
 
-finish_with_stick_successfully($competitor_id, "00-White", \%GET, \%COOKIE, \%TEST_INFO);
+finish_with_stick_successfully($competitor_id, "2108369", "00-White", \%GET, \%COOKIE, \%TEST_INFO);
 
 success();
 

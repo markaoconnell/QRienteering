@@ -5,7 +5,7 @@ use strict;
 require "testHelpers.pl";
 require "success_call_helpers.pl";
 
-my(%GET, %TEST_INFO, %COOKIE, %POST, %REGISTRATION_INFO);
+my(%GET, %TEST_INFO, %COOKIE, %POST);
 my($COMPETITOR_1) = "Mark_OConnell--space-----space--2";
 my($COMPETITOR_2) = "Karen_Yeowell--space--+2";   # +3 HTML encoded
 my($COMPETITOR_3) = "LydBid--space--(2)";       # (2) HTML encoded
@@ -23,42 +23,41 @@ my($competitor_1_id, $competitor_2_id, $competitor_3_id, $competitor_4_id, $comp
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 create_key_file();
 initialize_event();
+$POST{"course_description"} .= "--newline--c:Motala,Yellow,ScoreO,White";
 create_event_successfully(\%GET, \%COOKIE, \%POST, \%TEST_INFO);
 my($event_id) = $TEST_INFO{"event_id"};
 set_no_redirects_for_event($event_id, "UnitTestPlayground");
-
-# Set up the NRE classification tables
-set_using_nre_classes("UnitTestPlayground", $event_id);
-set_nre_classes("UnitTestPlayground");
-
 
 sub register_one_entrant {
   %GET = qw(key UnitTestPlayground);
   $GET{"course"} = $_[1];
   $GET{"competitor_name"} = $_[0];
   $GET{"event"} = $event_id;
-  my($birth_year, $gender);
-  $birth_year = $_[2];
-  $gender = $_[3];
-  my($expecting_class_entry) = $_[4];
   %COOKIE = ();  # empty hash
   
   #print "Register $_[0] on $_[1]\n";
 
-  %REGISTRATION_INFO = qw(club_name NEOC email_address mark:@mkoconnell.com cell_phone 5086148225 car_info ChevyBoltEV3470MA is_member yes);
-  $REGISTRATION_INFO{"first_name"} = "unused first";
-  $REGISTRATION_INFO{"last_name"} = "unused last";
-  $REGISTRATION_INFO{"classification_info"} = values_to_classification_info($birth_year, $gender, "");
-
-  register_member_successfully_for_nre(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO, $expecting_class_entry);
+  register_successfully(\%GET, \%COOKIE, \%TEST_INFO);
   return($TEST_INFO{"competitor_id"});
 }
 
 sub check_results {
-  my($expected_table_rows) = @_;
+  return(check_results_inner("UnitTestPlayground", @_));
+}
 
-  %GET = qw(key UnitTestPlayground);
-  $GET{"event"} = $event_id;
+sub check_results_xlt {
+  return(check_results_inner("UnitTestXlt", @_));
+}
+
+sub check_results_inner {
+  my($key, $expected_table_rows) = @_;
+
+  $expected_table_rows *= 2;  # For a Motala for this event, all results should appear normally AND as part of the motala
+
+  %GET = qw(key UnitTestPlayground);  # This clears the GET array, and then the key is overridden
+  $GET{"key"} = $key;
+  #$GET{"event"} = $event_id;   # Should only be one event during this test...
+                                #  Specifying the event disables the key translation
   %COOKIE = ();
   hashes_to_artificial_file();
 
@@ -73,7 +72,7 @@ sub check_results {
     error_and_exit("Found $actual_table_rows instead of $expected_table_rows in results output.\n$output");
   }
 
-  if ($output !~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04-GetEmAll,05-Green,06-Red,07-Brown\n/) {
+  if ($output !~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04-GetEmAll/) {
     error_and_exit("Did not find expected course list in results output.\n$output");
   }
 
@@ -81,10 +80,20 @@ sub check_results {
 }
 
 sub check_on_course {
-  my($expected_table_rows) = @_;
+  return(check_on_course_inner("UnitTestPlayground", @_));
+}
+
+sub check_on_course_xlt {
+  return(check_on_course_inner("UnitTestXlt", @_));
+}
+
+sub check_on_course_inner {
+  my($key, $expected_table_rows) = @_;
 
   %GET = qw(key UnitTestPlayground);
-  $GET{"event"} = $event_id;
+  $GET{"key"} = $key;
+  #$GET{"event"} = $event_id;   # There should only be one event during this test...
+                                #  Specifying the event disables the key translation
   %COOKIE = ();
   hashes_to_artificial_file();
 
@@ -103,10 +112,19 @@ sub check_on_course {
 }
 
 sub check_competitor_on_course {
-  my($competitor_name, $competitor_id) = @_;
+  return(check_competitor_on_course_inner("UnitTestPlayground", @_));
+}
+
+sub check_competitor_on_course_xlt {
+  return(check_competitor_on_course_inner("UnitTestXlt", @_));
+}
+
+sub check_competitor_on_course_inner {
+  my($key, $competitor_name, $competitor_id) = @_;
 
   %GET = qw(key UnitTestPlayground include_competitor_id 1);
-  $GET{"event"} = $event_id;
+  $GET{"key"} = $key;
+  #$GET{"event"} = $event_id;     # See comments earlier - there should only be one event for this test to work
   %COOKIE = ();
   hashes_to_artificial_file();
 
@@ -172,18 +190,21 @@ sub check_splits {
 ###########
 # Test 1 - register a new entrant successfully
 # Test registration of a new entrant
-%TEST_INFO = qw(Testname NreRegister6AndCheckOnCourse);
+%TEST_INFO = qw(Testname Register6AndCheckOnCourse);
 
-$competitor_1_id = register_one_entrant($COMPETITOR_1, "01-Yellow", "2001", "f", 1);
-$competitor_2_id = register_one_entrant($COMPETITOR_2, "01-Yellow", "2010", "f", 1);
-$competitor_3_id = register_one_entrant($COMPETITOR_3, "00-White", "2010", "m", 1);
-$competitor_4_id = register_one_entrant($COMPETITOR_4, "00-White", "1998", "m", 1);
-$competitor_5_id = register_one_entrant($COMPETITOR_5, "02-ScoreO", "2000", "f", 0);
-$competitor_6_id = register_one_entrant($COMPETITOR_6, "02-ScoreO", "2005", "m", 0);
+$competitor_1_id = register_one_entrant($COMPETITOR_1, "01-Yellow");
+$competitor_2_id = register_one_entrant($COMPETITOR_2, "01-Yellow");
+$competitor_3_id = register_one_entrant($COMPETITOR_3, "00-White");
+$competitor_4_id = register_one_entrant($COMPETITOR_4, "00-White");
+$competitor_5_id = register_one_entrant($COMPETITOR_5, "02-ScoreO");
+$competitor_6_id = register_one_entrant($COMPETITOR_6, "02-ScoreO");
 
 check_results(0);
 check_on_course(6);
 check_competitor_on_course($COMPETITOR_1, $competitor_1_id);
+check_results_xlt(0);
+check_on_course_xlt(6);
+check_competitor_on_course_xlt($COMPETITOR_1, $competitor_1_id);
 
 success();
 
@@ -197,7 +218,7 @@ success();
 # 0 results
 
 # Competitor 1 starts and gets two controls
-%TEST_INFO = qw(Testname NreTestThreeStartersAtEvent);
+%TEST_INFO = qw(Testname TestThreeStartersAtEvent);
 %COOKIE = qw(key UnitTestPlayground course 01-Yellow);
 $COOKIE{"event"} = $event_id;
 $COOKIE{"competitor_id"} = $competitor_1_id;
@@ -261,7 +282,7 @@ success();
 # Competitor 4 starts
 # Competitor 5 finds another control
 # Competitor 6 starts
-%TEST_INFO = qw(Testname NreOneFinisherThreeMoreStarters);
+%TEST_INFO = qw(Testname OneFinisherThreeMoreStarters);
 
 # Competitor 1 finds two more controls
 %COOKIE = qw(key UnitTestPlayground course 01-Yellow);
@@ -390,6 +411,9 @@ if (($no_newline_output !~ m#$COMPETITOR_2_RE</td><td>[0-9:]+</td><td>3</td>#) |
 check_competitor_on_course($COMPETITOR_3, $competitor_3_id);
 check_competitor_on_course($COMPETITOR_6, $competitor_6_id);
 check_competitor_on_course($COMPETITOR_5, $competitor_5_id);
+check_competitor_on_course_xlt($COMPETITOR_3, $competitor_3_id);
+check_competitor_on_course_xlt($COMPETITOR_6, $competitor_6_id);
+check_competitor_on_course_xlt($COMPETITOR_5, $competitor_5_id);
 
 success();
 
@@ -402,7 +426,7 @@ success();
 # Competitor 4 finds 2 controls and DNFs
 # Competitor 5 finishes
 # Competitor 6 finds another control and finishes
-%TEST_INFO = qw(Testname NreAllFinishWithTwoDNFs);
+%TEST_INFO = qw(Testname AllFinishWithTwoDNFs);
 
 # Competitor 3 finds more controls
 %COOKIE = qw(key UnitTestPlayground course 00-White);
@@ -499,7 +523,7 @@ finish_score_successfully(70, \%GET, \%COOKIE, \%TEST_INFO);
 
 #########
 # Validate results
-my($output) = check_results(6);
+my($output) = check_results_xlt(6);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;
 
@@ -512,7 +536,7 @@ if (($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1_RE</a></td><td>[0-
   error_and_exit("View result output wrong for 1 or more competitors.\n$output");
 }
 
-check_on_course(0);
+check_on_course_xlt(0);
 
 success();
 
@@ -521,7 +545,7 @@ success();
 #################
 #Test 5 - check the splits
 
-%TEST_INFO = qw(Testname NreCheckSplitsForEntrants);
+%TEST_INFO = qw(Testname CheckSplitsForEntrants);
 
 my(%expected_number_splits);
 $expected_number_splits{$competitor_1_id} = 5;
@@ -549,7 +573,7 @@ success();
 #################
 #Test 6 - check the stats
 
-%TEST_INFO = qw(Testname NreCheckStatsForEvent);
+%TEST_INFO = qw(Testname CheckStatsForEvent);
 %GET = qw(key UnitTestPlayground);
 $GET{"event"} = $event_id;
 
@@ -577,110 +601,34 @@ if ($actual_table_rows != 9) {
 success();
 
 #################
-# Test 6 - Can we view the results per class?
+#Test 7 - check the stats after rescanning for members
 
-%TEST_INFO = qw(Testname NreViewResultsByClass);
-%GET = qw(key UnitTestPlayground);
+%TEST_INFO = qw(Testname CheckStatsForEventWithMemberRescan);
+%GET = qw(key UnitTestPlayground rescan_for_members 1);
 $GET{"event"} = $event_id;
-$GET{"per_class"} = $event_id;
 
-%COOKIE = ();
 hashes_to_artificial_file();
 
-my($cmd) = "php ../OMeet/view_results.php";
+my($cmd) = "php ../OMeetMgmt/meet_statistics.php";
 my($output);
 $output = qx($cmd);
+
+if ($output !~ /6 unique/) {
+  error_and_exit("Did not find 6 unique entrants in output.\n$output");
+}
+
+if ($output !~ /15 total participants/) {
+  error_and_exit("Did not find 15 total participants in output.\n$output");
+}
 
 my($actual_table_rows);
 $actual_table_rows = () = $output =~ /(<tr><td>)/g;
 
-# 4 results should appear
-if ($actual_table_rows != 4) {
-  error_and_exit("Found $actual_table_rows instead of 4 in results output.\n$output");
-}
-
-if ($output !~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04-GetEmAll,05-Green,06-Red,07-Brown\n/) {
-  error_and_exit("Did not find expected course list in results output.\n$output");
+if ($actual_table_rows != 9) {
+  error_and_exit("Found $actual_table_rows instead of 9 rows in results output.\n$output");
 }
 
 success();
-
-#################
-# Test 7 - Can we get the winsplits results?
-
-%TEST_INFO = qw(Testname GetNreWinsplitsResults);
-%GET = qw(key UnitTestPlayground show_as_html 1);
-$GET{"event"} = $event_id;
-
-%COOKIE = ();
-hashes_to_artificial_file();
-
-my($cmd) = "php ../OMeetMgmt/download_results_csv.php";
-my($output);
-$output = qx($cmd);
-
-my($actual_table_rows);
-$actual_table_rows = () = $output =~ /(;[mf];;)/g;
-
-if ($output !~ /White;0;;5;2;\d+:\d+:\d+;\d+:\d+:\d+;201;0:0\d;202;0:0\d;203;-----;204;-----;205;-----;/) {
-  error_and_exit("Did not find expected splits output.\n$output");
-}
-
-# 4 results should appear
-if ($actual_table_rows != 4) {
-  error_and_exit("Found $actual_table_rows instead of 4 in results output.\n$output");
-}
-
-success();
-
-#################
-# Test 8 - Can we get the IOFXML results?
-
-%TEST_INFO = qw(Testname GetNreIofXMLResults);
-%GET = qw(key UnitTestPlayground);
-$GET{"event"} = $event_id;
-
-%COOKIE = ();
-hashes_to_artificial_file();
-
-my($cmd) = "php ../OMeetMgmt/download_results_iofxml.php";
-my($output);
-$output = qx($cmd);
-
-my($actual_control_lines);
-$actual_control_lines = () = $output =~ /(<ControlCode>)/g;
-
-# 4 results should appear
-if ($actual_control_lines != 20) {
-  error_and_exit("Found $actual_control_lines instead of 20 in results output.\n$output");
-}
-
-success();
-
-#################
-# Test 9 - Can we get the OUSA results?
-
-%TEST_INFO = qw(Testname GetNreOUSAResults);
-%GET = qw(key UnitTestPlayground);
-$GET{"event"} = $event_id;
-
-%COOKIE = ();
-hashes_to_artificial_file();
-
-my($cmd) = "php ../OMeetMgmt/download_results_ousacsv.php";
-my($output);
-$output = qx($cmd);
-
-my($actual_table_entries);
-$actual_table_entries = () = $output =~ /(,,,)/g;
-
-# 4 results should appear
-if ($actual_table_entries != 4) {
-  error_and_exit("Found $actual_table_entries instead of 4 in results output.\n$output");
-}
-
-success();
-
 
 ############
 # Cleanup

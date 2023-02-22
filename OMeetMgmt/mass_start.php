@@ -64,7 +64,8 @@ if ($event != "") {
                                         return ((strpos($get_element, "mass_start_") === 0) && ($_GET[$get_element] != "")); },  ARRAY_FILTER_USE_KEY));
 
   if (count($mass_start_courses) == 0) {
-    $courses_array = scandir(get_courses_path($event, $key, ".."));
+    $courses_path = get_courses_path($event, $key);
+    $courses_array = scandir($courses_path);
     $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
     // print_r($courses_array);
   
@@ -79,7 +80,10 @@ if ($event != "") {
       
       $output_string .= "<br><p>Select one or more courses:<br>\n";
       foreach ($courses_array as $course_name) {
-        $output_string .= "<input type=\"checkbox\" name=\"mass_start_{$course_name}\" value=\"{$course_name}\">" . ltrim($course_name, "0..9-") . " <br>\n";
+	if (!file_exists("{$courses_path}/{$course_name}/removed") && !file_exists("{$courses_path}/{$course_name}/no_registrations")) {
+          $output_string .= "<input type=\"checkbox\" name=\"mass_start_{$course_name}\" value=\"{$course_name}\">" .
+	                     ltrim($course_name, "0..9-") . " <br>\n";
+	}
       }
       
       $output_string .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";

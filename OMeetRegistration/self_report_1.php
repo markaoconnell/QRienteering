@@ -101,7 +101,7 @@ echo "<hr>\n";
 if (!isset($_GET["competitor"])) {
   echo "<br><p class=title>Select a course:</p><br>\n";
   foreach ($courses_array as $course_name) {
-    if (!file_exists("{$courses_path}/{$course_name}/removed")) {
+    if (!file_exists("{$courses_path}/{$course_name}/removed") && !file_exists("{$courses_path}/{$course_name}/no_registrations")) {
       echo "<p><input type=\"radio\" name=\"course\" value=\"" . $course_name . "\">" . ltrim($course_name, "0..9-") . " <br>\n";
     }
   }

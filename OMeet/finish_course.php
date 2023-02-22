@@ -1,5 +1,8 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/nre_routines.php';
+require '../OMeetCommon/time_routines.php';
+require '../OMeetCommon/results_routines.php';
 require '../OMeetCommon/course_properties.php';
 require '../OMeetCommon/generate_splits_output.php';
 require 'si_stick_finish.php';
@@ -248,7 +251,7 @@ if ($score_course && ($score_penalty_msg != "")) {
 }
 
 echo "{$parseable_result_string}\n-->\n";
-echo show_results($event, $key, $course, "", $score_course, $max_score);
+echo show_results($event, $key, $course, "", $score_course, $max_score, array());
 echo get_all_course_result_links($event, $key);
 
 // echo "<p>Course started at ${course_started_at}, course finished at ${now}, difference is ${time_taken}.\n";

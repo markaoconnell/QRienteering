@@ -193,7 +193,7 @@ success();
 # Test 6 - Initial non-member information incomplete
 # 
 %TEST_INFO = qw(Testname TestNonMemberBadSiStick);
-%GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson si_stick abcde);
+%GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson cell_number 123456789 si_stick abcde);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -281,11 +281,11 @@ success();
 # Test 12 - Success non-member registration
 # Test with very little information provided
 %TEST_INFO = qw(Testname TestNonMemberMinimalInfoProvided);
-%GET = qw(key UnitTestPlayground competitor_first_name Queen competitor_last_name Elizabeth waiver_signed signed);
+%GET = qw(key UnitTestPlayground competitor_first_name Queen competitor_last_name Elizabeth cell_number 123456789 waiver_signed signed);
 $GET{"si_stick"} = "";
 $GET{"club_name"} = "";
 $GET{"email"} = "";
-$GET{"cell_number"} = "";
+$GET{"cell_number"} = "123456789";
 $GET{"car_info"} = "";
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
@@ -303,7 +303,7 @@ $expected_hash{"si_stick"} = "";
 $expected_hash{"member_id"} = "";
 $expected_hash{"club_name"} = "";
 $expected_hash{"email_address"} = "";
-$expected_hash{"cell_phone"} = "";
+$expected_hash{"cell_phone"} = "123456789";
 $expected_hash{"car_info"} = "";
 
 my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
@@ -347,6 +347,24 @@ $output = qx($cmd);
 
 if ($output !~ /Unknown event \(empty\)/) {
   error_and_exit("Did not detect no event specified.\n$output");
+}
+
+success();
+
+###########
+# Test 15 - Fail non-member registration - no cell phone supplied
+# 
+%TEST_INFO = qw(Testname TestNonMemberNoCellPhone);
+%GET = qw(key UnitTestPlayground competitor_first_name Dasha competitor_last_name Wolfson club_name UNO waiver_signed signed si_stick 1024 email dasha@umassamherst.edu car_info RedCamaro);
+$GET{"event"} = $event_id;
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
+$output = qx($cmd);
+
+if ($output !~ /Invalid \(empty\) cell phone number/) {
+  error_and_exit("No missing cell phone error message found.\n$output");
 }
 
 success();

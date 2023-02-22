@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/nre_routines.php';
 require '../OMeetCommon/course_properties.php';
 require 'name_matcher.php';
 require 'preregistration_routines.php';
@@ -19,6 +20,8 @@ $event = isset($_GET["event"]) ? $_GET["event"] : "";
 if ($event == "") {
   error_and_exit("Unknown event (empty), are you using an authorized link?\n");
 }
+
+$quick_lookup_member_id = isset($_GET["quick_lookup_member_id"]) ? $_GET["quick_lookup_member_id"] : "";
 
 $event_path = get_event_path($event, $key, "..");
 if (!is_dir($event_path) || !file_exists("{$event_path}/description")) {
@@ -68,22 +71,15 @@ if ($has_preset_id) {
     $member_id = $_GET["member_id"];
   
     $member_properties = get_member_properties(get_base_path($key));
-    $matching_info = read_names_info(get_members_path($key, $member_properties), get_nicknames_path($key, $member_properties));
+    $member_info = quick_get_member($quick_lookup_member_id, get_members_path($key, $member_properties));
   
     if (!isset($_GET["member_id"])) {
       error_and_exit("No member id specified, please restart registration.\n");
     }
-    else {
-      $member_id = $_GET["member_id"];
-      if (get_full_name($member_id, $matching_info) == "") {
-        error_and_exit("No such member id {$_GET["member_id"]} found, please retry or ask for assistance.\n");
-      }
-    }
   
     $is_member = true;
-    $name_info = get_member_name_info($member_id, $matching_info);
-    $first_name = $name_info[0];
-    $last_name = $name_info[1];
+    $first_name = isset($member_info["first"]) ? $member_info["first"] : "";
+    $last_name = isset($member_info["last"]) ? $member_info["last"] : "";
     $club_name = get_club_name($key, $member_properties);
   }
 }
@@ -108,6 +104,10 @@ if ($first_name == "") {
 
 if ($last_name == "") {
   error_and_exit("Invalid (empty) last name, please go back and enter a valid last name.\n");
+}
+
+if ($cell_phone == "") {
+  error_and_exit("Invalid (empty) cell phone number, please go back and enter a valid emergency contact number (yours, a parent's, etc).\n");
 }
 
 if ($si_stick != "") {

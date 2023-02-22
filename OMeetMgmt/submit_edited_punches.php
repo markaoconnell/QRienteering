@@ -1,5 +1,7 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/nre_routines.php';
+require '../OMeetCommon/time_routines.php';
 require '../OMeetCommon/course_properties.php';
 require '../OMeetCommon/generate_splits_output.php';
 
@@ -144,10 +146,19 @@ if ($new_course != "") {
   if (count($matching_courses_list) == 1) {
     // It feels like there should be a more efficient way to do this
     // This should be rare enough that I don't care, but something to think about
-    $new_course = array_values($matching_courses_list)[0];
+    $found_course = array_values($matching_courses_list)[0];
+    if (file_exists("{$courses_path}/{$found_course}/removed") || file_exists("{$courses_path}/{$found_course}/no_registrations")) {
+      $error_string .= "<p>{$new_course} is no longer accepting registrations.\n";
+    }
+    $new_course = $found_course;
   }
   else {
-    $error_string .= "<p>No matching course found for {$new_course}, check for exact match, remember is it case sensitive.\n";
+    if (count($matching_courses_list) == 0) {
+      $error_string .= "<p>No matching course found for {$new_course}, check for exact match, remember is it case sensitive.\n";
+    }
+    else {
+      $error_string .= "<p>Too many matching courses for {$new_course}, name should be unique\n";
+    }
   }
 }
 else {

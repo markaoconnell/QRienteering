@@ -1,5 +1,8 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/time_routines.php';
+require '../OMeetCommon/nre_routines.php';
+require '../OMeetCommon/results_routines.php';
 require '../OMeetCommon/course_properties.php';
 
 ck_testing();
@@ -179,7 +182,7 @@ if ($score_course && ($score_penalty_msg != "")) {
   echo $score_penalty_msg;
 }
 
-echo show_results($event, $key, $course, "", $score_course, $max_score);
+echo show_results($event, $key, $course, "", $score_course, $max_score, array());
 echo get_all_course_result_links($event, $key);
 
 

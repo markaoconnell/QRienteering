@@ -1,12 +1,13 @@
 <?php
 
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/nre_routines.php';
 require '../OMeetRegistration/nre_class_handling.php';
 
 $failure = false;
 $show_all_classification_tests = false;
 
-$correct_current_year = 2022; // A little awkward, will need to be changed every year
+$correct_current_year = localtime()[5] + 1900;  // Should calculate the current year
 if (get_current_year() != $correct_current_year) {
   echo "Get current year did not return {$correct_current_year}, returned: " . get_current_year() . "\n";
   $failure = true;
@@ -18,8 +19,11 @@ else {
 // Format is the entered birth year (2 or 4 digit) and how it should be interpreted
 // Note: this doesn't work for 00, as 0 as a birth year is taken as unspecified
 // May need to rethink this, but for the moment the UI should always guarantee a 4 digit year
+// ************************
+// Note - this assumes that "24" will be interpreted as 1924 until 2024, in which case it will be interpreted as 2024.
+// Will need to update this test yearly.
 $birth_year_to_age = array(array(1967, 1967), array(2001, 2001), array(1920, 1920), array(67, 1967), array(01, 2001),
-                           array(20, 2020), array(23, 1923), array(40, 1940), array(99, 1999));
+                           array(20, 2020), array(23, 2023), array(24, 1924), array(40, 1940), array(99, 1999));
 
 foreach ($birth_year_to_age as $test_birth_year_entry) {
   if (get_age($test_birth_year_entry[0]) != ($correct_current_year - $test_birth_year_entry[1])) {

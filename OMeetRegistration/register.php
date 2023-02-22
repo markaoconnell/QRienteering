@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/nre_routines.php';
 require '../OMeetCommon/course_properties.php';
 
 ck_testing();
@@ -136,7 +137,7 @@ $preselected_course = isset($_GET["course"]) ? $_GET["course"] : "";
 $parseable_result_string = "\n<!--\n";
 echo "<br><p>Select a course:<br>\n";
 foreach ($courses_array as $course_name) {
-  if (!file_exists("{$courses_path}/{$course_name}/removed")) {
+  if (!file_exists("{$courses_path}/{$course_name}/removed") && !file_exists("{$courses_path}/{$course_name}/no_registrations")) {
     $prechecked_value = (ltrim($course_name, "0..9-") == $preselected_course) ? "checked" : "";
     // Decide at some point if this should specify the full name or just the human readable name
     // For now, only support the human readable name for simplicity

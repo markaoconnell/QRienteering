@@ -1,6 +1,7 @@
 <?php
 
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/time_routines.php';
 
 $test_cases = array(
   "3600" => 3600,

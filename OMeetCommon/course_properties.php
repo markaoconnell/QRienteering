@@ -1,8 +1,12 @@
 <?php
 // Information for parsing the course name
 // and the properties.txt file for a course
+// Combo course - something like a Motala, where there are multiple
+// different course options but the results should be shown in one screen
+// e.g. competitors run three loops in any order, but the final results are from all three loops
 $LINEAR_COURSE = 1;
 $SCORE_O_COURSE = 2;
+$COMBO_COURSE = 3;
 
 $NAME_FIELD = "name";
 $TYPE_FIELD = "type";
@@ -12,8 +16,11 @@ $MAX_SCORE_FIELD = "max";
 $CONTROLS = "controls";
 $ERROR_FIELD = "error";
 
+$COMBO_COURSE_LIST = "course_list";
+
 $LINEAR_COURSE_ID = "l";
 $SCORE_COURSE_ID = "s";
+$COMBO_COURSE_ID = "c";
 
 
 function get_course_properties($course_path) {

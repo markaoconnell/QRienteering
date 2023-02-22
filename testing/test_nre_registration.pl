@@ -310,6 +310,7 @@ $GET{"competitor_first_name"} = $COMPETITOR_FIRST_NAME;
 $GET{"competitor_last_name"} = $COMPETITOR_LAST_NAME;
 $GET{"course"} = "07-Brown";
 $GET{"si_stick"} = "";
+$GET{"cell_number"} = "5086148225";
 $GET{"waiver_signed"} = "signed";
 $GET{"member_id"} = "";
 $GET{"club_name"} = "";
@@ -336,6 +337,38 @@ my(%forwarded_info) = registration_info_string_to_hash($found_registration_info)
 #print "It should be          : " . values_to_classification_info("2001", "f", "M Brown") . "\n";
 if ($forwarded_info{"classification_info"} ne values_to_classification_info("2001", "f", "M Brown")) {
   error_and_exit("New values 2001 and f did not override original values of 1967 and m for OUSA classification.\n$output");
+}
+
+#print $output;
+
+success();
+
+###########
+# Test 11 - 
+# Finalize_registration - No cell phone found, should error
+%TEST_INFO = qw(Testname FinalizeNoCellPhoneProvided);
+%COOKIE = ();
+$COOKIE{"testing_cookie_support"} = "can--space--this--space--be--space--read?";
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+$GET{"competitor_name"} = $COMPETITOR_NAME;
+$GET{"competitor_first_name"} = $COMPETITOR_FIRST_NAME;
+$GET{"competitor_last_name"} = $COMPETITOR_LAST_NAME;
+$GET{"course"} = "07-Brown";
+$GET{"si_stick"} = "";
+#$GET{"cell_number"} = "5086148225";
+$GET{"waiver_signed"} = "signed";
+$GET{"member_id"} = "";
+$GET{"club_name"} = "";
+$GET{"classification_info"} = values_to_classification_info("1967", "m", "M Brown");
+$GET{"birth_year"} = "2001";
+$GET{"gender"} = "f";
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
+$output = qx($cmd);
+
+if ($output !~ /Invalid \(empty\) cell phone/) {
+  error_and_exit("Cell phone missing error not found.\n$output");
 }
 
 #print $output;

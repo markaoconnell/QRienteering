@@ -698,7 +698,7 @@ $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
 $GET{"si_stick_finish"} = $base_64_results;
 
 
-finish_with_stick_successfully($si_competitor_1_id, "00-White", \%GET, \%COOKIE, \%TEST_INFO);
+finish_with_stick_successfully($si_competitor_1_id, "2108369", "00-White", \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
 validate_si_results("${path}/Competitors/${si_competitor_1_id}/controls_found", @si_results);
 
@@ -715,7 +715,7 @@ $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
 $GET{"si_stick_finish"} = $base_64_results;
 
 
-finish_with_stick_successfully($si_competitor_2_id, "01-Yellow", \%GET, \%COOKIE, \%TEST_INFO);
+finish_with_stick_successfully($si_competitor_2_id, "314159", "01-Yellow", \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
 validate_si_results("${path}/Competitors/${si_competitor_2_id}/controls_found", @si_results);
 
@@ -734,7 +734,7 @@ $GET{"si_stick_finish"} = $base_64_results;
 
 
 # 21 minutes over time (1203 seconds really, 20m23s), 120 points - 21 point penalty
-finish_scoreO_with_stick_successfully($si_competitor_3_id, "02-ScoreO", 99, \%GET, \%COOKIE, \%TEST_INFO);
+finish_scoreO_with_stick_successfully($si_competitor_3_id, "141421", "02-ScoreO", 99, \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
 validate_si_results("${path}/Competitors/${si_competitor_3_id}/controls_found", @si_results);
 

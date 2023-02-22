@@ -38,8 +38,8 @@ function ck_score_control_entry($string_to_check) {
 
 
 function parse_course_name($course_name) {
-  global $NAME_FIELD, $TYPE_FIELD, $LIMIT_FIELD, $PENALTY_FIELD, $SCORE_O_COURSE, $LINEAR_COURSE, $ERROR_FIELD;
-  global $SCORE_COURSE_ID, $LINEAR_COURSE_ID;
+  global $NAME_FIELD, $TYPE_FIELD, $LIMIT_FIELD, $PENALTY_FIELD, $SCORE_O_COURSE, $LINEAR_COURSE, $COMBO_COURSE, $ERROR_FIELD;
+  global $SCORE_COURSE_ID, $LINEAR_COURSE_ID, $COMBO_COURSE_ID;
 
   $info = explode(":", $course_name);
   $return_info = array();
@@ -58,6 +58,11 @@ function parse_course_name($course_name) {
     else if ($info[0] == $LINEAR_COURSE_ID) {
       $return_info[$NAME_FIELD] = $info[1];
       $return_info[$TYPE_FIELD] = $LINEAR_COURSE;
+      $expected_fields = 2;
+    }
+    else if ($info[0] == $COMBO_COURSE_ID) {
+      $return_info[$NAME_FIELD] = $info[1];
+      $return_info[$TYPE_FIELD] = $COMBO_COURSE;
       $expected_fields = 2;
     }
     else {
@@ -83,8 +88,9 @@ function parse_course_name($course_name) {
 
 
 function validate_and_parse_course($course_description) {
-  global $NAME_FIELD, $TYPE_FIELD, $LIMIT_FIELD, $PENALTY_FIELD, $SCORE_O_COURSE, $LINEAR_COURSE, $ERROR_FIELD, $CONTROLS;
-  global $SCORE_COURSE_ID, $LINEAR_COURSE_ID, $MAX_SCORE_FIELD;
+  global $NAME_FIELD, $TYPE_FIELD, $LIMIT_FIELD, $PENALTY_FIELD, $SCORE_O_COURSE, $LINEAR_COURSE, $COMBO_COURSE, $ERROR_FIELD;
+  global $CONTROLS, $COMBO_COURSE_LIST;
+  global $SCORE_COURSE_ID, $LINEAR_COURSE_ID, $COMBO_COURSE_ID, $MAX_SCORE_FIELD;
   global $ERRORS, $OUTPUT, $VERBOSE_OUTPUT;
   global $MAX_COURSE_NAME_LEN, $MAX_CONTROLS;
 
@@ -120,6 +126,10 @@ function validate_and_parse_course($course_description) {
   }
   else if ($course_info[$TYPE_FIELD] == $SCORE_O_COURSE) {
     $check_controls = array_map('ck_score_control_entry', $control_list);
+  }
+  else if ($course_info[$TYPE_FIELD] == $COMBO_COURSE) {
+    // Do these look like valid course names?
+    $check_controls = array_map(function ($elt) { return ((ctype_alpha(substr($elt, 0, 1)) && ck_valid_chars($elt)) ? 1 : 0); }, $control_list);
   }
   else {
     $error_string .= "<p>ERROR: Unknown course type {$course_info[$TYPE_FIELD]}.\n";
@@ -212,14 +222,16 @@ function create_event($key, $event_description) {
   mkdir("{$event_path}/Competitors");
   mkdir("{$event_path}/Courses");
   mkdir("{$event_path}/Results");
+  mkdir("{$event_path}/StickXlations");
   file_put_contents("{$event_path}/description", $event_description);
+  file_put_contents("{$event_path}/no_redirects", "");
 
   return($event_name);
 }
 
 function create_course_in_event($course_info, $key, $event) {
-  global $NAME_FIELD, $TYPE_FIELD, $LIMIT_FIELD, $PENALTY_FIELD, $SCORE_O_COURSE, $LINEAR_COURSE, $ERROR_FIELD, $CONTROLS;
-  global $SCORE_COURSE_ID, $LINEAR_COURSE_ID;
+  global $NAME_FIELD, $TYPE_FIELD, $LIMIT_FIELD, $PENALTY_FIELD, $SCORE_O_COURSE, $LINEAR_COURSE, $COMBO_COURSE, $ERROR_FIELD, $CONTROLS;
+  global $SCORE_COURSE_ID, $LINEAR_COURSE_ID, $COMBO_COURSE_ID, $COMBO_COURSE_LIST;
 
   $event_path = get_event_path($event, $key, "..");
   
@@ -238,7 +250,9 @@ function create_course_in_event($course_info, $key, $event) {
   $prefix = sprintf("%02d", $this_course_number);
   mkdir("{$event_path}/Courses/{$prefix}-{$course_info[$NAME_FIELD]}");
   mkdir("{$event_path}/Results/{$prefix}-{$course_info[$NAME_FIELD]}");
-  file_put_contents("${event_path}/Courses/{$prefix}-{$course_info[$NAME_FIELD]}/controls.txt", implode("\n", $course_info[$CONTROLS]));
+  if ($course_info[$TYPE_FIELD] != $COMBO_COURSE) {
+    file_put_contents("${event_path}/Courses/{$prefix}-{$course_info[$NAME_FIELD]}/controls.txt", implode("\n", $course_info[$CONTROLS]));
+  }
 
   if ($course_info[$TYPE_FIELD] == $SCORE_O_COURSE) {
     $properties_string = "";
@@ -248,6 +262,13 @@ function create_course_in_event($course_info, $key, $event) {
       }
     }
     file_put_contents("{$event_path}/Courses/{$prefix}-{$course_info[$NAME_FIELD]}/properties.txt", $properties_string);
+  }
+
+  if ($course_info[$TYPE_FIELD] == $COMBO_COURSE) {
+    $properties_string = "{$COMBO_COURSE_LIST}:" . implode(",", $course_info[$CONTROLS]) . "\n";
+    $properties_string .= "{$TYPE_FIELD}:{$course_info[$TYPE_FIELD]}\n";
+    file_put_contents("{$event_path}/Courses/{$prefix}-{$course_info[$NAME_FIELD]}/properties.txt", $properties_string);
+    file_put_contents("{$event_path}/Courses/{$prefix}-{$course_info[$NAME_FIELD]}/no_registrations", "");
   }
 }
 
