@@ -93,6 +93,11 @@ $GET{"event"} = $event_id;
 $GET{"reported_time"} = "32m45s";
 $GET{"found_all"} = "true";
 $GET{"scoreo_score"} = "0";
+$GET{"setcookie"} = "12345678";
+
+my($time_for_results) = 60*22 + 15;
+$COOKIE{"SelfReportReplayProtectCookie-12345678"} = "PriorCompetitorDIfferentFromTheNewOne,00-White,${time_for_results},OK,5";
+
 
 hashes_to_artificial_file();
 $cmd = "php ../OMeetRegistration/self_report_2.php";
@@ -613,7 +618,56 @@ if ($output !~ /appears to contain non-numeric characters/) {
 success();
 
 
+###########
+# Test 14 - Self report with a good time, but as a replay
+%TEST_INFO = qw(Testname SelfReportWorkedOkay);
 
+%GET = qw(key UnitTestPlayground course 00-White);
+$GET{"competitor_name"} = $COMPETITOR_NAME;
+$GET{"event"} = $event_id;
+$GET{"reported_time"} = "32m45s";
+$GET{"found_all"} = "true";
+$GET{"scoreo_score"} = "0";
+$GET{"setcookie"} = "12345678";
+
+my($time_for_results) = 60*32 + 45;
+$COOKIE{"SelfReportReplayProtectCookie-12345678"} = "${COMPETITOR_NAME},00-White,${time_for_results},OK,5";
+
+my($last_known_competitor_id);
+my($ls_cmd);
+$ls_cmd = "ls -1t ${path}/Competitors | head -n 1";
+$last_known_competitor_id = qx($ls_cmd);
+chomp($last_known_competitor_id);
+print "The currently last competitor_id is $last_known_competitor_id\n";
+
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetRegistration/self_report_2.php";
+$output = qx($cmd);
+
+
+#print $output;
+if ($output =~ /Results for: $COMPETITOR_NAME/) {
+  error_and_exit("Did not find results string.\n$output");
+}
+
+
+$path = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+
+my($competitor_id);
+my($ls_cmd);
+$ls_cmd = "ls -1t ${path}/Competitors | head -n 1";
+$competitor_id = qx($ls_cmd);
+chomp($competitor_id);
+print "Curent last competitor_id is $competitor_id\n";
+if ($last_known_competitor_id != $competitor_id) {
+    error_and_exit("New competitor ${competitor_id} created unexpectedly, vs $last_known_competitor_id.\n");
+}
+
+success();
+
+
+	
 ############
 # Cleanup
 

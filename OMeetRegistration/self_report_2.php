@@ -108,34 +108,46 @@ else {
   }
 }
 
+$is_a_replay = false;
+if (isset($_GET["setcookie"])) {
+  $cookie_unique_id = $_GET["setcookie"];
+  $cookie_name = "SelfReportReplayProtectCookie-{$cookie_unique_id}";
+  $cookie_value="{$competitor_name},{$course},{$time_for_results}," . ($is_a_dnf ? "DNF" : "OK") . ",{$scoreo_score}";
+  if (isset($_COOKIE[$cookie_name]) && ($_COOKIE[$cookie_name] == $cookie_value)) {
+    $is_a_replay = true;
+  }
+}
+
 
 // Generate the competitor_id and make sure it is truly unique
 // Unless this is for an existing competitor...
 $tries = 0;
-if ($competitor == "") {
-  while ($tries < 5) {
-    $competitor_id = uniqid();
-    $competitor_path = get_competitor_path($competitor_id, $event, $key);
-    mkdir ($competitor_path, 0777);
-    $competitor_file = fopen($competitor_path . "/name", "x");
-    if ($competitor_file !== false) {
-      break;
+if (!$is_a_replay) {
+  if ($competitor == "") {
+    while ($tries < 5) {
+      $competitor_id = uniqid();
+      $competitor_path = get_competitor_path($competitor_id, $event, $key);
+      mkdir ($competitor_path, 0777);
+      $competitor_file = fopen($competitor_path . "/name", "x");
+      if ($competitor_file !== false) {
+        break;
+      }
+      $tries++;
     }
-    $tries++;
   }
-}
-else {
-  $competitor_path = get_competitor_path($competitor, $event, $key);
-  if (!is_dir($competitor_path)) {
-    error_and_exit("Unknown competitor {$competitor} with name {$competitor_name}, was the entry already removed?\n");
+  else {
+    $competitor_path = get_competitor_path($competitor, $event, $key);
+    if (!is_dir($competitor_path)) {
+      error_and_exit("Unknown competitor {$competitor} with name {$competitor_name}, was the entry already removed?\n");
+    }
+    $competitor_id = $competitor;
   }
-  $competitor_id = $competitor;
 }
 
 if ($tries === 5) {
   error_and_exit("<p>Temporary error recording results, please retry.\n");
 }
-else {
+else if (!$is_a_replay) {
   // Save the information about the competitor
   if ($competitor == "") {
     fwrite($competitor_file, $competitor_name);
@@ -166,20 +178,28 @@ else {
 }
 
 
+// Guard against someone who hits reload on this page - don't add the entry a second time
+if (isset($GET_["setcookie"])) {
+  setcookie($cookie_name, $cookie_value, $current_time + (3600 * 2), $cookie_path);
+}
+
 
 echo get_web_page_header(true, true, false);
 
-$dnf_string = "";
-if (file_exists("${competitor_path}/dnf")) {
-  $dnf_string = " - DNF";
-}
 
-$competitor_name = file_get_contents("{$competitor_path}/name");
-$readable_course_name = ltrim($course, "0..9-");
-$results_string = "<p class=\"title\">Results for: {$competitor_name}, course complete ({$readable_course_name}{$dnf_string}), time taken " . formatted_time($time_for_results) . "<p><p>";
-echo "{$results_string}\n";
-if ($score_course && ($score_penalty_msg != "")) {
-  echo $score_penalty_msg;
+if (!$is_a_replay) {
+  $dnf_string = "";
+  if (file_exists("${competitor_path}/dnf")) {
+    $dnf_string = " - DNF";
+  }
+
+  $competitor_name = file_get_contents("{$competitor_path}/name");
+  $readable_course_name = ltrim($course, "0..9-");
+  $results_string = "<p class=\"title\">Results for: {$competitor_name}, course complete ({$readable_course_name}{$dnf_string}), time taken " . formatted_time($time_for_results) . "<p><p>";
+  echo "{$results_string}\n";
+  if ($score_course && ($score_penalty_msg != "")) {
+    echo $score_penalty_msg;
+  }
 }
 
 echo show_results($event, $key, $course, "", $score_course, $max_score, array());

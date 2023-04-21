@@ -105,6 +105,7 @@ if (!isset($_GET["competitor"])) {
       echo "<p><input type=\"radio\" name=\"course\" value=\"" . $course_name . "\">" . ltrim($course_name, "0..9-") . " <br>\n";
     }
   }
+  echo "<input type=hidden name=setcookie value=\"" . time() . "\">\n";
 }
 else {
   echo "<input type=hidden name=course value=\"{$course}\">\n";
