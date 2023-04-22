@@ -179,7 +179,9 @@ else if (!$is_a_replay) {
 
 
 // Guard against someone who hits reload on this page - don't add the entry a second time
-if (isset($GET_["setcookie"])) {
+if (isset($_GET["setcookie"])) {
+  $cookie_path = isset($_SERVER["REQUEST_URI"]) ? dirname(dirname($_SERVER["REQUEST_URI"])) : "";
+  $current_time = time();
   setcookie($cookie_name, $cookie_value, $current_time + (3600 * 2), $cookie_path);
 }
 
