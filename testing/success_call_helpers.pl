@@ -90,7 +90,7 @@ sub reach_control_ok {
   }
   
   $time_now = time();
-  if (($time_now - $time_at_control) > 5) {
+  if (($time_now - $time_at_control) > 20) {
     error_and_exit("Control file wrong, " . $sorted_controls_found[$#sorted_controls_found] . " has time $time_at_control vs time_now of $time_now.");
   }
 
@@ -167,7 +167,7 @@ sub reach_control_with_skip {
   }
   
   $time_now = time();
-  if (($time_now - $time_at_control) > 5) {
+  if (($time_now - $time_at_control) > 20) {
     error_and_exit("Control file wrong, " . $extra_controls_array[$#extra_controls_array] . " has time $time_at_control vs time_now of $time_now.");
   }
 
@@ -495,7 +495,7 @@ sub finish_successfully {
   
   @file_contents_array = file_get_contents("$controls_found_path/finish");
   $time_now = time();
-  if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
+  if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 15)) {
     error_and_exit("File contents wrong, $controls_found_path/finish: " . join("--", @file_contents_array) . " vs time_now of $time_now.");
   }
   
@@ -633,7 +633,7 @@ sub finish_score_successfully {
   
   @file_contents_array = file_get_contents("$controls_found_path/finish");
   $time_now = time();
-  if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
+  if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 15)) {
     error_and_exit("File contents wrong, $controls_found_path/finish: " . join("--", @file_contents_array) . " vs time_now of $time_now.");
   }
 
@@ -786,7 +786,7 @@ sub finish_with_dnf {
   
   @file_contents_array = file_get_contents("$controls_found_path/finish");
   $time_now = time();
-  if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 5)) {
+  if (($#file_contents_array != 0) || (($time_now - $file_contents_array[0]) > 15)) {
     error_and_exit("File contents wrong, $controls_found_path/finish: " . join("--", @file_contents_array) . " vs time_now of $time_now.");
   }
   

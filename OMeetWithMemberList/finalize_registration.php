@@ -190,10 +190,6 @@ if (!$is_preregistered_checkin && $has_preset_id && ($email_si_stick != "")) {
   $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]);
   // print_r($email_properties);
   if ($email_enabled && ($email_properties["email_to_register_stick"] != "")) {
-    $name_info = get_member_name_info($member_id, $matching_info);
-    $first_name = $name_info[0];
-    $last_name = $name_info[1];
-
     $email_addr = $email_properties["email_to_register_stick"];
     if (preg_match("/^[a-zA-z0-9_.\-]+@[a-zA-Z0-9_.\-]+/", $email_addr)) {
       $headers = array();
@@ -208,7 +204,7 @@ if (!$is_preregistered_checkin && $has_preset_id && ($email_si_stick != "")) {
       $body_string .= "\r\n</body></html>";
     
       //echo "<p>Mail: Attempting mail send to {$email_addr} with results.\n";
-      $subject = "Register SI {$email_si_stick}";
+      $subject = "Register SI {$email_si_stick} to {$first_name} {$last_name}";
 
       // echo "<p>Emailing to {$email_addr}\n";
       if (isset($email_properties["extra_params"]) && ($email_properties["extra_params"] != "")) {

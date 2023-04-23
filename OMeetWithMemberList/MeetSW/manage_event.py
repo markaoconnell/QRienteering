@@ -341,7 +341,7 @@ def registration_window(user_info):
     registration_flow = register_user(user_info, url_caller, discovered_courses, myFont)
     add_long_running_class(registration_flow)
     registration_flow.add_completion_callback(remove_long_running_class)
-    registration_flow.create_registration_window(event_key, event)
+    registration_flow.create_registration_window(url_caller.get_xlated_key(), event)
     return
 
 def change_font_size_window():
