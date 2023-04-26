@@ -155,7 +155,7 @@ def get_event(current_event_key):
 
 ##############################################################
 def have_event(choice_frame, event_list, chosen_event):
-    global event, event_key, event_allows_preregistration
+    global event, event_allows_preregistration
     if choice_frame != None:
         choice_frame.pack_forget()
         choice_frame.destroy()
@@ -318,7 +318,7 @@ def replay_stick(user_info):
 
 def replay_stick_thread(user_info):
     if exit_all_threads: return
-    result_tuple = url_caller.upload_results(user_info, event_key, event)
+    result_tuple = url_caller.upload_results(user_info, url_caller.get_xlated_key(), event)
     if exit_all_threads: return
 
     if user_info.get_missed_finish():
