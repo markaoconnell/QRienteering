@@ -119,11 +119,38 @@ if (isset($_GET["setcookie"])) {
 }
 
 
+$force_new_competitor_id = false;
+// If the competitor has punches already, then we need to make a new competitor id for recording the results
+// This can only happen when editing punches for a competitor and changing it to a self-reported time
+if ($competitor != "") {
+    $competitor_path = get_competitor_path($competitor, $event, $key);
+    $controls_found_path = "{$competitor_path}/controls_found";
+    if (!is_dir($competitor_path) || !is_dir($controls_found_path)) {
+      error_and_exit("Unknown competitor {$competitor} with name {$competitor_name}, was the entry already removed?\n");
+    }
+
+    $controls_found = scandir($controls_found_path);
+    $controls_found = array_diff($controls_found, array(".", "..", "start", "finish"));
+    if (count($controls_found) != 0) {
+      $force_new_competitor_id = true;
+    }
+    else {
+      // The competitor has not visited ANY controls, just remove any start or finish entry and mark this as self-timed
+      if (file_exists("{$controls_found_path}/start")) {
+        unlink("{$controls_found_path}/start");
+      }
+
+      if (file_exists("{$controls_found_path}/finish")) {
+        unlink("{$controls_found_path}/finish");
+      }
+    }
+}
+
 // Generate the competitor_id and make sure it is truly unique
 // Unless this is for an existing competitor...
 $tries = 0;
 if (!$is_a_replay) {
-  if ($competitor == "") {
+  if (($competitor == "") || $force_new_competitor_id) {
     while ($tries < 5) {
       $competitor_id = uniqid();
       $competitor_path = get_competitor_path($competitor_id, $event, $key);
@@ -136,10 +163,6 @@ if (!$is_a_replay) {
     }
   }
   else {
-    $competitor_path = get_competitor_path($competitor, $event, $key);
-    if (!is_dir($competitor_path)) {
-      error_and_exit("Unknown competitor {$competitor} with name {$competitor_name}, was the entry already removed?\n");
-    }
     $competitor_id = $competitor;
   }
 }
@@ -149,7 +172,7 @@ if ($tries === 5) {
 }
 else if (!$is_a_replay) {
   // Save the information about the competitor
-  if ($competitor == "") {
+  if (($competitor == "")  || $force_new_competitor_id) {
     fwrite($competitor_file, $competitor_name);
     fclose($competitor_file);
     file_put_contents("{$competitor_path}/course", $course);
@@ -169,12 +192,12 @@ else if (!$is_a_replay) {
   }
 
   // If this is the first result for the course, create the directory
-  if (!file_exists("{$results_path}/${course}")) {
-    mkdir("{$results_path}/${course}");
+  if (!file_exists("{$results_path}/{$course}")) {
+    mkdir("{$results_path}/{$course}");
   }
 
   $result_filename = sprintf("%04d,%06d,%s", $max_score - $scoreo_score, $time_for_results, $competitor_id);
-  file_put_contents("{$results_path}/${course}/${result_filename}", "");
+  file_put_contents("{$results_path}/{$course}/{$result_filename}", "");
 }
 
 
@@ -202,6 +225,11 @@ if (!$is_a_replay) {
   if ($score_course && ($score_penalty_msg != "")) {
     echo $score_penalty_msg;
   }
+}
+
+if ($force_new_competitor_id) {
+  echo "<p><p>Converted competitor {$competitor_name} to self reported time despite partial or full course completion, old entry must be manually removed.\n";
+  echo "<p><a href=\"../OMeetMgmt/remove_from_event.php?event={$event}&key={$key}&Remove-{$competitor}=1\">Remove original {$competitor_name} entry</a><p><p>\n";
 }
 
 echo show_results($event, $key, $course, "", $score_course, $max_score, array());

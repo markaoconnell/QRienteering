@@ -11,25 +11,65 @@ $ERRORS = "errors";
 $OUTPUT = "output";
 $VERBOSE_OUTPUT = "verbose output";
 
+$verbose_errors = array();
+
 
 // Utility functions
 function ck_valid_chars($string_to_check) {
-  return (preg_match("/^[a-zA-Z0-9_-]+$/", $string_to_check));
+  global $verbose_errors;
+  if (!preg_match("/^[a-zA-Z0-9_-]+$/", $string_to_check)) {
+    $verbose_errors[] = "Illegal characters in \"{$string_to_check}\", only letters, numbers, underscore (_), and hyphen (-) allowed.";
+    return(0);
+  }
+  else {
+    return(1);  // success
+  }
 }
 
 function ck_linear_control_entry($string_to_check) {
-  global $MAX_CONTROL_CODE_LEN;
-  return((ctype_alnum($string_to_check) && (strlen($string_to_check) < $MAX_CONTROL_CODE_LEN)) ? 1 : 0);
-}
-
-function ck_score_control_entry($string_to_check) {
-  global $MAX_CONTROL_CODE_LEN, $MAX_CONTROL_VALUE;
-  if (!preg_match("/^[a-zA-Z0-9]+:[0-9]+$/", $string_to_check)) {
+  global $MAX_CONTROL_CODE_LEN, $verbose_errors;
+  if (!ctype_alnum($string_to_check)) {
+    $verbose_errors[] = "Illegal characters in \"{$string_to_check}\", only letters and numbers allowed.";
     return(0);
   }
 
+  if (strlen($string_to_check) >= $MAX_CONTROL_CODE_LEN) {
+    $verbose_errors[] = "Control code too long, may only be {$MAX_CONTROL_CODE_LEN} characters: \"" . substr($string_to_check, 0, $MAX_CONTROL_CODE_LEN) . "...\"";
+    return(0);
+  }
+
+  return (1);
+}
+
+function ck_score_control_entry($string_to_check) {
+  global $MAX_CONTROL_CODE_LEN, $MAX_CONTROL_VALUE, $verbose_errors;
   $pieces = explode(":", $string_to_check);
-  if ((strlen($pieces[0]) > $MAX_CONTROL_CODE_LEN) || ($pieces[1] > $MAX_CONTROL_VALUE)) {
+
+  if (count($pieces) != 2) {
+    $verbose_errors[] = "Poorly formatted scoreO control entry \"{$string_to_check}\", must have exactly one colon (:) to separate control code from point value";
+    return(0);
+  }
+
+  if (!preg_match("/^[a-zA-Z0-9]+:[0-9]+$/", $string_to_check)) {
+    if (!preg_match("/^[A-Za-z0-9]+$/", $pieces[0])) {
+      $verbose_errors[] = "Poorly formatted control code \"{$pieces[0]}\" from \"{$string_to_check}\", may only contain letters and numbers";
+    }
+
+
+    if (!preg_match("/^[0-9]+$/", $pieces[1])) {
+      $verbose_errors[] = "Poorly formatted control code point value \"{$pieces[1]}\" from \"{$string_to_check}\", may only contain numbers and may not be empty";
+    }
+
+    return(0);
+  }
+
+  if (strlen($pieces[0]) > $MAX_CONTROL_CODE_LEN) {
+    $verbose_errors[] = "Control code exceeds maximum length of {$MAX_CONTROL_CODE_LEN}: \"" . substr($pieces[0], 0, $MAX_CONTROL_CODE_LEN) . "...:{$pieces[1]}\"";
+    return(0);
+  }
+  
+  if ($pieces[1] > $MAX_CONTROL_VALUE) {
+    $verbose_errors[] = "Control point value exceeds maximum of {$MAX_CONTROL_VALUE}: \"{$string_to_check}\"";
     return(0);
   }
 
@@ -93,6 +133,7 @@ function validate_and_parse_course($course_description) {
   global $SCORE_COURSE_ID, $LINEAR_COURSE_ID, $COMBO_COURSE_ID, $MAX_SCORE_FIELD;
   global $ERRORS, $OUTPUT, $VERBOSE_OUTPUT;
   global $MAX_COURSE_NAME_LEN, $MAX_CONTROLS;
+  global $verbose_errors;
 
   // Course name must begin with a letter and may only contain [a-zA-Z0-9-_]
   // controls may only contain [a-zA-Z0-9]
@@ -116,9 +157,13 @@ function validate_and_parse_course($course_description) {
     $verbose_output_string .= "<p>Course name {$course_name} passes the checks.\n";
   }
   else {
-    $error_string .= "<p>ERROR: Course name \"{$course_name}\" fails the checks, only letters, numbers, and - allowed (no spaces allowed).\n";
+    $error_string .= "<p>ERROR: Course name \"{$course_name}\" fails the checks, only letters, numbers, _, and - allowed (no spaces allowed).\n";
   }
 
+  // Reset the errors array so we only show errors for this particular course, not from prior courses
+  // This also has the effect of removing any error from checking the course name, but that's oky, that
+  // error was reported already (just above)
+  $verbose_errors = array();
   $control_list = array_map('trim', array_slice($course_name_and_controls, 1));
 
   if ($course_info[$TYPE_FIELD] == $LINEAR_COURSE) {
@@ -140,14 +185,17 @@ function validate_and_parse_course($course_description) {
     $verbose_output_string .= "<p>Control list all seems to be correctly formatted and not too long.\n";
   }
   else {
-    $error_string .= "<p>ERROR: Control list for \"{$course_name}\" contains either non-alphanumeric characters or too long.\n";
+    $error_string .= "<p>ERROR: Control list for \"{$course_name}\" has errors.\n";
     $error_control_entries = array_filter($check_controls, function ($elt) { return ($elt == 0); });
     $controls_with_an_error = array_map(function ($elt) use ($control_list) { return ($control_list[$elt]); }, array_keys($error_control_entries));
     $error_string .= "<p>Incorrect controls: " . join(",", $controls_with_an_error) . "\n";
+    if (count($verbose_errors) > 0) {
+      $error_string .= "<ul><li>" . join("\n<li>", $verbose_errors) . "</ul>\n";
+    }
   }
 
   if (count($control_list) > $MAX_CONTROLS) {
-    $error_string .= "<p>ERROR: Too many controls found - " . count($control_list) . "\n";
+    $error_string .= "<p>ERROR: Too many controls found - " . count($control_list) . ", max of {$MAX_CONTROLS} allowed\n";
   }
 
   // Validate that if there are duplicate entries, that at least the point values are the same
