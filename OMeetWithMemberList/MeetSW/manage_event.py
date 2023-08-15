@@ -19,6 +19,7 @@ from mass_start_flow import mass_start_flow
 from si_reader import si_processor, real_si_reader, fake_si_reader
 from url_caller import url_caller, UrlTimeoutException
 from font_size_change_flow import change_font_size_flow
+from version import version
 
 progress_label = None
 mode_label = None
@@ -546,12 +547,15 @@ root.title("QRienteering SI download station")
 #Configure the default properties, especially font size
 myFont = font.Font()
 
+# Get the version
+version_string = version().get_version()
 
 # Set up the initial layout
 menubar = tk.Menu(root)
 options_menu = tk.Menu(menubar, tearoff = 0)
 options_menu.add_command(label = "Mass start from SI unit", command = switch_to_mass_start_mode)
 options_menu.add_command(label = "Change font size", command = change_font_size_window)
+options_menu.add_command(label = f"Version: {version_string}")
 menubar.add_cascade(label = "Options", menu = options_menu)
 root.config(menu = menubar)
 
