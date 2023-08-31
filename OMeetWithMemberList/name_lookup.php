@@ -163,9 +163,9 @@ else {
     $success_string .= "<p><input type=radio name=\"member_id\" value=\"{$possible_member}\"> " . get_full_name($possible_member, $matching_info) . "\n";
   }
   if ($is_preregistered_checkin) {
-    $success_string .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
     $success_string .= "<input type=\"hidden\" name=\"checkin\" value=\"true\">\n";
   }
+  $success_string .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
   $success_string .= "<input type=\"hidden\" name=\"key\" value=\"{$key}\">\n";
   $success_string .= "<p><input type=submit name=\"Choose member\"/>\n";
   $success_string .= "</form>\n";

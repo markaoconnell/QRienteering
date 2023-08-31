@@ -132,21 +132,24 @@ elseif ($is_generic_registration) {
 }
 else {
   if (isset($saved_registration_info["first_name"])) {
-    $presupplied_first_name = "value=\"{$saved_registration_info["first_name"]}\"";
+    $escaped_first_name = htmlentities($saved_registration_info["first_name"]);
+    $presupplied_first_name = "value=\"{$escaped_first_name}\"";
   }
   else {
     $presupplied_first_name = "";
   }
 
   if (isset($saved_registration_info["last_name"])) {
-    $presupplied_last_name = "value=\"{$saved_registration_info["last_name"]}\"";
+    $escaped_last_name = htmlentities($saved_registration_info["last_name"]);
+    $presupplied_last_name = "value=\"{$escaped_last_name}\"";
   }
   else {
     $presupplied_last_name = "";
   }
 
   if (isset($saved_registration_info["club_name"])) {
-    $presupplied_club_name = "value=\"{$saved_registration_info["club_name"]}\"";
+    $escaped_club_name = htmlentities($saved_registration_info["club_name"]);
+    $presupplied_club_name = "value=\"{$escaped_club_name}\"";
   }
   else {
     $presupplied_club_name = "";
