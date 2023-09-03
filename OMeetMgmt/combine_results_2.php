@@ -11,6 +11,8 @@ set_page_title("Results Combiner");
 
 $output_string = "";
 $error_string = "";
+$incomplete_entry_string = "";
+$incomplete_entry_hash = array();
 
 $key = isset($_GET["key"]) ? $_GET["key"] : "";
 if (!key_is_valid($key)) {
@@ -149,6 +151,10 @@ foreach ($results_by_class_and_stick as $one_result) {
     }
     $results_by_class[$competitive_class][$hash_key] = $one_result;
   }
+  else {
+    $hash_key = "{$one_result["name"]}:{$one_result["stick"]}";
+    $incomplete_entry_hash[$hash_key] = $one_result;
+  }
 }
 
 // Format the results nicely for printing
@@ -194,10 +200,31 @@ foreach (array_merge($named_classes, $extra_classes) as $this_class) {
   $output_string .= "</table><p><p>\n";
 }
 
+if (!$suppress_errors && (count($incomplete_entry_hash) > 0)) {
+  $incomplete_entry_string .= "<p>Results that are not counted for various reasons\n";
+  $incomplete_entry_string .= "<table border=1 style=\"border-collapse:collapse\">\n<tr>{$header_row}</tr>\n";
+  $incomplete_entry_hash_keys = array_keys($incomplete_entry_hash);
+  asort($incomplete_entry_hash_keys);
+  foreach ($incomplete_entry_hash_keys as $incomplete_entry_key) {
+    $this_result = $incomplete_entry_hash[$incomplete_entry_key];
+    $printable_time = csv_formatted_time($this_result["total_time"]);
+    $individual_times = implode("", array_map(function ($elt) { return ("<td>{$elt}</td>"); }, $this_result["individual_times"]));
+
+    $incomplete_entry_string .= "<tr><td>{$this_result["name"]}</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
+    $incomplete_entry_string .= $individual_times;
+    $incomplete_entry_string .= "</tr>\n";
+  }
+  $incomplete_entry_string .= "</table><p><p>\n";
+}
+
 echo get_web_page_header(true, false, false);
 
 if (($error_string != "") && !$suppress_errors) {
   echo $error_string;
+}
+
+if (($incomplete_entry_string != "") && !$suppress_errors) {
+  echo $incomplete_entry_string;
 }
 
 echo $output_string;
