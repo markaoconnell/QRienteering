@@ -13,6 +13,7 @@ $output_string = "";
 $error_string = "";
 $incomplete_entry_string = "";
 $incomplete_entry_hash = array();
+$dnf_hash = array();
 
 $key = isset($_GET["key"]) ? $_GET["key"] : "";
 if (!key_is_valid($key)) {
@@ -97,6 +98,7 @@ foreach ($event_list as $this_event) {
       }
 
       if ($this_result["dnf"] != 0) {
+	$dnf_hash["{$this_result["competitor_name"]}:{$this_result["si_stick"]}"] = 1;
         continue;
       }
 
@@ -205,14 +207,32 @@ if (!$suppress_errors && (count($incomplete_entry_hash) > 0)) {
   $incomplete_entry_string .= "<table border=1 style=\"border-collapse:collapse\">\n<tr>{$header_row}</tr>\n";
   $incomplete_entry_hash_keys = array_keys($incomplete_entry_hash);
   asort($incomplete_entry_hash_keys);
+  $last_seen_name="";
+  $last_seen_stick="";
   foreach ($incomplete_entry_hash_keys as $incomplete_entry_key) {
     $this_result = $incomplete_entry_hash[$incomplete_entry_key];
     $printable_time = csv_formatted_time($this_result["total_time"]);
     $individual_times = implode("", array_map(function ($elt) { return ("<td>{$elt}</td>"); }, $this_result["individual_times"]));
 
-    $incomplete_entry_string .= "<tr><td>{$this_result["name"]}</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
-    $incomplete_entry_string .= $individual_times;
-    $incomplete_entry_string .= "</tr>\n";
+    if (isset($dnf_hash[$incomplete_entry_key])) {
+      $incomplete_entry_string .= "<tr bgcolor=gray><td>{$this_result["name"]} - has dnf</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
+      $incomplete_entry_string .= $individual_times;
+      $incomplete_entry_string .= "</tr>\n";
+    }
+    else {
+      // Most like cause of a true error is someone who switched sticks during the event, so flag these clearly
+      if (($last_seen_name == $this_result["name"]) && ($last_seen_stick != $this_result["stick"])) {
+        $incomplete_entry_string .= "<tr bgcolor=red><td>{$this_result["name"]}</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
+      }
+      else {
+        $incomplete_entry_string .= "<tr><td>{$this_result["name"]}</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
+      }
+      $incomplete_entry_string .= $individual_times;
+      $incomplete_entry_string .= "</tr>\n";
+    }
+
+    $last_seen_name = $this_result["name"];
+    $last_seen_stick = $this_result["stick"];
   }
   $incomplete_entry_string .= "</table><p><p>\n";
 }
