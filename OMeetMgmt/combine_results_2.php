@@ -138,6 +138,73 @@ foreach ($event_list as $this_event) {
       $results_by_class_and_stick[$hash_key]["individual_times"][] = $this_result["time"];
     }
   }
+
+  // Look to see if this is an unfinished event where we need to account for outstanding runners
+  //$error_string .= "<p>Event {$this_event} in tss GET is {$_GET["time_since_start-{$this_event}"]}\n";
+  if (isset($_GET["time_since_start-{$this_event}"]) && ($_GET["time_since_start-{$this_event}"] != "")) {
+    $default_elapsed_time = $_GET["time_since_start-{$this_event}"];
+    $default_elapsed_time_seconds = time_limit_to_seconds($default_elapsed_time);
+    if ($default_elapsed_time_seconds != -1) {
+      //$error_string .= "<p>Event {$this_event} has default elapsed time seconds of {$default_elapsed_time_seconds}\n";
+      $reported_elapsed_time = csv_formatted_time($default_elapsed_time_seconds);
+      $competitor_directory = get_competitor_directory($this_event, $key, "..");
+      if (is_dir($competitor_directory)) {  // shouldn't really need to test for this...
+        $competitor_list = scandir("{$competitor_directory}");
+	$competitor_list = array_diff($competitor_list, array(".", ".."));
+
+	foreach ($competitor_list as $possible_unfinished_competitor) {
+	  // Skip anyone with a finish marker or who self reported (shouldn't happen at an NRE...)
+	  // Skip anyone not using a SI stick - ineligible at most NREs
+          if (file_exists("{$competitor_directory}/{$possible_unfinished_competitor}/controls_found/finish")) {
+	    continue;
+	  } 
+          if (file_exists("{$competitor_directory}/{$possible_unfinished_competitor}/self_reported")) {
+	    continue;
+	  } 
+          if (file_exists("{$competitor_directory}/{$possible_unfinished_competitor}/si_stick")) {
+	    $unfinished_competitor_stick = file_get_contents("{$competitor_directory}/{$possible_unfinished_competitor}/si_stick");
+	  }
+	  else {
+	    continue;
+	  } 
+
+	  // Truly have an unfinished competitor, but we only care if in a competitive class for the NRE
+	  $unfinished_competitor_path = "{$competitor_directory}/{$possible_unfinished_competitor}";
+	  $competitor_class = get_class_for_competitor($unfinished_competitor_path);
+	  if ($competitor_class == "") {
+	    continue;
+	  }
+	  $course = file_get_contents("{$unfinished_competitor_path}/course");
+          $readable_course_name = ltrim($course, "0..9-");
+	  $unfinished_competitor_name = file_get_contents("{$unfinished_competitor_path}/name");
+
+
+	  // Should really check a few things here but I'm being lazy for the moment
+	  // Should check if the name matches if the entry exists already
+	  // Should check if the course matches if the entry exists already
+	  // Should check if the competitor_class is appropriate for the course
+	  // These are checked for true finishers, so any error we will find when the person ACTUALLY finishes, but would be better to know now
+	  $hash_key = "{$competitor_class}:{$unfinished_competitor_stick}";
+          if (!isset($results_by_class_and_stick[$hash_key])) {
+            $results_by_class_and_stick[$hash_key] = array("name" => $unfinished_competitor_name,
+                                                           "course" => $readable_course_name,
+                                                           "competitive_class" => $competitor_class,
+                                                           "stick" => $unfinished_competitor_stick,
+                                                           "total_time" => 0,
+						           "individual_times" => array(),
+							   "num_finishes" => 0);
+	  }
+          $results_by_class_and_stick[$hash_key]["total_time"] += $default_elapsed_time_seconds;
+          $results_by_class_and_stick[$hash_key]["num_finishes"]++;
+	  $results_by_class_and_stick[$hash_key]["individual_times"][] = "<mark>$reported_elapsed_time</mark>";
+	  $results_by_class_and_stick[$hash_key]["provisional"] = 1;
+	}
+      }
+    }
+    else {
+      $error_string .= "<p>Time limit \"{$default_elapsed_time}\" is incorrectly formatted, not adding unfinished competitors from that event.\n";
+    }
+  }
 }
 
 // Move to an array keyed by class and subarray keyed by time:stick
@@ -194,7 +261,12 @@ foreach (array_merge($named_classes, $extra_classes) as $this_class) {
     $printable_time = csv_formatted_time($this_result["total_time"]);
     $individual_times = implode("", array_map(function ($elt) { return ("<td>{$elt}</td>"); }, $this_result["individual_times"]));
 
-    $output_string .= "<tr><td>{$this_result["name"]}</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
+    if (isset($this_result["provisional"])) {
+      $output_string .= "<tr><td><del>{$this_result["name"]}</del><mark>Still on course</mark></td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
+    }
+    else {
+      $output_string .= "<tr><td>{$this_result["name"]}</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
+    }
     $output_string .= $individual_times;
     $output_string .= "</tr>\n";
   }
@@ -214,18 +286,22 @@ if (!$suppress_errors && (count($incomplete_entry_hash) > 0)) {
     $printable_time = csv_formatted_time($this_result["total_time"]);
     $individual_times = implode("", array_map(function ($elt) { return ("<td>{$elt}</td>"); }, $this_result["individual_times"]));
 
+    $provisional_text = "";
+    if (isset($this_result["provisional"])) {
+      $provisional_text = "<strong> STILL ON COURSE</strong>";
+    }
     if (isset($dnf_hash[$incomplete_entry_key])) {
-      $incomplete_entry_string .= "<tr bgcolor=gray><td>{$this_result["name"]} - has dnf</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
+      $incomplete_entry_string .= "<tr bgcolor=gray><td>{$this_result["name"]} - has dnf{$provisional_text}</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
       $incomplete_entry_string .= $individual_times;
       $incomplete_entry_string .= "</tr>\n";
     }
     else {
       // Most like cause of a true error is someone who switched sticks during the event, so flag these clearly
       if (($last_seen_name == $this_result["name"]) && ($last_seen_stick != $this_result["stick"])) {
-        $incomplete_entry_string .= "<tr bgcolor=red><td>{$this_result["name"]}</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
+        $incomplete_entry_string .= "<tr bgcolor=red><td>{$this_result["name"]}{$provisional_text}</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
       }
       else {
-        $incomplete_entry_string .= "<tr><td>{$this_result["name"]}</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
+        $incomplete_entry_string .= "<tr><td>{$this_result["name"]}{$provisional_text}</td><td>{$printable_time}</td><td>{$this_result["course"]}</td><td>{$this_result["stick"]}</td> ";
       }
       $incomplete_entry_string .= $individual_times;
       $incomplete_entry_string .= "</tr>\n";

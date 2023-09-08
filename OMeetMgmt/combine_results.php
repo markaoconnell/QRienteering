@@ -57,15 +57,23 @@ echo get_web_page_header(true, false, false);
 <p>Orienteering Event Results combiner
 <p>
 <p> Choose the events whose results should be combined
+<p> Fill in the box for events still in progress to give unfinished competitors a default
+time for the course - normally the time elapsed since the last start - this can be useful
+to see if any outstanding runners <strong>could</strong> be eligible for an award.  Format
+as 60m (60 minutes), 90m (90 minutes), 1h45m (105 minutes), etc...
 <form action="./combine_results_2.php">
 <?php
 echo "<input type=hidden name=\"key\" value=\"{$key}\">\n";
 echo "<ul>\n";
 echo implode("\n", array_map(function ($elt) use ($base_path, $key)
-                             { return (  "<li> <input type=checkbox name=\"{$elt}\" value=1> " . (file_get_contents("{$base_path}/{$elt}/description"))  );  }, 
+                             { return (
+	                       "<li> <input type=checkbox name=\"{$elt}\" value=1> " . (file_get_contents("{$base_path}/{$elt}/description")) .
+                               " - <input type=text name=\"time_since_start-{$elt}\" >" );  }, 
                              $open_event_list));
 echo implode("\n", array_map(function ($elt) use ($base_path, $key)
-                             { return (  "<li> <input type=checkbox name=\"{$elt}\" value=1> " . (file_get_contents("{$base_path}/{$elt}/description"))  );  }, 
+                             { return (
+	                       "<li> <input type=checkbox name=\"{$elt}\" value=1> " . (file_get_contents("{$base_path}/{$elt}/description")) .
+                               " - <input type=text name=\"time_since_start-{$elt}\" >" );  }, 
                              $closed_event_list));
 
 echo "</ul>\n";
