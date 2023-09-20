@@ -7,10 +7,6 @@ require 'preregistration_routines.php';
 
 ck_testing();
 
-function find_get_key_or_empty_string($parameter_name) {
-  return(isset($_GET[$parameter_name]) ? $_GET[$parameter_name] : "");
-}
-
 $key = isset($_GET["key"]) ? $_GET["key"] : "";
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");

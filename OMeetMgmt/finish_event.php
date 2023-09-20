@@ -1,5 +1,6 @@
 <?php
 require '../OMeetCommon/common_routines.php';
+require '../OMeetCommon/time_routines.php';
 
 ck_testing();
 
@@ -15,10 +16,22 @@ function is_event_open($filename) {
   return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
 }
 
-function name_to_link($event_id) {
+function is_event_recently_closed($filename) {
+  global $base_path, $recent_event_cutoff;
+  return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && file_exists("{$base_path}/{$filename}/done") &&
+          (stat("{$base_path}/{$filename}/done")["mtime"] > $recent_event_cutoff));
+}
+
+function open_event_to_close_link($event_id) {
   global $base_path, $key;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
-  return ("<li><a href=./finish_event.php?event=${event_id}&key={$key}>{$event_fullname}</a>\n");
+  return ("<li><a href=./finish_event.php?event=${event_id}&key={$key}&action=close>{$event_fullname}</a>\n");
+}
+
+function closed_event_to_reopen_link($event_id) {
+  global $base_path, $key;
+  $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  return ("<li><a href=./finish_event.php?event=${event_id}&key={$key}&action=reopen>{$event_fullname}</a>\n");
 }
 
 echo "<p>\n";
@@ -32,30 +45,72 @@ if (!key_is_valid($key)) {
 
 $base_path = get_base_path($key, "..");
 
+if (isset($_GET["recent_event_timeout"])) {
+  $recent_event_timeout = time_limit_to_seconds($_GET["recent_event_timeout"]);
+}
+else {
+  $recent_event_timeout = 86400 * 30;  // One month cutoff
+}
+
+$recent_event_cutoff = time() - $recent_event_timeout;
+
+
 if (strcmp($event_name, "") == 0) {
   $event_list = scandir($base_path);
-  $event_list = array_filter($event_list, "is_event_open");
-  $event_output_array = array_map("name_to_link", $event_list);
-  if (count($event_output_array) > 0) {
-    echo "<p>Choose your event:<p>\n<ul>\n" . implode("\n", $event_output_array) . "</ul>";
+  $open_event_list = array_filter($event_list, "is_event_open");
+  $closed_event_list = array_filter($event_list, "is_event_recently_closed");
+  $open_event_output_array = array_map("open_event_to_close_link", $open_event_list);
+  $closed_event_output_array = array_map("closed_event_to_reopen_link", $closed_event_list);
+
+  if (count($open_event_output_array) > 0) {
+    echo "<p>Choose event to close:<p>\n<ul>\n" . implode("\n", $open_event_output_array) . "</ul>";
   }
   else {
-    echo "<p>No unfinished events found.\n";
+    echo "<p>No open events found.\n";
+  }
+
+  if (count($closed_event_output_array) > 0) {
+    echo "<p>Choose event to reopen:<p>\n<ul>\n" . implode("\n", $closed_event_output_array) . "</ul>";
+  }
+  else {
+    echo "<p>No closed events found.\n";
   }
 }
 else {
   $event_path = get_event_path($event_name, $key, "..");
+  if (!isset($_GET["action"])) {
+    error_and_exit("No action (close or reopen) specified, please retry.\n");
+  }
+
+  $close_an_event = ($_GET["action"] == "close");
+  $open_an_event = ($_GET["action"] == "reopen");
+
+  if (!$close_an_event && !$open_an_event) {
+    error_and_exit("Action was neither close nor reopen, please retry.\n");
+  }
+
   if (!is_dir($event_path) || !file_exists("{$event_path}/description")) {
     echo "<p>Bad event key specified \"{$event_name}\", please retry.\n";
   }
   else {
     $event_fullname = file_get_contents("{$event_path}/description");
     if (file_exists("{$event_path}/done")) {
-      echo "<p>Event {$event_fullname} already completed.";
+      if ($open_an_event) {
+        unlink("{$event_path}/done");
+        echo "<p>Event {$event_fullname} has been reopened.";
+      }
+      else {
+        echo "<p>Event {$event_fullname} already closed.";
+      }
     }
     else {
-      file_put_contents("{$event_path}/done", "");
-      echo "<p>Event {$event_fullname} completed.";
+      if ($close_an_event) {
+        file_put_contents("{$event_path}/done", "");
+        echo "<p>Event {$event_fullname} closed.";
+      }
+      else {
+        echo "<p>Event {$event_fullname} already closed.";
+      }
     }
   }
 }

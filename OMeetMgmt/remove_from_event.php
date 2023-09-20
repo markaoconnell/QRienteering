@@ -64,6 +64,18 @@ foreach ($competitor_list as $competitor) {
     $course = file_get_contents("{$competitor_directory}/{$competitor}/course");
     $competitor_name = file_get_contents("{$competitor_directory}/{$competitor}/name");
     $entry_output = "{$competitor_name} from " . ltrim($course, "0..9-");
+
+    // Clear the quick si_stick -> competitor entry if it is for this competitor
+    // i.e. we could be removing a prior entry for the same si_stick when it was
+    // used on a different run
+    if (file_exists("{$competitor_directory}/{$competitor}/si_stick")) {
+      $si_stick = file_get_contents("{$competitor_directory}/{$competitor}/si_stick");
+      $competitor_for_si_stick = get_stick_xlation($event, $key, $si_stick);
+      if ($competitor_for_si_stick == $competitor) {
+        clear_stick_xlation($event, $key, $si_stick);
+      }     
+    }
+
     if (file_exists("{$competitor_directory}/{$competitor}/controls_found/finish") ||
         file_exists("{$competitor_directory}/{$competitor}/self_reported")) {
       # Remove the completed entry

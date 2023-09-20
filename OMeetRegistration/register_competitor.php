@@ -9,8 +9,10 @@ ck_testing();
 // echo "<p>\n";
 
 // Make sure any funky HTML sequeneces in the name are escaped
-$competitor_name = htmlentities($_GET["competitor_name"]);
-$course = $_GET["course"];
+$competitor_name = find_get_key_or_empty_string("competitor_name");
+
+
+$course = find_get_key_or_empty_string("course");
 
 if (isset($_GET["registration_info"])) {
   $registration_info_supplied = true;
@@ -21,8 +23,8 @@ else {
   $registration_info_supplied = false;
 }
 
-$key = $_GET["key"];
-$event = $_GET["event"];
+$key = find_get_key_or_empty_string("key");
+$event = find_get_key_or_empty_string("event");
 $show_reregister_link = isset($_GET["show_reregister_link"]);
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"{$key}\", are you using an authorized link?\n");
@@ -222,14 +224,18 @@ echo "{$parseable_result_string}\n-->\n";
 
 if (!$error) {
   if ($using_si_stick) {
-    echo "<p>To start the course, clear and check your SI unit, then proceed to the start control with your SI unit.\n";
+    echo "<p>Clear and check your SI unit, then go to the start.\n";
   }
   else {
-    echo "<p>To start the course, please proceed to start and scan the start QR code there or click the \"Start course\" button below to start now.\n";
-    echo "<p style=\"color:red;\">Please make sure you are NOT in icognito / private mode in your browser!\n";
-    echo "<p style=\"color:red;\">If you are uncertain, please explicitly scan the start QR code.\n";
+    $show_start_button = file_exists(get_base_path($key) . "/show_start_button_when_registering");
 
-    echo "<p><form action=\"../OMeet/start_course.php\"> <input type=\"submit\" value=\"Start course\"> </form>\n";
+    echo "<p>Go to start.\n";
+    echo "<p style=\"color:red;\">NOTE: your browser must NOT be in private mode!\n";
+
+    if ($show_start_button) {
+      echo "<p>(Optional) Click the \"Start course\" button below to start immediately.\n";
+      echo "<p><form action=\"../OMeet/start_course.php\"> <input type=\"submit\" value=\"Start course\"> </form>\n";
+    }
   }
 }
 

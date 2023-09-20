@@ -21,6 +21,10 @@ function set_page_title($new_title) {
   $page_title = $new_title;
 }
 
+function find_get_key_or_empty_string($parameter_name) {
+  return(isset($_GET[$parameter_name]) ? $_GET[$parameter_name] : "");
+}
+
 
 $bg_color = "";
 $font_color_override = "";
