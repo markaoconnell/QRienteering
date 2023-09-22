@@ -229,7 +229,7 @@ if (!$error) {
   else {
     $show_start_button = file_exists(get_base_path($key) . "/show_start_button_when_registering");
 
-    echo "<p>Go to start.\n";
+    echo "<p>Go the start and scan the QR code to begin your course.\n";
     echo "<p style=\"color:red;\">NOTE: your browser must NOT be in private mode!\n";
 
     if ($show_start_button) {
