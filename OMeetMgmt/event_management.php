@@ -13,7 +13,7 @@ function validate_name($string) {
 }
 
 function validate_course($string) {
-  if (!preg_match("/^[a-zA-Z0-9]+$/", $string)) {
+  if (!preg_match("/^[a-zA-Z0-9_-]+$/", $string)) {
     return ("Course field may only contain alphabetic characters and numbers");
   }
   return("");
