@@ -2,6 +2,7 @@
 require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/nre_routines.php';
 require '../OMeetWithMemberList/preregistration_routines.php';
+require '../OMeetRegistration/nre_class_handling.php';
 
 
 // Return a hash from the readable course name to the unique course name
@@ -22,6 +23,8 @@ function get_course_hash($event, $key) {
 
 function register_competitor($entrant_info) {
   global $key, $event, $course_hash;
+
+  print_r($entrant_info);
 
   if (!isset($course_hash[$entrant_info["course"]])) {
     return(array("ERROR", "Invalid course {$entrant_info["course"]} for entrant {$entrant_info["first name"]} {$entrant_info["last_name"]}"));
@@ -48,7 +51,10 @@ function register_competitor($entrant_info) {
     return(array("ERROR", "Internal error during registration for entrant {$entrant_info["first name"]} {$entrant_info["last_name"]}"));
   }
 
+
   $saved_competitor_name = "{$entrant_info["first_name"]} {$entrant_info["last_name"]}";
+
+  //echo "<p>Got competitor id ${competitor_id} for {$saved_competitor_name}\n";
 
   // Save the information about the competitor
   fwrite($competitor_file, $saved_competitor_name);
@@ -67,6 +73,7 @@ function register_competitor($entrant_info) {
   $club_name = isset($entrant_info["club_name"]) ? $entrant_info["club_name"] : "";
   $waiver_signed = isset($entrant_info["waiver_signed"]) ? $entrant_info["waiver_signed"] : "";
 
+  //echo "<p>Setting Registration info : ${competitor_id} for {$saved_competitor_name}\n";
   // NRE information (optional)
   $birth_year = isset($entrant_info["birth_year"]) ? $entrant_info["birth_year"] : "";
   $gender = isset($entrant_info["gender"]) ? $entrant_info["gender"] : "";
@@ -85,6 +92,7 @@ function register_competitor($entrant_info) {
   file_put_contents("{$competitor_path}/registration_info", $registration_info);
 
 
+  //echo "<p>Setting NRE info : ${competitor_id} for {$saved_competitor_name}\n";
   // Handle the processing of the OUSA classes if necessary
   if (event_is_using_nre_classes($event, $key)) {
     if ($competitive_class != "") {
@@ -95,7 +103,9 @@ function register_competitor($entrant_info) {
     if (($competitive_class == "") && ($birth_year != "") && ($gender != "")) {
 	    // echo "Looking up class for {$birth_year} and {$gender}\n";
 	// Final parameter is true - when autostarting, must always be with a si unit, not for QRienteering
-      $entrant_class = get_nre_class($event, $key, $gender, $birth_year, $entrant_info["course"], true);
+  //echo "<p>Getting NRE info : ${competitor_id} for {$saved_competitor_name} with {$birth_year} and {$gender}\n";
+      $entrant_class = get_nre_class($event, $key, $gender, $birth_year, $course_hash[$entrant_info["course"]], true);
+  //echo "<p>Got NRE info {$entrans_class} : ${competitor_id} for {$saved_competitor_name} with {$birth_year} and {$gender}\n";
       if ($entrant_class != "") {
         set_class_for_competitor($competitor_path, $entrant_class);
         $competitive_class = $entrant_class;
@@ -103,6 +113,7 @@ function register_competitor($entrant_info) {
     }
   }
 
+  //echo "<p>All seems ok for : ${competitor_id} for {$saved_competitor_name}\n";
   return(array("OK", "Registered {$first_name} {$last_name} on {$entrant_info["course"]}" .
 	                  (($competitive_class != "") ? " ({$competitive_class})" : "")));
 }
