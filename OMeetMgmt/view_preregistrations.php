@@ -24,7 +24,7 @@ function get_course_hash($event, $key) {
 function register_competitor($entrant_info) {
   global $key, $event, $course_hash;
 
-  print_r($entrant_info);
+  //print_r($entrant_info);
 
   if (!isset($course_hash[$entrant_info["course"]])) {
     return(array("ERROR", "Invalid course {$entrant_info["course"]} for entrant {$entrant_info["first name"]} {$entrant_info["last_name"]}"));
