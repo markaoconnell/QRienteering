@@ -80,7 +80,7 @@ function register_competitor($entrant_info) {
   $competitive_class = isset($entrant_info["class"]) ? $entrant_info["class"] : "";
   $classification_info = encode_entrant_classification_info($birth_year, $gender, $competitive_class);
 
-  $registration_info = implode(",", array("email_address", base64_encode($_GET["email_address"]),
+  $registration_info = implode(",", array("email_address", base64_encode($email_address),
 	                                  "AutoStarted", base64_encode("yes"),
                                           "first_name", base64_encode($first_name),
                                           "last_name", base64_encode($last_name),
