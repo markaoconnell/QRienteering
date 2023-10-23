@@ -142,7 +142,7 @@ if ($new_course != "") {
   $course_list = scandir($courses_path);
   $course_list = array_diff($course_list, array(".", ".."));
 
-  $matching_courses_list = array_filter($course_list, function ($elt) use ($new_course) { return (ltrim($elt, "0..9-") == $new_course); });
+  $matching_courses_list = array_filter($course_list, function ($elt) use ($new_course) { return ((ltrim($elt, "0..9-") == $new_course) && !file_exists("{$courses_path}/{$elt}/removed")); });
   if (count($matching_courses_list) == 1) {
     // It feels like there should be a more efficient way to do this
     // This should be rare enough that I don't care, but something to think about
