@@ -169,7 +169,7 @@ if (isset($_POST["upload_preregistrants"])) {
   }
 
   if (count($good_entries) > 0) {
-    enable_preregistration($event, $key);  # Safe to do this is preregistration is already allowed
+    enable_preregistration($event, $key);  # Safe to do this if preregistration is already allowed
     if ($_POST["handle_current"] == "replace") {
       file_put_contents(get_preregistration_file($event, $key), implode("\n", $good_entries));
     }
@@ -181,6 +181,28 @@ if (isset($_POST["upload_preregistrants"])) {
     }
 
     $output_string .= "<p>Successfully added " . count($good_entries) . " preregistrants.\n";
+
+
+    # Check for duplicate users of a single stick
+    $users_by_stick = array();
+    $prereg_info = read_preregistrations($event, $key);
+    $prereg_list = $prereg_info["members_hash"];
+    foreach ($prereg_list as $prereg_entry) {
+      $entrant_info = $prereg_entry["entrant_info"];
+      if ($entrant_info["stick"] != "") {
+        $full_name = "{$entrant_info["first_name"]} {$entrant_info["last_name"]}";
+	if (!isset($users_by_stick[$entrant_info["stick"]])) {
+	  $users_by_stick[$entrant_info["stick"]] = array($full_name);
+	}
+	else {
+	  $users_by_stick[$entrant_info["stick"]][] = $full_name;
+	}
+      }
+    }
+
+    $duplicate_sticks = array_filter($users_by_stick, function ($elt) { return (count($elt) > 1); });  # Find any stick with multiple registrants
+    $error_string .= "<p>" . implode("<p>", array_map(function ($elt) use ($duplicate_sticks) { return ("Stick {$elt} has multiple users: " . implode(", ", $duplicate_sticks[$elt])); },
+	                                              array_keys($duplicate_sticks)));
   }
 
   if (isset($_POST["nre_classes"]) && ($_POST["nre_classes"] == "use_nre_classes")) {
