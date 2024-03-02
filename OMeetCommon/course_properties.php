@@ -39,6 +39,39 @@ function get_email_properties($base_path) {
   return(array());
 }
 
+function get_timing_properties($key, $event) {
+  $base_path = get_base_path($key);
+  if (file_exists("{$base_path}/{$event}/timing_properties.txt")) {
+    return(get_properties("{$base_path}/{$event}/timing_properties.txt"));
+  }
+  else if (file_exists("{$base_path}/timing_properties.txt")) {
+    return(get_properties("{$base_path}/timing_properties.txt"));
+  }
+  else {
+    return(array());
+  }
+}
+
+# QR code option always allowed by default
+function qr_coding_allowed($timing_properties) {
+  if (isset($timing_properties["QR_allowed"])) {
+    return($timing_properties["QR_allowed"] == "true");
+  }
+
+  # QR code option always allowed by default
+  return true;
+}
+
+function untimed_runs_allowed($timing_properties) {
+  if (isset($timing_properties["untimed_allowed"])) {
+    return($timing_properties["untimed_allowed"] == "true");
+  }
+
+  # untimed option not allowed by default
+  return false;
+}
+
+
 function get_member_properties($base_path) {
   if (file_exists("{$base_path}/member_properties.txt")) {
     return(get_properties("{$base_path}/member_properties.txt", true));

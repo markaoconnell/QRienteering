@@ -229,8 +229,15 @@ if (!$error) {
   else {
     $show_start_button = file_exists(get_base_path($key) . "/show_start_button_when_registering");
 
-    echo "<p>Go the start and scan the QR code to begin your course.\n";
-    echo "<p style=\"color:red;\">NOTE: your browser must NOT be in private mode!\n";
+    # See if running untimed and change the prompt somewhat
+    if ($registration_info_supplied && isset($registration_info["untimed_run"]) && ($registration_info["untimed_run"] == "true")) {
+      echo "<p>For untimed orienteering, start the course when you wish.\n";
+      echo "<p style=\"color:red;\">YOU MUST EITHER<ul><li>Report to the download table when you finish<li>Use your phone to scan the finish code QR (if registering via your phone and your browser IS NOT in private mode.</ul>\n";
+    }
+    else {
+      echo "<p>Go the start and scan the QR code to begin your course.\n";
+      echo "<p style=\"color:red;\">NOTE: your browser must NOT be in private mode!\n";
+    }
 
     if ($show_start_button) {
       echo "<p>(Optional) Click the \"Start course\" button below to start immediately.\n";

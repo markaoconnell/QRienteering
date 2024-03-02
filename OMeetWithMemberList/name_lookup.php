@@ -135,6 +135,27 @@ else if (count($possible_member_ids) == 1) {
     $no_checked_by_default = "checked";
     $pass_registered_si_stick_entry = "";
   }
+
+  $timing_properties = get_timing_properties($key, $event);
+  $qr_code_option = "";
+  $untimed_option = "";
+  if (qr_coding_allowed($timing_properties)) {
+    $qr_code_option = "<p> Using QR codes <input type=radio name=\"using_stick\" value=\"no\" {$no_checked_by_default}/>\n";
+  }
+
+  if (untimed_runs_allowed($timing_properties)) {
+    # If allowing both untimed and QR code running, and not using a SI stick, assume QR coding unless the user chooses otherwise
+    # Otherwise if only allowing untimed run and not QR code timing, then check the untimed option if no stick is known at this point
+    if (qr_coding_allowed($timing_properties)) {
+      $untimed_is_checked = "";
+    }
+    else {
+      $untimed_is_checked = $no_checked_by_default;
+    }
+    $untimed_option = "<p> Run untimed (must still scan finish or report to download table!!) <input type=radio name=\"using_stick\" value=\"untimed\" {$untimed_is_checked}/>\n";
+  }
+
+
   $success_string .= "<p>How are you orienteering today?";
   $success_string .= <<<END_OF_FORM
 <form action="./add_safety_info.php">
@@ -144,7 +165,8 @@ else if (count($possible_member_ids) == 1) {
 {$pass_registered_si_stick_entry}
 {$classification_form_entry}
 <p> Using Si unit <input type=radio name="using_stick" value="yes" {$yes_checked_by_default} /> <input type=text name="si_stick_number" value="{$si_stick}" />
-<p> Using QR codes <input type=radio name="using_stick" value="no" {$no_checked_by_default}/>
+{$qr_code_option}
+{$untimed_option}
 <input type="hidden" name="key" value="{$key}">
 <input type="hidden" name="event" value="{$event}">
 <p><input type="submit" value="Fill in safety information"/>

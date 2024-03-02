@@ -20,10 +20,10 @@ else {
 // Note: this doesn't work for 00, as 0 as a birth year is taken as unspecified
 // May need to rethink this, but for the moment the UI should always guarantee a 4 digit year
 // ************************
-// Note - this assumes that "24" will be interpreted as 1924 until 2024, in which case it will be interpreted as 2024.
+// Note - this assumes that "26" will be interpreted as 1926 until 2026, in which case it will be interpreted as 2026.
 // Will need to update this test yearly.
 $birth_year_to_age = array(array(1967, 1967), array(2001, 2001), array(1920, 1920), array(67, 1967), array(01, 2001),
-                           array(20, 2020), array(23, 2023), array(24, 1924), array(40, 1940), array(99, 1999));
+                           array(20, 2020), array(23, 2023), array(24, 2024), array(26, 1926), array(40, 1940), array(99, 1999));
 
 foreach ($birth_year_to_age as $test_birth_year_entry) {
   if (get_age($test_birth_year_entry[0]) != ($correct_current_year - $test_birth_year_entry[1])) {
