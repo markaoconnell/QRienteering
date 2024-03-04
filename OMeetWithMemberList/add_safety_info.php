@@ -100,7 +100,7 @@ else {
 
   if (isset($_GET["using_stick"])) {
     $using_stick_value = $_GET["using_stick"];
-    if (($using_stick_value != "no") && ($using_stick_vlaue != "untimed") && ($using_stick_value != "yes")) {
+    if (($using_stick_value != "no") && ($using_stick_value != "untimed") && ($using_stick_value != "yes")) {
       error_and_exit("Invalid value for using_stick option, please restart and seek assistance.\n");
     }
   }

@@ -232,7 +232,7 @@ if (!$error) {
     # See if running untimed and change the prompt somewhat
     if ($registration_info_supplied && isset($registration_info["untimed_run"]) && ($registration_info["untimed_run"] == "true")) {
       echo "<p>For untimed orienteering, start the course when you wish.\n";
-      echo "<p style=\"color:red;\">YOU MUST EITHER<ul><li>Report to the download table when you finish<li>Use your phone to scan the finish code QR (if registering via your phone and your browser IS NOT in private mode.</ul>\n";
+      echo "<p style=\"color:red;\">YOU MUST EITHER<ul><li>Report to the download table when you finish<li>Use your phone to scan the finish code QR<ul><li>If registering via your phone and your browser IS NOT in private mode.</ul></ul>\n";
     }
     else {
       echo "<p>Go the start and scan the QR code to begin your course.\n";

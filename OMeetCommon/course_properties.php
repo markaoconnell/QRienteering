@@ -42,10 +42,10 @@ function get_email_properties($base_path) {
 function get_timing_properties($key, $event) {
   $base_path = get_base_path($key);
   if (file_exists("{$base_path}/{$event}/timing_properties.txt")) {
-    return(get_properties("{$base_path}/{$event}/timing_properties.txt"));
+    return(get_properties("{$base_path}/{$event}/timing_properties.txt", true));
   }
   else if (file_exists("{$base_path}/timing_properties.txt")) {
-    return(get_properties("{$base_path}/timing_properties.txt"));
+    return(get_properties("{$base_path}/timing_properties.txt", true));
   }
   else {
     return(array());

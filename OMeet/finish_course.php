@@ -87,6 +87,8 @@ if (!key_is_valid($key)) {
 
 set_timezone($key);
 
+
+$competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
 if (file_exists("{$competitor_path}/registration_info")) {
   $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
   $has_registration_info = true;
@@ -96,7 +98,9 @@ else {
   $has_registration_info = false;
 }
 
-$competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
+
+$untimed_run = (isset($registration_info["untimed_run"]) && ($registration_info["untimed_run"] == "true"));
+
 $controls_found_path = "{$competitor_path}/controls_found";
 
 $courses_path = get_courses_path($event, $key, "..");
@@ -133,7 +137,7 @@ $suppress_email = false;
 if (!file_exists("${controls_found_path}/start")) {
   # Untimed runners may never have recorded a start time, but assume one from the registration time.
   # Is this worthwhile?
-  if (isset($registration_info["untimed_run"]) && ($registration_info["untimed_run"] == "true")) {
+  if ($untimed_run) {
     $time_of_registration = stat("{$competitor_path}/name")["mtime"];
     file_put_contents("{$controls_found_path}/start", $time_of_registration);
   }
@@ -149,7 +153,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
   // echo "<br>Controls done on the ${course} course.<br>\n";
   // print_r($controls_done);
   
-  if (!$score_course) {
+  if (!$score_course && !$untimed_run) {
     // Are we at the right control?
     $number_controls_found = count($controls_done);
     $number_controls_on_course = count($control_list);
@@ -200,13 +204,12 @@ if (!file_exists("{$controls_found_path}/finish")) {
   }
   else {
     $total_score = count($controls_found);
-    if ($has_skipped_controls) {
+    if ($has_skipped_controls && !$untimed_run) {
       $total_score += count($controls_ok_array);
     }
   }
 
-  $is_timed = !(isset($registration_info["untimed_run"]) && ($registration_info["untimed_run"] == "true"));
-  if ($is_timed) {
+  if (!$untimed_run) {
     $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $competitor_id);
     file_put_contents("{$results_path}/${course}/${result_filename}", "");
 
@@ -225,9 +228,10 @@ if (!file_exists("{$controls_found_path}/finish")) {
   else {
     # Untimed run, just add "fake" entries, with no splits
     # Like in self-reporting, use a 2 day time to put all of these at the bottom - it won't be shown though
+    # Also, give a 0 for the score, which is the maximum - so assume that all the controls were found
     file_put_contents("{$competitor_path}/no_time", "untimed run", FILE_APPEND);
     file_put_contents("{$competitor_path}/self_reported", "");
-    $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, 86400 * 2, $competitor_id);
+    $result_filename = sprintf("%04d,%06d,%s", 0, 86400 * 2, $competitor_id);
     file_put_contents("{$results_path}/${course}/${result_filename}", "");
   }
 }
