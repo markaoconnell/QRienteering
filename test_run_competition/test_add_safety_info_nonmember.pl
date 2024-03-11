@@ -69,7 +69,7 @@ success();
 # Test 2 - Success nonmember registration
 # 
 %TEST_INFO = qw(Testname TestNonMemberNoStickWithClub);
-%GET = qw(key UnitTestPlayground competitor_first_name Karen competitor_last_name Yeowell club_name CSU);
+%GET = qw(key UnitTestPlayground competitor_first_name Karen competitor_last_name Yeowell club_name CSU using_stick no);
 $GET{"si_stick"} = "";
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash

@@ -54,12 +54,12 @@ $stick_override_msg = "";
 $db_si_stick = isset($_GET["db_si_stick"]) ? $_GET["db_si_stick"] : "";
 if ($has_preset_id) {
   if (!isset($_GET["using_stick"])) {
-    error_and_exit("No value found for SI unit usage - error in scripting?  Please restart registration.\n");
+    error_and_exit("Must select orienteering method, SI Unit or otherwise - no box was selected.  Please restart registration.\n");
   }
   
   $using_stick_value = $_GET["using_stick"];
   if (($using_stick_value != "yes") && ($using_stick_value != "no") && ($using_stick_value != "untimed")) {
-    error_and_exit("Invalid value \"{$using_stick_value}\" for SI unit usage.  Please restart registration.\n");
+    error_and_exit("Invalid value \"{$using_stick_value}\" for SI unit usage, please restart registration.\n");
   }
 
   if (isset($_GET["si_stick_number"]) && ($_GET["si_stick_number"] != "") &&
@@ -115,6 +115,9 @@ if ($si_stick != "") {
   if (!preg_match("/^[0-9]+$/", $si_stick)) {
     error_and_exit("Invalid si unit id \"{$si_stick}\", only numbers allowed.  Please go back and re-enter.\n");
   }
+}
+else if ($using_stick_value == "yes") {
+  error_and_exit("No SI unit numbered entered, please go back and re-enter.\n");
 }
 
 echo get_web_page_header(true, false, true);
