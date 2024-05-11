@@ -132,7 +132,7 @@ elseif ($is_generic_registration) {
 }
 else {
   if (isset($saved_registration_info["first_name"])) {
-    $escaped_first_name = htmlentities($saved_registration_info["first_name"]);
+    $escaped_first_name = htmlentities($saved_registration_info["first_name"], ENT_QUOTES, 'iso8859-1');
     $presupplied_first_name = "value=\"{$escaped_first_name}\"";
   }
   else {
@@ -140,7 +140,7 @@ else {
   }
 
   if (isset($saved_registration_info["last_name"])) {
-    $escaped_last_name = htmlentities($saved_registration_info["last_name"]);
+    $escaped_last_name = htmlentities($saved_registration_info["last_name"], ENT_QUOTES, 'iso8859-1');
     $presupplied_last_name = "value=\"{$escaped_last_name}\"";
   }
   else {
@@ -148,7 +148,7 @@ else {
   }
 
   if (isset($saved_registration_info["club_name"])) {
-    $escaped_club_name = htmlentities($saved_registration_info["club_name"]);
+    $escaped_club_name = htmlentities($saved_registration_info["club_name"], ENT_QUOTES, 'iso8859-1');
     $presupplied_club_name = "value=\"{$escaped_club_name}\"";
   }
   else {

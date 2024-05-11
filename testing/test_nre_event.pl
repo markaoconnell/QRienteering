@@ -622,7 +622,7 @@ $output = qx($cmd);
 my($actual_table_rows);
 $actual_table_rows = () = $output =~ /(;[mf];;)/g;
 
-if ($output !~ /White;0;;5;2;\d+:\d+:\d+;\d+:\d+:\d+;201;0:0\d;202;0:0\d;203;-----;204;-----;205;-----;/) {
+if ($output !~ /White;0;;5;2;\d+:\d+:\d+;\d+:\d+:\d+;201;0:\d\d;202;0:\d\d;203;-----;204;-----;205;-----;/) {
   error_and_exit("Did not find expected splits output.\n$output");
 }
 

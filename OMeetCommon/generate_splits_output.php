@@ -8,13 +8,13 @@ function format_split_time($punch_time, $si_time, $include_day) {
   }
   else {
     if ($include_day) {
-      $format_string = "%T (%a - %d)";
+      $format_string = "H:i:s (D - d)";
     }
     else {
-      $format_string = "%T";
+      $format_string = "H:i:s";
     }
 
-    return (strftime($format_string, $punch_time));
+    return (date_format(date_create("@{$punch_time}"), $format_string));
   }
 }
 

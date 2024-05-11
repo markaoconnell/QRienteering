@@ -84,9 +84,9 @@ if ($has_preset_id) {
   }
 }
 else {
-  $first_name = htmlentities($_GET["competitor_first_name"]);
-  $last_name = htmlentities($_GET["competitor_last_name"]);
-  $club_name = htmlentities($_GET["club_name"]);
+  $first_name = htmlentities($_GET["competitor_first_name"], ENT_QUOTES, 'iso8859-1');
+  $last_name = htmlentities($_GET["competitor_last_name"], ENT_QUOTES, 'iso8859-1');
+  $club_name = htmlentities($_GET["club_name"], ENT_QUOTES, 'iso8859-1');
   $si_stick = $_GET["si_stick"];
 
   // Let's do some validations

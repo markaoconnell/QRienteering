@@ -104,7 +104,7 @@ if (!$error) {
     $i = 0;
     while (isset($_GET["extra-{$i}"])) {
       if ($_GET["extra-{$i}"] != "") {
-        $saved_competitor_name .= " - " . htmlentities($_GET["extra-{$i}"]);
+        $saved_competitor_name .= " - " . htmlentities($_GET["extra-{$i}"], ENT_QUOTES, 'iso8859-1');
       }
       $i++;
     }
