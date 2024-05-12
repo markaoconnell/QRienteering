@@ -82,8 +82,8 @@ foreach ($course_list as $one_course) {
       $this_si_stick = $si_stick + $start_number;
     }
 
-    $formatted_start_time = date_format(date_create("@{$splits_array["start"]}"), "H:i:s");
-    $formatted_end_time = date_format(date_create("@{$splits_array["finish"]}"), "H:i:s");
+    $formatted_start_time = date("H:i:s", $splits_array["start"]);
+    $formatted_end_time = date("H:i:s", $splits_array["finish"]);
 
     $csv_array[] = $this_si_stick;
     $csv_array[] = ""; // Database ID

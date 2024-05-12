@@ -14,7 +14,7 @@ function format_split_time($punch_time, $si_time, $include_day) {
       $format_string = "H:i:s";
     }
 
-    return (date_format(date_create("@{$punch_time}"), $format_string));
+    return (date($format_string, $punch_time));
   }
 }
 

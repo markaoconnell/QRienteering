@@ -56,6 +56,19 @@ if (!isset($_GET["si_stick"])) {
 
 $si_stick = $_GET["si_stick"];
 
+# See if there is a registration entry for this stick already
+# Only check the fast path - more efficient than checking the slow path, since we would do this
+# frequently
+$competitor = get_stick_xlation($event, $key, $si_stick);
+if ($competitor != "") {
+  $competitor_path = get_competitor_path($competitor, $event, $key);
+  $name = file_get_contents("{$competitor_path}/name");
+  $course = ltrim(file_get_contents("{$competitor_path}/course"), "0..9-");
+  
+  $parseable_result_string .= "####,REGISTERED,Found {$name} registered on {$course} with SI unit:{$si_stick}\n";
+}
+
+
 if ($is_preregistered_checkin) {
   $member_id = $prereg_matching_info["si_hash"][$si_stick];
   if ($member_id == "") {

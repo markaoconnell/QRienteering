@@ -201,8 +201,8 @@ foreach (array_keys($on_course) as $course) {
         }
       }
 
-      $results_string .= "<tr><td>${competitor_name}</td>\n<td>" . date_format(date_create("@{$start_time}"), "H:i:s") . "</td>\n";
-      $results_string .= "<td>${last_control}</td>\n<td>" . date_format(date_create("@{$last_control_time}"), "H:i:s") . "</td></tr>\n";
+      $results_string .= "<tr><td>${competitor_name}</td>\n<td>" . date("H:i:s", $start_time) . "</td>\n";
+      $results_string .= "<td>${last_control}</td>\n<td>" . date("H:i:s", $last_control_time) . "</td></tr>\n";
     }
     $results_string .= "</table><p><p><p>\n";
   }

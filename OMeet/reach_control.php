@@ -128,7 +128,7 @@ if (!file_exists("${controls_found_path}/start")) {
   $time_of_registration = stat("{$competitor_path}/name")["mtime"];
   file_put_contents("{$controls_found_path}/start", $time_of_registration);
   set_timezone($key);
-  $autostart_msg = "<p>Course " . ltrim($course, "0..9-") . " auto-started at " . date_format(date_create("@{$time_of_registration}"), "H:i:s") .
+  $autostart_msg = "<p>Course " . ltrim($course, "0..9-") . " auto-started at " . date("H:i:s", $time_of_registration) .
                    " for {$competitor_name}, for a more accurate time please re-register and be certain to scan the Start QR code.\n";
 }
 

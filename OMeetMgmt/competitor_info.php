@@ -28,7 +28,7 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
     $competitor_string .= " ({$competitor_id})";
   }
   if ($include_date) {
-    $competitor_string .= "<br>(" . date_format(date_create("@" . stat("{$competitor_base_path}/{$competitor_id}/name")["mtime"]), "D - d @ H:i:s") . ")";
+    $competitor_string .= "<br>(" . date("D - d @ H:i:s", stat("{$competitor_base_path}/{$competitor_id}/name")["mtime"]) . ")";
   }
  
   $competitor_string .= "</td><td>{$status}</td><td><a href=\"./update_stick.php?key={$key}&event={$event}&competitor={$competitor_id}\">$si_stick</a></td>";
