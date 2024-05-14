@@ -34,7 +34,7 @@ class stick_info:
 
 
 class found_user_info:
-    def __init__(self, name=None, member_id=None, email=None, club=None, stick=None, cell_phone=None, course=None, nre_info=None):
+    def __init__(self, name=None, member_id=None, email=None, club=None, stick=None, cell_phone=None, course=None, nre_info=None, registration_info=None):
         self.name = name
         self.member_id = member_id
         self.email = email
@@ -43,3 +43,4 @@ class found_user_info:
         self.course = course
         self.nre_info = nre_info
         self.club = club
+        self.registration_info = registration_info

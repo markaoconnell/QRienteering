@@ -9,7 +9,7 @@ ck_testing();
 // echo "<p>\n";
 
 // Make sure any funky HTML sequeneces in the name are escaped
-$competitor_name = find_get_key_or_empty_string("competitor_name");
+$competitor_name = htmlentities(find_get_key_or_empty_string("competitor_name"), ENT_QUOTES, 'iso8859-1');
 
 
 $course = find_get_key_or_empty_string("course");
