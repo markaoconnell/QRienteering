@@ -89,6 +89,18 @@ set_timezone($key);
 
 
 $competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
+if (file_exists("{$competitor_path}/registration_info")) {
+  $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
+  $has_registration_info = true;
+}
+else {
+  $registration_info = array();
+  $has_registration_info = false;
+}
+
+
+$untimed_run = (isset($registration_info["untimed_run"]) && ($registration_info["untimed_run"] == "true"));
+
 $controls_found_path = "{$competitor_path}/controls_found";
 
 $courses_path = get_courses_path($event, $key, "..");
@@ -123,7 +135,15 @@ $result_filename = "";
 $suppress_email = false;
 
 if (!file_exists("${controls_found_path}/start")) {
-  error_and_exit("<p>Course " . ltrim($course, "0..9-") . " not yet started.\n<br>Please scan the start QR code to start a course.\n");
+  # Untimed runners may never have recorded a start time, but assume one from the registration time.
+  # Is this worthwhile?
+  if ($untimed_run) {
+    $time_of_registration = stat("{$competitor_path}/name")["mtime"];
+    file_put_contents("{$controls_found_path}/start", $time_of_registration);
+  }
+  else {
+    error_and_exit("<p>Course " . ltrim($course, "0..9-") . " not yet started.\n<br>Please scan the start QR code to start a course.\n");
+  }
 }
 
 if (!file_exists("{$controls_found_path}/finish")) {
@@ -133,7 +153,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
   // echo "<br>Controls done on the ${course} course.<br>\n";
   // print_r($controls_done);
   
-  if (!$score_course) {
+  if (!$score_course && !$untimed_run) {
     // Are we at the right control?
     $number_controls_found = count($controls_done);
     $number_controls_on_course = count($control_list);
@@ -184,24 +204,35 @@ if (!file_exists("{$controls_found_path}/finish")) {
   }
   else {
     $total_score = count($controls_found);
-    if ($has_skipped_controls) {
+    if ($has_skipped_controls && !$untimed_run) {
       $total_score += count($controls_ok_array);
     }
   }
 
-  $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $competitor_id);
-  file_put_contents("{$results_path}/${course}/${result_filename}", "");
+  if (!$untimed_run) {
+    $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $competitor_id);
+    file_put_contents("{$results_path}/${course}/${result_filename}", "");
 
-  if (event_is_using_nre_classes($event, $key) && competitor_has_class($competitor_path)) {
-    $results_per_class_path = get_results_per_class_path($event, $key);
-    $result_class = get_class_for_competitor($competitor_path);
-    if (!file_exists($results_per_class_path)) {
-      mkdir($results_per_class_path);
+    if (event_is_using_nre_classes($event, $key) && competitor_has_class($competitor_path)) {
+      $results_per_class_path = get_results_per_class_path($event, $key);
+      $result_class = get_class_for_competitor($competitor_path);
+      if (!file_exists($results_per_class_path)) {
+        mkdir($results_per_class_path);
+      }
+      if (!file_exists("{$results_per_class_path}/{$result_class}")) {
+        mkdir("{$results_per_class_path}/{$result_class}");
+      }
+      file_put_contents("{$results_per_class_path}/{$result_class}/{$result_filename}", "");
     }
-    if (!file_exists("{$results_per_class_path}/{$result_class}")) {
-      mkdir("{$results_per_class_path}/{$result_class}");
-    }
-    file_put_contents("{$results_per_class_path}/{$result_class}/{$result_filename}", "");
+  }
+  else {
+    # Untimed run, just add "fake" entries, with no splits
+    # Like in self-reporting, use a 2 day time to put all of these at the bottom - it won't be shown though
+    # Also, give a 0 for the score, which is the maximum - so assume that all the controls were found
+    file_put_contents("{$competitor_path}/no_time", "untimed run", FILE_APPEND);
+    file_put_contents("{$competitor_path}/self_reported", "");
+    $result_filename = sprintf("%04d,%06d,%s", 0, 86400 * 2, $competitor_id);
+    file_put_contents("{$results_path}/${course}/${result_filename}", "");
   }
 }
 else {
@@ -256,15 +287,14 @@ echo get_all_course_result_links($event, $key);
 
 // echo "<p>Course started at ${course_started_at}, course finished at ${now}, difference is ${time_taken}.\n";
 
-if (file_exists("{$competitor_path}/registration_info")) {
-  $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
+if ($has_registration_info) {
   $email_properties = get_email_properties(get_base_path($key, ".."));
   //print_r($email_properties);
   $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]) && !$suppress_email;
   if (($registration_info["email_address"] != "") && $email_enabled) {
     // See if this looks like a valid email
     // Make sure to escape anything that could be a funky html character
-    $email_addr = htmlentities($registration_info["email_address"]);
+    $email_addr = htmlentities($registration_info["email_address"], ENT_QUOTES, 'iso8859-1');
     if (preg_match("/^[a-zA-z0-9_.\-]+@[a-zA-Z0-9_.\-]+/", $email_addr)) {
       $headers = array();
       $headers[] = "From: " . $email_properties["from"];

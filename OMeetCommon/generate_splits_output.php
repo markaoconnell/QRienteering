@@ -8,13 +8,13 @@ function format_split_time($punch_time, $si_time, $include_day) {
   }
   else {
     if ($include_day) {
-      $format_string = "%T (%a - %d)";
+      $format_string = "H:i:s (D - d)";
     }
     else {
-      $format_string = "%T";
+      $format_string = "H:i:s";
     }
 
-    return (strftime($format_string, $punch_time));
+    return (date($format_string, $punch_time));
   }
 }
 
@@ -35,7 +35,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
   $course = file_get_contents("{$competitor_path}/course");
 
   if (file_exists("{$competitor_path}/self_reported")) {
-    return("No splits available for \"{$competitor_name}\" on {$course}, result was self-reported.\n");
+    return("No splits available for \"{$competitor_name}\" on " . ltrim($course, "0..9-") . ", result was self-reported or untimed.\n");
   }
   
   

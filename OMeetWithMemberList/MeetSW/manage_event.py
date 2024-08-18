@@ -221,7 +221,7 @@ def upload_initial_results(user_info, event):
      # See if the person is a member and could be quickly registered
       try:
           possible_member_info = url_caller.lookup_si_unit(user_info.stick_number, event, event_allows_preregistration)
-          if possible_member_info != None:
+          if possible_member_info.name != None:
               user_info.add_lookup_info(possible_member_info)
               extra_status = f"\nIdentified member {user_info.get_lookup_info().name}\n"
               extra_status += "If finishing - use the register button to register for a course, then download the results\n"
@@ -379,16 +379,24 @@ def create_status_frame():
 def process_si_stick(user_info, forced_registration):
   if (current_mode == REGISTER_MODE) or forced_registration:
       display_as_error = False
+      already_registered = False
       try:
           discovered_user_info = url_caller.lookup_si_unit(user_info.stick_number, event, event_allows_preregistration)
-          if (discovered_user_info != None):
+          if (discovered_user_info.name != None):
               user_info.add_lookup_info(discovered_user_info)
               message = f"Recognized member {user_info.get_lookup_info().name} with SI unit {user_info.stick_number}"
-              message += "\nIf registering, use the register button."
+              if (discovered_user_info.registration_info != None):
+                  message += f"\nFound existing registration: {discovered_user_info.registration_info}"
+                  already_registered = True
+              else:
+                  message += "\nIf registering, use the register button."
           else:
               display_as_error = True
               message = f"Could not find member for SI unit {user_info.stick_number}\n"
-              message += "If registering - use SmartPhone based registration instead."
+              if (discovered_user_info.registration_info != None):
+                  message += f"\nFound existing registration: {discovered_user_info.registration_info}"
+              else:
+                  message += "If registering - use SmartPhone based registration instead."
       except UrlTimeoutException:
           display_as_error = True
           message = f"Could not contact website about {user_info.stick_number}\nValidate connectivity and site status\n"
@@ -411,7 +419,7 @@ def process_si_stick(user_info, forced_registration):
       user_info.get_widget().show_as_error(display_as_error)
       user_info.get_widget().update(message)
 
-      if (current_mode == REGISTER_MODE) and (user_info.get_lookup_info() != None):
+      if (current_mode == REGISTER_MODE) and (user_info.get_lookup_info() != None) and not already_registered:
           user_info.get_widget().disable_buttons()
           registration_window(user_info)
 

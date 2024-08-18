@@ -56,6 +56,19 @@ if (!isset($_GET["si_stick"])) {
 
 $si_stick = $_GET["si_stick"];
 
+# See if there is a registration entry for this stick already
+# Only check the fast path - more efficient than checking the slow path, since we would do this
+# frequently
+$competitor = get_stick_xlation($event, $key, $si_stick);
+if ($competitor != "") {
+  $competitor_path = get_competitor_path($competitor, $event, $key);
+  $name = file_get_contents("{$competitor_path}/name");
+  $course = ltrim(file_get_contents("{$competitor_path}/course"), "0..9-");
+  
+  $parseable_result_string .= "####,REGISTERED,Found {$name} registered on {$course} with SI unit:{$si_stick}\n";
+}
+
+
 if ($is_preregistered_checkin) {
   $member_id = $prereg_matching_info["si_hash"][$si_stick];
   if ($member_id == "") {
@@ -130,6 +143,18 @@ $parseable_result_string .= "\n####,MEMBER_ENTRY," . base64_encode($printable_na
 if ($classification_info != "") {
   $parseable_result_string .= "\n####,CLASSIFICATION_INFO,{$classification_info}\n";
 }
+
+$timing_properties = get_timing_properties($key, $event);
+$qr_code_option = "";
+$untimed_option = "";
+if (qr_coding_allowed($timing_properties)) {
+  $qr_code_option = "<p> Using QR codes <input type=radio name=\"using_stick\" value=\"no\"/>\n";
+}
+
+if (untimed_runs_allowed($timing_properties)) {
+  $untimed_option = "<p> Run untimed (must still scan finish or report to download table!!) <input type=radio name=\"using_stick\" value=\"untimed\"/>\n";
+}
+
 $success_string .= <<<END_OF_FORM
 <form action="./add_safety_info.php">
 <input type=hidden name="member_id" value="{$member_id}"/>
@@ -142,7 +167,8 @@ $success_string .= <<<END_OF_FORM
 {$classification_form_entry}
 <p> How are you orienteering today? <br>
 <p> Using Si unit <input type=radio name="using_stick" value="yes" checked /> <input type=text name="si_stick_number" value="{$si_stick}" readonly/>
-<p> Using QR codes <input type=radio name="using_stick" value="no" />
+{$qr_code_option}
+{$untimed_option}
 <p><input type="submit" value="Fill in safety information"/>
 <p>If you are using a different SI unit, go back and register by name rather than by SI unit.
 <p>If your name is wrong, go back and re-register.

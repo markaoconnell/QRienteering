@@ -138,7 +138,7 @@ foreach ($preregistration_list["members_hash"] as $prereg_entry_hash) {
   if (($entrant_info["email_address"] != "") && $email_enabled) {
     // See if this looks like a valid email
     // Make sure to escape anything that could be a funky html character
-    $email_addr = htmlentities($entrant_info["email_address"]);
+    $email_addr = htmlentities($entrant_info["email_address"], ENT_QUOTES, 'iso8859-1');
     if (preg_match("/^[a-zA-z0-9_.\-]+@[a-zA-Z0-9_.\-]+/", $email_addr)) {
       $headers = array();
       $headers[] = "From: " . $email_properties["from"];

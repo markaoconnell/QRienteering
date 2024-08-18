@@ -108,7 +108,7 @@ function csv_formatted_time($time_in_seconds) {
 
 // Return a string with the elapsed time in seconds formatted for easy parsing
 function format_time_as_minutes_since_midnight($unix_timestamp) {
-  $hours_mins_secs = strftime("%T", $unix_timestamp);
+  $hours_mins_secs = date("H:i:s", $unix_timestamp);
   $time_pieces = explode(":", $hours_mins_secs);
 
   $mins = ($time_pieces[0] * 60) + $time_pieces[1];

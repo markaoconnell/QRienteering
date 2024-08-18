@@ -51,7 +51,7 @@ if (($event != "") && file_exists($event_path) && is_dir($courses_path)) {
   // so ignore everything but the hour, minute, second for today and use that as the si stick start time
   if (!$si_time_supplied) {
     $mass_start_time = time();
-    $si_stick_mass_start_pieces = explode(":", strftime("%T", $mass_start_time));
+    $si_stick_mass_start_pieces = explode(":", date("H:i:s", $mass_start_time));
     $si_stick_start_time = ($si_stick_mass_start_pieces[0] * 3600) + ($si_stick_mass_start_pieces[1] * 60) + $si_stick_mass_start_pieces[0];
   }
 
@@ -73,7 +73,7 @@ if (($event != "") && file_exists($event_path) && is_dir($courses_path)) {
             file_put_contents("{$competitor_path}/{$competitor}/mass_si_stick_start", $si_stick_start_time);
             $competitor_started = true;
             if ($universal_start) {
-              file_put_contents("{$competitor_path}/{$competitor}/raw_mass_start_time", strftime("%T", $mass_start_time));
+              file_put_contents("{$competitor_path}/{$competitor}/raw_mass_start_time", date("H:i:s", $mass_start_time));
             }
           }
           else {

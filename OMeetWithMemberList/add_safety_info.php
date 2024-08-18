@@ -54,16 +54,18 @@ $stick_override_msg = "";
 $db_si_stick = isset($_GET["db_si_stick"]) ? $_GET["db_si_stick"] : "";
 if ($has_preset_id) {
   if (!isset($_GET["using_stick"])) {
-    error_and_exit("No value found for SI unit usage - error in scripting?  Please restart registration.\n");
+    error_and_exit("Must select orienteering method, SI Unit or otherwise - no box was selected.  Please restart registration.\n");
   }
   
   $using_stick_value = $_GET["using_stick"];
-  if (($using_stick_value != "yes") && ($using_stick_value != "no")) {
-    error_and_exit("Invalid value \"{$using_stick_value}\" for SI unit usage.  Please restart registration.\n");
+  if (($using_stick_value != "yes") && ($using_stick_value != "no") && ($using_stick_value != "untimed")) {
+    error_and_exit("Invalid value \"{$using_stick_value}\" for SI unit usage, please restart registration.\n");
   }
 
-  if (isset($_GET["si_stick_number"]) && ($_GET["si_stick_number"] != "") && ($using_stick_value == "no") && !isset($_GET["registered_si_stick"])) {
-    $stick_override_msg = "<p class=title style=\"color:red;\"> <strong>SI unit number \"{$_GET["si_stick_number"]}\" entered but QR orienteering selected.\n";
+  if (isset($_GET["si_stick_number"]) && ($_GET["si_stick_number"] != "") &&
+	  (($using_stick_value == "no") || ($using_stick_value == "untimed")) &&
+	  !isset($_GET["registered_si_stick"])) {
+    $stick_override_msg = "<p class=title style=\"color:red;\"> <strong>SI unit number \"{$_GET["si_stick_number"]}\" entered but non-SI timing selected.\n";
     $stick_override_msg .= "<br>Overriding and using SI unit orienteering.\n";
     $stick_override_msg .= "<br>If this is wrong, please go back and restart registration and make sure that the SI unit field is blank.\n";
     $stick_override_msg .= "</strong><br><br><br><br>\n";
@@ -82,9 +84,9 @@ if ($has_preset_id) {
   }
 }
 else {
-  $first_name = htmlentities($_GET["competitor_first_name"]);
-  $last_name = htmlentities($_GET["competitor_last_name"]);
-  $club_name = htmlentities($_GET["club_name"]);
+  $first_name = htmlentities($_GET["competitor_first_name"], ENT_QUOTES, 'iso8859-1');
+  $last_name = htmlentities($_GET["competitor_last_name"], ENT_QUOTES, 'iso8859-1');
+  $club_name = htmlentities($_GET["club_name"], ENT_QUOTES, 'iso8859-1');
   $si_stick = $_GET["si_stick"];
 
   // Let's do some validations
@@ -95,12 +97,27 @@ else {
   if ($last_name == "") {
     error_and_exit("Invalid (empty) last name, please go back and enter a valid last name.\n");
   }
+
+  if (isset($_GET["using_stick"])) {
+    $using_stick_value = $_GET["using_stick"];
+    if (($using_stick_value != "no") && ($using_stick_value != "untimed") && ($using_stick_value != "yes")) {
+      error_and_exit("Invalid value for using_stick option, please restart and seek assistance.\n");
+    }
+  }
+  else {
+    # For non-member registration, if they did not explicitly choose a non-SI option, then it is assumed that they are
+    # using SI timing
+    $using_stick_value = "yes";
+  }
 }
 
 if ($si_stick != "") {
   if (!preg_match("/^[0-9]+$/", $si_stick)) {
     error_and_exit("Invalid si unit id \"{$si_stick}\", only numbers allowed.  Please go back and re-enter.\n");
   }
+}
+else if ($using_stick_value == "yes") {
+  error_and_exit("No SI unit numbered entered, please go back and re-enter.\n");
 }
 
 echo get_web_page_header(true, false, true);
@@ -122,6 +139,9 @@ else {
 echo "<input type=hidden name=\"si_stick\" value=\"{$si_stick}\">\n";
 echo "<input type=hidden name=\"key\" value=\"{$key}\">\n";
 echo "<input type=hidden name=\"event\" value=\"{$event}\">\n";
+if ($using_stick_value == "untimed") {
+  echo "<input type=hidden name=\"untimed_run\" value=\"true\">\n";
+}
 if ($classification_info_supplied) {
   echo "<input type=hidden name=\"classification_info\" value=\"{$classification_info}\">\n";
 }

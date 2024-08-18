@@ -81,6 +81,10 @@ foreach ($course_list as $one_course) {
     else {
       $this_si_stick = $si_stick + $start_number;
     }
+
+    $formatted_start_time = date("H:i:s", $splits_array["start"]);
+    $formatted_end_time = date("H:i:s", $splits_array["finish"]);
+
     $csv_array[] = $this_si_stick;
     $csv_array[] = ""; // Database ID
     $csv_array[] = "\"{$last_name}\"";  // Surname
@@ -89,8 +93,8 @@ foreach ($course_list as $one_course) {
     $csv_array[] = $this_result["gender"]; // Gender
     $csv_array[] = ""; // Block
     $csv_array[] = ($this_result["competitive_class"] != "") ? "0" : "1"; // NC
-    $csv_array[] = strftime("%T", $splits_array["start"]);  // Should be HH:MM:SS
-    $csv_array[] = strftime("%T", $splits_array["finish"]); // Should be HH:MM:SS
+    $csv_array[] = $formatted_start_time;
+    $csv_array[] = $formatted_end_time;
     $csv_array[] = trim($this_result["time"]);
     $csv_array[] = $this_result["dnf"] ? "2" : "0"; // 2 = DNF, 0 = good - Classifier
     $csv_array[] = "1"; // Club number
@@ -124,8 +128,8 @@ foreach ($course_list as $one_course) {
     $csv_array[] = ""; // course m
     $csv_array[] = $number_controls; // course controls
     $csv_array[] = $place; // place
-    $csv_array[] = strftime("%T", $splits_array["start"]);  // Should be HH:MM:SS
-    $csv_array[] = strftime("%T", $splits_array["finish"]); // Should be HH:MM:SS
+    $csv_array[] = $formatted_start_time;
+    $csv_array[] = $formatted_end_time;
     $winsplits_csv_line = implode(";", $csv_array);
     $winsplits_csv_line .= ";" . implode(";", array_map(function($elt) { return ($elt["control_id"] . ";" .
 	                                                                         (isset($elt["missed"]) ?

@@ -9,7 +9,7 @@ ck_testing();
 // echo "<p>\n";
 
 // Make sure any funky HTML sequeneces in the name are escaped
-$competitor_name = find_get_key_or_empty_string("competitor_name");
+$competitor_name = htmlentities(find_get_key_or_empty_string("competitor_name"), ENT_QUOTES, 'iso8859-1');
 
 
 $course = find_get_key_or_empty_string("course");
@@ -104,7 +104,7 @@ if (!$error) {
     $i = 0;
     while (isset($_GET["extra-{$i}"])) {
       if ($_GET["extra-{$i}"] != "") {
-        $saved_competitor_name .= " - " . htmlentities($_GET["extra-{$i}"]);
+        $saved_competitor_name .= " - " . htmlentities($_GET["extra-{$i}"], ENT_QUOTES, 'iso8859-1');
       }
       $i++;
     }
@@ -229,8 +229,15 @@ if (!$error) {
   else {
     $show_start_button = file_exists(get_base_path($key) . "/show_start_button_when_registering");
 
-    echo "<p>Go the start and scan the QR code to begin your course.\n";
-    echo "<p style=\"color:red;\">NOTE: your browser must NOT be in private mode!\n";
+    # See if running untimed and change the prompt somewhat
+    if ($registration_info_supplied && isset($registration_info["untimed_run"]) && ($registration_info["untimed_run"] == "true")) {
+      echo "<p>For untimed orienteering, start the course when you wish.\n";
+      echo "<p style=\"color:red;\">YOU MUST EITHER<ul><li>Report to the download table when you finish<li>Use your phone to scan the finish code QR<ul><li>If registering via your phone and your browser IS NOT in private mode.</ul></ul>\n";
+    }
+    else {
+      echo "<p>Go the start and scan the QR code to begin your course.\n";
+      echo "<p style=\"color:red;\">NOTE: your browser must NOT be in private mode!\n";
+    }
 
     if ($show_start_button) {
       echo "<p>(Optional) Click the \"Start course\" button below to start immediately.\n";

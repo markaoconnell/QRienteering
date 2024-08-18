@@ -11,7 +11,7 @@ ck_testing();
 // echo "<p>\n";
 
 // Make sure any funky HTML sequeneces in the name are escaped
-$competitor_name = htmlentities($_GET["competitor_name"]);
+$competitor_name = htmlentities($_GET["competitor_name"], ENT_QUOTES, 'iso8859-1');
 $course = $_GET["course"];
 if (isset($_GET["competitor"])) {
   $competitor = $_GET["competitor"];

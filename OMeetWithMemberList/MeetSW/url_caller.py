@@ -216,9 +216,15 @@ class url_caller(LongRunningClass):
       if self.debug or self.verbose:
         print ("Got results from si lookup: {}".format(output))
       
+      registered_stick_found = re.search(r"####,REGISTERED,(.*)", output)
+      if (registered_stick_found != None):
+          registered_stick_msg = registered_stick_found.group(1)
+      else:
+          registered_stick_msg = None
+
       member_match = re.search(r"####,MEMBER_ENTRY,(.*)", output)
       if member_match == None:
-          return None
+          return (found_user_info(registration_info = registered_stick_msg))
     
       member_elements = member_match.group(1).split(",")
       found_name = base64.standard_b64decode(member_elements[0]).decode("utf-8")
@@ -235,5 +241,5 @@ class url_caller(LongRunningClass):
       if nre_info_match != None:
           nre_info = nre_info_match.group(1)
     
-      return (found_user_info(name = found_name, member_id = found_id, email = found_email, club = club_name, stick = stick, cell_phone = cell_phone, course = course, nre_info = nre_info))
+      return (found_user_info(name = found_name, member_id = found_id, email = found_email, club = club_name, stick = stick, cell_phone = cell_phone, course = course, nre_info = nre_info, registration_info = registered_stick_msg))
     

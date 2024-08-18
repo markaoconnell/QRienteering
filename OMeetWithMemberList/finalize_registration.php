@@ -91,6 +91,7 @@ $email_address = find_get_key_or_empty_string("email");
 $si_stick = find_get_key_or_empty_string("si_stick");
 $birth_year = find_get_key_or_empty_string("birth_year");
 $gender = find_get_key_or_empty_string("gender");
+$untimed_run = find_get_key_or_empty_string("untimed_run");
 
 
 // Let's do some validations
@@ -143,6 +144,11 @@ $registration_pieces = array("first_name", base64_encode($first_name),
                               "car_info", base64_encode($car_info),
                               "member_id", base64_encode($is_member ? $member_id : ""),
 			      "is_member", base64_encode($is_member ? "yes" : "no"));
+if ($untimed_run != "") {
+  $registration_pieces[] = "untimed_run";
+  $registration_pieces[] = base64_encode($untimed_run);
+}
+
 if ($using_nre_classes) {
   if (($birth_year != "") || ($gender != "")) {
     $classification_info_hash = array();

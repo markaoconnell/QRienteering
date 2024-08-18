@@ -132,7 +132,7 @@ elseif ($is_generic_registration) {
 }
 else {
   if (isset($saved_registration_info["first_name"])) {
-    $escaped_first_name = htmlentities($saved_registration_info["first_name"]);
+    $escaped_first_name = htmlentities($saved_registration_info["first_name"], ENT_QUOTES, 'iso8859-1');
     $presupplied_first_name = "value=\"{$escaped_first_name}\"";
   }
   else {
@@ -140,7 +140,7 @@ else {
   }
 
   if (isset($saved_registration_info["last_name"])) {
-    $escaped_last_name = htmlentities($saved_registration_info["last_name"]);
+    $escaped_last_name = htmlentities($saved_registration_info["last_name"], ENT_QUOTES, 'iso8859-1');
     $presupplied_last_name = "value=\"{$escaped_last_name}\"";
   }
   else {
@@ -148,7 +148,7 @@ else {
   }
 
   if (isset($saved_registration_info["club_name"])) {
-    $escaped_club_name = htmlentities($saved_registration_info["club_name"]);
+    $escaped_club_name = htmlentities($saved_registration_info["club_name"], ENT_QUOTES, 'iso8859-1');
     $presupplied_club_name = "value=\"{$escaped_club_name}\"";
   }
   else {
@@ -160,6 +160,17 @@ else {
   }
   else {
     $presupplied_si_stick = "";
+  }
+
+  $timing_properties = get_timing_properties($key, $event);
+  $qr_code_option = "";
+  $untimed_option = "";
+  if (qr_coding_allowed($timing_properties)) {
+    $qr_code_option = "<p> Check here if you want to run using QR codes <input type=radio name=\"using_stick\" value=\"no\"/>\n";
+  }
+
+  if (untimed_runs_allowed($timing_properties)) {
+    $untimed_option = "<p> Check here to run untimed (must still scan finish or report to download table!!) <input type=radio name=\"using_stick\" value=\"untimed\"/>\n";
   }
 
 ?>
@@ -174,6 +185,8 @@ else {
   <input type="text" name="club_name" <?php echo $presupplied_club_name; ?>><br>
   <br><p>If you are using a SI unit today, please enter the number here<br>
   <input type="text" name="si_stick" <?php echo $presupplied_si_stick; ?>><br>
+  <?php echo $qr_code_option; ?>
+  <?php echo $untimed_option; ?>
   <input type="hidden" name="key" <?php echo "value=\"{$key}\""; ?> >
   <input type="hidden" name="event" <?php echo "value=\"{$event}\""; ?> >
   <br><br>

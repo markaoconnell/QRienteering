@@ -109,7 +109,7 @@ echo "<p>Registration for orienteering event: " . file_get_contents("{$base_path
 echo "<form action=\"./register_competitor.php\">\n";
 
 if ($registration_info_supplied) {
-  $escaped_name = htmlentities("{$registration_info["first_name"]} {$registration_info["last_name"]}");
+  $escaped_name = htmlentities("{$registration_info["first_name"]} {$registration_info["last_name"]}", ENT_QUOTES, 'iso8859-1');
   echo "<br><p>Welcome:<br>\n";
   echo "<input type=\"text\" name=\"competitor_name\" value=\"{$escaped_name}\" readonly><br>\n";
   echo "<input type=\"hidden\" name=\"registration_info\" value=\"{$raw_registration_info}\">\n";
