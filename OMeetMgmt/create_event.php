@@ -39,6 +39,10 @@ if (isset($_POST["uploadppen"])) {
         continue;  // Lines beginning with -- are ignored as comments
       }
 
+      if (substr($this_course, 0, 2) == "d:") {
+        continue;  // Control descriptions don't really need validating
+      }
+
       $validation_results = validate_and_parse_course($this_course);
 
       $extra_info = $validation_results[1];
@@ -84,7 +88,7 @@ elseif (isset($_POST["submit"])) {
   $file_contents = $_POST["course_description"];
 
   $course_list = explode("\n", $file_contents);
-  $num_courses=count($course_list);
+  $num_courses = count(array_filter($course_list, function ($elt) { return (substr($elt, 0, 2) != "d:"); } ));
   if ($verbose) {
     echo "<p>There are ${num_courses} courses found.\n";
   }
@@ -98,6 +102,10 @@ elseif (isset($_POST["submit"])) {
 
       if (strpos($this_course, "--") === 0) {
         continue;  // Lines beginning with -- are ignored as comments
+      }
+
+      if (substr($this_course, 0, 2) == "d:") {
+        continue;  // Skip control descriptions here - will deal with them later
       }
 
       $validation_results = validate_and_parse_course($this_course);
@@ -142,6 +150,8 @@ elseif (isset($_POST["submit"])) {
         //print_r($this_course_info);
         create_course_in_event($this_course_info, $key, $event);
       }
+
+      add_control_descriptions_to_event(array_filter($course_list, function ($elt) { return (substr($elt, 0, 2) == "d:"); }), $key, $event);
 
       echo "<p>Created event successfully {$event_fullname} with " . count($course_array) . " courses:<ul><li>" . implode("<li>", $course_names_array) . "</ul>\n";
 //      if (isset($_SERVER["HTTPS"])) {

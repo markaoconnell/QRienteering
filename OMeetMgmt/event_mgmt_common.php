@@ -271,6 +271,7 @@ function create_event($key, $event_description) {
   mkdir("{$event_path}/Courses");
   mkdir("{$event_path}/Results");
   mkdir("{$event_path}/StickXlations");
+  mkdir("{$event_path}/ControlDescriptions");
   file_put_contents("{$event_path}/description", $event_description);
   file_put_contents("{$event_path}/no_redirects", "");
 
@@ -317,6 +318,16 @@ function create_course_in_event($course_info, $key, $event) {
     $properties_string .= "{$TYPE_FIELD}:{$course_info[$TYPE_FIELD]}\n";
     file_put_contents("{$event_path}/Courses/{$prefix}-{$course_info[$NAME_FIELD]}/properties.txt", $properties_string);
     file_put_contents("{$event_path}/Courses/{$prefix}-{$course_info[$NAME_FIELD]}/no_registrations", "");
+  }
+}
+
+function add_control_descriptions_to_event($description_list, $key, $event) {
+  $event_path = get_event_path($event, $key, "..");
+  foreach ($description_list as $this_description) {
+    $pieces = explode(":", $this_description, 3); // format is d:<code>:description
+    if ($pieces[0] == "d") {
+      file_put_contents("{$event_path}/ControlDescriptions/{$pieces[1]}", $pieces[2]);
+    }
   }
 }
 
