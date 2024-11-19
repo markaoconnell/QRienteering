@@ -70,7 +70,8 @@ if ($event != "") {
     // print_r($courses_array);
   
     if (count($courses_array) == 1) {
-      $mass_start_courses[0] = $courses_array[0];
+      // Get the first (and only) value of the array, remembering the the keys were preserved in the array_diff, so the first element is no longer necessarily 0!
+      $mass_start_courses[0] = array_values($courses_array)[0];
     }
     else {
       $output_string .= "<p>\n";

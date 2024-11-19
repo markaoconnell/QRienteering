@@ -49,7 +49,7 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
   }
 
   if (count($registration_info) > 0) {
-    $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = " . htmlentities($registration_info[$key], ENT_QUOTES, 'iso8859-1')); },
+    $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = " . htmlentities($registration_info[$key], ENT_QUOTES, 'utf-8')); },
                                                                                                                 array_diff(array_keys($registration_info),
                                                                                                                            array("first_name", "last_name")));
     $competitor_string .= "<td>{$nre_class_string}" . implode(", ", $registration_info_strings)  . "</td>";

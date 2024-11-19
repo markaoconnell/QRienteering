@@ -114,6 +114,8 @@ $box_E_items = array("8.1" => "low",
 $box_F_dual_feature_items = array("10.1" => "crossing",
 	                          "10.2" => "junction");
 
+$box_F_single_feature_items = array("11.7" => "bend");
+
 $box_G_directional_items = array("11.1" => "side",
 	                         "11.2" => "edge",
 				 "11.3" => "part",
@@ -123,8 +125,7 @@ $box_G_directional_items = array("11.1" => "side",
 				 "11.8" => "end",
 				 "11.14" => "foot");
 
-$box_G_nondirectional_items = array("11.7" => "bend",
-	                            "11.9" => "upper part",
+$box_G_nondirectional_items = array("11.9" => "upper part",
 				    "11.10" => "lower part",
 				    "11.11" => "top",
 				    "11.12" => "beneath",
@@ -134,11 +135,11 @@ $box_G_dual_feature_items = array("11.15" => "Between");
 
 
 
-function get_control_description($description_boxes) {
+function create_control_description($description_boxes) {
   global $box_C_nondirectional_items;
   global $box_D_items;
   global $box_E_items;
-  global $box_F_dual_feature_items;
+  global $box_F_dual_feature_items, $box_F_single_feature_items;
   global $box_G_directional_items, $box_G_nondirectional_items, $box_G_dual_feature_items;
 
   $description_items = array();
@@ -195,8 +196,14 @@ function get_control_description($description_boxes) {
   }
 
   // In this case, box F describes the feature in box D - height etc
+  // Except for a bend, this is a literal description of the item
   if (isset($description_items["F"]) && !isset($box_F_dual_feature_items[$description_items["F"][0]])) {
-    $description .= " {$description_items["F"][1]}";
+    if (isset($box_F_single_feature_items[$description_items["F"][0]])) {
+      $description .= " {$box_F_single_feature_items[$description_items["F"][0]]}";
+    }
+    else {
+      $description .= " {$description_items["F"][1]}";
+    }
   }
 
   // Handle the other cases of column G - location on a single feature
@@ -302,7 +309,7 @@ foreach ($child_list as $top_level_child) {
       }
 
       if (($kind == "normal") && count($control_description_box_list) > 0) {
-        $control_descriptions[$code] = get_control_description($control_description_box_list);
+        $control_descriptions[$code] = create_control_description($control_description_box_list);
         if ($verbose) {
           echo "Control id {$id} (code {$code}) has description: {$control_descriptions[$code]}\n";
 	}

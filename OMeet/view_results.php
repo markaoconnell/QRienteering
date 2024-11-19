@@ -31,6 +31,8 @@ if ($event == "") {
 $download_csv_flag = isset($_GET["download_csv"]) ? $_GET["download_csv"] : "";
 $download_csv = ($download_csv_flag != "");
 
+$only_course_list = isset($_GET["only_course_list"]) ? $_GET["only_course_list"] : "";
+$only_return_course_list = ($only_course_list != "");
 
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
@@ -116,7 +118,7 @@ foreach ($course_list as $one_course) {
     $courses_for_parsing[] = $one_course;
   }
 
-  if ($show_course || isset($_GET["show_all_courses"])) {
+  if (($show_course || isset($_GET["show_all_courses"])) && !$only_return_course_list) {
     $course_properties = get_course_properties("{$courses_path}/{$one_course}");
     $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
     $max_score = 0;

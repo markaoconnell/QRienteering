@@ -310,13 +310,20 @@ else {
     if ($remaining_controls <= 0) {
       $next_control = "Finish";
       $append_finish_message = true;
+      $next_control_msg = "Finish";
     }
     else {
       $next_control = $control_list[$number_controls_found + 1][0];
+      $next_control_ordinal = $number_controls_found + 2;
+      $next_control_msg = "{$next_control_ordinal} (" . xlate_control_id_for_display($key, $event, $next_control) . ")";
+      $next_control_description = get_control_description(get_event_path($event, $key), xlate_control_id_for_display($key, $event, $next_control));
+      if ($next_control_description != "") {
+        $next_control_msg .= " - {$next_control_description}";
+      }
     }
     $control_number_for_printing = $number_controls_found + 1;
     $success_msg = "<p>Correct!  Reached {$control_id_for_display}, control #{$control_number_for_printing} on " . ltrim($course, "0..9-") . "\n" .
-                   "<p>{$remaining_controls} more to find, next is " . xlate_control_id_for_display($key, $event, $next_control) . ".\n";
+                   "<p>{$remaining_controls} more to find, next is {$next_control_msg}.\n";
     // echo "<p>Saved to the file ${competitor_path}/${number_controls_found}.\n";
   }
 

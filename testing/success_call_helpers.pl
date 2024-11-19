@@ -930,7 +930,7 @@ sub create_event_successfully {
   }
   $number_courses++;   # There is normally one fewer newline than the number of courses
   
-  @directory_contents = check_directory_contents($event_path, qw(description Competitors Results Courses no_redirects StickXlations));
+  @directory_contents = check_directory_contents($event_path, qw(description Competitors Results Courses no_redirects StickXlations ControlDescriptions));
   if (scalar(@directory_contents) != 0) {
     error_and_exit("More files exist in $event_path than expected: " . join("--", @directory_contents));
   }
