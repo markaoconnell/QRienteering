@@ -166,7 +166,7 @@ else {
 }
 
 $base_path = get_base_path($key);
-if (isset($entrant_info["waiver_signed"]) && (strtolower($entrant_info["waiver_signed"]) == "yes")) {
+if (isset($entrant_info["waiver_signed"]) && ((strtolower($entrant_info["waiver_signed"]) == "yes") || (strtolower($entrant_info["waiver_signed"]) == "y"))) {
   echo "<p><input type=hidden name=\"waiver_signed\" value=\"signed\"><br>";
 }
 else {

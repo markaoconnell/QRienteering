@@ -18,6 +18,9 @@ if (isset($_GET["registration_info"])) {
   $registration_info_supplied = true;
   $raw_registration_info = $_GET["registration_info"];
   $registration_info = parse_registration_info($raw_registration_info);
+  if (!isset($registration_info["si_stick"])) {
+    $registration_info["si_stick"] = "";
+  }
   $competitor_name = "{$registration_info["first_name"]} {$registration_info["last_name"]}";
 }
 else {
