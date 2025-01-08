@@ -88,7 +88,7 @@ function get_properties($properties_path, $filter_for_comments) {
   $props_as_hash = array();
   $properties_contents = file($properties_path);
   if ($filter_for_comments) {
-    $properties_contents = array_filter($properties_contents, function ($line) { return (ltrim($line)[0] != "#"); });
+    $properties_contents = array_filter($properties_contents, function ($line) { $no_whitespace_line = ltrim($line); return ((strlen($no_whitespace_line) > 0) && ($no_whitespace_line[0] != "#")); });
   }
   array_map(function ($string) use (&$props_as_hash) { $first_colon = strpos($string, ":");
                                                        $props_as_hash[trim(substr($string, 0, $first_colon))] = trim(substr($string, $first_colon + 1)); },

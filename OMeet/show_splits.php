@@ -19,12 +19,16 @@ if (($event == "") || (!key_is_valid($key))) {
 set_timezone($key);
 
 $result_pieces = explode(",", $time_and_competitor);
+if (count($result_pieces) < 3) {
+  error_and_exit("Bad splits entry \"{$time_and_competitor}\", no competitor id found in 3rd position, bad link?\n");
+}
 $competitor_id = $result_pieces[2];
 
 
+# Check to make sure that there is a name file too
 $competitor_path = get_competitor_path($competitor_id, $event, $key, ".."); 
 
-if (!is_dir($competitor_path)) {
+if (!is_dir($competitor_path) || !is_file("{$competitor_path}/name")) {
   error_and_exit("Cannot find competitor \"{$competitor_id}\" for {$event} and {$key}, please check that this is an authorized link.\n");
 }
 

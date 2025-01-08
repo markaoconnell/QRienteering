@@ -5,10 +5,10 @@ ck_testing();
 
 // Get the submitted info
 // echo "<p>\n";
-$course = $_COOKIE["course"];
-$competitor_id = $_COOKIE["competitor_id"];
-$event = $_COOKIE["event"];
-$key = $_COOKIE["key"];
+$course = isset($_COOKIE["course"]) ? $_COOKIE["course"] : "";
+$competitor_id = isset($_COOKIE["competitor_id"]) ? $_COOKIE["competitor_id"] : "";
+$event = isset($_COOKIE["event"]) ? $_COOKIE["event"] : "";
+$key = isset($_COOKIE["key"]) ? $_COOKIE["key"] : "";
 $error_string = "";
 
 if (($key == "") && redirect_to_secure_http_if_no_key_cookie() && !isset($_SERVER["HTTPS"])) {
@@ -77,10 +77,10 @@ else {
 echo get_web_page_header(true, false, false);
 
 if ($error_string == "") {
-  echo "<p>" . ltrim($course, "0..9-") . " course started for ${competitor_name}.\n";
+  echo "<p>" . ltrim($course, "0..9-") . " course started for {$competitor_name}.\n";
 }
 else {
-  echo "<p>ERROR: ${error_string}\n<br>Course not started.";
+  echo "<p>ERROR: {$error_string}\n<br>Course not started.";
 }
 
 echo get_web_page_footer();

@@ -113,7 +113,7 @@ if (file_exists("{$competitor_path}/si_stick") && !isset($_GET["si_stick_finish"
   error_and_exit("<p>ERROR: If using SI unit, do not scan the finish QR code, use the SI unit to finish instead.\n");
 }
 
-$control_list = read_controls("${courses_path}/${course}/controls.txt");
+$control_list = read_controls("{$courses_path}/{$course}/controls.txt");
 $controls_points_hash = array_combine(array_map(function ($element) { return $element[0]; }, $control_list),
                                       array_map(function ($element) { return $element[1]; }, $control_list));
 
@@ -134,7 +134,7 @@ $parseable_result_string = "\n<!--\n";
 $result_filename = "";
 $suppress_email = false;
 
-if (!file_exists("${controls_found_path}/start")) {
+if (!file_exists("{$controls_found_path}/start")) {
   # Untimed runners may never have recorded a start time, but assume one from the registration time.
   # Is this worthwhile?
   if ($untimed_run) {
@@ -148,7 +148,7 @@ if (!file_exists("${controls_found_path}/start")) {
 
 if (!file_exists("{$controls_found_path}/finish")) {
   // See how many controls have been completed
-  $controls_done = scandir("./${controls_found_path}");
+  $controls_done = scandir("./{$controls_found_path}");
   $controls_done = array_diff($controls_done, array(".", "..", "start", "finish")); // Remove the annoying . and .. entries
   // echo "<br>Controls done on the ${course} course.<br>\n";
   // print_r($controls_done);
@@ -163,10 +163,10 @@ if (!file_exists("{$controls_found_path}/finish")) {
           $found_controls = $number_controls_found + count($controls_ok_array);
           $skipped_controls_string = implode(", ", array_map(function ($elt) { return (explode("-", $elt)[1]); }, $controls_skipped_array));
           $error_string .= "<p>Not all controls found, found {$found_controls} controls (skipped {$skipped_controls_string}), " .
-                                                                                        "expected ${number_controls_on_course} controls.\n";
+                                                                                        "expected {$number_controls_on_course} controls.\n";
         }
         else {
-          $error_string .= "<p>Not all controls found, found ${number_controls_found} controls, expected ${number_controls_on_course} controls.\n";
+          $error_string .= "<p>Not all controls found, found {$number_controls_found} controls, expected {$number_controls_on_course} controls.\n";
         }
         file_put_contents("{$competitor_path}/dnf", $error_string, FILE_APPEND);
     }
@@ -175,8 +175,8 @@ if (!file_exists("{$controls_found_path}/finish")) {
   file_put_contents("{$controls_found_path}/finish", strval($now));
   $course_started_at = file_get_contents("{$controls_found_path}/start");
   $time_taken = $now - $course_started_at;
-  if (!file_exists("{$results_path}/${course}")) {
-    mkdir("{$results_path}/${course}");
+  if (!file_exists("{$results_path}/{$course}")) {
+    mkdir("{$results_path}/{$course}");
   }
 
   // Just pluck off the controls found (ignore the timestamp for now
@@ -211,7 +211,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
 
   if (!$untimed_run) {
     $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $competitor_id);
-    file_put_contents("{$results_path}/${course}/${result_filename}", "");
+    file_put_contents("{$results_path}/{$course}/{$result_filename}", "");
 
     if (event_is_using_nre_classes($event, $key) && competitor_has_class($competitor_path)) {
       $results_per_class_path = get_results_per_class_path($event, $key);
@@ -232,7 +232,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
     file_put_contents("{$competitor_path}/no_time", "untimed run", FILE_APPEND);
     file_put_contents("{$competitor_path}/self_reported", "");
     $result_filename = sprintf("%04d,%06d,%s", 0, 86400 * 2, $competitor_id);
-    file_put_contents("{$results_path}/${course}/${result_filename}", "");
+    file_put_contents("{$results_path}/{$course}/{$result_filename}", "");
   }
 }
 else {
@@ -262,11 +262,11 @@ setcookie("event", $event, $now - 86400);
 echo get_web_page_header(true, true, false);
 
 if ($error_string != "") {
-  echo "<p>ERROR: ${error_string}\n";
+  echo "<p>ERROR: {$error_string}\n";
 }
 
 $dnf_string = "";
-if (file_exists("${competitor_path}/dnf")) {
+if (file_exists("{$competitor_path}/dnf")) {
   echo "<p>ERROR: DNF status.\n";
   $parseable_result_string .= "\n####,ERROR,DNF\n"; 
   $dnf_string = " - DNF";

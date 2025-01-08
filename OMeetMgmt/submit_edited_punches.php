@@ -313,7 +313,7 @@ if ($error_string == "") {
       $number_controls_on_course = count($control_list);
       // echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found][0] . "--\n";
       if ($number_controls_found != $number_controls_on_course) {
-        $output_string .= "<p>Not all controls found, found ${number_controls_found} controls, expected ${number_controls_on_course} controls.\n";
+        $output_string .= "<p>Not all controls found, found {$number_controls_found} controls, expected {$number_controls_on_course} controls.\n";
         file_put_contents("{$new_competitor_path}/dnf", $error_string, FILE_APPEND);
         $dnf_string = " - DNF";
       }

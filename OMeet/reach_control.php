@@ -6,12 +6,12 @@ require '../OMeetCommon/course_properties.php';
 
 ck_testing();
 
-$event = $_COOKIE["event"];
-$key = $_COOKIE["key"];
+$event = isset($_COOKIE["event"]) ? $_COOKIE["event"] : "";
+$key = isset($_COOKIE["key"]) ? $_COOKIE["key"] : "";
 $control_id = isset($_GET["control"]) ? $_GET["control"] : "no-such-control";
 $control_id_for_display = xlate_control_id_for_display($key, $event, $control_id);
-$competitor_id = $_COOKIE["competitor_id"];
-$course = $_COOKIE["course"];
+$competitor_id = isset($_COOKIE["competitor_id"]) ? $_COOKIE["competitor_id"] : "";
+$course = isset($_COOKIE["course"]) ? $_COOKIE["course"] : "";
 $time_now = time();
 $skip_adding_control_as_extra = false;
 
@@ -52,7 +52,7 @@ if (isset($_GET["skipped_controls"]) && ($_GET["skipped_controls"] != "")) {
   }
 
   if ($get_prior_skipped_controls == "") {
-    $_COOKIE["${competitor_id}_skipped_controls"] = $get_skipped_controls;
+    $_COOKIE["{$competitor_id}_skipped_controls"] = $get_skipped_controls;
   }
   else {
     $_COOKIE["{$competitor_id}_skipped_controls"] = "{$_COOKIE["{$competitor_id}_skipped_controls"]},{$get_skipped_controls}";
@@ -75,7 +75,7 @@ if (!file_exists(get_event_path($event, $key, "..") . "/no_redirects") && ($_GET
     $extra_mumble_field = ",redo";
   }
   $redirect_encoded_info = base64_encode("{$control_id},{$competitor_id},{$current_time}{$extra_mumble_field}");
-  echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=./reach_control.php?mumble=${redirect_encoded_info}\" /></head></html>";
+  echo "<html><head><meta http-equiv=\"refresh\" content=\"0; URL=./reach_control.php?mumble={$redirect_encoded_info}\" /></head></html>";
   return;
 }
 
@@ -117,13 +117,13 @@ $controls_points_hash = array_combine(array_map(function ($element) { return $el
 $course_properties = get_course_properties("{$courses_path}/{$course}");
 $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
 
-if (file_exists("${competitor_path}/si_stick")) {
+if (file_exists("{$competitor_path}/si_stick")) {
   $competitor_name = file_get_contents("{$competitor_path}/name");
   error_and_exit("<p>{$competitor_name} on course {$course} registered with si unit, should not scan QR codes.\n");
 }
 
 $autostart_msg = "";
-if (!file_exists("${controls_found_path}/start")) {
+if (!file_exists("{$controls_found_path}/start")) {
   $competitor_name = file_get_contents("{$competitor_path}/name");
   $time_of_registration = stat("{$competitor_path}/name")["mtime"];
   file_put_contents("{$controls_found_path}/start", $time_of_registration);
@@ -132,13 +132,13 @@ if (!file_exists("${controls_found_path}/start")) {
                    " for {$competitor_name}, for a more accurate time please re-register and be certain to scan the Start QR code.\n";
 }
 
-if (file_exists("${controls_found_path}/finish")) {
+if (file_exists("{$controls_found_path}/finish")) {
   $competitor_name = file_get_contents("{$competitor_path}/name");
   error_and_exit("<p>Course " . ltrim($course, "0..9-") . " already finished for {$competitor_name}, please return and re-register to restart the course.\n");
 }
 
 // See how many controls have been completed
-$controls_done = scandir("./${controls_found_path}");
+$controls_done = scandir("./{$controls_found_path}");
 $controls_done = array_diff($controls_done, array(".", "..", "start", "finish")); // Remove the annoying . and .. entries
 $start_time = file_get_contents("./{$controls_found_path}/start");
 $time_on_course = $time_now - $start_time;
@@ -299,7 +299,7 @@ else {
       $new_cookie_entry = "{$_COOKIE["{$competitor_id}_skipped_controls"]},ok-{$control_id}";
       setcookie("{$competitor_id}_skipped_controls", $new_cookie_entry, $time_now + 3600 * 6);
       if (!$skip_adding_control_as_extra) {
-        file_put_contents("{$competitor_path}/extra", "${control_entry}\n", FILE_APPEND);
+        file_put_contents("{$competitor_path}/extra", "{$control_entry}\n", FILE_APPEND);
       }
     }
     else {

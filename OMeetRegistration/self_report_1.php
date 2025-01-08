@@ -9,7 +9,7 @@ ck_testing();
 
 function is_event($filename) {
   global $base_path;
-  return ((substr($filename, 0, 6) == "event-") && is_dir("${base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
+  return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
 }
 
 function name_to_link($event_id) {
@@ -69,7 +69,12 @@ if (file_exists("{$base_path}/{$event}/no_self_reporting")) {
   error_and_exit("Event " . file_get_contents("{$base_path}/{$event}/description") . " does not allow self-reporting.\n");
 }
 
+
 $courses_path = get_courses_path($event, $key);
+if (!is_dir($courses_path)) {
+  error_and_exit("Event \"{$event}\" appears corrupt, please contact the webmaster.\n");
+}
+
 $courses_array = scandir($courses_path);
 $courses_array = array_diff($courses_array, array(".", "..")); // Remove the annoying . and .. entries
 

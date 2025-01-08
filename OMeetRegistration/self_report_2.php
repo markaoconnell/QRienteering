@@ -214,7 +214,7 @@ echo get_web_page_header(true, true, false);
 
 if (!$is_a_replay) {
   $dnf_string = "";
-  if (file_exists("${competitor_path}/dnf")) {
+  if (file_exists("{$competitor_path}/dnf")) {
     $dnf_string = " - DNF";
   }
 

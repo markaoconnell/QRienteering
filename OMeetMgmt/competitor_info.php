@@ -132,7 +132,7 @@ else {
 }
 
 if (is_dir($competitor_directory)) {
-  $competitor_list = scandir("${competitor_directory}");
+  $competitor_list = scandir("{$competitor_directory}");
   $competitor_list = array_diff($competitor_list, array(".", ".."));
 }
 else {
@@ -151,7 +151,7 @@ $recent_finisher_cutoff = time() - $RECENT_FINISHER_WINDOW;
 
 $competitor_outputs = array();
 foreach ($competitor_list as $competitor) {
-  $course = file_get_contents("${competitor_directory}/${competitor}/course");
+  $course = file_get_contents("{$competitor_directory}/{$competitor}/course");
   $is_self_reported = file_exists("{$competitor_directory}/{$competitor}/self_reported");
   $finish_file_exists = file_exists("{$competitor_directory}/{$competitor}/controls_found/finish");
   $has_finished = $finish_file_exists || $is_self_reported;
@@ -174,10 +174,10 @@ foreach ($competitor_list as $competitor) {
     if ($is_self_reported) {
       $status = "self reported";
     }
-    else if (file_exists("${competitor_directory}/${competitor}/controls_found/finish")) {
+    else if (file_exists("{$competitor_directory}/{$competitor}/controls_found/finish")) {
       $status = "finished";
     }
-    else if (file_exists("{$competitor_directory}/${competitor}/controls_found/start")) {
+    else if (file_exists("{$competitor_directory}/{$competitor}/controls_found/start")) {
       $status = "on course";
     }
     else if (file_exists("{$competitor_directory}/{$competitor}/si_stick")) {
@@ -190,7 +190,7 @@ foreach ($competitor_list as $competitor) {
     # The start time for an si_stick user is not a good indicator of how old the entry is, so always use
     # the registration time for si_stick users
     $competitor_info = get_competitor_info($competitor_directory, $competitor, $status, $registration_info, $si_stick);
-    if (!file_exists("${competitor_directory}/${competitor}/controls_found/start") || ($si_stick != "none")) {
+    if (!file_exists("{$competitor_directory}/{$competitor}/controls_found/start") || ($si_stick != "none")) {
       $file_info = stat("{$competitor_directory}/{$competitor}");
       // Weed out people who's registration time is too old (one day in seconds)
       if (($current_time - $file_info["mtime"]) < $TIME_LIMIT) {
@@ -201,7 +201,7 @@ foreach ($competitor_list as $competitor) {
       }
     }
     else {
-      $start_time = file_get_contents("{$competitor_directory}/${competitor}/controls_found/start");
+      $start_time = file_get_contents("{$competitor_directory}/{$competitor}/controls_found/start");
       // Weed out people who started more than one day ago
       if (($current_time - $start_time) < $TIME_LIMIT) {
         $competitor_outputs[] = $competitor_info;
@@ -242,8 +242,8 @@ foreach ($competitor_list as $competitor) {
 }
 
 $time_limit_string = "<form action=./competitor_info.php>\n";
-$time_limit_string .= "<input type=hidden name=\"key\" value=\"${key}\">\n";
-$time_limit_string .= "<input type=hidden name=\"event\" value=\"${event}\">\n";
+$time_limit_string .= "<input type=hidden name=\"key\" value=\"{$key}\">\n";
+$time_limit_string .= "<input type=hidden name=\"event\" value=\"{$event}\">\n";
 $time_limit_string .= "<p>Show competitors registered within the past:\n";
 $time_limit_string .= "<table border=1>\n<tr>\n";
 $time_limit_string .= "<td><input type=radio name=TIME_LIMIT value=86400 " . (($TIME_LIMIT == 86400) ? " checked " : "") . "> 1 day</td>\n";
@@ -271,8 +271,8 @@ else {
   $results_string = "<p>Competitors for {$event_name} ({$total_outstanding_runners} runners still on course)<p><p>\n";
   $results_string .= "<form action=\"../OMeetMgmt/remove_from_event.php\">\n";
 }
-$results_string .= "<input type=hidden name=\"key\" value=\"${key}\">\n";
-$results_string .= "<input type=hidden name=\"event\" value=\"${event}\">\n";
+$results_string .= "<input type=hidden name=\"key\" value=\"{$key}\">\n";
+$results_string .= "<input type=hidden name=\"event\" value=\"{$event}\">\n";
 $button_label = $show_removed_competitors ? "Restore" : "Remove";
 $results_string .= "\n<table><tr><th><input type=submit value=\"{$button_label}\"></th><th>Course</th><th>Competitor</th><th>Status</th><th>Si Unit</th>" .
                                 "<th>Punches</th><th>Info</th></tr>\n";

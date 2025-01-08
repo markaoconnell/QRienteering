@@ -4,7 +4,7 @@ require '../OMeetCommon/course_properties.php';
 
 function is_event($filename) {
   global $base_path;
-  return ((substr($filename, 0, 6) == "event-") && is_dir("${base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
+  return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
 }
 
 function name_to_link($event_id) {
@@ -78,7 +78,7 @@ $event_name = file_get_contents(get_event_path($event, $key) . "/description");
 
 $results_string = "";
 $competitor_directory = get_competitor_directory($event, $key, "..");
-$competitor_list = scandir("${competitor_directory}");
+$competitor_list = scandir("{$competitor_directory}");
 $competitor_list = array_diff($competitor_list, array(".", ".."));
 
 $courses_path = get_courses_path($event, $key, "..");
@@ -96,9 +96,9 @@ foreach ($courses_array as $course) {
 
 $found_registered_not_started = false;
 foreach ($competitor_list as $competitor) {
-  $course = file_get_contents("${competitor_directory}/${competitor}/course");
-  if (!file_exists("${competitor_directory}/${competitor}/controls_found/finish")) {
-    if (!file_exists("${competitor_directory}/${competitor}/controls_found/start")) {
+  $course = file_get_contents("{$competitor_directory}/{$competitor}/course");
+  if (!file_exists("{$competitor_directory}/{$competitor}/controls_found/finish")) {
+    if (!file_exists("{$competitor_directory}/{$competitor}/controls_found/start")) {
       $file_info = stat("{$competitor_directory}/{$competitor}");
       // Weed out people who's registration time is too old (one day in seconds)
       // or if they have self reported (they have no start time but really are done)
@@ -110,7 +110,7 @@ foreach ($competitor_list as $competitor) {
       }
     }
     else {
-      $start_time = file_get_contents("{$competitor_directory}/${competitor}/controls_found/start");
+      $start_time = file_get_contents("{$competitor_directory}/{$competitor}/controls_found/start");
       // Weed out people who started more than one day ago
       if (($current_time - $start_time) < $TIME_LIMIT) {
         $on_course[$course][] = $competitor;
@@ -128,7 +128,7 @@ if ($found_registered_not_started) {
     if (count($not_started[$course]) > 0) {
       $outstanding_entrants = true;
       foreach ($not_started[$course] as $competitor) {
-        $competitor_name = file_get_contents("${competitor_directory}/${competitor}/name");
+        $competitor_name = file_get_contents("{$competitor_directory}/{$competitor}/name");
         if ($include_competitor_id) {
           $competitor_name .= " ({$competitor})";
         }
@@ -138,7 +138,7 @@ if ($found_registered_not_started) {
         else {
           $status_field = "not started";
         }
-        $results_string .= "<tr><td>${competitor_name}</td><td>" . ltrim($course, "0..9-") . "</td><td>{$status_field}</td></tr>";
+        $results_string .= "<tr><td>{$competitor_name}</td><td>" . ltrim($course, "0..9-") . "</td><td>{$status_field}</td></tr>";
       }
     }
   }
@@ -150,19 +150,19 @@ foreach (array_keys($on_course) as $course) {
 //  print_r($on_course[$course]);
   if (count($on_course[$course]) > 0) {
     $outstanding_entrants = true;
-    $course_properties = get_course_properties("${courses_path}/${course}");
+    $course_properties = get_course_properties("{$courses_path}/{$course}");
     $is_score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
 
     $results_string .= "<p>Currently on " . ltrim($course, "0..9-") . "\n";
     $results_string .= "<table><tr><th>Name</th><th>Start time</th><th>Last control</th><th>Last control time</th></tr>\n";
     foreach ($on_course[$course] as $competitor) {
-      $competitor_path = "${competitor_directory}/${competitor}";
-      $competitor_name = file_get_contents("${competitor_path}/name");
+      $competitor_path = "{$competitor_directory}/{$competitor}";
+      $competitor_name = file_get_contents("{$competitor_path}/name");
       if ($include_competitor_id) {
         $competitor_name .= " ({$competitor})";
       }
-      $start_time = file_get_contents("${competitor_path}/controls_found/start");
-      $controls_done = scandir("${competitor_path}/controls_found");
+      $start_time = file_get_contents("{$competitor_path}/controls_found/start");
+      $controls_done = scandir("{$competitor_path}/controls_found");
       $controls_done = array_values(array_diff($controls_done, array(".", "..", "start", "finish")));
       $num_controls_done = count($controls_done);
       if ($num_controls_done > 0) {
@@ -201,8 +201,8 @@ foreach (array_keys($on_course) as $course) {
         }
       }
 
-      $results_string .= "<tr><td>${competitor_name}</td>\n<td>" . date("H:i:s", $start_time) . "</td>\n";
-      $results_string .= "<td>${last_control}</td>\n<td>" . date("H:i:s", $last_control_time) . "</td></tr>\n";
+      $results_string .= "<tr><td>{$competitor_name}</td>\n<td>" . date("H:i:s", $start_time) . "</td>\n";
+      $results_string .= "<td>{$last_control}</td>\n<td>" . date("H:i:s", $last_control_time) . "</td></tr>\n";
     }
     $results_string .= "</table><p><p><p>\n";
   }

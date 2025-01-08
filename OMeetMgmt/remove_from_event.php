@@ -29,7 +29,7 @@ $competitor_directory = get_competitor_directory($event, $key);
 $current_time = time();
 
 if (isset($_GET["Remove-all"])) {
-  $competitor_list = scandir("${competitor_directory}");
+  $competitor_list = scandir("{$competitor_directory}");
   $competitor_list = array_diff($competitor_list, array(".", ".."));
 }
 else {
@@ -120,8 +120,8 @@ if ($is_confirmed) {
 }
 else {
   echo "<p>Confirm removal from {$event_description}\n";
-  echo "<form action=\"../OMeetMgmt/remove_from_event.php\">\n<input type=hidden name=\"key\" value=\"${key}\">\n";
-  echo "<input type=hidden name=\"event\" value=\"${event}\">\n";
+  echo "<form action=\"../OMeetMgmt/remove_from_event.php\">\n<input type=hidden name=\"key\" value=\"{$key}\">\n";
+  echo "<input type=hidden name=\"event\" value=\"{$event}\">\n";
   echo "<input type=hidden name=\"confirmed\" value=\"true\">\n";
 }
 echo "<ul>\n";

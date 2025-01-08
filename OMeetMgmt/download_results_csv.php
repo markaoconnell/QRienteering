@@ -10,8 +10,8 @@ ck_testing();
 
 // Get the submitted info
 // echo "<p>\n";
-$event = $_GET["event"];
-$key = $_GET["key"];
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
+$key = isset($_GET["key"]) ? $_GET["key"] : "";
 $download_csv = !isset($_GET["show_as_html"]);
 
 if ($event == "") {
