@@ -22,7 +22,7 @@ function is_event_recently_closed($filename) {
 function name_to_registration_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
-  return ("<li>{$event_fullname}<ul><li><a href={$base_path_for_links}/OMeetRegistration/register.php?event=${event_id}&key={$key}>BYOM Registration</a>" .
+  return ("<li>{$event_fullname}<ul><li><a href={$base_path_for_links}/OMeetRegistration/register.php?event={$event_id}&key={$key}>BYOM Registration</a>" .
                                    "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}&event={$event_id}&member=1>Member meet Registration</a>" .
                                    "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}&event={$event_id}>Non-member meet Registration</a></ul>\n");
 }
@@ -68,7 +68,7 @@ function name_to_download_links($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
   if (event_is_using_nre_classes($event_id, $key)) {
-    $ousa_results_download_link = "<a href=\"{$base_path_for_links}/OMeetMgmt/download_results_ousacsv.php?event={$event_id}&key=${key}\"> OUSA NRE results </a> / ";
+    $ousa_results_download_link = "<a href=\"{$base_path_for_links}/OMeetMgmt/download_results_ousacsv.php?event={$event_id}&key={$key}\"> OUSA NRE results </a> / ";
   }
   else {
     $ousa_results_download_link = "";

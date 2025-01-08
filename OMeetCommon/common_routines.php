@@ -48,6 +48,7 @@ function get_web_page_header($paragraph_style, $table_style, $form_style) {
   <title>{$page_title}</title>
   <meta content="Mark O'Connell" name="author">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
   <link rel="stylesheet" href="../OMeetCommon/styles.css"></link>
 
 END_OF_HEADERS;
@@ -310,6 +311,15 @@ function get_event_path($event, $key, $path_to_top = "..") {
 
 function get_base_path($key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key));
+}
+
+function get_control_description($event_path, $control) {
+  if (file_exists("{$event_path}/ControlDescriptions/{$control}")) {
+    return(file_get_contents("{$event_path}/ControlDescriptions/{$control}"));
+  }
+  else {
+    return("");
+  }
 }
 
 function get_members_path($key, $member_properties) {

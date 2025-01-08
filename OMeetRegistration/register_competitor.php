@@ -9,7 +9,7 @@ ck_testing();
 // echo "<p>\n";
 
 // Make sure any funky HTML sequeneces in the name are escaped
-$competitor_name = htmlentities(find_get_key_or_empty_string("competitor_name"), ENT_QUOTES, 'iso8859-1');
+$competitor_name = htmlentities(find_get_key_or_empty_string("competitor_name"), ENT_QUOTES, 'utf-8');
 
 
 $course = find_get_key_or_empty_string("course");
@@ -18,6 +18,10 @@ if (isset($_GET["registration_info"])) {
   $registration_info_supplied = true;
   $raw_registration_info = $_GET["registration_info"];
   $registration_info = parse_registration_info($raw_registration_info);
+  if (!isset($registration_info["si_stick"])) {
+    $registration_info["si_stick"] = "";
+  }
+  $competitor_name = "{$registration_info["first_name"]} {$registration_info["last_name"]}";
 }
 else {
   $registration_info_supplied = false;
@@ -104,7 +108,7 @@ if (!$error) {
     $i = 0;
     while (isset($_GET["extra-{$i}"])) {
       if ($_GET["extra-{$i}"] != "") {
-        $saved_competitor_name .= " - " . htmlentities($_GET["extra-{$i}"], ENT_QUOTES, 'iso8859-1');
+        $saved_competitor_name .= " - " . htmlentities($_GET["extra-{$i}"], ENT_QUOTES, 'utf-8');
       }
       $i++;
     }

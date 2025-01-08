@@ -97,7 +97,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
   }
   
   $table_string = "";
-  $table_string .= "<p class=\"title\">Splits for ${competitor_name} on " . ltrim($course, "0..9-") . "\n";
+  $table_string .= "<p class=\"title\">Splits for {$competitor_name} on " . ltrim($course, "0..9-") . "\n";
   $table_string .= "<table border=1 style=\"border-collapse: collapse\"><tr><th>Control Num</th><th>Control Id</th><th>Split Time</th><th>Cumulative Time</th><th>Time of Day</th></tr>\n";
   $table_string .= "<tr><td>Start</td><td></td><td></td><td></td><td>" . format_split_time($start_time, $using_si_timing, true) . "</td></tr>\n";
   $controls_found_list = array();  // De-dup controls found if on a scoreO
@@ -129,7 +129,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
   
   $splits_string = "";
   if ($error_string != "") {
-    $splits_string .= "<p>ERROR: ${error_string}\n";
+    $splits_string .= "<p>ERROR: {$error_string}\n";
   }
   
   $splits_string .= $table_string;
@@ -147,7 +147,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
       $splits_string .= $score_penalty_msg;
     }
   }
-  if (file_exists("${competitor_path}/dnf")) {
+  if (file_exists("{$competitor_path}/dnf")) {
     $splits_string .= "<p>DNF\n";
   }
   

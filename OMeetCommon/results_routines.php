@@ -12,7 +12,7 @@ function show_results($event, $key, $course, $result_class, $show_points, $max_p
         $result_string .= "<p>No Results yet<p><p><p>\n";
         return($result_string);
       }
-      $results_list = scandir("{$results_path}/${course}");
+      $results_list = scandir("{$results_path}/{$course}");
     }
     else {
       $results_list = array();
@@ -35,11 +35,11 @@ function show_results($event, $key, $course, $result_class, $show_points, $max_p
   }
   else {
     $results_path = get_results_per_class_path($event, $key);
-    if (!is_dir("{$results_path}/${result_class}")) {
+    if (!is_dir("{$results_path}/{$result_class}")) {
       $result_string .= "<p>No Results yet<p><p><p>\n";
       return($result_string);
     }
-    $results_list = scandir("{$results_path}/${result_class}");
+    $results_list = scandir("{$results_path}/{$result_class}");
   }
   $results_list = array_diff($results_list, array(".", ".."));
   if (count($results_list) == 0) {
@@ -62,7 +62,7 @@ function show_results($event, $key, $course, $result_class, $show_points, $max_p
     $finish_place++;
     $result_pieces = explode(",", $this_result);
     $competitor_path = get_competitor_path($result_pieces[2], $event, $key);
-    $competitor_name = file_get_contents("${competitor_path}/name");
+    $competitor_name = file_get_contents("{$competitor_path}/name");
     if ($show_points) {
       $points_value = "<td>" . ($max_points - $result_pieces[0]) . "</td>";
     }
@@ -72,16 +72,16 @@ function show_results($event, $key, $course, $result_class, $show_points, $max_p
 
     if (file_exists("./{$competitor_path}/self_reported")) {
       if (file_exists("./{$competitor_path}/dnf")) {
-        $dnfs .= "<tr><td>{$finish_place}</td><td>${competitor_name}</td><td>DNF</td>{$points_value}</tr>\n";
+        $dnfs .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td><td>DNF</td>{$points_value}</tr>\n";
       }
       else if (file_exists("./{$competitor_path}/no_time")) {
-        $result_string .= "<tr><td>{$finish_place}</td><td>${competitor_name}</td><td>No time</td>{$points_value}</tr>\n";
+        $result_string .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td><td>No time</td>{$points_value}</tr>\n";
       }
       else {
-        $result_string .= "<tr><td>{$finish_place}</td><td>${competitor_name}</td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
+        $result_string .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
       }
     }
-    else if (!file_exists("./${competitor_path}/dnf")) {
+    else if (!file_exists("./{$competitor_path}/dnf")) {
       $result_string .= "<tr><td>{$finish_place}</td><td><a href=\"../OMeet/show_splits.php?event={$event}&key={$key}&entry={$this_result}\">{$competitor_name}</a></td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
     }
     else {
@@ -89,7 +89,7 @@ function show_results($event, $key, $course, $result_class, $show_points, $max_p
       $dnfs .= "<tr><td>{$finish_place}</td><td><a href=\"../OMeet/show_splits.php?event={$event}&key={$key}&entry={$this_result}\">{$competitor_name}</a></td><td>DNF</td>{$points_value}</tr>\n";
     }
   }
-  $result_string .= "${dnfs}</table>\n<p><p><p>";
+  $result_string .= "{$dnfs}</table>\n<p><p><p>";
   return($result_string);
 }
 
@@ -106,7 +106,7 @@ function get_csv_results($event, $key, $course, $result_class, $show_points, $ma
       if (!is_dir("{$results_path}/{$course}")) {
         return("");
       }
-      $results_list = scandir("{$results_path}/${course}");
+      $results_list = scandir("{$results_path}/{$course}");
     }
     else {
       $results_list = array();
@@ -134,7 +134,7 @@ function get_csv_results($event, $key, $course, $result_class, $show_points, $ma
     if (!is_dir("{$results_path}/{$result_class}")) {
       return("");
     }
-    $results_list = scandir("${results_path}/{$result_class}");
+    $results_list = scandir("{$results_path}/{$result_class}");
   }
 
   $results_list = array_diff($results_list, array(".", ".."));
@@ -193,7 +193,7 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
     return($result_array);
   }
   
-  $results_list = scandir("${results_path}/{$course}");
+  $results_list = scandir("{$results_path}/{$course}");
   $results_list = array_diff($results_list, array(".", ".."));
 
   foreach ($results_list as $this_result) {
@@ -256,13 +256,13 @@ function get_course_stats($event, $key, $course) {
     return($course_results);
   }
   
-  $results_list = scandir("${results_path}/{$course}");
+  $results_list = scandir("{$results_path}/{$course}");
   $results_list = array_diff($results_list, array(".", ".."));
 
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);
     $competitor_path = get_competitor_path($result_pieces[2], $event, $key);
-    $competitor_name = file_get_contents("${competitor_path}/name");
+    $competitor_name = file_get_contents("{$competitor_path}/name");
 
     $course_results["start_names"][$competitor_name] = 1;
     $course_results["starts"]++;
@@ -366,10 +366,10 @@ function get_email_course_result_links($event, $key, $path_to_top = "..") {
   $links_string = "<p>Show results for ";
   foreach ($course_list as $one_course) {
     if (!file_exists("{$courses_path}/{$one_course}/removed")) {
-      $links_string .= "<a href=\"{$base_path_for_links}/OMeet/view_results.php?event=${event}&key={$key}&course=$one_course\">" . ltrim($one_course, "0..9-") . "</a> \n";
+      $links_string .= "<a href=\"{$base_path_for_links}/OMeet/view_results.php?event={$event}&key={$key}&course=$one_course\">" . ltrim($one_course, "0..9-") . "</a> \n";
     }
   }
-  $links_string .= "<a href=\"{$base_path_for_links}/OMeet/view_results.php?event=${event}&key={$key}\">All</a> \n";
+  $links_string .= "<a href=\"{$base_path_for_links}/OMeet/view_results.php?event={$event}&key={$key}\">All</a> \n";
   if (event_is_using_nre_classes($event, $key)) {
     $links_string .= "<a href=\"{$base_path_for_links}/OMeet/view_results.php?event={$event}&key={$key}&per_class=1\">Per-class results</a> \n";
   }

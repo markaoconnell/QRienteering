@@ -108,7 +108,7 @@ class url_caller(LongRunningClass):
     ###############################################################
     def get_courses(self, event, event_key):
         try:
-            output = self.make_url_call(self.VIEW_RESULTS, "event={}&key={}".format(event, event_key))
+            output = self.make_url_call(self.VIEW_RESULTS, "event={}&key={}&only_course_list=yes".format(event, event_key))
         except UrlTimeoutException:
             output = ""
             

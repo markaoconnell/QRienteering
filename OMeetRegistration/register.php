@@ -23,7 +23,7 @@ echo get_web_page_header(true, false, true);
 
 function is_event($filename) {
   global $base_path;
-  return ((substr($filename, 0, 6) == "event-") && is_dir("${base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
+  return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
 }
 
 function name_to_link($event_id) {
@@ -109,7 +109,7 @@ echo "<p>Registration for orienteering event: " . file_get_contents("{$base_path
 echo "<form action=\"./register_competitor.php\">\n";
 
 if ($registration_info_supplied) {
-  $escaped_name = htmlentities("{$registration_info["first_name"]} {$registration_info["last_name"]}", ENT_QUOTES, 'iso8859-1');
+  $escaped_name = "{$registration_info["first_name"]} {$registration_info["last_name"]}";
   echo "<br><p>Welcome:<br>\n";
   echo "<input type=\"text\" name=\"competitor_name\" value=\"{$escaped_name}\" readonly><br>\n";
   echo "<input type=\"hidden\" name=\"registration_info\" value=\"{$raw_registration_info}\">\n";

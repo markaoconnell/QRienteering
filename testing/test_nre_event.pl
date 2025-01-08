@@ -46,8 +46,9 @@ sub register_one_entrant {
   #print "Register $_[0] on $_[1]\n";
 
   %REGISTRATION_INFO = qw(club_name NEOC email_address mark:@mkoconnell.com cell_phone 5086148225 car_info ChevyBoltEV3470MA is_member yes);
-  $REGISTRATION_INFO{"first_name"} = "unused first";
-  $REGISTRATION_INFO{"last_name"} = "unused last";
+  $REGISTRATION_INFO{"first_name"} = $GET{"competitor_name"};
+  $REGISTRATION_INFO{"first_name"} =~ s/--space--/ /g;
+  $REGISTRATION_INFO{"last_name"} = "";
   $REGISTRATION_INFO{"classification_info"} = values_to_classification_info($birth_year, $gender, "");
 
   register_member_successfully_for_nre(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO, $expecting_class_entry);
@@ -120,7 +121,7 @@ sub check_competitor_on_course {
   $competitor_name_for_match =~ s/\(/\\(/g;
   $competitor_name_for_match =~ s/\)/\\)/g;
 
-  if ($output !~ /$competitor_name_for_match \($competitor_id\)/) {
+  if ($output !~ /$competitor_name_for_match ? \($competitor_id\)/) {
     error_and_exit("Name and id - $competitor_name and $competitor_id - not found in on_course output.\n$output");
   }
   
@@ -242,8 +243,8 @@ my($output) = check_on_course(6);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;  # Easier to check in a regex without the newlines
 
-if (($no_newline_output !~ m#$COMPETITOR_2_RE</td><td>[0-9:]+</td><td>start</td>#) || ($no_newline_output !~ m#$COMPETITOR_1_RE</td><td>[0-9:]+</td><td>2</td>#) ||
-    ($no_newline_output !~ m#$COMPETITOR_5_RE</td><td>[0-9:]+</td><td>304</td>#)) {
+if (($no_newline_output !~ m#$COMPETITOR_2_RE ?</td><td>[0-9:]+</td><td>start</td>#) || ($no_newline_output !~ m#$COMPETITOR_1_RE ?</td><td>[0-9:]+</td><td>2</td>#) ||
+    ($no_newline_output !~ m#$COMPETITOR_5_RE ?</td><td>[0-9:]+</td><td>304</td>#)) {
   error_and_exit("On course output showing wrong controls.\n$output");
 }
 
@@ -373,7 +374,7 @@ my($output) = check_results(1);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;
 
-if ($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1_RE</a></td><td>[0-9 smh:]+</td>#) {
+if ($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1_RE ?</a></td><td>[0-9 smh:]+</td>#) {
   error_and_exit("View result output for $COMPETITOR_1 wrong.\n$output");
 }
 
@@ -381,9 +382,9 @@ my($output) = check_on_course(5);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;  # Easier to check in a regex without the newlines
 
-if (($no_newline_output !~ m#$COMPETITOR_2_RE</td><td>[0-9:]+</td><td>3</td>#) || ($no_newline_output !~ m#$COMPETITOR_3_RE</td><td>[0-9:]+</td><td>1</td>#) ||
-    ($no_newline_output !~ m#$COMPETITOR_5_RE</td><td>[0-9:]+</td><td>305</td>#) || ($no_newline_output !~ m#$COMPETITOR_6_RE</td><td>[0-9:]+</td><td>303</td>#) || 
-    ($no_newline_output !~ m#$COMPETITOR_4_RE</td><td>[0-9:]+</td><td>start</td>#) || ($no_newline_output =~ m#$COMPETITOR_1_RE#)) {
+if (($no_newline_output !~ m#$COMPETITOR_2_RE ?</td><td>[0-9:]+</td><td>3</td>#) || ($no_newline_output !~ m#$COMPETITOR_3_RE ?</td><td>[0-9:]+</td><td>1</td>#) ||
+    ($no_newline_output !~ m#$COMPETITOR_5_RE ?</td><td>[0-9:]+</td><td>305</td>#) || ($no_newline_output !~ m#$COMPETITOR_6_RE ?</td><td>[0-9:]+</td><td>303</td>#) || 
+    ($no_newline_output !~ m#$COMPETITOR_4_RE ?</td><td>[0-9:]+</td><td>start</td>#) || ($no_newline_output =~ m#$COMPETITOR_1_RE ?#)) {
   error_and_exit("On course output showing wrong controls.\n$output");
 }
 
@@ -503,12 +504,12 @@ my($output) = check_results(6);
 my($no_newline_output) = $output;
 $no_newline_output =~ s/\n//g;
 
-if (($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1_RE</a></td><td>[0-9 smh:]+</td>#) ||
-    ($no_newline_output !~ m#,$competitor_2_id">$COMPETITOR_2_RE</a></td><td>DNF</td>#) ||
-    ($no_newline_output !~ m#,$competitor_3_id">$COMPETITOR_3_RE</a></td><td>[0-9 smh:]+</td>#) ||
-    ($no_newline_output !~ m#,$competitor_5_id">$COMPETITOR_5_RE</a></td><td>[0-9 smh:]+</td><td>100</td>#) ||
-    ($no_newline_output !~ m#,$competitor_6_id">$COMPETITOR_6_RE</a></td><td>[0-9 smh:]+</td><td>70</td>#) ||
-    ($no_newline_output !~ m#,$competitor_4_id">$COMPETITOR_4_RE</a></td><td>DNF</td>#)) {
+if (($no_newline_output !~ m#,$competitor_1_id">$COMPETITOR_1_RE ?</a></td><td>[0-9 smh:]+</td>#) ||
+    ($no_newline_output !~ m#,$competitor_2_id">$COMPETITOR_2_RE ?</a></td><td>DNF</td>#) ||
+    ($no_newline_output !~ m#,$competitor_3_id">$COMPETITOR_3_RE ?</a></td><td>[0-9 smh:]+</td>#) ||
+    ($no_newline_output !~ m#,$competitor_5_id">$COMPETITOR_5_RE ?</a></td><td>[0-9 smh:]+</td><td>100</td>#) ||
+    ($no_newline_output !~ m#,$competitor_6_id">$COMPETITOR_6_RE ?</a></td><td>[0-9 smh:]+</td><td>70</td>#) ||
+    ($no_newline_output !~ m#,$competitor_4_id">$COMPETITOR_4_RE ?</a></td><td>DNF</td>#)) {
   error_and_exit("View result output wrong for 1 or more competitors.\n$output");
 }
 

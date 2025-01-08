@@ -118,7 +118,7 @@ if ($is_preregistered_checkin) {
   $preregistered_course = isset($entrant_info["course"]) ? "," . $entrant_info["course"] : "";
   if ($using_nre_classes) {
     $birth_year = $entrant_info["birth_year"];
-    $gender = $entrant_info["gender"];
+    $gender = strtolower($entrant_info["gender"]);
     $competition_class = $entrant_info["class"];
     $classification_info = encode_entrant_classification_info($birth_year, $gender, $competition_class);
     $classification_form_entry = "<input type=hidden name=\"classification_info\" value=\"{$classification_info}\">\n";
@@ -133,7 +133,7 @@ else {
   $pass_preregistration_marker = "";
   if ($using_nre_classes) {
     $birth_year = get_member_birth_year($member_id, $matching_info);
-    $gender = get_member_gender($member_id, $matching_info);
+    $gender = strtolower(get_member_gender($member_id, $matching_info));
     $classification_info = encode_entrant_classification_info($birth_year, $gender, "");
     $classification_form_entry = "<input type=hidden name=\"classification_info\" value=\"{$classification_info}\">\n";
   }

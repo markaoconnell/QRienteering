@@ -98,7 +98,7 @@ else if (count($possible_member_ids) == 1) {
     $pass_preregistration_marker = "<input type=\"hidden\" name=\"checkin\" value=\"true\">\n";
     if ($using_nre_classes) {
       $birth_year = $prereg_matching_info["members_hash"][$possible_member_ids[0]]["entrant_info"]["birth_year"];
-      $gender = $prereg_matching_info["members_hash"][$possible_member_ids[0]]["entrant_info"]["gender"];
+      $gender = strtolower($prereg_matching_info["members_hash"][$possible_member_ids[0]]["entrant_info"]["gender"]);
       $competition_class = $prereg_matching_info["members_hash"][$possible_member_ids[0]]["entrant_info"]["class"];
       $classification_info = encode_entrant_classification_info($birth_year, $gender, $competition_class);
       $classification_form_entry = "<input type=hidden name=\"classification_info\" value=\"{$classification_info}\">\n";
@@ -111,7 +111,7 @@ else if (count($possible_member_ids) == 1) {
     $pass_preregistration_marker = "";
     if ($using_nre_classes) {
       $birth_year = get_member_birth_year($possible_member_ids[0], $matching_info);
-      $gender = get_member_gender($possible_member_ids[0], $matching_info);
+      $gender = strtolower(get_member_gender($possible_member_ids[0], $matching_info));
       $classification_info = encode_entrant_classification_info($birth_year, $gender, "");
       $classification_form_entry = "<input type=hidden name=\"classification_info\" value=\"{$classification_info}\">\n";
     }

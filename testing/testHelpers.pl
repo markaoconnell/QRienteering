@@ -219,7 +219,7 @@ sub get_base_path {
 sub initialize_event {
   # Make the event for testing purposes
   %{$post_ref} = qw(submit true event_name UnitTesting key UnitTestPlayground
-                    course_description White,201,202,203,204,205--newline--Yellow,202,204,206,208,210--newline--s:ScoreO:300:1,301:10,302:20,303:30,304:40,305:50--newline--Butterfly,401,402,403,401,404,405,401,406,407--newline--s:GetEmAll:0:10,301:1,302:1,303:1,304:1,305:1--newline--Green,101--newline--Red,101--newline--Brown,101--newline--c:MotalaTestCourse,Butterfly,Green,Brown,Red);
+                    course_description White,201,202,203,204,205--newline--Yellow,202,204,206,208,210--newline--s:ScoreO:300:1,301:10,302:20,303:30,304:40,305:50--newline--Butterfly,401,402,403,401,404,405,401,406,407--newline--s:GetEmAll:0:10,301:1,302:1,303:1,304:1,305:1--newline--Green,101--newline--Red,101--newline--Brown,101--newline--c:MotalaTestCourse,Butterfly,Green,Brown,Red--newline--d:201:Boulder--newline--d:202:Path and path junction--newline--d:203:Hill top--newline--d:204:Ruin southwest side--newline--d:205:Cliff 1m foot);
 #  mkdir("UnitTestingEvent");
 #  mkdir("UnitTestingEvent/Competitors");
 #  mkdir("UnitTestingEvent/Results");

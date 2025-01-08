@@ -84,9 +84,9 @@ if ($has_preset_id) {
   }
 }
 else {
-  $first_name = htmlentities($_GET["competitor_first_name"], ENT_QUOTES, 'iso8859-1');
-  $last_name = htmlentities($_GET["competitor_last_name"], ENT_QUOTES, 'iso8859-1');
-  $club_name = htmlentities($_GET["club_name"], ENT_QUOTES, 'iso8859-1');
+  $first_name = htmlentities($_GET["competitor_first_name"], ENT_QUOTES, 'utf-8');
+  $last_name = htmlentities($_GET["competitor_last_name"], ENT_QUOTES, 'utf-8');
+  $club_name = htmlentities($_GET["club_name"], ENT_QUOTES, 'utf-8');
   $si_stick = $_GET["si_stick"];
 
   // Let's do some validations
@@ -166,7 +166,7 @@ else {
 }
 
 $base_path = get_base_path($key);
-if (isset($entrant_info["waiver_signed"]) && (strtolower($entrant_info["waiver_signed"]) == "yes")) {
+if (isset($entrant_info["waiver_signed"]) && ((strtolower($entrant_info["waiver_signed"]) == "yes") || (strtolower($entrant_info["waiver_signed"]) == "y"))) {
   echo "<p><input type=hidden name=\"waiver_signed\" value=\"signed\"><br>";
 }
 else {

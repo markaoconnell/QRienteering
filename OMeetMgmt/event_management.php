@@ -41,7 +41,7 @@ function validate_email($string) {
 }
 
 function validate_waiver($string) {
-  if ($string != "yes") {
+  if (!(($string == "yes") || ($string == "y") || ($string == "Y"))) {
     return ("Waiver field should be \"yes\" or blank");
   }
   return("");
@@ -55,7 +55,7 @@ function validate_birth_year($string) {
 }
 
 function validate_gender($string) {
-  if (!preg_match("/^[mfo]$/", $string)) {
+  if (!preg_match("/^[mfoMFO]$/", $string)) {
     return ("Gender must be m, f, or o (lower case)");
   }
   return("");
@@ -232,7 +232,7 @@ if ($preregistration_currently_allowed) {
   $output_string .= "<hr>";
 }
 else {
-  $output_string .= "<p>Preregistration currently <u>disabled</u>\n";
+  $output_string .= "<p>No currently preregistered entrants.\n";
 }
 
 $output_string .= "<p><p>Upload new preregistration file";
