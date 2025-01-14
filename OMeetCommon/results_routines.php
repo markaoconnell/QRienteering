@@ -1,7 +1,7 @@
 <?php
 
 // Show the results for a course
-function show_results($event, $key, $course, $result_class, $show_points, $max_points, $base_course_list, $path_to_top = "..") {
+function show_results($event, $key, $course, $result_class, $show_points, $max_points, $base_course_list, $show_school_and_club, $path_to_top = "..") {
   $result_string = "";
   $result_string .= "<p>Results on " . ltrim($course, "0..9-") . (($result_class != "") ? ":{$result_class}" : "") . "\n";
 
@@ -54,9 +54,16 @@ function show_results($event, $key, $course, $result_class, $show_points, $max_p
     $points_header = "";
   }
 
+  if ($show_school_and_club) {
+    $school_and_club_header = "<th>Club/School</th>";
+  }
+  else {
+    $school_and_club_header = "";
+  }
+
   $finish_place = 0;
 
-  $result_string .= "<table border=1><tr><th>Place</th><th>Name</th><th>Time</th>{$points_header}</tr>\n";
+  $result_string .= "<table border=1><tr><th>Place</th><th>Name</th>{$school_and_club_header}<th>Time</th>{$points_header}</tr>\n";
   $dnfs = "";
   foreach ($results_list as $this_result) {
     $finish_place++;
@@ -70,23 +77,45 @@ function show_results($event, $key, $course, $result_class, $show_points, $max_p
       $points_value = "";
     }
 
-    if (file_exists("./{$competitor_path}/self_reported")) {
-      if (file_exists("./{$competitor_path}/dnf")) {
-        $dnfs .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td><td>DNF</td>{$points_value}</tr>\n";
-      }
-      else if (file_exists("./{$competitor_path}/no_time")) {
-        $result_string .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td><td>No time</td>{$points_value}</tr>\n";
+    $club_school_value = "";
+    if ($show_school_and_club && file_exists("{$competitor_path}/registration_info")) {
+      $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
+      if (isset($registration_info["club_name"])) {
+        $club_and_school_field = $registration_info["club_name"];
+	$club_and_school_pieces = explode("::", $club_and_school_field);
+	$display_array = array();
+	if (isset($club_and_school_pieces[0]) && ($club_and_school_pieces[0] != "")) {
+          $display_array[] = $club_and_school_pieces[0];
+	}
+	if (isset($club_and_school_pieces[1]) && ($club_and_school_pieces[1] != "")) {
+          $display_array[] = $club_and_school_pieces[1];
+	}
+	$club_school_value = "<td>" . join(" / ", $display_array) . "</td>";
       }
       else {
-        $result_string .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
+        # This shouldn't really happen, but better safe than sorry
+        $club_school_value = "<td></td>";
+      }
+    }
+
+
+    if (file_exists("./{$competitor_path}/self_reported")) {
+      if (file_exists("./{$competitor_path}/dnf")) {
+        $dnfs .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td>{$club_school_value}<td>DNF</td>{$points_value}</tr>\n";
+      }
+      else if (file_exists("./{$competitor_path}/no_time")) {
+        $result_string .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td>{$club_school_value}<td>No time</td>{$points_value}</tr>\n";
+      }
+      else {
+        $result_string .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td>{$club_school_value}<td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
       }
     }
     else if (!file_exists("./{$competitor_path}/dnf")) {
-      $result_string .= "<tr><td>{$finish_place}</td><td><a href=\"../OMeet/show_splits.php?event={$event}&key={$key}&entry={$this_result}\">{$competitor_name}</a></td><td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
+      $result_string .= "<tr><td>{$finish_place}</td><td><a href=\"../OMeet/show_splits.php?event={$event}&key={$key}&entry={$this_result}\">{$competitor_name}</a></td>{$club_school_value}<td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}</tr>\n";
     }
     else {
       // For a scoreO course, there are no DNFs, so $points_value should always be "", but show it just in case
-      $dnfs .= "<tr><td>{$finish_place}</td><td><a href=\"../OMeet/show_splits.php?event={$event}&key={$key}&entry={$this_result}\">{$competitor_name}</a></td><td>DNF</td>{$points_value}</tr>\n";
+      $dnfs .= "<tr><td>{$finish_place}</td><td><a href=\"../OMeet/show_splits.php?event={$event}&key={$key}&entry={$this_result}\">{$competitor_name}</a></td>{$club_school_value}<td>DNF</td>{$points_value}</tr>\n";
     }
   }
   $result_string .= "{$dnfs}</table>\n<p><p><p>";
@@ -207,6 +236,29 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
       $points_value = 0;
     }
 
+    if (file_exists("{$competitor_path}/registration_info")) {
+      $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
+      if (isset($registration_info["club_name"])) {
+	$club_school_pieces = explode("::", $registration_info["club_name"]);
+	if (isset($club_school_pieces[0])) {
+          $competitor_result_array["club_name"] = $club_school_pieces[0];
+	}
+	else {
+          $competitor_result_array["club_name"] = "\"\"";
+	}
+
+	if (isset($club_school_pieces[1])) {
+          $competitor_result_array["school_name"] = $club_school_pieces[1];
+	}
+	else {
+          $competitor_result_array["school_name"] = "\"\"";
+	}
+      }
+    }
+    else {
+      $registration_info = array();
+    }
+
     $competitor_result_array = array();
     $competitor_result_array["competitor_id"] = $result_pieces[2];
     $competitor_result_array["competitor_name"] = $competitor_name;
@@ -220,15 +272,9 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
     $competitor_result_array["competitive_class"] = get_class_for_competitor($competitor_path);
     $competitor_result_array["birth_year"] = "";
     $competitor_result_array["gender"] = "\"\"";
-    $competitor_result_array["club_name"] = "\"\"";
 
     if (event_is_using_nre_classes($event, $key)) {
-      if (file_exists("{$competitor_path}/registration_info")) {
-        $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
-        if (isset($registration_info["club_name"])) {
-          $competitor_result_array["club_name"] = $registration_info["club_name"];
-        }
-
+      if (count($registration_info) > 0) {
         if (isset($registration_info["classification_info"])) {
           if ($registration_info["classification_info"] != "") {
             $classification_info = decode_entrant_classification_info($registration_info["classification_info"]);

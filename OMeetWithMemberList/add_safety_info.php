@@ -87,6 +87,7 @@ else {
   $first_name = htmlentities($_GET["competitor_first_name"], ENT_QUOTES, 'utf-8');
   $last_name = htmlentities($_GET["competitor_last_name"], ENT_QUOTES, 'utf-8');
   $club_name = htmlentities($_GET["club_name"], ENT_QUOTES, 'utf-8');
+  $school_name = htmlentities($_GET["school_name"], ENT_QUOTES, 'utf-8');
   $si_stick = $_GET["si_stick"];
 
   // Let's do some validations
@@ -135,6 +136,7 @@ else {
   echo "<input type=hidden name=\"competitor_first_name\" value=\"{$first_name}\">\n";
   echo "<input type=hidden name=\"competitor_last_name\" value=\"{$last_name}\">\n";
   echo "<input type=hidden name=\"club_name\" value=\"{$club_name}\">\n";
+  echo "<input type=hidden name=\"school_name\" value=\"{$school_name}\">\n";
 }
 echo "<input type=hidden name=\"si_stick\" value=\"{$si_stick}\">\n";
 echo "<input type=hidden name=\"key\" value=\"{$key}\">\n";

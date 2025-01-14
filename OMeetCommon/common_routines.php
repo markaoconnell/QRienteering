@@ -346,8 +346,8 @@ function get_nicknames_path($key, $member_properties) {
   }
 }
 
-function get_club_name($key, $member_properties) {
-  if (isset($member_properties['club_name'])) {
+function get_default_club_name($key, $member_properties) {
+  if (isset($member_properties['club_name']) && ($member_properties["club_name"] != "")) {
     return($member_properties['club_name']);
   }
   else {

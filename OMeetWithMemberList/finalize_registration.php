@@ -38,6 +38,7 @@ $is_preregistered_checkin = isset($_GET["checkin"]) && ($_GET["checkin"] == "tru
 $is_member = false;
 $member_id = "";
 $pass_info_to_registration = "";
+$school_name = "";
 
 if ($has_preset_id) {
   if ($is_preregistered_checkin) {
@@ -52,7 +53,7 @@ if ($has_preset_id) {
 
     if (($entrant_info["member_id"] != "not_a_member") && ($entrant_info["member_id"] != "")) {
       $member_properties = get_member_properties(get_base_path($key));
-      $club_name = get_club_name($key, $member_properties);
+      $club_name = get_default_club_name($key, $member_properties);
       $is_member = true;
       $member_id = $entrant_info["member_id"];
     }
@@ -76,13 +77,17 @@ if ($has_preset_id) {
     $is_member = true;
     $first_name = isset($member_info["first"]) ? $member_info["first"] : "";
     $last_name = isset($member_info["last"]) ? $member_info["last"] : "";
-    $club_name = get_club_name($key, $member_properties);
+    $club_name = isset($member_info["club_name"]) ? $member_info["club_name"] : "";
+    $school_name = isset($member_info["school_name"]) ? $member_info["school_name"] : "";
+
+    // print_r($member_info);
   }
 }
 else {
   $first_name = find_get_key_or_empty_string("competitor_first_name");
   $last_name = find_get_key_or_empty_string("competitor_last_name");
   $club_name = find_get_key_or_empty_string("club_name");
+  $school_name = find_get_key_or_empty_string("school_name");
 }
 $waiver_signed = find_get_key_or_empty_string("waiver_signed");
 $car_info = find_get_key_or_empty_string("car_info");
@@ -134,10 +139,14 @@ if ($using_nre_classes) {
   }
 }
 
+# Note: In the registration info we encode the school into the club_name field, which is a little weird.
+# This was done so that the program(s) which read the SI Unit and auto-detect the member don't also need to change
+# to incoporate the school - instead we extend the club_name field and handle this on the backend.  Not ideal, but
+# simpler than changing the other programs.
 $success_string = "";
 $registration_pieces = array("first_name", base64_encode($first_name),
                               "last_name", base64_encode($last_name),
-                              "club_name", base64_encode($club_name),
+                              "club_name", base64_encode("{$club_name}::{$school_name}"),
                               "si_stick", base64_encode($si_stick),
                               "email_address", base64_encode($email_address),
                               "cell_phone", base64_encode($cell_phone),

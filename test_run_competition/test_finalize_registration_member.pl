@@ -79,7 +79,7 @@ sub compare_hashes {
 # Test 1 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberUsingStick);
-%GET = qw(key UnitTestPlayground member_id 31 si_stick 3959473 cell_number 5083959473 email karen@mkoconnell.com waiver_signed signed quick_lookup_member_id 11-31);
+%GET = qw(key UnitTestPlayground member_id 31 si_stick 3959473 cell_number 5083959473 email karen@mkoconnell.com waiver_signed signed quick_lookup_member_id 14-31);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -91,13 +91,73 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC si_stick 3959473 member_id 31 is_member yes email_address karen@mkoconnell.com);
+my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC::Dartmouth si_stick 3959473 member_id 31 is_member yes email_address karen@mkoconnell.com);
 $expected_hash{"cell_phone"} = "5083959473";
 $expected_hash{"car_info"} = "";
 
 my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
 
 if ($error_string ne "") {
+  print join("\n", %{$info_hash_ref});
+  error_and_exit("Registration information is wrong:\n$1\n$error_string");
+}
+
+success();
+
+###########
+# Test 1a - Success member registration
+# 
+%TEST_INFO = qw(Testname TestMemberUsingStickAndJustSchool);
+%GET = qw(key UnitTestPlayground member_id 315 si_stick 3959473 cell_number 5083959473 email someone@EnglishStudent.com waiver_signed signed quick_lookup_member_id 9-315);
+$GET{"event"} = $event_id;
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
+$output = qx($cmd);
+
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&"]+)[&"]#) {
+  error_and_exit("Redirect URL not found.\n$output");
+}
+my($info_hash_ref) = get_specified_info($1);
+my(%expected_hash) = qw(first_name Student last_name Body club_name ::StAndrewsScotland si_stick 3959473 member_id 315 is_member yes email_address someone@EnglishStudent.com);
+$expected_hash{"cell_phone"} = "5083959473";
+$expected_hash{"car_info"} = "";
+
+my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
+
+if ($error_string ne "") {
+  print join("\n", %{$info_hash_ref});
+  print $output;
+  error_and_exit("Registration information is wrong:\n$1\n$error_string");
+}
+
+success();
+
+###########
+# Test 1b - Success member registration
+# 
+%TEST_INFO = qw(Testname TestMemberUsingStickAndJustClub);
+%GET = qw(key UnitTestPlayground member_id 180 si_stick 141421 cell_number 5086148225 email quelquun@FrenchStudent.com waiver_signed signed quick_lookup_member_id 11-180);
+$GET{"event"} = $event_id;
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/finalize_registration.php";
+$output = qx($cmd);
+
+if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&"]+)[&"]#) {
+  error_and_exit("Redirect URL not found.\n$output");
+}
+my($info_hash_ref) = get_specified_info($1);
+my(%expected_hash) = qw(first_name Etudiant last_name Personne club_name DVOA:: si_stick 141421 member_id 180 is_member yes email_address quelquun@FrenchStudent.com);
+$expected_hash{"cell_phone"} = "5086148225";
+$expected_hash{"car_info"} = "";
+
+my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
+
+if ($error_string ne "") {
+  print join("\n", %{$info_hash_ref});
   error_and_exit("Registration information is wrong:\n$1\n$error_string");
 }
 
@@ -120,12 +180,13 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC si_stick 141421 member_id 31 is_member yes car_info VWFox cell_phone 5083959473);
+my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC::Dartmouth si_stick 141421 member_id 31 is_member yes car_info VWFox cell_phone 5083959473);
 $expected_hash{"email_address"} = "";
 
 my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
 
 if ($error_string ne "") {
+  print join("\n", %{$info_hash_ref});
   error_and_exit("Registration information is wrong:\n$1\n$error_string");
 }
 
@@ -148,7 +209,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC member_id 31 is_member yes);
+my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC::Dartmouth member_id 31 is_member yes);
 $expected_hash{"email_address"} = "";
 $expected_hash{"cell_phone"} = "5083959473";
 $expected_hash{"car_info"} = "";
@@ -157,6 +218,7 @@ $expected_hash{"si_stick"} = "";
 my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
 
 if ($error_string ne "") {
+  print join("\n", %{$info_hash_ref});
   error_and_exit("Registration information is wrong:\n$1\n$error_string");
 }
 
@@ -179,7 +241,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Larry last_name Berrill club_name BOK member_id 41 is_member yes si_stick 1421);
+my(%expected_hash) = qw(first_name Larry last_name Berrill club_name :: member_id 41 is_member yes si_stick 1421);
 $expected_hash{"email_address"} = "";
 $expected_hash{"cell_phone"} = "5086148225";
 $expected_hash{"car_info"} = "";
@@ -187,6 +249,7 @@ $expected_hash{"car_info"} = "";
 my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
 
 if ($error_string ne "") {
+  print join("\n", %{$info_hash_ref});
   error_and_exit("Registration information is wrong:\n$1\n$error_string");
 }
 

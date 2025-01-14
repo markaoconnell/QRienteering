@@ -210,7 +210,7 @@ if ($duplicates_string != "") {
 }
 
 echo "<p><p><p>\n";
-print_r($preregistration_matching_info);
+// print_r($preregistration_matching_info);
 
 echo get_web_page_footer();
 ?>

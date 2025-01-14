@@ -64,7 +64,7 @@ if (file_exists("{$base_path}/{$event}/done")) {
 
 
 $member_properties = get_member_properties(get_base_path($key));
-$club_name = get_club_name($key, $member_properties);
+$club_name = get_default_club_name($key, $member_properties);
 
 ?>
   <p class="title"><u><?php echo $club_name ?> event checkin (only for preregistered entrants):</u>

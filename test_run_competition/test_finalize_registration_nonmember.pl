@@ -91,7 +91,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Mark last_name OConnell club_name QOC si_stick 32768 email_address mark@mkoconnell.com
+my(%expected_hash) = qw(first_name Mark last_name OConnell club_name QOC:: si_stick 32768 email_address mark@mkoconnell.com
                         cell_phone 5086148225 car_info ChevyBoltEV3470 is_member no);
 $expected_hash{"member_id"} = "";
 
@@ -107,7 +107,7 @@ success();
 # Test 2 - Success non-member registration
 # Even if they claim to be a NEOC member, they are registered as a non-member
 %TEST_INFO = qw(Testname TestNonMemberAllInfoProvidedClaimsNEOC);
-%GET = qw(key UnitTestPlayground competitor_first_name Isabelle competitor_last_name Davenport club_name NEOC si_stick 32768 email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470 waiver_signed signed);
+%GET = qw(key UnitTestPlayground competitor_first_name Isabelle competitor_last_name Davenport school_name USD si_stick 32768 email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470 waiver_signed signed);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -119,7 +119,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Isabelle last_name Davenport club_name NEOC si_stick 32768 email_address mark@mkoconnell.com
+my(%expected_hash) = qw(first_name Isabelle last_name Davenport club_name ::USD si_stick 32768 email_address mark@mkoconnell.com
                         cell_phone 5086148225 car_info ChevyBoltEV3470 is_member no);
 $expected_hash{"member_id"} = "";
 
@@ -251,7 +251,7 @@ success();
 # Test 11 - Success non-member registration
 # Test with less than all information provided
 %TEST_INFO = qw(Testname TestNonMemberSomeInfoProvided);
-%GET = qw(key UnitTestPlayground competitor_first_name Freddie competitor_last_name Mercury club_name DVOC email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470 waiver_signed signed);
+%GET = qw(key UnitTestPlayground competitor_first_name Freddie competitor_last_name Mercury club_name DVOC school_name Oxford email mark@mkoconnell.com cell_number 5086148225 car_info ChevyBoltEV3470 waiver_signed signed);
 $GET{"event"} = $event_id;
 $GET{"si_stick"} = "";
 %COOKIE = ();  # empty hash
@@ -264,7 +264,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^"
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Freddie last_name Mercury club_name DVOC email_address mark@mkoconnell.com
+my(%expected_hash) = qw(first_name Freddie last_name Mercury club_name DVOC::Oxford email_address mark@mkoconnell.com
                         cell_phone 5086148225 car_info ChevyBoltEV3470 is_member no);
 $expected_hash{"member_id"} = "";
 $expected_hash{"si_stick"} = "";
@@ -301,7 +301,7 @@ my($info_hash_ref) = get_specified_info($1);
 my(%expected_hash) = qw(first_name Queen last_name Elizabeth is_member no);
 $expected_hash{"si_stick"} = "";
 $expected_hash{"member_id"} = "";
-$expected_hash{"club_name"} = "";
+$expected_hash{"club_name"} = "::";
 $expected_hash{"email_address"} = "";
 $expected_hash{"cell_phone"} = "123456789";
 $expected_hash{"car_info"} = "";

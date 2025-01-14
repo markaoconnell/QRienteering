@@ -78,7 +78,7 @@ if (isset($_COOKIE["{$key}-member_ids"])) {
 
 $current_time = time();
 $member_properties = get_member_properties(get_base_path($key));
-$club_name = get_club_name($key, $member_properties);
+$club_name = get_default_club_name($key, $member_properties);
 
 if ($is_member_registration) {
   $radio_button_string = "";
@@ -132,7 +132,7 @@ elseif ($is_generic_registration) {
 }
 else {
   if (isset($saved_registration_info["first_name"])) {
-    $escaped_first_name = htmlentities($saved_registration_info["first_name"], ENT_QUOTES, 'iso8859-1');
+    $escaped_first_name = $saved_registration_info["first_name"];
     $presupplied_first_name = "value=\"{$escaped_first_name}\"";
   }
   else {
@@ -140,19 +140,24 @@ else {
   }
 
   if (isset($saved_registration_info["last_name"])) {
-    $escaped_last_name = htmlentities($saved_registration_info["last_name"], ENT_QUOTES, 'iso8859-1');
+    $escaped_last_name = $saved_registration_info["last_name"];
     $presupplied_last_name = "value=\"{$escaped_last_name}\"";
   }
   else {
     $presupplied_last_name = "";
   }
 
+  $presupplied_club_name = "";
+  $presupplied_school_name = "";
   if (isset($saved_registration_info["club_name"])) {
-    $escaped_club_name = htmlentities($saved_registration_info["club_name"], ENT_QUOTES, 'iso8859-1');
-    $presupplied_club_name = "value=\"{$escaped_club_name}\"";
-  }
-  else {
-    $presupplied_club_name = "";
+    $escaped_club_name = $saved_registration_info["club_name"];
+    $club_school_pieces = explode("::", $escaped_club_name);
+    if (count($club_school_pieces) >= 1) {
+      $presupplied_club_name = "value=\"{$club_school_pieces[0]}\"";
+    }
+    if (count($club_school_pieces) >= 2) {
+      $presupplied_school_name = "value=\"{$club_school_pieces[1]}\"";
+    }
   }
 
   if (isset($saved_registration_info["si_stick"])) {
@@ -183,6 +188,8 @@ else {
   <input type="text" name="competitor_last_name" <?php echo $presupplied_last_name; ?>><br>
   <br><p>What is your orienteering club affiliation (if any)?<br>
   <input type="text" name="club_name" <?php echo $presupplied_club_name; ?>><br>
+  <br><p>What school/college do you attend (optional)?<br>
+  <input type="text" name="school_name" <?php echo $presupplied_school_name; ?>><br>
   <br><p>If you are using a SI unit today, please enter the number here<br>
   <input type="text" name="si_stick" <?php echo $presupplied_si_stick; ?>><br>
   <?php echo $qr_code_option; ?>

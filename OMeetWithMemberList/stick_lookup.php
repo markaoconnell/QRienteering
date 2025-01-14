@@ -101,7 +101,7 @@ if ($is_preregistered_checkin) {
   if (($club_member_id != "not_a_member") && ($club_member_id != "")) {
     $email_address = get_member_email($club_member_id, $matching_info);
     $cell_phone = get_member_cell_phone($club_member_id, $matching_info);
-    $club_name = get_club_name($key, $member_properties);
+    $club_name = get_member_club($club_member_id, $matching_info);
   }
   else {
     if (isset($entrant_info["email_address"])) {
@@ -128,7 +128,8 @@ else {
   $printable_name = get_full_name($member_id, $matching_info);
   $email_address = get_member_email($member_id, $matching_info);
   $cell_phone = get_member_cell_phone($member_id, $matching_info);
-  $club_name = get_club_name($key, $member_properties);
+  $club_name = get_member_club($member_id, $matching_info);
+  $school_name = get_member_school($member_id, $matching_info);
   $quick_lookup_member_id = get_quick_lookup_member_id($member_id, $matching_info);
   $pass_preregistration_marker = "";
   if ($using_nre_classes) {
@@ -139,7 +140,7 @@ else {
   }
 }
 $success_string .= "<p>Welcome {$printable_name}.\n";
-$parseable_result_string .= "\n####,MEMBER_ENTRY," . base64_encode($printable_name) . ",{$member_id},{$email_address},{$cell_phone},{$club_name}{$preregistered_course}\n";
+$parseable_result_string .= "\n####,MEMBER_ENTRY," . base64_encode($printable_name) . ",{$member_id},{$email_address},{$cell_phone},{$club_name}::{$school_name},{$preregistered_course}\n";
 if ($classification_info != "") {
   $parseable_result_string .= "\n####,CLASSIFICATION_INFO,{$classification_info}\n";
 }
