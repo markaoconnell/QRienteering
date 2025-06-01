@@ -54,6 +54,12 @@ function read_names_info($member_file, $nicknames_file) {
         $last_name_hash[strtolower($pieces[2])][] = $pieces[0]; 
         $full_name_hash[$lower_case_full_name] = $pieces[0];
       }
+      else {
+        // If there is a duplicate id (same name, same SI), then update the SI hash to point to the member entry
+        if ($pieces[3] != "") {
+          $si_hash[$pieces[3]] = $full_name_hash[$lower_case_full_name];
+        }
+      }
     }
   }
 

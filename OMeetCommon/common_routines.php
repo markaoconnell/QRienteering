@@ -322,6 +322,15 @@ function get_control_description($event_path, $control) {
   }
 }
 
+function get_control_extra_info($event_path, $control) {
+  if (file_exists("{$event_path}/ControlExtraInfo/{$control}")) {
+    return(file_get_contents("{$event_path}/ControlExtraInfo/{$control}"));
+  }
+  else {
+    return("");
+  }
+}
+
 function get_members_path($key, $member_properties) {
   if (isset($member_properties['member_list_file'])) {
     return("../OMeetData/" . key_to_path($key) . "/{$member_properties['member_list_file']}");
