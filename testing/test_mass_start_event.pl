@@ -575,10 +575,14 @@ my($mass_start_time) = get_competitor_mass_start_time("UnitTestPlayground", $eve
 ##########
 
 # si competitor 1 finishes
+# Note that this competitor started AFTER the mass start time, and has a start punch which should be honored
 %GET = qw(key UnitTestPlayground);  # empty hash
 $GET{"event"} = $event_id;
 my(@si_results) = qw(2108369;0 start:0 finish:800 201:210 202:300 203:440 204:600 205:700);
 @si_results = adjust_si_results($mass_start_time, @si_results);
+print "New si_results are: " . join(",", @si_results) . "\n";
+$si_results[0] = "2108369;" . ($mass_start_time + 200);
+$si_results[1] = "start:" . ($mass_start_time + 200);
 print "New si_results are: " . join(",", @si_results) . "\n";
 my($base_64_results) = encode_base64(join(",", @si_results));
 $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
@@ -646,6 +650,8 @@ if (($no_newline_output !~ m#,$si_competitor_1_id">$SI_COMPETITOR_1_NAME</a></td
     ($no_newline_output !~ m#,$si_competitor_3_id">$SI_COMPETITOR_3_NAME</a></td><td>[0-9 smh:]+</td>#)) {
   error_and_exit("View result output wrong for 1 or more si stick competitors.\n$output");
 }
+
+#print $output;
 
 check_on_course(0);
 
