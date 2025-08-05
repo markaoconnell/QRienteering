@@ -99,6 +99,11 @@ function show_results($event, $key, $course, $result_class, $show_points, $max_p
     }
 
 
+    // If this is an award event and the competitor is not eligible for an award, then preceded the name with an (x) to indicate this
+    if (file_exists("./{$competitor_path}/award_ineligible")) {
+      $competitor_name = "(x) {$competitor_name}";
+    }
+
     if (file_exists("./{$competitor_path}/self_reported")) {
       if (file_exists("./{$competitor_path}/dnf")) {
         $dnfs .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td>{$club_school_value}<td>DNF</td>{$points_value}</tr>\n";
@@ -268,6 +273,7 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
     if (file_exists("{$competitor_path}/si_stick")) {
       $competitor_result_array["si_stick"] = file_get_contents("{$competitor_path}/si_stick");
     }
+    $competitor_result_array["award_eligibility"] = (file_exists("{$competitor_path}/award_ineligible") ? "n" : "y");
     $competitor_result_array["scoreo_points"] = $points_value;
     $competitor_result_array["competitive_class"] = get_class_for_competitor($competitor_path);
     $competitor_result_array["birth_year"] = "";

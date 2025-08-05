@@ -278,6 +278,14 @@ if ($using_nre_classes && (!$classification_info_supplied || ($classification_in
   echo "<input type=radio name=\"gender\" value=\"m\" {$male_checked} >  Male<br>\n";
   echo "<input type=radio name=\"gender\" value=\"o\" {$other_checked} >  Other<br>\n";
   echo "<input type=radio name=\"gender\" value=\"\" >  Unspecified<br>\n";
+
+  $award_eligibility_prompt = get_award_eligibility_prompt($event, $key);
+  if ($award_eligibility_prompt != "") {
+      echo "<p><input type=checkbox name=\"award_eligibility\" value=\"y\"> {$award_eligibility_prompt}<br>\n";
+  }
+  else {
+    echo "<input type=hidden name=\"award_eligibility\" value=\"y\">\n";
+  }
 }
 
 // If the person is a member doing normal checkin, see if they are using a new stick

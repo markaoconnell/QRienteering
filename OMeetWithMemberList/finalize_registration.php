@@ -97,6 +97,7 @@ $si_stick = find_get_key_or_empty_string("si_stick");
 $birth_year = find_get_key_or_empty_string("birth_year");
 $gender = find_get_key_or_empty_string("gender");
 $untimed_run = find_get_key_or_empty_string("untimed_run");
+$award_eligibility = find_get_key_or_empty_string("award_eligibility");
 
 
 // Let's do some validations
@@ -152,6 +153,7 @@ $registration_pieces = array("first_name", base64_encode($first_name),
                               "cell_phone", base64_encode($cell_phone),
                               "car_info", base64_encode($car_info),
                               "member_id", base64_encode($is_member ? $member_id : ""),
+                              "award_eligibility", base64_encode(($award_eligibility == "y") ? "y" : "n"),
 			      "is_member", base64_encode($is_member ? "yes" : "no"));
 if ($untimed_run != "") {
   $registration_pieces[] = "untimed_run";

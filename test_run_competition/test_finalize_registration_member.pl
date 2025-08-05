@@ -79,7 +79,7 @@ sub compare_hashes {
 # Test 1 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberUsingStick);
-%GET = qw(key UnitTestPlayground member_id 31 si_stick 3959473 cell_number 5083959473 email karen@mkoconnell.com waiver_signed signed quick_lookup_member_id 14-31);
+%GET = qw(key UnitTestPlayground member_id 31 si_stick 3959473 cell_number 5083959473 email karen@mkoconnell.com waiver_signed signed quick_lookup_member_id 14-31 award_eligibility y);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -91,7 +91,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC::Dartmouth si_stick 3959473 member_id 31 is_member yes email_address karen@mkoconnell.com);
+my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC::Dartmouth si_stick 3959473 member_id 31 is_member yes email_address karen@mkoconnell.com award_eligibility y);
 $expected_hash{"cell_phone"} = "5083959473";
 $expected_hash{"car_info"} = "";
 
@@ -108,7 +108,7 @@ success();
 # Test 1a - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberUsingStickAndJustSchool);
-%GET = qw(key UnitTestPlayground member_id 315 si_stick 3959473 cell_number 5083959473 email someone@EnglishStudent.com waiver_signed signed quick_lookup_member_id 9-315);
+%GET = qw(key UnitTestPlayground member_id 315 si_stick 3959473 cell_number 5083959473 email someone@EnglishStudent.com waiver_signed signed quick_lookup_member_id 9-315 award_eligibility y);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -120,7 +120,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Student last_name Body club_name ::StAndrewsScotland si_stick 3959473 member_id 315 is_member yes email_address someone@EnglishStudent.com);
+my(%expected_hash) = qw(first_name Student last_name Body club_name ::StAndrewsScotland si_stick 3959473 member_id 315 is_member yes email_address someone@EnglishStudent.com award_eligibility y);
 $expected_hash{"cell_phone"} = "5083959473";
 $expected_hash{"car_info"} = "";
 
@@ -150,7 +150,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Etudiant last_name Personne club_name DVOA:: si_stick 141421 member_id 180 is_member yes email_address quelquun@FrenchStudent.com);
+my(%expected_hash) = qw(first_name Etudiant last_name Personne club_name DVOA:: si_stick 141421 member_id 180 is_member yes email_address quelquun@FrenchStudent.com award_eligibility n);
 $expected_hash{"cell_phone"} = "5086148225";
 $expected_hash{"car_info"} = "";
 
@@ -168,7 +168,7 @@ success();
 # Test 2 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberUsingCarAndPhone);
-%GET = qw(key UnitTestPlayground member_id 31 si_stick 141421 car_info VWFox cell_number 5083959473 waiver_signed signed quick_lookup_member_id 11-31);
+%GET = qw(key UnitTestPlayground member_id 31 si_stick 141421 car_info VWFox cell_number 5083959473 waiver_signed signed quick_lookup_member_id 11-31 award_eligibility y);
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
 
@@ -180,7 +180,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC::Dartmouth si_stick 141421 member_id 31 is_member yes car_info VWFox cell_phone 5083959473);
+my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC::Dartmouth si_stick 141421 member_id 31 is_member yes car_info VWFox cell_phone 5083959473 award_eligibility y);
 $expected_hash{"email_address"} = "";
 
 my($error_string) = compare_hashes(\%expected_hash, $info_hash_ref);
@@ -196,7 +196,7 @@ success();
 # Test 3 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberNotUsingStick);
-%GET = qw(key UnitTestPlayground member_id 31 cell_number 5083959473 waiver_signed signed quick_lookup_member_id 11-31);
+%GET = qw(key UnitTestPlayground member_id 31 cell_number 5083959473 waiver_signed signed quick_lookup_member_id 11-31 award_eligibility y);
 $GET{"si_stick"} = "";
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
@@ -209,7 +209,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC::Dartmouth member_id 31 is_member yes);
+my(%expected_hash) = qw(first_name Karen last_name Yeowell club_name NEOC::Dartmouth member_id 31 is_member yes award_eligibility y);
 $expected_hash{"email_address"} = "";
 $expected_hash{"cell_phone"} = "5083959473";
 $expected_hash{"car_info"} = "";
@@ -228,7 +228,7 @@ success();
 # Test 4 - Success member registration
 # 
 %TEST_INFO = qw(Testname TestMemberOtherClubDefault);
-%GET = qw(key UnitTestPlayground member_id 41 cell_number 5086148225 si_stick 1421 waiver_signed signed quick_lookup_member_id 1-41);
+%GET = qw(key UnitTestPlayground member_id 41 cell_number 5086148225 si_stick 1421 waiver_signed signed quick_lookup_member_id 1-41 award_eligibility y);
 $GET{"event"} = $event_id;
 set_club_name("UnitTestPlayground", "BOK");
 %COOKIE = ();  # empty hash
@@ -241,7 +241,7 @@ if ($output !~ m#URL=../OMeetRegistration/register.php\?.*registration_info=([^&
   error_and_exit("Redirect URL not found.\n$output");
 }
 my($info_hash_ref) = get_specified_info($1);
-my(%expected_hash) = qw(first_name Larry last_name Berrill club_name :: member_id 41 is_member yes si_stick 1421);
+my(%expected_hash) = qw(first_name Larry last_name Berrill club_name :: member_id 41 is_member yes si_stick 1421 award_eligibility y);
 $expected_hash{"email_address"} = "";
 $expected_hash{"cell_phone"} = "5086148225";
 $expected_hash{"car_info"} = "";
