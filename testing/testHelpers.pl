@@ -45,6 +45,14 @@ sub hashes_to_artificial_file {
   close(ARTIFICIAL_FILE);
 }
 
+sub add_uploaded_file {
+  my($upload_entry_name, $local_filename, $number_entries) = @_;
+  open(ARTIFICIAL_FILE, ">>./artificial_input");
+  print ARTIFICIAL_FILE "FILES ${upload_entry_name} size ${number_entries}\n";
+  print ARTIFICIAL_FILE "FILES ${upload_entry_name} tmp_name ${local_filename}\n";
+  close(ARTIFICIAL_FILE);
+}
+
 sub file_get_contents {
   my($file_to_read) = @_;
 
