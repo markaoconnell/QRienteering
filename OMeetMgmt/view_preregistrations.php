@@ -22,16 +22,16 @@ function get_course_hash($event, $key) {
 }
 
 function register_competitor($entrant_info) {
-  global $key, $event, $course_hash;
+  global $key, $event, $course_hash, $show_id_for_auto_start;
 
   //print_r($entrant_info);
 
   if (!isset($course_hash[$entrant_info["course"]])) {
-    return(array("ERROR", "Invalid course {$entrant_info["course"]} for entrant {$entrant_info["first name"]} {$entrant_info["last_name"]}"));
+    return(array("ERROR", "Invalid course {$entrant_info["course"]} for entrant {$entrant_info["first_name"]} {$entrant_info["last_name"]}"));
   }
 
   if (!isset($entrant_info["stick"]) || ($entrant_info["stick"] == "")) {
-    return(array("ERROR", "No si unit specified for entrant {$entrant_info["first name"]} {$entrant_info["last_name"]}"));
+    return(array("ERROR", "No si unit specified for entrant {$entrant_info["first_name"]} {$entrant_info["last_name"]}"));
   }
 
   // Get the unique id for the competitor
@@ -121,7 +121,7 @@ function register_competitor($entrant_info) {
   }
 
   //echo "<p>All seems ok for : ${competitor_id} for {$saved_competitor_name}\n";
-  return(array("OK", "Registered {$first_name} {$last_name} on {$entrant_info["course"]}" .
+  return(array("OK", "Registered {$first_name} {$last_name}" . ($show_id_for_auto_start ?  "--{$competitor_id}--" : "" ) . " on {$entrant_info["course"]}" .
 	                  (($competitive_class != "") ? " ({$competitive_class})" : "")));
 }
 
@@ -149,6 +149,7 @@ if (!is_dir($event_path)) {
   error_and_exit("No event directory found, is \"{$event}\" from a valid link?\n");
 }
 
+$show_id_for_auto_start = isset($_GET["auto_start_show_id"]) && ($_GET["auto_start_show_id"] == "true");
 $auto_start = isset($_GET["auto_start"]) && ($_GET["auto_start"] == "true");
 $course_hash = array();
 if ($auto_start) {

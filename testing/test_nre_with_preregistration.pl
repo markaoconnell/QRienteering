@@ -31,8 +31,8 @@ sub create_good_preregistration_file {
   open(FAKE_PREREG_FILE, ">./${fake_filename}");
   print FAKE_PREREG_FILE "Mark,OConnell,Brown,2108369,5086148225,mark\@mkoconnell.com,NEOC,yes,1967,m,M Brown,y\n";
   print FAKE_PREREG_FILE "Karen,Yeowell,Green,377865,508-395-9473,karen\@mkoconnell.com,NEOC,yes,1968,f,F50+,y\n";
-  print FAKE_PREREG_FILE "Lydia,OConnell,Orange,141421,508-395-9473,lydia\@mkoconnell.com,NEOC,yes,2001,f,F Orange,y\n";
-  print FAKE_PREREG_FILE "Foreign,Person,Blue,314159,+33-32-34-45-99,ferriner\@somewhere.com,SWO,yes,1990,m,M-21+,n\n";
+  print FAKE_PREREG_FILE "Lydia,OConnell,Yellow,141421,508-395-9473,lydia\@mkoconnell.com,NEOC,yes,2001,f,F Yellow,y\n";
+  print FAKE_PREREG_FILE "Foreign,Person,Red,314159,+33-32-34-45-99,ferriner\@somewhere.com,SWO,yes,1990,m,M30+,n\n";
   close(FAKE_PREREG_FILE);
 
   return($fake_filename);
@@ -58,6 +58,69 @@ $output = qx($cmd);
 if ($output !~ /Successfully added 4 preregistrants/) {
   error_and_exit("Web page output wrong, count of good pregistrants not found or incorrect.\n$output");
 }
+
+#print $output;
+
+success();
+
+
+###########
+# Test 2 - View preregistration which were uploaded
+# 
+%TEST_INFO = qw(Testname ViewUploadedPreregistrations);
+%GET = qw(key UnitTestPlayground);
+$GET{"event"} = $event_id;
+%POST = ();
+%COOKIE = ();
+
+my($fake_prereg_file) = create_good_preregistration_file();
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetMgmt/view_preregistrations.php";
+$output = qx($cmd);
+
+if ($output !~ /View preregistrations/) {
+  error_and_exit("Web page output wrong, no view pregistrations string.\n$output");
+}
+
+if ($output !~ /Mark,OConnell,Brown,2108369,/) {
+  error_and_exit("Web page output wrong, Mark OConnell registration not present.\n$output");
+}
+
+if ($output !~ /Foreign,Person,Red,314159,/) {
+  error_and_exit("Web page output wrong, Foreign Person registration not present.\n$output");
+}
+
+
+#print $output;
+
+success();
+
+
+
+###########
+# Test 3 - Auto-start the entrants, validate the files
+# 
+%TEST_INFO = qw(Testname AutoStartPreregisteredEntrants);
+%GET = qw(key UnitTestPlayground auto_start true auto_start_show_id true);
+$GET{"event"} = $event_id;
+%POST = ();
+%COOKIE = ();
+
+my($fake_prereg_file) = create_good_preregistration_file();
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetMgmt/view_preregistrations.php";
+$output = qx($cmd);
+
+if ($output !~ /Registered Mark OConnell--[0-9a-f]+-- on Brown/) {
+  error_and_exit("Web page output wrong, Mark OConnell registration not present.\n$output");
+}
+
+if ($output !~ /Registered Foreign Person--[0-9a-f]+-- on Red/) {
+  error_and_exit("Web page output wrong, Foreign Person registration not present.\n$output");
+}
+
 
 #print $output;
 
