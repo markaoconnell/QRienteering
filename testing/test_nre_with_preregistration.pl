@@ -26,6 +26,7 @@ set_no_redirects_for_event($event_id, "UnitTestPlayground");
 set_using_nre_classes("UnitTestPlayground", $event_id);
 set_nre_classes("UnitTestPlayground");
 
+####################################
 sub create_good_preregistration_file {
   my($fake_filename) = "fake_prereg_entries";
   open(FAKE_PREREG_FILE, ">./${fake_filename}");
@@ -36,6 +37,13 @@ sub create_good_preregistration_file {
   close(FAKE_PREREG_FILE);
 
   return($fake_filename);
+}
+
+####################################
+sub validate_award_eligibility {
+  my($id) = @_;
+  my($path) = get_base_path("UnitTestPlayground") . "/${event_id}/Competitors/${id}";
+  return ( ! -f "${path}/award_ineligible" );
 }
 
 
@@ -107,8 +115,6 @@ $GET{"event"} = $event_id;
 %POST = ();
 %COOKIE = ();
 
-my($fake_prereg_file) = create_good_preregistration_file();
-
 hashes_to_artificial_file();
 $cmd = "php ../OMeetMgmt/view_preregistrations.php";
 $output = qx($cmd);
@@ -119,6 +125,117 @@ if ($output !~ /Registered Mark OConnell--[0-9a-f]+-- on Brown/) {
 
 if ($output !~ /Registered Foreign Person--[0-9a-f]+-- on Red/) {
   error_and_exit("Web page output wrong, Foreign Person registration not present.\n$output");
+}
+
+my($competitor_1_id) = $output =~ /Registered Mark OConnell--([0-9a-f]*)-- on Brown/;
+my($competitor_2_id) = $output =~ /Registered Foreign Person--([0-9a-f]*)-- on Red/;
+
+#print "1: ${competitor_1_id}, 2: ${competitor_2_id}\n";
+
+if (!validate_award_eligibility($competitor_1_id)) {
+  error_and_exit("Mark OConnell - ${competitor_1_id} - incorrectly marked as award ineligible.");
+}
+
+if (validate_award_eligibility($competitor_2_id)) {
+  error_and_exit("Foreign Person - ${competitor_2_id} - incorrectly marked as award eligible.");
+}
+
+
+#print $output;
+
+success();
+
+
+###########
+# Test 4 - Toggle the award eligibility
+# 
+%TEST_INFO = qw(Testname ToggleAwardEligibility);
+%GET = qw(key UnitTestPlayground);
+$GET{"event"} = $event_id;
+$GET{"competitor"} = $competitor_1_id;
+%POST = ();
+%COOKIE = ();
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetMgmt/toggle_competitor_award_eligibility.php";
+$output = qx($cmd);
+
+if ($output !~ /Competitor Mark OConnell is now <strong>ineligible/) {
+  error_and_exit("Incorrect toggle output - Mark OConnell should now be ineligible.\n${output}");
+}
+
+if (validate_award_eligibility($competitor_1_id)) {
+  error_and_exit("Mark OConnell - ${competitor_1_id} - incorrectly marked as award eligible.");
+}
+
+if (validate_award_eligibility($competitor_2_id)) {
+  error_and_exit("Foreign Person - ${competitor_2_id} - incorrectly marked as award eligible.");
+}
+
+
+#print $output;
+
+success();
+
+
+
+###########
+# Test 5 - Toggle the award eligibility second competitor
+# 
+%TEST_INFO = qw(Testname ToggleAwardEligibilitySecondTry);
+%GET = qw(key UnitTestPlayground);
+$GET{"event"} = $event_id;
+$GET{"competitor"} = $competitor_2_id;
+%POST = ();
+%COOKIE = ();
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetMgmt/toggle_competitor_award_eligibility.php";
+$output = qx($cmd);
+
+if ($output !~ /Competitor Foreign Person is now eligible/) {
+  error_and_exit("Incorrect toggle output - Foreign Person should now be eligible.\n${output}");
+}
+
+if (validate_award_eligibility($competitor_1_id)) {
+  error_and_exit("Mark OConnell - ${competitor_1_id} - incorrectly marked as award eligible.");
+}
+
+if (!validate_award_eligibility($competitor_2_id)) {
+  error_and_exit("Foreign Person - ${competitor_2_id} - incorrectly marked as award ineligible.");
+}
+
+
+#print $output;
+
+success();
+
+
+
+###########
+# Test 6 - Toggle the award eligibility again
+# 
+%TEST_INFO = qw(Testname ToggleAwardEligibilityToggleBack);
+%GET = qw(key UnitTestPlayground);
+$GET{"event"} = $event_id;
+$GET{"competitor"} = $competitor_1_id;
+%POST = ();
+%COOKIE = ();
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetMgmt/toggle_competitor_award_eligibility.php";
+$output = qx($cmd);
+
+if ($output !~ /Competitor Mark OConnell is now eligible/) {
+  error_and_exit("Incorrect toggle output - Mark OConnell should now be eligible.\n${output}");
+}
+
+if (!validate_award_eligibility($competitor_1_id)) {
+  error_and_exit("Mark OConnell - ${competitor_1_id} - incorrectly marked as award ineligible.");
+}
+
+if (!validate_award_eligibility($competitor_2_id)) {
+  error_and_exit("Foreign Person - ${competitor_2_id} - incorrectly marked as award ineligible.");
 }
 
 

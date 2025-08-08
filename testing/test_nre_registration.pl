@@ -26,6 +26,15 @@ set_no_redirects_for_event($event_id, "UnitTestPlayground");
 set_using_nre_classes("UnitTestPlayground", $event_id);
 set_nre_classes("UnitTestPlayground");
 
+######################
+sub set_nre_award_prompt {
+  my($prompt) = @_;
+  my($event_path) = get_base_path("UnitTestPlayground") . "/${event_id}";
+  open(PROMPT_FILE, ">./${event_path}/award_eligibility_prompt");
+  print PROMPT_FILE $prompt;
+  close(PROMPT_FILE);
+}
+
 
 ###########
 # Test 1 - Register normally and see if classified correctly
@@ -226,6 +235,10 @@ if ($output !~ /name="gender" value="m" checked/) {
   error_and_exit("Web page output wrong, gender was not prefilled.\n$output");
 }
 
+if ($output !~ /<input type=hidden name="award_eligibility" value="y">/) {
+  error_and_exit("Web page output wrong, hidden award eligibility entry not found.\n$output");
+}
+
 #print $output;
 
 success();
@@ -242,7 +255,7 @@ $GET{"competitor_name"} = $COMPETITOR_NAME;
 $GET{"competitor_first_name"} = $COMPETITOR_FIRST_NAME;
 $GET{"competitor_last_name"} = $COMPETITOR_LAST_NAME;
 $GET{"course"} = "07-Brown";
-$GET{"si_stick"} = "";
+$GET{"si_stick"} = "2108369";
 $GET{"member_id"} = "";
 $GET{"club_name"} = "";
 $GET{"classification_info"} = values_to_classification_info("1967", "m", "M Brown");
@@ -256,6 +269,10 @@ if ($output =~ /name="birth_year" value=/) {
 
 if ($output =~ /name="gender" value=/) {
   error_and_exit("Web page output wrong, gender prompt is present.\n$output");
+}
+
+if ($output !~ /<input type=hidden name="award_eligibility" value="y">/) {
+  error_and_exit("Web page output wrong, hidden award eligibility entry not found.\n$output");
 }
 
 #print $output;
@@ -293,6 +310,10 @@ if ($output !~ /name="gender" value="m" *>/) {
 
 if ($output !~ /name="gender" value="f" *>/) {
   error_and_exit("Web page output wrong, unchecked gender prompt not present.\n$output");
+}
+
+if ($output !~ /<input type=hidden name="award_eligibility" value="y">/) {
+  error_and_exit("Web page output wrong, hidden award eligibility entry not found.\n$output");
 }
 
 #print $output;
@@ -379,6 +400,50 @@ if ($output !~ /Invalid \(empty\) cell phone/) {
 
 success();
 
+
+
+###########
+# Test 12 - 
+# Add safety info - Prompt for award eligibility if the file is there
+%TEST_INFO = qw(Testname AddSafetyInfoWithAwardEligibilityPrompt);
+%COOKIE = ();
+$COOKIE{"testing_cookie_support"} = "can--space--this--space--be--space--read?";
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+$GET{"competitor_name"} = $COMPETITOR_NAME;
+$GET{"competitor_first_name"} = $COMPETITOR_FIRST_NAME;
+$GET{"competitor_last_name"} = $COMPETITOR_LAST_NAME;
+$GET{"course"} = "07-Brown";
+$GET{"si_stick"} = "";
+$GET{"using_stick"} = "no";
+$GET{"member_id"} = "";
+$GET{"club_name"} = "";
+#$GET{"classification_info"} = values_to_classification_info("1967", "m", "M Brown");
+
+set_nre_award_prompt("<p>This is a silly prompt<br>\n");
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
+$output = qx($cmd);
+
+if ($output !~ /This is a silly prompt/) {
+  error_and_exit("Web page output wrong, prompt for award eligibility not present.\n$output");
+}
+
+if ($output !~ /<input type=checkbox name="award_eligibility" value="y">/) {
+  error_and_exit("Web page output wrong, hidden award eligibility entry not found.\n$output");
+}
+
+if ($output !~ /name="gender" value="m" *>/) {
+  error_and_exit("Web page output wrong, unchecked gender prompt not present.\n$output");
+}
+
+if ($output !~ /name="gender" value="f" *>/) {
+  error_and_exit("Web page output wrong, unchecked gender prompt not present.\n$output");
+}
+
+#print $output;
+
+success();
 
 
 
