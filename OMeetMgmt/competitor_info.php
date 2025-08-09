@@ -47,8 +47,8 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
     }
     $nre_class_string = "<a href=\"../OMeetMgmt/edit_competitor_class.php?event={$event}&key={$key}&competitor={$competitor_id}\">{$competitor_class}</a><br>\n";
 
-    $nre_class_string .= "<a href=\"../OMeetMgmt/toggle_competitor_award_eligibility.php?event={$event}&key={$key}&competitor={$competitor_id}\"" . 
-	    (file_exists("{$competitor_base_path}/award_ineligible") ? "ineligible for award" : "eligible for award") . "</a><br>\n";
+    $nre_class_string .= "<a href=\"../OMeetMgmt/toggle_competitor_award_eligibility.php?event={$event}&key={$key}&competitor={$competitor_id}\">" . 
+	    (file_exists("{$competitor_base_path}/{$competitor_id}/award_ineligible") ? "ineligible for award" : "meets award criteria") . "</a><br>\n";
   }
 
   if (count($registration_info) > 0) {

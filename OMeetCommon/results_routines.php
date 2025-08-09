@@ -101,7 +101,7 @@ function show_results($event, $key, $course, $result_class, $show_points, $max_p
 
     // If this is an award event and the competitor is not eligible for an award, then preceded the name with an (x) to indicate this
     if (file_exists("./{$competitor_path}/award_ineligible")) {
-      $competitor_name = "(x) {$competitor_name}";
+      $competitor_name = "<span style=\"color: red;\">(x)</span> {$competitor_name}";
     }
 
     if (file_exists("./{$competitor_path}/self_reported")) {
