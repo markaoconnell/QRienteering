@@ -176,7 +176,13 @@ function get_column_data($prior_page_end) {
     }
 
     $this_entry = $results_array[$next_place_to_show];
-    $output = "<td>" . ($next_place_to_show + 1) . "</td><td>" . $this_entry["competitor_name"] . "</td>";
+    if ($this_entry["award_eligibility"] == "n") {
+      $display_name = "<span style=\"color: red;\">(x)</span> {$this_entry["competitor_name"]}";
+    }
+    else {
+      $display_name = $this_entry["competitor_name"];
+    }
+    $output = "<td>" . ($next_place_to_show + 1) . "</td><td>" . $display_name . "</td>";
     if ($this_entry["dnf"]) {
       $output .= "<td>DNF</td>";
     }
