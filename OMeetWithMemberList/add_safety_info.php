@@ -289,6 +289,10 @@ if ($using_nre_classes) {
     echo "<input type=hidden name=\"award_eligibility\" value=\"y\">\n";
   }
 }
+else {
+  // If not using NRE classes, there are no awards, so everyone is eligible
+  echo "<input type=hidden name=\"award_eligibility\" value=\"y\">\n";
+}
 
 // If the person is a member doing normal checkin, see if they are using a new stick
 // and would like to register it with the club
