@@ -6,9 +6,9 @@ require '../OMeetCommon/results_routines.php';
 require '../OMeetCommon/course_properties.php';
 require '../OMeetCommon/generate_splits_output.php';
 require 'si_stick_finish.php';
-require '../OMeetCOmmon/PHPMailer/Exception.php';
-require '../OMeetCOmmon/PHPMailer/PHPMailer.php';
-require '../OMeetCOmmon/PHPMailer/SMTP.php';
+require '../OMeetCommon/PHPMailer/Exception.php';
+require '../OMeetCommon/PHPMailer/PHPMailer.php';
+require '../OMeetCommon/PHPMailer/SMTP.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -369,16 +369,19 @@ if ($has_registration_info) {
         try {
           $email_sender = new PHPMailer(true);
           $email_sender->isSMTP();
-          // $email_sender->Host = 'smtp.google.com';
           $email_sender->Host = $email_properties["email_host"];
           $email_sender->SMTPAuth = true;
           $email_sender->Username = $email_properties["email_sender_username"];
           $email_sender->Password = $email_properties["email_sender_password"];
           $email_sender->SMTPSecure = $email_properties["email_secure_protocol"];
-          // $email_sender->Port = 587;
           $email_sender->Port = $email_properties["email_port"];
-          $email_sender->addReplyTo($email_properties["reply-to"]);
-          $email_sender->setFrom($email_properties["from"]);
+	  $email_sender->addReplyTo($email_properties["reply-to"]);
+	  if (isset($email_properties["from_name"])) {
+            $email_sender->setFrom($email_properties["from"], $email_properties["from_name"]);
+	  }
+	  else {
+            $email_sender->setFrom($email_properties["from"]);
+	  }
           $email_sender->addAddress($email_addr, $competitor_name);
           $email_sender->isHTML(true);
           $email_sender->Subject = $subject;

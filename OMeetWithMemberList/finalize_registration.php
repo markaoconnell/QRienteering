@@ -4,6 +4,13 @@ require '../OMeetCommon/nre_routines.php';
 require '../OMeetCommon/course_properties.php';
 require 'name_matcher.php';
 require 'preregistration_routines.php';
+require '../OMeetCommon/PHPMailer/Exception.php';
+require '../OMeetCommon/PHPMailer/PHPMailer.php';
+require '../OMeetCommon/PHPMailer/SMTP.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 
 ck_testing();
 
@@ -205,26 +212,54 @@ if (!$is_preregistered_checkin && $has_preset_id && ($email_si_stick != "")) {
   if ($email_enabled && ($email_properties["email_to_register_stick"] != "")) {
     $email_addr = $email_properties["email_to_register_stick"];
     if (preg_match("/^[a-zA-z0-9_.\-]+@[a-zA-Z0-9_.\-]+/", $email_addr)) {
-      $headers = array();
-      $headers[] = "From: " . $email_properties["from"];
-      $headers[] = "Reply-To: ". $email_properties["reply-to"];
-      $headers[] = "MIME-Version: 1.0";
-      $headers[] = "Content-type: text/html; charset=iso-8859-1";
-
-      $header_string = implode("\r\n", $headers);
-
       $body_string = "<html><body>\r\nRegister SI {$email_si_stick}\r\nto {$first_name} {$last_name}.\r\n";
       $body_string .= "\r\n</body></html>";
     
       //echo "<p>Mail: Attempting mail send to {$email_addr} with results.\n";
       $subject = "Register SI {$email_si_stick} to {$first_name} {$last_name}";
 
-      // echo "<p>Emailing to {$email_addr}\n";
-      if (isset($email_properties["extra_params"]) && ($email_properties["extra_params"] != "")) {
-        $email_send_result = mail($email_addr, $subject, $body_string, $header_string, $email_properties["extra_params"]);
+      if (isset($email_properties["use_php_mail_function"])) {
+        $headers = array();
+        $headers[] = "From: " . $email_properties["from"];
+        $headers[] = "Reply-To: ". $email_properties["reply-to"];
+        $headers[] = "MIME-Version: 1.0";
+        $headers[] = "Content-type: text/html; charset=iso-8859-1";
+  
+        $header_string = implode("\r\n", $headers);
+  
+        // echo "<p>Emailing to {$email_addr}\n";
+        if (isset($email_properties["extra_params"]) && ($email_properties["extra_params"] != "")) {
+          $email_send_result = mail($email_addr, $subject, $body_string, $header_string, $email_properties["extra_params"]);
+        }
+        else {
+          $email_send_result = mail($email_addr, $subject, $body_string, $header_string);
+        }
       }
-      else {
-        $email_send_result = mail($email_addr, $subject, $body_string, $header_string);
+      else if (isset($email_properties["use_phpmailer"])) {
+        try {
+          $email_sender = new PHPMailer(true);
+          $email_sender->isSMTP();
+          $email_sender->Host = $email_properties["email_host"];
+          $email_sender->SMTPAuth = true;
+          $email_sender->Username = $email_properties["email_sender_username"];
+          $email_sender->Password = $email_properties["email_sender_password"];
+          $email_sender->SMTPSecure = $email_properties["email_secure_protocol"];
+          $email_sender->Port = $email_properties["email_port"];
+          $email_sender->addReplyTo($email_properties["reply-to"]);
+          if (isset($email_properties["from_name"])) {
+            $email_sender->setFrom($email_properties["from"], $email_properties["from_name"]);
+          }
+          else {
+            $email_sender->setFrom($email_properties["from"]);
+          }
+          $email_sender->addAddress($email_addr);
+          $email_sender->isHTML(true);
+          $email_sender->Subject = $subject;
+          $email_sender->Body = $body_string;
+          $email_sender->send();
+        } catch (Exception $e) {
+          echo "<p>Mail: Failed when sending SI unit update request to {$email_addr}\n, {$e->errorMessage()}\n";
+        }
       }
 
       // echo "<p> Mail sent " . ($email_send_result ? " successfully" : " failure")  . "\n";
