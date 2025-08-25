@@ -6,6 +6,12 @@ require '../OMeetCommon/results_routines.php';
 require '../OMeetCommon/course_properties.php';
 require '../OMeetCommon/generate_splits_output.php';
 require 'si_stick_finish.php';
+require '../OMeetCOmmon/PHPMailer/Exception.php';
+require '../OMeetCOmmon/PHPMailer/PHPMailer.php';
+require '../OMeetCOmmon/PHPMailer/SMTP.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 ck_testing();
 
@@ -289,20 +295,13 @@ echo get_all_course_result_links($event, $key);
 
 if ($has_registration_info) {
   $email_properties = get_email_properties(get_base_path($key, ".."));
-  //print_r($email_properties);
+  // print_r($email_properties);
   $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]) && !$suppress_email;
   if (($registration_info["email_address"] != "") && $email_enabled) {
     // See if this looks like a valid email
     // Make sure to escape anything that could be a funky html character
     $email_addr = htmlentities($registration_info["email_address"], ENT_QUOTES, 'iso8859-1');
     if (preg_match("/^[a-zA-z0-9_.\-]+@[a-zA-Z0-9_.\-]+/", $email_addr)) {
-      $headers = array();
-      $headers[] = "From: " . $email_properties["from"];
-      $headers[] = "Reply-To: ". $email_properties["reply-to"];
-      $headers[] = "MIME-Version: 1.0";
-      $headers[] = "Content-type: text/html; charset=iso-8859-1";
-
-      $header_string = implode("\r\n", $headers);
 
       $course_description = file_get_contents(get_event_path($event, $key, "..") . "/description");
       $email_extra_info_file = get_email_extra_info_file(get_base_path($key, ".."));
@@ -344,18 +343,53 @@ if ($has_registration_info) {
         $subject = "Orienteering Results";
       }
 
-      if (isset($email_properties["extra_params"]) && ($email_properties["extra_params"] != "")) {
-        $email_send_result = mail($email_addr, $subject, $body_string, $header_string, $email_properties["extra_params"]);
+      if (isset($email_properties["use_php_mail_function"])) {
+        $headers = array();
+        $headers[] = "From: " . $email_properties["from"];
+        $headers[] = "Reply-To: ". $email_properties["reply-to"];
+        $headers[] = "MIME-Version: 1.0";
+        $headers[] = "Content-type: text/html; charset=iso-8859-1";
+  
+        $header_string = implode("\r\n", $headers);
+        if (isset($email_properties["extra_params"]) && ($email_properties["extra_params"] != "")) {
+          $email_send_result = mail($email_addr, $subject, $body_string, $header_string, $email_properties["extra_params"]);
+        }
+        else {
+          $email_send_result = mail($email_addr, $subject, $body_string, $header_string);
+        }
+  
+        if ($email_send_result) {
+          echo "<p>Mail: Sent results to {$email_addr}.\n";
+        }
+        else {
+          echo "<p>Mail: Failed when sending results to {$email_addr}\n";
+        }
+      }
+      else if (isset($email_properties["use_phpmailer"])) {
+        try {
+          $email_sender = new PHPMailer(true);
+          $email_sender->isSMTP();
+          // $email_sender->Host = 'smtp.google.com';
+          $email_sender->Host = $email_properties["email_host"];
+          $email_sender->SMTPAuth = true;
+          $email_sender->Username = $email_properties["email_sender_username"];
+          $email_sender->Password = $email_properties["email_sender_password"];
+          $email_sender->SMTPSecure = $email_properties["email_secure_protocol"];
+          // $email_sender->Port = 587;
+          $email_sender->Port = $email_properties["email_port"];
+          $email_sender->addReplyTo($email_properties["reply-to"]);
+          $email_sender->setFrom($email_properties["from"]);
+          $email_sender->addAddress($email_addr, $competitor_name);
+          $email_sender->isHTML(true);
+          $email_sender->Subject = $subject;
+          $email_sender->Body = $body_string;
+          $email_sender->send();
+        } catch (Exception $e) {
+          echo "<p>Mail: Failed when sending results to {$email_addr}\n, {$e->errorMessage()}\n";
+        }
       }
       else {
-        $email_send_result = mail($email_addr, $subject, $body_string, $header_string);
-      }
-
-      if ($email_send_result) {
-        echo "<p>Mail: Sent results to {$email_addr}.\n";
-      }
-      else {
-        echo "<p>Mail: Failed when sending results to {$email_addr}\n";
+        echo "<p>Mail: No configured email send program in email_properties file.\n";
       }
     }
     else {

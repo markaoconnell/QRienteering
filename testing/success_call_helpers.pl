@@ -475,7 +475,7 @@ sub finish_successfully {
     error_and_exit("Did not see parseable finish entry:\n$output");
   }
   
-  #print $output;
+  # print $output;
   
   $path = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Competitors/$competitor_id";
   my($controls_found_path) = "$path/controls_found";
@@ -513,6 +513,11 @@ sub finish_successfully {
   if (grep(/NOTFOUND:$results_file/, @results_array)) {
     error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
   }
+
+  if ($output =~ /Mail: Failed when sending results/) {
+    error_and_exit("Failed to send email, message\n$output");
+  }
+  
   
   delete($test_info_ref->{"subroutine"});
 }

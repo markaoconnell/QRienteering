@@ -103,6 +103,18 @@ sub set_email_properties {
   print EMAIL_PROPS_FILE "reply-to: markandkaren" . "@" . "mkoconnell.com\n";
   print EMAIL_PROPS_FILE "subject: Results of NEOC Orienteering meet\n";
   print EMAIL_PROPS_FILE "extra-info: <p>Learn more about NEOC at <a href=\"www.newenglandorienteering.org\">our website</a>.\n";
+  print EMAIL_PROPS_FILE "use_php_mail_function: true";
+  close(EMAIL_PROPS_FILE);
+}
+
+sub set_email_properties_from_hash {
+  my($key, %props) = @_;
+  my($email_props_path) = get_base_path($key) . "/email_properties.txt";
+  open(EMAIL_PROPS_FILE, ">$email_props_path");
+  my($this_key);
+  foreach $this_key (keys(%props)) {
+    print EMAIL_PROPS_FILE "${this_key}:" . $props{$this_key} . "\n";
+  }
   close(EMAIL_PROPS_FILE);
 }
 
