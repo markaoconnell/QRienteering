@@ -305,6 +305,40 @@ function clear_stick_xlation($event, $key, $stick) {
   }
 }
 
+// Format returned is a hash of course (e.g. 01-White) to list of controls (e.g. 101:60,105:60) meaning control 101 is untimed (max 60s),
+// control 105 is also untimed (max 60s), etc.
+function get_untimed_controls($event, $key) {
+  $untimed_controls = array();
+  $event_path = get_event_path($event, $key);
+  if (file_exists("{$event_path}/untimed_controls")) {
+    $file_contents = file("{$event_path}/untimed_controls", FILE_IGNORE_NEW_LINES);
+    array_map(function ($elt) use (&$untimed_controls) { $pieces = explode(";", $elt); $untimed_controls[$pieces[0]] = $pieces[1]; }, $file_contents);
+  }
+
+  return($untimed_controls);
+}
+
+function put_untimed_controls($event, $key, $untimed_controls) {
+  $event_path = get_event_path($event, $key);
+  if (count($untimed_controls) > 0) {
+    file_put_contents("{$event_path}/untimed_controls",
+	  implode("\n", array_map(function ($elt) use ($untimed_controls) { return("{$elt};{$untimed_controls[$elt]}"); }, array_keys($untimed_controls))));
+  }
+  else {
+    if (file_exists("{$event_path}/untimed_controls")) {
+      unlink("{$event_path}/untimed_controls");
+    }
+  }
+  return;
+}
+
+function untimed_control_entry_to_hash($course_entry) {
+  $course_entry_hash = array();
+  array_map(function ($elt) use (&$course_entry_hash) { $pieces = explode(":", $elt); $course_entry_hash[$pieces[0]] = $pieces[1]; }, explode(",", $course_entry));
+  return($course_entry_hash);
+}
+
+
 function get_event_path($event, $key, $path_to_top = "..") {
   return("../OMeetData/" . key_to_path($key) . "/{$event}");
 }

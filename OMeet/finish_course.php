@@ -110,7 +110,7 @@ $controls_found_path = "{$competitor_path}/controls_found";
 $courses_path = get_courses_path($event, $key, "..");
 $results_path = get_results_path($event, $key, "..");
 if (!file_exists($competitor_path) || !file_exists("{$courses_path}/{$course}/controls.txt")) {
-  error_and_exit("<p>ERROR: Event \"{$event}\" or competitor \"{$competitor}\" appears to be no longer appears valid, please re-register and try again.\n");
+  error_and_exit("<p>ERROR: Event \"{$event}\" or competitor \"{$competitor_id}\" appears to be no longer appears valid, please re-register and try again.\n");
 }
 
 if (file_exists("{$competitor_path}/si_stick") && !isset($_GET["si_stick_finish"])) {
@@ -150,6 +150,7 @@ if (!file_exists("{$controls_found_path}/start")) {
   }
 }
 
+$score_penalty_msg = "";
 if (!file_exists("{$controls_found_path}/finish")) {
   // See how many controls have been completed
   $controls_done = scandir("./{$controls_found_path}");
@@ -189,7 +190,6 @@ if (!file_exists("{$controls_found_path}/finish")) {
   // For each control, look up its point value in the associative array and sum the total points
   // TODO: Must de-dup the controls found - Don't doublecount the points!!
   if ($score_course) {
-    $score_penalty_msg = "";
     $unique_controls = array_unique($controls_found);
     //$total_score = calculate_score($unique_controls, $controls_points_hash);
     $total_score = array_reduce($unique_controls, function ($carry, $elt) use ($controls_points_hash) { return($carry + $controls_points_hash[$elt]); }, 0);
@@ -210,6 +210,32 @@ if (!file_exists("{$controls_found_path}/finish")) {
     $total_score = count($controls_found);
     if ($has_skipped_controls && !$untimed_run) {
       $total_score += count($controls_ok_array);
+    }
+    // Check for untimed controls and adjust the total time accordingly
+    $untimed_controls = get_untimed_controls($event, $key);
+    $untimed_controls_for_course = array();
+    if (isset($untimed_controls[$course])) {
+      $untimed_controls_for_course = untimed_control_entry_to_hash($untimed_controls[$course]);
+      // This course has one or more untimed controls, see how long was spent at each
+      $prior_control_time = $course_started_at;
+      $forgiven_time = 0;
+      foreach ($controls_done as $this_control) {
+        $control_info = explode(",", $this_control);  // format is timestamp,control
+	if (isset($untimed_controls_for_course[$control_info[1]])) {
+          $this_leg_split = $control_info[0] - $prior_control_time;
+          $max_forgiven_time = $untimed_controls_for_course[$control_info[1]];
+
+	  if ($this_leg_split <= $max_forgiven_time) {
+            $forgiven_time += $this_leg_split;
+	  }
+	  else {
+            $forgiven_time += $max_forgiven_time;
+	  }
+	$prior_control_time = $control_info[0];
+	}
+      }
+
+      $time_taken -= $forgiven_time;
     }
   }
 

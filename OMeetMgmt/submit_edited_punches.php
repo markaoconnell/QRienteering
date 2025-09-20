@@ -317,6 +317,33 @@ if ($error_string == "") {
         file_put_contents("{$new_competitor_path}/dnf", $error_string, FILE_APPEND);
         $dnf_string = " - DNF";
       }
+
+      // Check for untimed controls and adjust the total time accordingly
+      $untimed_controls = get_untimed_controls($event, $key);
+      $untimed_controls_for_course = array();
+      if (isset($untimed_controls[$new_course])) {
+        $untimed_controls_for_course = untimed_control_entry_to_hash($untimed_controls[$new_course]);
+        // This course has one or more untimed controls, see how long was spent at each
+        $prior_control_time = $start_time;
+        $forgiven_time = 0;
+        foreach ($controls_done as $this_control) {
+          $control_info = explode(",", $this_control);  // format is timestamp,control
+          if (isset($untimed_controls_for_course[$control_info[1]])) {
+            $this_leg_split = $control_info[0] - $prior_control_time;
+	    $max_forgiven_time = $untimed_controls_for_course[$control_info[1]];
+
+            if ($this_leg_split <= $max_forgiven_time) {
+              $forgiven_time += $this_leg_split;
+            }
+            else {
+              $forgiven_time += $max_forgiven_time;
+            }
+         }
+         $prior_control_time = $control_info[0];
+        }
+  
+        $time_taken -= $forgiven_time;
+      }
     }
 
     $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $new_competitor_id);

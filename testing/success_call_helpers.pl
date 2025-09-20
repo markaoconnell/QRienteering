@@ -527,13 +527,26 @@ sub finish_successfully {
 # Finish the course successfully
 sub finish_with_stick_successfully {
   my($competitor_id, $stick, $course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  $test_info_ref->{"subroutine"} = "finish_with_stick_successfully";
+  finish_with_stick_successfully_internal($competitor_id, $stick, $course, 0, $get_ref, $cookie_ref, $test_info_ref);
+  delete($test_info_ref->{"subroutine"});
+}
+
+sub finish_with_stick_successfully_with_untimed_controls {
+  my($competitor_id, $stick, $course, $amount_untimed, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  $test_info_ref->{"subroutine"} = "finish_with_stick_successfully_with_untimed_controls";
+  finish_with_stick_successfully_internal($competitor_id, $stick, $course, $amount_untimed, $get_ref, $cookie_ref, $test_info_ref);
+  delete($test_info_ref->{"subroutine"});
+}
+
+sub finish_with_stick_successfully_internal {
+  my($competitor_id, $stick, $course, $adjustment, $get_ref, $cookie_ref, $test_info_ref) = @_;
 
   my($cached_competitor) = get_stick_xlation($get_ref->{"key"}, $get_ref->{"event"}, $stick);
   if ($cached_competitor ne $competitor_id) {
     error_and_exit("Finish failed - cached competitor \"${cached_competitor}\" does not match competitor \"${competitor_id}\".\n");
   }
 
-  $test_info_ref->{"subroutine"} = "finish_with_stick_successfully";
   hashes_to_artificial_file();
   $cmd = "php ../OMeet/finish_course.php";
   $output = qx($cmd);
@@ -593,8 +606,6 @@ sub finish_with_stick_successfully {
   if (grep(/NOTFOUND:$results_file/, @results_array)) {
     error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
   }
-  
-  delete($test_info_ref->{"subroutine"});
 }
 
 
@@ -899,6 +910,10 @@ sub finish_with_stick_dnf {
 # Use the web interface to create an event
 sub create_event_successfully {
   my($get_ref, $cookie_ref, $post_ref, $test_info_ref) = @_;
+
+  if (!defined($get_ref->{"orig_key"})) {
+    $get_ref->{"orig_key"} = $get_ref->{"key"};
+  }
 
   $test_info_ref->{"subroutine"} = "create_event_successfully";
   hashes_to_artificial_file();

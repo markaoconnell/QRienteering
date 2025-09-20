@@ -85,7 +85,7 @@ if (isset($_GET["mumble"]) && ($_GET["mumble"] != "")) {
   $control_id_for_display = xlate_control_id_for_display($key, $event, $control_id);
   $encoded_competitor_id = $pieces[1];
   $time_of_page_access = $pieces[2];
-  $skip_adding_control_as_extra = ($pieces[3] == "redo");
+  $skip_adding_control_as_extra = (isset($pieces[3]) ? ($pieces[3] == "redo") : false);
 
   if ($encoded_competitor_id != $competitor_id) {
     error_and_exit("<p>ERROR: Competitor mismatch, possible replay of earlier scan?\n");

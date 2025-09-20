@@ -22,7 +22,7 @@ $ppen_errors_found = "";
 
 if (isset($_POST["uploadppen"])) {
   $key = $_POST["key"];
-  $orig_key = $_POST["orig_key"];
+  $orig_key = (isset($_POST["orig_key"]) ? $_POST["orig_key"] : $key);
   if ($_FILES["upload_file"]["size"] > 0) {
     $event_description_array = get_event_description($_FILES["upload_file"]["tmp_name"], $_POST["getemall"] == "true");
     $uploaded_ppen_file = true;
@@ -57,7 +57,7 @@ elseif (isset($_POST["submit"])) {
   echo "Name of event: " . $_POST["event_name"] . "\n<p>";
   $event_fullname = $_POST["event_name"];
   $key = $_POST["key"];
-  $orig_key = $_POST["orig_key"];
+  $orig_key = (isset($_POST["orig_key"]) ? $_POST["orig_key"] : $key);
 
 //  if (!ck_valid_chars($event_name) || (substr($event_name, -5) == ".done")) {
 //    echo "<p>ERROR: Event \"{$event_name}\" can only contain letters and numbers and cannot end in \".done\".\n";
@@ -186,7 +186,7 @@ elseif (isset($_POST["submit"])) {
 }
 else {
   $key = $_GET["key"];
-  $orig_key = $_GET["orig_key"];
+  $orig_key = (isset($_POST["orig_key"]) ? $_POST["orig_key"] : $key);
   if (!key_is_valid($key)) {
     error_and_exit("No such access key \"$key\", are you using an authorized link?\n");
   }

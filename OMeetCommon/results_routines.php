@@ -1,7 +1,7 @@
 <?php
 
 // Show the results for a course
-function show_results($event, $key, $course, $result_class, $show_points, $max_points, $base_course_list, $show_school_and_club, $path_to_top = "..") {
+function show_results($event, $key, $course, $result_class, $show_points, $max_points, $base_course_list, $show_school_and_club = false, $path_to_top = "..") {
   $result_string = "";
   $result_string .= "<p>Results on " . ltrim($course, "0..9-") . (($result_class != "") ? ":{$result_class}" : "") . "\n";
 

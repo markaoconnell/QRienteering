@@ -26,7 +26,7 @@ echo "<p>\n";
 $output_string = "";
 $mass_start_courses = array();
 
-$event = $_GET["event"];
+$event = isset($_GET["event"]) ? $_GET["event"] : "";
 $key = $_GET["key"];
 if (!key_is_valid($key)) {
   error_and_exit("Unknown management key \"$key\", are you using an authorized link?\n");

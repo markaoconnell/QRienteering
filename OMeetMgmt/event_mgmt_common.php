@@ -148,7 +148,7 @@ function validate_and_parse_course($course_description) {
   $verbose_output_string = "";
 
   if (isset($course_info[$ERROR_FIELD]) && ($course_info[$ERROR_FIELD] != "")) {
-    $error_string .= "<p>ERROR: Course entry {$this_course} looks wrong: {$course_info[$ERROR_FIELD]}\n";
+    $error_string .= "<p>ERROR: Course entry {$course_name} looks wrong: {$course_info[$ERROR_FIELD]}\n";
     $found_error = true;
   }
 

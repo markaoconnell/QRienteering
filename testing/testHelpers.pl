@@ -142,6 +142,23 @@ sub remove_nre_classes {
   unlink($nre_class_file);
 }
 
+sub set_untimed_controls {
+  my($key, $event, %course_untimed_controls) = @_;
+  my($untimed_entries_file) = get_base_path($key) . "/${event}/untimed_controls";
+  open(UNTIMED_FILE, ">$untimed_entries_file");
+  my($this_key);
+  foreach $this_key (keys(%course_untimed_controls)) {
+    print UNTIMED_FILE "${this_key};" . $course_untimed_controls{$this_key} . "\n";
+  }
+  close(UNTIMED_FILE);
+}
+
+sub remove_untimed_controls {
+  my($key, $event) = @_;
+  my($untimed_entries_file) = get_base_path($key) . "/${event}/untimed_controls";
+  unlink($untimed_entries_file);
+}
+
 sub set_default_timezone {
   my($key, $default_timezone) = @_;
   my($timezone_file) = get_base_path($key) . "/timezone.txt";
