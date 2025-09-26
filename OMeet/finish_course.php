@@ -221,18 +221,18 @@ if (!file_exists("{$controls_found_path}/finish")) {
       $forgiven_time = 0;
       foreach ($controls_done as $this_control) {
         $control_info = explode(",", $this_control);  // format is timestamp,control
-	if (isset($untimed_controls_for_course[$control_info[1]])) {
+        if (isset($untimed_controls_for_course[$control_info[1]])) {
           $this_leg_split = $control_info[0] - $prior_control_time;
           $max_forgiven_time = $untimed_controls_for_course[$control_info[1]];
 
-	  if ($this_leg_split <= $max_forgiven_time) {
+          if ($this_leg_split <= $max_forgiven_time) {
             $forgiven_time += $this_leg_split;
-	  }
-	  else {
+          }
+          else {
             $forgiven_time += $max_forgiven_time;
-	  }
-	$prior_control_time = $control_info[0];
-	}
+          }
+        }
+        $prior_control_time = $control_info[0];
       }
 
       $time_taken -= $forgiven_time;

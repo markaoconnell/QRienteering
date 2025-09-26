@@ -83,7 +83,7 @@ foreach ($course_list as $one_course) {
     }
 
     $formatted_start_time = date("H:i:s", $splits_array["start"]);
-    $formatted_end_time = date("H:i:s", $splits_array["finish"]);
+    $formatted_end_time = date("H:i:s", $splits_array["finish"] - $splits_array["forgiven_time"]);
 
     $csv_array[] = $this_si_stick;
     $csv_array[] = ""; // Database ID

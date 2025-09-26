@@ -538,7 +538,19 @@ function get_splits_for_download($competitor_id, $event, $key) {
           $control_was_punched = true;
 
           $this_split = $later_control_info[0] - $prior_control_time;
-          $cumulative_time = $later_control_info[0] - $start_time;
+          if (isset($untimed_controls_for_course[$later_control_info[1]])) {
+            // This is an untimed control - eliminate this split unless it is more than the maximum allowed
+            $maximum_forgiven_time = $untimed_controls_for_course[$later_control_info[1]];
+            if ($this_split <= $maximum_forgiven_time) {
+              $forgiven_time += $this_split;
+              $this_split = 0;
+            }
+            else {
+              $forgiven_time += $maximum_forgiven_time;
+              $this_split -= $maximum_forgiven_time;
+            }
+          }
+          $cumulative_time = $later_control_info[0] - $start_time - $forgiven_time;
           //$time_at_control[$i] = $later_control_info[0];
           //$split_times[$i] = $time_at_control[$i] - $prior_control_time;
           //$cumulative_time[$i] = $time_at_control[$i] - $start_time;

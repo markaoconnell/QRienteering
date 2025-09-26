@@ -598,7 +598,7 @@ sub finish_with_stick_successfully_internal {
   #}
   
   my(@start_time_array) = file_get_contents("$controls_found_path/start");
-  my($results_file) = sprintf("%04d,%06d,%s", 0, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
+  my($results_file) = sprintf("%04d,%06d,%s", 0, (int($file_contents_array[0]) - int($start_time_array[0]) - $adjustment), $competitor_id);
   
   
   my($results_dir) = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Results/${course}";

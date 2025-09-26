@@ -117,7 +117,7 @@ foreach ($course_list as $one_course) {
 
     xmlwriter_start_element($xw, "Result");
     add_text_element($xw, "StartTime",  iso8601($splits_array["start"]));
-    add_text_element($xw, "FinishTime",  iso8601($splits_array["finish"]));
+    add_text_element($xw, "FinishTime",  iso8601($splits_array["finish"] - $splits_array["forgiven_time"]));
     add_text_element($xw, "Time", ltrim($this_result["raw_time"], "0"));
     add_text_element($xw, "Position", "{$place}");
     add_text_element($xw, "Status", $this_result["dnf"] ? "MissingPunch" : "OK");

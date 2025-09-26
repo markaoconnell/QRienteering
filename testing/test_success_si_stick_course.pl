@@ -197,7 +197,7 @@ $REGISTRATION_INFO{"last_name"} = "LeMonde";
 $GET{"competitor_name"} = "Tout--space--LeMonde";
 %COOKIE = ();  # empty hash
 
-my(%untimed_entries_hash) = qw(01-Yellow, 206:60);
+my(%untimed_entries_hash) = qw(01-Yellow 206:60);
 set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
 
 register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
@@ -234,7 +234,7 @@ $REGISTRATION_INFO{"last_name"} = "LeMonde";
 $GET{"competitor_name"} = "Tout--space--LeMonde";
 %COOKIE = ();  # empty hash
 
-my(%untimed_entries_hash) = qw(01-Yellow, 202:180);
+my(%untimed_entries_hash) = qw(01-Yellow 204:180);
 set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
 
 register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
@@ -270,7 +270,7 @@ $REGISTRATION_INFO{"last_name"} = "LeMonde";
 $GET{"competitor_name"} = "Tout--space--LeMonde";
 %COOKIE = ();  # empty hash
 
-my(%untimed_entries_hash) = qw(01-Yellow, 204:90 208:120);
+my(%untimed_entries_hash) = qw(01-Yellow 204:90,208:120);
 set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
 
 register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
@@ -284,7 +284,7 @@ $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
 $GET{"si_stick_finish"} = $base_64_results;
 
 
-finish_with_stick_successfully_with_untimed_controls($competitor_id, "3959473", "01-Yellow", 99, \%GET, \%COOKIE, \%TEST_INFO);
+finish_with_stick_successfully_with_untimed_controls($competitor_id, "3959473", "01-Yellow", 159, \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
 validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000910,202");
 validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001030,204");
@@ -307,7 +307,7 @@ $REGISTRATION_INFO{"last_name"} = "LeMonde";
 $GET{"competitor_name"} = "Tout--space--LeMonde";
 %COOKIE = ();  # empty hash
 
-my(%untimed_entries_hash) = qw(01-Yellow, 304:90 308:120);
+my(%untimed_entries_hash) = qw(01-Yellow 304:90,308:120);
 set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
 
 register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
@@ -328,6 +328,60 @@ validate_file_present("${path}/Competitors/${competitor_id}/controls_found/00103
 validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001200,206");
 validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001269,208");
 validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001403,210");
+
+success();
+
+#################
+# Test 10 - Can we get the winsplits results?
+
+%TEST_INFO = qw(Testname GetNreWinsplitsResults);
+%GET = qw(key UnitTestPlayground show_as_html 1);
+$GET{"event"} = $event_id;
+%COOKIE = ();
+
+my(%untimed_entries_hash) = qw(01-Yellow 204:90,208:120);
+set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
+
+hashes_to_artificial_file();
+my($cmd) = "php ../OMeetMgmt/download_results_csv.php";
+my($output);
+$output = qx($cmd);
+
+my($actual_table_rows);
+$actual_table_rows = () = $output =~ /(;Yellow;)/g;
+
+if ($output !~ /White;0;;5;2;\d+:\d+:\d+;\d+:\d+:\d+;201;\d+:\d\d;202;\d+:\d\d;203;-----;204;-----;205;-----;/) {
+  error_and_exit("Did not find expected splits output.\n$output");
+}
+
+# 4 results should appear
+if ($actual_table_rows != 10) {
+  error_and_exit("Found $actual_table_rows instead of 10 in results output for Yellow course.\n$output");
+}
+
+success();
+
+#################
+# Test 11 - Can we get the IOFXML results?
+
+%TEST_INFO = qw(Testname GetNreIofXMLResults);
+%GET = qw(key UnitTestPlayground);
+$GET{"event"} = $event_id;
+
+%COOKIE = ();
+hashes_to_artificial_file();
+
+my($cmd) = "php ../OMeetMgmt/download_results_iofxml.php";
+my($output);
+$output = qx($cmd);
+
+my($actual_control_lines);
+$actual_control_lines = () = $output =~ /(<ControlCode>)/g;
+
+# 4 results should appear
+if ($actual_control_lines != 35) {
+  error_and_exit("Found $actual_control_lines instead of 35 in results output.\n$output");
+}
 
 success();
 
