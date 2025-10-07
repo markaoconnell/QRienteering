@@ -248,7 +248,6 @@ echo "<input type=\"text\" size=50 name=\"email\" {$presupplied_email_address} >
 //
 if ($using_nre_classes && (!$classification_info_supplied || ($classification_info_hash["CLASS"] == ""))) {
   echo "<br><br><p>If you would like your time to count for national ranking purposes, please enter your birth year and gender.\n";
-  echo "<p>Please leave blank (unspecified) if you are orienteering recreationally or going out in a group (more than 1 person).\n";
 
   echo "<p>(Optional) Birth year (for ranking purposes), please use 4 digits, e.g. 1973, 2001, etc.<br>\n";
   if ($classification_info_supplied && ($classification_info_hash["BY"] != "")) {

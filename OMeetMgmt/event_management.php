@@ -127,6 +127,7 @@ if (isset($_GET["remove_preregistrations"]) && ($_GET["remove_preregistrations"]
 }
 
 if (isset($_POST["upload_preregistrants"])) {
+  $good_entries = array();
   if ($_FILES["prereg_file"]["size"] > 0) {
     $prereg_file = file($_FILES["prereg_file"]["tmp_name"], FILE_IGNORE_NEW_LINES);
     $prereg_entries = array_map(function ($elt) { return (explode(",", $elt)); }, $prereg_file);
@@ -144,7 +145,6 @@ if (isset($_POST["upload_preregistrants"])) {
 			array("offset" => 10, "field_name" => "class", "validator" => "validate_class", "optional" => true),
 			array("offset" => 11, "field_name" => "award_eligibility", "validator" => "validate_award_eligibility", "optional" => true));
 
-    $good_entries = array();
     foreach ($prereg_entries as $this_entry) {
       $entry_is_ok = true;
       $entry_string = "";
