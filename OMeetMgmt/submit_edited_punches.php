@@ -349,6 +349,19 @@ if ($error_string == "") {
     $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $new_competitor_id);
     file_put_contents("{$results_path}/{$new_course}/{$result_filename}", "");
 
+      // Update the NRE class result also, if there is one
+    if (event_is_using_nre_classes($event, $key) && competitor_has_class($new_competitor_path)) {
+      $results_per_class_path = get_results_per_class_path($event, $key);
+      $result_class = get_class_for_competitor($new_competitor_path);
+      if (!file_exists($results_per_class_path)) {
+        mkdir($results_per_class_path);
+      }
+      if (!file_exists("{$results_per_class_path}/{$result_class}")) {
+        mkdir("{$results_per_class_path}/{$result_class}");
+      }
+      file_put_contents("{$results_per_class_path}/{$result_class}/{$result_filename}", "");
+    }
+
     $readable_course_name = ltrim($new_course, "0..9-");
     $output_string .= "<p class=\"title\">Results for: {$new_competitor_name}, course complete ({$readable_course_name}{$dnf_string}), time taken " . formatted_time($time_taken) . "<p><p>";
 

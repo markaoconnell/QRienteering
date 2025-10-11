@@ -391,8 +391,8 @@ function get_all_class_result_links($event, $key, $classification_info) {
   foreach ($valid_classes_for_event as $this_class) {
     if (!isset($processed_classes[$this_class[5]])) {
       $course_for_class = $course_hash[$this_class[0]];
-      $links_string .= "<a href=\"../OMeet/view_results.php?event={$event}&key={$key}&course={$course_for_class}&class={$this_class[5]}&per_class=1\">" .
-	      "{$this_class[0]}:{$this_class[5]}</a> \n";
+      $links_string .= "<a href=\"../OMeet/view_results.php?event={$event}&key={$key}&course={$course_for_class}&class=" .
+	      urlencode($this_class[5]) . "&per_class=1\">" . "{$this_class[0]}:{$this_class[5]}</a> \n";
       $processed_classes[$this_class[5]] = 1;
     }
   }
