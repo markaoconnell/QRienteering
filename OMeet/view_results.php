@@ -7,7 +7,7 @@ require '../OMeetCommon/course_properties.php';
 
 function is_event($filename) {
   global $base_path;
-  return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
+  return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && (!file_exists("{$base_path}/{$filename}/done") || stat("{$base_path}/{$filename}/done")["mtime"] > (time() - 86400 * 2)));  // Should be configurable rather than hardcoded two days
 }
 
 function name_to_link($event_id) {

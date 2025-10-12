@@ -31,9 +31,9 @@ foreach (array_keys($_GET) as $is_this_an_event) {
   }
 }
 
-if (count($event_list) < 2) {
-  error_and_exit("<p>Only " . count($event_list) . " events selected, must be at least 2 to combine results.\n");
-}
+//if (count($event_list) < 2) {
+//  error_and_exit("<p>Only " . count($event_list) . " events selected, must be at least 2 to combine results.\n");
+//}
 
 // Get the information about the NRE classes
 // This is a little incorrect - this assumes that all the events being combined
