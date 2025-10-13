@@ -221,6 +221,10 @@ if ($error_string == "") {
       }
     }
 
+    if (file_exists("${competitor_path}/award_ineligible")) {
+      file_put_contents("${new_competitor_path}/award_ineligible", "");
+    }
+
     global $TYPE_FIELD, $SCORE_O_COURSE;
 
     $error_string = "";
