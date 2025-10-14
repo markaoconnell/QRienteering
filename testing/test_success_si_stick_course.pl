@@ -186,6 +186,205 @@ validate_file_present("${path}/Competitors/${competitor_id}/controls_found/00233
 success();
 
 
+###########
+# Test 6 - Run a course that has a single untimed entry
+%TEST_INFO = qw(Testname TestCourseWithOneUntimedEntry);
+%GET = qw(key UnitTestPlayground course 01-Yellow);
+$GET{"event"} = $event_id;
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 9688073 email_address mark:@mkoconnell.com cell_phone 7787878 car_info HondaOdyssey is_member no);
+$REGISTRATION_INFO{"first_name"} = "Tout";
+$REGISTRATION_INFO{"last_name"} = "LeMonde";
+$GET{"competitor_name"} = "Tout--space--LeMonde";
+%COOKIE = ();  # empty hash
+
+my(%untimed_entries_hash) = qw(01-Yellow 206:60);
+set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_id = $TEST_INFO{"competitor_id"};
+
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+my(@si_results) = qw(9688073;800 start:800 finish:1484 202:910 204:1030 206:1200 208:1269 210:1403);
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_with_stick_successfully_with_untimed_controls($competitor_id, "9688073", "01-Yellow", 60, \%GET, \%COOKIE, \%TEST_INFO);
+my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000910,202");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001030,204");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001200,206");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001269,208");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001403,210");
+
+success();
+
+
+
+###########
+# Test 7 - Run a course that has a single untimed entry which completely negates a leg
+%TEST_INFO = qw(Testname TestCourseWithOneUntimedEntryMaxLongerThanSplit);
+%GET = qw(key UnitTestPlayground course 01-Yellow);
+$GET{"event"} = $event_id;
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 6148225 email_address mark:@mkoconnell.com cell_phone 7787878 car_info HondaOdyssey is_member no);
+$REGISTRATION_INFO{"first_name"} = "Tout";
+$REGISTRATION_INFO{"last_name"} = "LeMonde";
+$GET{"competitor_name"} = "Tout--space--LeMonde";
+%COOKIE = ();  # empty hash
+
+my(%untimed_entries_hash) = qw(01-Yellow 204:180);
+set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_id = $TEST_INFO{"competitor_id"};
+
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+my(@si_results) = qw(6148225;800 start:800 finish:1484 202:910 204:1030 206:1200 208:1269 210:1403);
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_with_stick_successfully_with_untimed_controls($competitor_id, "6148225", "01-Yellow", 120, \%GET, \%COOKIE, \%TEST_INFO);
+my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000910,202");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001030,204");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001200,206");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001269,208");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001403,210");
+
+success();
+
+
+###########
+# Test 8 - Run a course that has a multiple untimed entries (not sure that this is really realistic)
+%TEST_INFO = qw(Testname TestCourseWithOneMultipleUntimedLegs);
+%GET = qw(key UnitTestPlayground course 01-Yellow);
+$GET{"event"} = $event_id;
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 3959473 email_address mark:@mkoconnell.com cell_phone 7787878 car_info HondaOdyssey is_member no);
+$REGISTRATION_INFO{"first_name"} = "Tout";
+$REGISTRATION_INFO{"last_name"} = "LeMonde";
+$GET{"competitor_name"} = "Tout--space--LeMonde";
+%COOKIE = ();  # empty hash
+
+my(%untimed_entries_hash) = qw(01-Yellow 204:90,208:120);
+set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_id = $TEST_INFO{"competitor_id"};
+
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+my(@si_results) = qw(3959473;800 start:800 finish:1484 202:910 204:1030 206:1200 208:1269 210:1403);
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_with_stick_successfully_with_untimed_controls($competitor_id, "3959473", "01-Yellow", 159, \%GET, \%COOKIE, \%TEST_INFO);
+my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000910,202");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001030,204");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001200,206");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001269,208");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001403,210");
+
+success();
+
+
+
+###########
+# Test 9 - Make a mistake - enter an untimed control which is not on the course, should do nothing
+%TEST_INFO = qw(Testname TestCourseWithIncorrectUntimedControl);
+%GET = qw(key UnitTestPlayground course 01-Yellow);
+$GET{"event"} = $event_id;
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 141421 email_address mark:@mkoconnell.com cell_phone 7787878 car_info HondaOdyssey is_member no);
+$REGISTRATION_INFO{"first_name"} = "Tout";
+$REGISTRATION_INFO{"last_name"} = "LeMonde";
+$GET{"competitor_name"} = "Tout--space--LeMonde";
+%COOKIE = ();  # empty hash
+
+my(%untimed_entries_hash) = qw(01-Yellow 304:90,308:120);
+set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_id = $TEST_INFO{"competitor_id"};
+
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+my(@si_results) = qw(141421;800 start:800 finish:1484 202:910 204:1030 206:1200 208:1269 210:1403);
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_with_stick_successfully_with_untimed_controls($competitor_id, "141421", "01-Yellow", 0, \%GET, \%COOKIE, \%TEST_INFO);
+my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/000910,202");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001030,204");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001200,206");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001269,208");
+validate_file_present("${path}/Competitors/${competitor_id}/controls_found/001403,210");
+
+success();
+
+#################
+# Test 10 - Can we get the winsplits results?
+
+%TEST_INFO = qw(Testname GetNreWinsplitsResults);
+%GET = qw(key UnitTestPlayground show_as_html 1);
+$GET{"event"} = $event_id;
+%COOKIE = ();
+
+my(%untimed_entries_hash) = qw(01-Yellow 204:90,208:120);
+set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
+
+hashes_to_artificial_file();
+my($cmd) = "php ../OMeetMgmt/download_results_csv.php";
+my($output);
+$output = qx($cmd);
+
+my($actual_table_rows);
+$actual_table_rows = () = $output =~ /(;Yellow;)/g;
+
+if ($output !~ /White;0;;5;2;\d+:\d+:\d+;\d+:\d+:\d+;201;\d+:\d\d;202;\d+:\d\d;203;-----;204;-----;205;-----;/) {
+  error_and_exit("Did not find expected splits output.\n$output");
+}
+
+# 4 results should appear
+if ($actual_table_rows != 10) {
+  error_and_exit("Found $actual_table_rows instead of 10 in results output for Yellow course.\n$output");
+}
+
+success();
+
+#################
+# Test 11 - Can we get the IOFXML results?
+
+%TEST_INFO = qw(Testname GetNreIofXMLResults);
+%GET = qw(key UnitTestPlayground);
+$GET{"event"} = $event_id;
+
+%COOKIE = ();
+hashes_to_artificial_file();
+
+my($cmd) = "php ../OMeetMgmt/download_results_iofxml.php";
+my($output);
+$output = qx($cmd);
+
+my($actual_control_lines);
+$actual_control_lines = () = $output =~ /(<ControlCode>)/g;
+
+# 4 results should appear
+if ($actual_control_lines != 35) {
+  error_and_exit("Found $actual_control_lines instead of 35 in results output.\n$output");
+}
+
+success();
+
 
 
 ############

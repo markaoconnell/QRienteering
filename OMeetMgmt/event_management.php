@@ -68,6 +68,14 @@ function validate_class($string) {
   return("");
 }
 
+function validate_award_eligibility($string) {
+  $testing_string = strtolower($string);
+  if (!(($testing_string == "y") || ($testing_string == "n") || ($testing_string == "yes") || ($testing_string == "no"))) {
+    return("Award eligibility must be either \"y\" or \"n\"");
+  }
+  return("");
+}
+
 $output_string = "";
 
 echo get_web_page_header(true, false, false);
@@ -119,6 +127,7 @@ if (isset($_GET["remove_preregistrations"]) && ($_GET["remove_preregistrations"]
 }
 
 if (isset($_POST["upload_preregistrants"])) {
+  $good_entries = array();
   if ($_FILES["prereg_file"]["size"] > 0) {
     $prereg_file = file($_FILES["prereg_file"]["tmp_name"], FILE_IGNORE_NEW_LINES);
     $prereg_entries = array_map(function ($elt) { return (explode(",", $elt)); }, $prereg_file);
@@ -133,9 +142,9 @@ if (isset($_POST["upload_preregistrants"])) {
                         array("offset" => 7, "field_name" => "waiver_signed", "validator" => "validate_waiver", "optional" => true),
                         array("offset" => 8, "field_name" => "birth_year", "validator" => "validate_birth_year", "optional" => true),
                         array("offset" => 9, "field_name" => "gender", "validator" => "validate_gender", "optional" => true),
-			array("offset" => 10, "field_name" => "class", "validator" => "validate_class", "optional" => true));
+			array("offset" => 10, "field_name" => "class", "validator" => "validate_class", "optional" => true),
+			array("offset" => 11, "field_name" => "award_eligibility", "validator" => "validate_award_eligibility", "optional" => true));
 
-    $good_entries = array();
     foreach ($prereg_entries as $this_entry) {
       $entry_is_ok = true;
       $entry_string = "";
@@ -244,7 +253,7 @@ $output_string .= "<p>File format is .csv (comma separated fields), first name a
 $output_string .= "<p>Field order is:\n";
 $output_string .= "<ul><li>First name<li>Last name<li>Course<li>E punch id (si unit)<li>cell phone<li>email address\n";
 $output_string .= "<li>orienteering club name<li>presigned waiver (yes or leave blank)<li>year of birth (4 digits)\n";
-$output_string .= "<li>gender (m or f)<li>class (e.g. M55+, F-18, etc)</ul>\n";
+$output_string .= "<li>gender (m or f)<li>class (e.g. M55+, F-18, etc)<li>Eligible For Award (y/n)</ul>\n";
 $output_string .= "<p>File to upload: \n";
 $output_string .= "<input type=file name=\"prereg_file\" accept=\".csv\">\n";
 if ($preregistration_currently_allowed) {

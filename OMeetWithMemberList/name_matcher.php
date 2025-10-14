@@ -2,11 +2,11 @@
 
 $MAX_CHECK_DISTANCE = 3;
 
-// member_id;first;last;si_stick;email;cell_phone;
+// member_id;first;last;si_stick;email;cell_phone;birth_year;gender;member_type;school;club
 // Read in the members together with si_stick, if they have one
 // Results
 // Hash from si_stick -> member
-// Hash from member-> hash(first -> , last ->, full_name ->, si_stick->, email->, cell_phone->, birth_year->, gender->)
+// Hash from member-> hash(first -> , last ->, full_name ->, si_stick->, email->, cell_phone->, birth_year->, gender->, club_name ->, school_name -> )
 // Hash from last -> member list
 // Hash from full_name -> member_id (assumes unique names amongst the membership)
 // Hash of equivalent nicknames
@@ -35,6 +35,9 @@ function read_names_info($member_file, $nicknames_file) {
       $cell_phone = isset($pieces[5]) ? $pieces[5] : "";
       $birth_year = isset($pieces[6]) ? $pieces[6] : "";
       $gender = isset($pieces[7]) ? $pieces[7] : "";
+      $member_type = isset($pieces[8]) ? $pieces[8] : "";
+      $school_name = isset($pieces[9]) ? $pieces[9] : "";
+      $club_name = isset($pieces[10]) ? $pieces[10] : "";
       if (!isset($full_name_hash[$lower_case_full_name])) {
         $member_hash[$pieces[0]] = array("first" => $pieces[1],
                                          "last" => $pieces[2],
@@ -44,9 +47,18 @@ function read_names_info($member_file, $nicknames_file) {
 					 "cell_phone" => $cell_phone,
 	                                 "birth_year" => $birth_year,
 					 "gender" => $gender,
+					 "member_type" => $member_type,
+					 "club_name" => $club_name,
+					 "school_name" => $school_name,
 	                                 "optimized_lookup_key" => $elt_key);
         $last_name_hash[strtolower($pieces[2])][] = $pieces[0]; 
         $full_name_hash[$lower_case_full_name] = $pieces[0];
+      }
+      else {
+        // If there is a duplicate id (same name, same SI), then update the SI hash to point to the member entry
+        if ($pieces[3] != "") {
+          $si_hash[$pieces[3]] = $full_name_hash[$lower_case_full_name];
+        }
       }
     }
   }
@@ -92,6 +104,9 @@ function quick_get_member($quick_lookup_member_id, $member_file) {
         $cell_phone = isset($pieces[5]) ? $pieces[5] : "";
         $birth_year = isset($pieces[6]) ? $pieces[6] : "";
         $gender = isset($pieces[7]) ? $pieces[7] : "";
+        $member_type = isset($pieces[8]) ? $pieces[8] : "";
+        $school_name = isset($pieces[9]) ? $pieces[9] : "";
+        $club_name = isset($pieces[10]) ? $pieces[10] : "";
         return(array("first" => $pieces[1],
                      "last" => $pieces[2],
                      "full_name" => "{$pieces[1]} {$pieces[2]}",
@@ -100,6 +115,9 @@ function quick_get_member($quick_lookup_member_id, $member_file) {
                      "cell_phone" => $cell_phone,
 	             "birth_year" => $birth_year,
                      "gender" => $gender,
+		     "member_type" => $member_type,
+		     "club_name" => $club_name,
+		     "school_name" => $school_name,
 	             "optimized_lookup_key" => $lookup_pieces[0]));
       }
     }
@@ -125,6 +143,14 @@ function get_member_name_info($member_id, $matching_info) {
 
 function get_member_email($member_id, $matching_info) {
   return($matching_info["members_hash"][$member_id]["email"]);
+}
+
+function get_member_club($member_id, $matching_info) {
+  return($matching_info["members_hash"][$member_id]["club_name"]);
+}
+
+function get_member_school($member_id, $matching_info) {
+  return($matching_info["members_hash"][$member_id]["school_name"]);
 }
 
 function get_member_cell_phone($member_id, $matching_info) {

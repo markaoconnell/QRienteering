@@ -6,6 +6,10 @@ require '../OMeetCommon/results_routines.php';
 require '../OMeetCommon/course_properties.php';
 require '../OMeetCommon/generate_splits_output.php';
 require 'si_stick_finish.php';
+require '../OMeetCommon/email_support.php';
+require '../OMeetCommon/PHPMailer/Exception.php';
+require '../OMeetCommon/PHPMailer/PHPMailer.php';
+require '../OMeetCommon/PHPMailer/SMTP.php';
 
 ck_testing();
 
@@ -106,7 +110,7 @@ $controls_found_path = "{$competitor_path}/controls_found";
 $courses_path = get_courses_path($event, $key, "..");
 $results_path = get_results_path($event, $key, "..");
 if (!file_exists($competitor_path) || !file_exists("{$courses_path}/{$course}/controls.txt")) {
-  error_and_exit("<p>ERROR: Event \"{$event}\" or competitor \"{$competitor}\" appears to be no longer appears valid, please re-register and try again.\n");
+  error_and_exit("<p>ERROR: Event \"{$event}\" or competitor \"{$competitor_id}\" appears to be no longer appears valid, please re-register and try again.\n");
 }
 
 if (file_exists("{$competitor_path}/si_stick") && !isset($_GET["si_stick_finish"])) {
@@ -146,6 +150,7 @@ if (!file_exists("{$controls_found_path}/start")) {
   }
 }
 
+$score_penalty_msg = "";
 if (!file_exists("{$controls_found_path}/finish")) {
   // See how many controls have been completed
   $controls_done = scandir("./{$controls_found_path}");
@@ -185,7 +190,6 @@ if (!file_exists("{$controls_found_path}/finish")) {
   // For each control, look up its point value in the associative array and sum the total points
   // TODO: Must de-dup the controls found - Don't doublecount the points!!
   if ($score_course) {
-    $score_penalty_msg = "";
     $unique_controls = array_unique($controls_found);
     //$total_score = calculate_score($unique_controls, $controls_points_hash);
     $total_score = array_reduce($unique_controls, function ($carry, $elt) use ($controls_points_hash) { return($carry + $controls_points_hash[$elt]); }, 0);
@@ -206,6 +210,32 @@ if (!file_exists("{$controls_found_path}/finish")) {
     $total_score = count($controls_found);
     if ($has_skipped_controls && !$untimed_run) {
       $total_score += count($controls_ok_array);
+    }
+    // Check for untimed controls and adjust the total time accordingly
+    $untimed_controls = get_untimed_controls($event, $key);
+    $untimed_controls_for_course = array();
+    if (isset($untimed_controls[$course])) {
+      $untimed_controls_for_course = untimed_control_entry_to_hash($untimed_controls[$course]);
+      // This course has one or more untimed controls, see how long was spent at each
+      $prior_control_time = $course_started_at;
+      $forgiven_time = 0;
+      foreach ($controls_done as $this_control) {
+        $control_info = explode(",", $this_control);  // format is timestamp,control
+        if (isset($untimed_controls_for_course[$control_info[1]])) {
+          $this_leg_split = $control_info[0] - $prior_control_time;
+          $max_forgiven_time = $untimed_controls_for_course[$control_info[1]];
+
+          if ($this_leg_split <= $max_forgiven_time) {
+            $forgiven_time += $this_leg_split;
+          }
+          else {
+            $forgiven_time += $max_forgiven_time;
+          }
+        }
+        $prior_control_time = $control_info[0];
+      }
+
+      $time_taken -= $forgiven_time;
     }
   }
 
@@ -282,27 +312,20 @@ if ($score_course && ($score_penalty_msg != "")) {
 }
 
 echo "{$parseable_result_string}\n-->\n";
-echo show_results($event, $key, $course, "", $score_course, $max_score, array());
+echo show_results($event, $key, $course, "", $score_course, $max_score, array(), false);
 echo get_all_course_result_links($event, $key);
 
 // echo "<p>Course started at ${course_started_at}, course finished at ${now}, difference is ${time_taken}.\n";
 
 if ($has_registration_info) {
   $email_properties = get_email_properties(get_base_path($key, ".."));
-  //print_r($email_properties);
+  // print_r($email_properties);
   $email_enabled = isset($email_properties["from"]) && isset($email_properties["reply-to"]) && !$suppress_email;
   if (($registration_info["email_address"] != "") && $email_enabled) {
     // See if this looks like a valid email
     // Make sure to escape anything that could be a funky html character
     $email_addr = htmlentities($registration_info["email_address"], ENT_QUOTES, 'iso8859-1');
     if (preg_match("/^[a-zA-z0-9_.\-]+@[a-zA-Z0-9_.\-]+/", $email_addr)) {
-      $headers = array();
-      $headers[] = "From: " . $email_properties["from"];
-      $headers[] = "Reply-To: ". $email_properties["reply-to"];
-      $headers[] = "MIME-Version: 1.0";
-      $headers[] = "Content-type: text/html; charset=iso-8859-1";
-
-      $header_string = implode("\r\n", $headers);
 
       $course_description = file_get_contents(get_event_path($event, $key, "..") . "/description");
       $email_extra_info_file = get_email_extra_info_file(get_base_path($key, ".."));
@@ -344,19 +367,7 @@ if ($has_registration_info) {
         $subject = "Orienteering Results";
       }
 
-      if (isset($email_properties["extra_params"]) && ($email_properties["extra_params"] != "")) {
-        $email_send_result = mail($email_addr, $subject, $body_string, $header_string, $email_properties["extra_params"]);
-      }
-      else {
-        $email_send_result = mail($email_addr, $subject, $body_string, $header_string);
-      }
-
-      if ($email_send_result) {
-        echo "<p>Mail: Sent results to {$email_addr}.\n";
-      }
-      else {
-        echo "<p>Mail: Failed when sending results to {$email_addr}\n";
-      }
+      send_email($email_addr, $subject, $body_string, $email_properties);
     }
     else {
       echo "<p>Mail: {$email_addr} looks fake, no result email attempted.\n";

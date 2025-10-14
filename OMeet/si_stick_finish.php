@@ -143,9 +143,13 @@ function validate_and_save_results($event, $key, $competitor, $si_stick, $start_
   // Do NOT save the finish time, as the finish_course will do that
   if (file_exists("{$competitor_path}/mass_si_stick_start")) {
     if ($start_pieces[1] != 0) {
-      // HMMMM, this shouldn't happen, error somehow
+      // The person was mass started, but has a start punch - assume that they started the course early
+      // and use their existing start punch.  If this is wrong it can be fixed later.
+      file_put_contents("{$competitor_path}/controls_found/start", $start_pieces[1]);
     }
-    file_put_contents("{$competitor_path}/controls_found/start", file_get_contents("{$competitor_path}/mass_si_stick_start"));
+    else {
+      file_put_contents("{$competitor_path}/controls_found/start", file_get_contents("{$competitor_path}/mass_si_stick_start"));
+    }
   }
   else {
     file_put_contents("{$competitor_path}/controls_found/start", $start_pieces[1]);

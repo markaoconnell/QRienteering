@@ -33,7 +33,14 @@ function get_course_properties($course_path) {
 
 function get_email_properties($base_path) {
   if (file_exists("{$base_path}/email_properties.txt")) {
-    return(get_properties("{$base_path}/email_properties.txt", true));
+    $email_properties = get_properties("{$base_path}/email_properties.txt", true);
+    // Be extra careful with the password.  Allow it to be in a different (more private) part of the tree
+    // so that someone browsing the filesystem with the browser cannot accidentally (or purposefully) get the
+    // password!
+    if (isset($email_properties["email_sender_password_file"]) && !isset($email_properties["email_sender_password"])) {
+      $email_properties["email_sender_password"] = trim(file_get_contents($email_properties["email_sender_password_file"]));
+    }
+    return ($email_properties);
   }
 
   return(array());

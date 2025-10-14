@@ -85,7 +85,7 @@ if (isset($_GET["mumble"]) && ($_GET["mumble"] != "")) {
   $control_id_for_display = xlate_control_id_for_display($key, $event, $control_id);
   $encoded_competitor_id = $pieces[1];
   $time_of_page_access = $pieces[2];
-  $skip_adding_control_as_extra = ($pieces[3] == "redo");
+  $skip_adding_control_as_extra = (isset($pieces[3]) ? ($pieces[3] == "redo") : false);
 
   if ($encoded_competitor_id != $competitor_id) {
     error_and_exit("<p>ERROR: Competitor mismatch, possible replay of earlier scan?\n");
@@ -144,6 +144,7 @@ $start_time = file_get_contents("./{$controls_found_path}/start");
 $time_on_course = $time_now - $start_time;
 $extra_info_msg = "";
 $append_finish_message = false;
+$control_extra_info = get_control_extra_info(get_event_path($event, $key), $control_id);
 // echo "<br>Controls done on the ${course} course.<br>\n";
 // print_r($controls_done);
 
@@ -367,6 +368,10 @@ echo "<br><p>Time on course is: " . formatted_time($time_on_course) . "\n";
 
 if ($extra_info_msg != "") {
   echo $extra_info_msg;
+}
+
+if ($control_extra_info != "") {
+  echo "<p><p>{$control_extra_info}";
 }
 
 echo get_web_page_footer();

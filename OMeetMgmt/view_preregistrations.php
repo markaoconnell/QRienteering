@@ -22,16 +22,16 @@ function get_course_hash($event, $key) {
 }
 
 function register_competitor($entrant_info) {
-  global $key, $event, $course_hash;
+  global $key, $event, $course_hash, $show_id_for_auto_start;
 
   //print_r($entrant_info);
 
   if (!isset($course_hash[$entrant_info["course"]])) {
-    return(array("ERROR", "Invalid course {$entrant_info["course"]} for entrant {$entrant_info["first name"]} {$entrant_info["last_name"]}"));
+    return(array("ERROR", "Invalid course {$entrant_info["course"]} for entrant {$entrant_info["first_name"]} {$entrant_info["last_name"]}"));
   }
 
   if (!isset($entrant_info["stick"]) || ($entrant_info["stick"] == "")) {
-    return(array("ERROR", "No si unit specified for entrant {$entrant_info["first name"]} {$entrant_info["last_name"]}"));
+    return(array("ERROR", "No si unit specified for entrant {$entrant_info["first_name"]} {$entrant_info["last_name"]}"));
   }
 
   // Get the unique id for the competitor
@@ -78,6 +78,7 @@ function register_competitor($entrant_info) {
   $birth_year = isset($entrant_info["birth_year"]) ? $entrant_info["birth_year"] : "";
   $gender = isset($entrant_info["gender"]) ? $entrant_info["gender"] : "";
   $competitive_class = isset($entrant_info["class"]) ? $entrant_info["class"] : "";
+  $award_eligibility = isset($entrant_info["award_eligibility"]) ? $entrant_info["award_eligibility"] : "";
   $classification_info = encode_entrant_classification_info($birth_year, $gender, $competitive_class);
 
   $registration_info = implode(",", array("email_address", base64_encode($email_address),
@@ -88,8 +89,14 @@ function register_competitor($entrant_info) {
                                           "cell_phone", base64_encode($cell_phone),
                                           "club_name", base64_encode($club_name),
                                           "waiver_signed", base64_encode($waiver_signed),
+                                          "award_eligibility", base64_encode($award_eligibility),
                                           "classification_info", base64_encode($classification_info)));
   file_put_contents("{$competitor_path}/registration_info", $registration_info);
+
+  $lower_case_award_eligibility = strtolower($award_eligibility);
+  if (($lower_case_award_eligibility == "n") || ($lower_case_award_eligibility == "no")) {
+    file_put_contents("{$competitor_path}/award_ineligible", "");
+  }
 
 
   //echo "<p>Setting NRE info : ${competitor_id} for {$saved_competitor_name}\n";
@@ -114,7 +121,7 @@ function register_competitor($entrant_info) {
   }
 
   //echo "<p>All seems ok for : ${competitor_id} for {$saved_competitor_name}\n";
-  return(array("OK", "Registered {$first_name} {$last_name} on {$entrant_info["course"]}" .
+  return(array("OK", "Registered {$first_name} {$last_name}" . ($show_id_for_auto_start ?  "--{$competitor_id}--" : "" ) . " on {$entrant_info["course"]}" .
 	                  (($competitive_class != "") ? " ({$competitive_class})" : "")));
 }
 
@@ -142,6 +149,7 @@ if (!is_dir($event_path)) {
   error_and_exit("No event directory found, is \"{$event}\" from a valid link?\n");
 }
 
+$show_id_for_auto_start = isset($_GET["auto_start_show_id"]) && ($_GET["auto_start_show_id"] == "true");
 $auto_start = isset($_GET["auto_start"]) && ($_GET["auto_start"] == "true");
 $course_hash = array();
 if ($auto_start) {
@@ -180,6 +188,7 @@ if ($preregistration_currently_allowed) {
       $fields[] = isset($entrant_info["birth_year"]) ? $entrant_info["birth_year"] : "";
       $fields[] = isset($entrant_info["gender"]) ? $entrant_info["gender"] : "";
       $fields[] = isset($entrant_info["class"]) ? $entrant_info["class"] : "";
+      $fields[] = isset($entrant_info["award_eligibility"]) ? $entrant_info["award_eligibility"] : "";
       $output_string .= "<p>" . implode(",", $fields) . "\n";
     }
   }

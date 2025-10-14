@@ -37,6 +37,11 @@ function artificial_input_file_parse() {
           $_POST[$this_line_elements[1]] = $post_processed_value;
         }
       }
+      else if (count($this_line_elements) == 4) {
+        if ($this_line_elements[0] == "FILES") {
+          $_FILES[$this_line_elements[1]][$this_line_elements[2]] = $this_line_elements[3];
+	}
+      }
     }
   }
 }

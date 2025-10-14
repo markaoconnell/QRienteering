@@ -7,7 +7,7 @@ require '../OMeetCommon/course_properties.php';
 
 function is_event($filename) {
   global $base_path;
-  return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && !file_exists("{$base_path}/{$filename}/done"));
+  return ((substr($filename, 0, 6) == "event-") && is_dir("{$base_path}/{$filename}") && (!file_exists("{$base_path}/{$filename}/done") || stat("{$base_path}/{$filename}/done")["mtime"] > (time() - 86400 * 2)));  // Should be configurable rather than hardcoded two days
 }
 
 function name_to_link($event_id) {
@@ -33,6 +33,9 @@ $download_csv = ($download_csv_flag != "");
 
 $only_course_list = isset($_GET["only_course_list"]) ? $_GET["only_course_list"] : "";
 $only_return_course_list = ($only_course_list != "");
+
+$show_school_and_club_flag = isset($_GET["show_school_and_club"]) ? $_GET["show_school_and_club"] : "";
+$show_school_and_club = ($show_school_and_club_flag != "");
 
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
@@ -165,7 +168,7 @@ foreach ($course_list as $one_course) {
         $results_string .= get_csv_results($event, $key, $one_course, $this_class, $score_course, $max_score, $base_course_list);
       }
       else {
-        $results_string .= show_results($event, $key, $one_course, $this_class, $score_course, $max_score, $base_course_list);
+        $results_string .= show_results($event, $key, $one_course, $this_class, $score_course, $max_score, $base_course_list, $show_school_and_club);
       }
     }
   }

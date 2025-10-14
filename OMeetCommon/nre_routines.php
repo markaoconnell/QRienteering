@@ -20,6 +20,16 @@ function event_is_using_nre_classes($event, $key) {
   return(file_exists(get_event_path($event, $key) . "/using_nre_classes"));
 }
 
+function get_award_eligibility_prompt($event, $key) {
+  $file_path = get_event_path($event, $key) . "/award_eligibility_prompt";
+  if (file_exists($file_path)) {
+    return(file_get_contents($file_path));
+  }
+  else {
+    return("");
+  }
+}
+
 function set_class_for_competitor($competitor_path, $class) {
   file_put_contents("{$competitor_path}/competition_class", $class);
 }

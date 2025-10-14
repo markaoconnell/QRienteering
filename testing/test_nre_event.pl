@@ -683,6 +683,40 @@ if ($actual_table_entries != 4) {
 success();
 
 
+
+#################
+# Test 10 - Mark a competitor as award ineligible and validate that it shows in the results
+
+%TEST_INFO = qw(Testname ResultsWithIneligibleRunners);
+%GET = qw(key UnitTestPlayground);
+$GET{"event"} = $event_id;
+
+%COOKIE = ();
+
+# Mark two competitors as ineligible
+open(OUTFILE, ">" . get_base_path("UnitTestPlayground") . "/${event_id}/Competitors/${competitor_1_id}/award_ineligible");
+close(OUTFILE);
+
+open(OUTFILE, ">" . get_base_path("UnitTestPlayground") . "/${event_id}/Competitors/${competitor_5_id}/award_ineligible");
+close(OUTFILE);
+
+# Validate results
+my($output) = check_results(6);
+my($no_newline_output) = $output;
+$no_newline_output =~ s/\n//g;
+
+if (($no_newline_output !~ m#,$competitor_1_id"><span style="color: red;">\(x\)</span> $COMPETITOR_1_RE ?</a></td><td>[0-9 smh:]+</td>#) ||
+    ($no_newline_output !~ m#,$competitor_2_id">$COMPETITOR_2_RE ?</a></td><td>DNF</td>#) ||
+    ($no_newline_output !~ m#,$competitor_3_id">$COMPETITOR_3_RE ?</a></td><td>[0-9 smh:]+</td>#) ||
+    ($no_newline_output !~ m#,$competitor_5_id"><span style="color: red;">\(x\)</span> $COMPETITOR_5_RE ?</a></td><td>[0-9 smh:]+</td><td>100</td>#) ||
+    ($no_newline_output !~ m#,$competitor_6_id">$COMPETITOR_6_RE ?</a></td><td>[0-9 smh:]+</td><td>70</td>#) ||
+    ($no_newline_output !~ m#,$competitor_4_id">$COMPETITOR_4_RE ?</a></td><td>DNF</td>#)) {
+  error_and_exit("View result output wrong for 1 or more competitors.\n$output");
+}
+
+success();
+
+
 ############
 # Cleanup
 

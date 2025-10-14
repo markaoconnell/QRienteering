@@ -45,6 +45,14 @@ sub hashes_to_artificial_file {
   close(ARTIFICIAL_FILE);
 }
 
+sub add_uploaded_file {
+  my($upload_entry_name, $local_filename, $number_entries) = @_;
+  open(ARTIFICIAL_FILE, ">>./artificial_input");
+  print ARTIFICIAL_FILE "FILES ${upload_entry_name} size ${number_entries}\n";
+  print ARTIFICIAL_FILE "FILES ${upload_entry_name} tmp_name ${local_filename}\n";
+  close(ARTIFICIAL_FILE);
+}
+
 sub file_get_contents {
   my($file_to_read) = @_;
 
@@ -95,6 +103,18 @@ sub set_email_properties {
   print EMAIL_PROPS_FILE "reply-to: markandkaren" . "@" . "mkoconnell.com\n";
   print EMAIL_PROPS_FILE "subject: Results of NEOC Orienteering meet\n";
   print EMAIL_PROPS_FILE "extra-info: <p>Learn more about NEOC at <a href=\"www.newenglandorienteering.org\">our website</a>.\n";
+  print EMAIL_PROPS_FILE "use_php_mail_function: true";
+  close(EMAIL_PROPS_FILE);
+}
+
+sub set_email_properties_from_hash {
+  my($key, %props) = @_;
+  my($email_props_path) = get_base_path($key) . "/email_properties.txt";
+  open(EMAIL_PROPS_FILE, ">$email_props_path");
+  my($this_key);
+  foreach $this_key (keys(%props)) {
+    print EMAIL_PROPS_FILE "${this_key}:" . $props{$this_key} . "\n";
+  }
   close(EMAIL_PROPS_FILE);
 }
 
@@ -120,6 +140,23 @@ sub remove_nre_classes {
   my($key) = @_;
   my($nre_class_file) = get_base_path($key) . "/default_classes.csv";
   unlink($nre_class_file);
+}
+
+sub set_untimed_controls {
+  my($key, $event, %course_untimed_controls) = @_;
+  my($untimed_entries_file) = get_base_path($key) . "/${event}/untimed_controls";
+  open(UNTIMED_FILE, ">$untimed_entries_file");
+  my($this_key);
+  foreach $this_key (keys(%course_untimed_controls)) {
+    print UNTIMED_FILE "${this_key};" . $course_untimed_controls{$this_key} . "\n";
+  }
+  close(UNTIMED_FILE);
+}
+
+sub remove_untimed_controls {
+  my($key, $event) = @_;
+  my($untimed_entries_file) = get_base_path($key) . "/${event}/untimed_controls";
+  unlink($untimed_entries_file);
 }
 
 sub set_default_timezone {

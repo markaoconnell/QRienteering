@@ -87,6 +87,7 @@ else {
   $first_name = htmlentities($_GET["competitor_first_name"], ENT_QUOTES, 'utf-8');
   $last_name = htmlentities($_GET["competitor_last_name"], ENT_QUOTES, 'utf-8');
   $club_name = htmlentities($_GET["club_name"], ENT_QUOTES, 'utf-8');
+  $school_name = htmlentities($_GET["school_name"], ENT_QUOTES, 'utf-8');
   $si_stick = $_GET["si_stick"];
 
   // Let's do some validations
@@ -135,6 +136,7 @@ else {
   echo "<input type=hidden name=\"competitor_first_name\" value=\"{$first_name}\">\n";
   echo "<input type=hidden name=\"competitor_last_name\" value=\"{$last_name}\">\n";
   echo "<input type=hidden name=\"club_name\" value=\"{$club_name}\">\n";
+  echo "<input type=hidden name=\"school_name\" value=\"{$school_name}\">\n";
 }
 echo "<input type=hidden name=\"si_stick\" value=\"{$si_stick}\">\n";
 echo "<input type=hidden name=\"key\" value=\"{$key}\">\n";
@@ -246,7 +248,6 @@ echo "<input type=\"text\" size=50 name=\"email\" {$presupplied_email_address} >
 //
 if ($using_nre_classes && (!$classification_info_supplied || ($classification_info_hash["CLASS"] == ""))) {
   echo "<br><br><p>If you would like your time to count for national ranking purposes, please enter your birth year and gender.\n";
-  echo "<p>Please leave blank (unspecified) if you are orienteering recreationally or going out in a group (more than 1 person).\n";
 
   echo "<p>(Optional) Birth year (for ranking purposes), please use 4 digits, e.g. 1973, 2001, etc.<br>\n";
   if ($classification_info_supplied && ($classification_info_hash["BY"] != "")) {
@@ -276,6 +277,20 @@ if ($using_nre_classes && (!$classification_info_supplied || ($classification_in
   echo "<input type=radio name=\"gender\" value=\"m\" {$male_checked} >  Male<br>\n";
   echo "<input type=radio name=\"gender\" value=\"o\" {$other_checked} >  Other<br>\n";
   echo "<input type=radio name=\"gender\" value=\"\" >  Unspecified<br>\n";
+}
+
+if ($using_nre_classes) {
+  $award_eligibility_prompt = get_award_eligibility_prompt($event, $key);
+  if ($award_eligibility_prompt != "") {
+    echo "<p><input type=checkbox name=\"award_eligibility\" value=\"y\"> {$award_eligibility_prompt}<br>\n";
+  }
+  else {
+    echo "<input type=hidden name=\"award_eligibility\" value=\"y\">\n";
+  }
+}
+else {
+  // If not using NRE classes, there are no awards, so everyone is eligible
+  echo "<input type=hidden name=\"award_eligibility\" value=\"y\">\n";
 }
 
 // If the person is a member doing normal checkin, see if they are using a new stick

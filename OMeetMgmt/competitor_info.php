@@ -46,6 +46,9 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
       $competitor_class = "Rec (unranked)";
     }
     $nre_class_string = "<a href=\"../OMeetMgmt/edit_competitor_class.php?event={$event}&key={$key}&competitor={$competitor_id}\">{$competitor_class}</a><br>\n";
+
+    $nre_class_string .= "<a href=\"../OMeetMgmt/toggle_competitor_award_eligibility.php?event={$event}&key={$key}&competitor={$competitor_id}\">" . 
+	    (file_exists("{$competitor_base_path}/{$competitor_id}/award_ineligible") ? "ineligible for award" : "meets award criteria") . "</a><br>\n";
   }
 
   if (count($registration_info) > 0) {
@@ -55,7 +58,7 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
     $competitor_string .= "<td>{$nre_class_string}" . implode(", ", $registration_info_strings)  . "</td>";
   }
   else {
-    $competitor_string .= "<td></td>";
+    $competitor_string .= "<td>{$nre_class_string}</td>";
   }
   $competitor_string .= "</tr>";
   

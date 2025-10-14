@@ -49,7 +49,8 @@ function name_to_manage_event_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
   return ("<li>{$event_fullname}: <a href={$base_path_for_links}/OMeetMgmt/event_management.php?event={$event_id}&key={$key}>Preregistrations & NRE support</a> / " .
-                                 "<a href={$base_path_for_links}/OMeetMgmt/control_xlations.php?event={$event_id}&key={$key}>Control translations</a>\n");
+                                 "<a href={$base_path_for_links}/OMeetMgmt/control_xlations.php?event={$event_id}&key={$key}>Control translations</a> / " .
+                                 "<a href={$base_path_for_links}/OMeetMgmt/untimed_controls.php?event={$event_id}&key={$key}>Untimed control management</a>\n");
 }
 
 function name_to_remove_course_link($event_id) {

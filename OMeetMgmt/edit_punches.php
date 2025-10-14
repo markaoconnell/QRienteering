@@ -215,16 +215,20 @@ foreach ($controls_found as $this_control) {
     $control_num_on_course++;
   }
 
+  // Use the raw_time here (raw_time - $start_time - $start_time_adjustment) because the cumulative time
+  // is already adjusted for the forgiven time for an untimed leg - and adjusting the cumulative_time for the
+  // start_time_adjustment confuses things when we recalculate the untimed leg again
+  //
   // is the punched control on the course at all?
   if (isset($controls_hash[$control_id])) {
     $output_string .= "<tr><td>" . implode(",", array_map(function ($elt) { return ($elt + 1); }, $controls_hash[$control_id])) . "</td><td>" . $control_id . "</td>";
     $output_string .="<td>" . format_split_time($this_control["raw_time"], $using_si_timing, false) . "</td>";
     if ($allow_editing) {
       $output_string .= "<td><input type=text name=\"Control-{$control_id}-{$control_unique_counter}\" value=\"" .
-                                                      ($this_control["cumulative_time"] - $start_time_adjustment) . "\"></td></tr>\n";
+                                                      ($this_control["raw_time"] - $start_time - $start_time_adjustment) . "\"></td></tr>\n";
     }
     else {
-      $output_string .= "<td>" . ($this_control["cumulative_time"] - $start_time_adjustment) . "</td></tr>\n";
+      $output_string .= "<td>" . ($this_control["raw_time"] - $start_time - $start_time_adjustment) . "</td></tr>\n";
     }
 
     $control_num_on_course++;
@@ -234,10 +238,10 @@ foreach ($controls_found as $this_control) {
     $output_string .="<td>" . format_split_time($this_control["raw_time"], $using_si_timing, false) . "</td>";
     if ($allow_editing) {
       $output_string .= "<td><input type=text name=\"Control-{$control_id}-{$control_unique_counter}\" value=\"" .
-                                                     ($this_control["cumulative_time"] - $start_time_adjustment) . "\"></td></tr>\n";
+                                                     ($this_control["raw_time"] - $start_time - $start_time_adjustment) . "\"></td></tr>\n";
     }
     else {
-      $output_string .= "<td>" . ($this_control["cumulative_time"] - $start_time_adjustment) . "</td></tr>\n";
+      $output_string .= "<td>" . ($this_control["raw_time"] - $start_time - $start_time_adjustment) . "</td></tr>\n";
     }
   }
 }

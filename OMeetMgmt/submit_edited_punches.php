@@ -221,6 +221,10 @@ if ($error_string == "") {
       }
     }
 
+    if (file_exists("${competitor_path}/award_ineligible")) {
+      file_put_contents("${new_competitor_path}/award_ineligible", "");
+    }
+
     global $TYPE_FIELD, $SCORE_O_COURSE;
 
     $error_string = "";
@@ -317,10 +321,50 @@ if ($error_string == "") {
         file_put_contents("{$new_competitor_path}/dnf", $error_string, FILE_APPEND);
         $dnf_string = " - DNF";
       }
+
+      // Check for untimed controls and adjust the total time accordingly
+      $untimed_controls = get_untimed_controls($event, $key);
+      $untimed_controls_for_course = array();
+      if (isset($untimed_controls[$new_course])) {
+        $untimed_controls_for_course = untimed_control_entry_to_hash($untimed_controls[$new_course]);
+        // This course has one or more untimed controls, see how long was spent at each
+        $prior_control_time = $start_time;
+        $forgiven_time = 0;
+        foreach ($controls_done as $this_control) {
+          $control_info = explode(",", $this_control);  // format is timestamp,control
+          if (isset($untimed_controls_for_course[$control_info[1]])) {
+            $this_leg_split = $control_info[0] - $prior_control_time;
+	    $max_forgiven_time = $untimed_controls_for_course[$control_info[1]];
+
+            if ($this_leg_split <= $max_forgiven_time) {
+              $forgiven_time += $this_leg_split;
+            }
+            else {
+              $forgiven_time += $max_forgiven_time;
+            }
+         }
+         $prior_control_time = $control_info[0];
+        }
+  
+        $time_taken -= $forgiven_time;
+      }
     }
 
     $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $new_competitor_id);
     file_put_contents("{$results_path}/{$new_course}/{$result_filename}", "");
+
+      // Update the NRE class result also, if there is one
+    if (event_is_using_nre_classes($event, $key) && competitor_has_class($new_competitor_path)) {
+      $results_per_class_path = get_results_per_class_path($event, $key);
+      $result_class = get_class_for_competitor($new_competitor_path);
+      if (!file_exists($results_per_class_path)) {
+        mkdir($results_per_class_path);
+      }
+      if (!file_exists("{$results_per_class_path}/{$result_class}")) {
+        mkdir("{$results_per_class_path}/{$result_class}");
+      }
+      file_put_contents("{$results_per_class_path}/{$result_class}/{$result_filename}", "");
+    }
 
     $readable_course_name = ltrim($new_course, "0..9-");
     $output_string .= "<p class=\"title\">Results for: {$new_competitor_name}, course complete ({$readable_course_name}{$dnf_string}), time taken " . formatted_time($time_taken) . "<p><p>";

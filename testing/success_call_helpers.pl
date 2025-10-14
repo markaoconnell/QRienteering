@@ -475,7 +475,7 @@ sub finish_successfully {
     error_and_exit("Did not see parseable finish entry:\n$output");
   }
   
-  #print $output;
+  # print $output;
   
   $path = get_base_path($cookie_ref->{"key"}) . "/" . $cookie_ref->{"event"} . "/Competitors/$competitor_id";
   my($controls_found_path) = "$path/controls_found";
@@ -513,6 +513,11 @@ sub finish_successfully {
   if (grep(/NOTFOUND:$results_file/, @results_array)) {
     error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
   }
+
+  if ($output =~ /Mail: Failed when sending results/) {
+    error_and_exit("Failed to send email, message\n$output");
+  }
+  
   
   delete($test_info_ref->{"subroutine"});
 }
@@ -522,13 +527,26 @@ sub finish_successfully {
 # Finish the course successfully
 sub finish_with_stick_successfully {
   my($competitor_id, $stick, $course, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  $test_info_ref->{"subroutine"} = "finish_with_stick_successfully";
+  finish_with_stick_successfully_internal($competitor_id, $stick, $course, 0, $get_ref, $cookie_ref, $test_info_ref);
+  delete($test_info_ref->{"subroutine"});
+}
+
+sub finish_with_stick_successfully_with_untimed_controls {
+  my($competitor_id, $stick, $course, $amount_untimed, $get_ref, $cookie_ref, $test_info_ref) = @_;
+  $test_info_ref->{"subroutine"} = "finish_with_stick_successfully_with_untimed_controls";
+  finish_with_stick_successfully_internal($competitor_id, $stick, $course, $amount_untimed, $get_ref, $cookie_ref, $test_info_ref);
+  delete($test_info_ref->{"subroutine"});
+}
+
+sub finish_with_stick_successfully_internal {
+  my($competitor_id, $stick, $course, $adjustment, $get_ref, $cookie_ref, $test_info_ref) = @_;
 
   my($cached_competitor) = get_stick_xlation($get_ref->{"key"}, $get_ref->{"event"}, $stick);
   if ($cached_competitor ne $competitor_id) {
     error_and_exit("Finish failed - cached competitor \"${cached_competitor}\" does not match competitor \"${competitor_id}\".\n");
   }
 
-  $test_info_ref->{"subroutine"} = "finish_with_stick_successfully";
   hashes_to_artificial_file();
   $cmd = "php ../OMeet/finish_course.php";
   $output = qx($cmd);
@@ -580,7 +598,7 @@ sub finish_with_stick_successfully {
   #}
   
   my(@start_time_array) = file_get_contents("$controls_found_path/start");
-  my($results_file) = sprintf("%04d,%06d,%s", 0, (int($file_contents_array[0]) - int($start_time_array[0])), $competitor_id);
+  my($results_file) = sprintf("%04d,%06d,%s", 0, (int($file_contents_array[0]) - int($start_time_array[0]) - $adjustment), $competitor_id);
   
   
   my($results_dir) = get_base_path($get_ref->{"key"}) . "/" . $get_ref->{"event"} . "/Results/${course}";
@@ -588,8 +606,6 @@ sub finish_with_stick_successfully {
   if (grep(/NOTFOUND:$results_file/, @results_array)) {
     error_and_exit("No results file ($results_file) found, contents are: " . join("--", @results_array));
   }
-  
-  delete($test_info_ref->{"subroutine"});
 }
 
 
@@ -894,6 +910,10 @@ sub finish_with_stick_dnf {
 # Use the web interface to create an event
 sub create_event_successfully {
   my($get_ref, $cookie_ref, $post_ref, $test_info_ref) = @_;
+
+  if (!defined($get_ref->{"orig_key"})) {
+    $get_ref->{"orig_key"} = $get_ref->{"key"};
+  }
 
   $test_info_ref->{"subroutine"} = "create_event_successfully";
   hashes_to_artificial_file();

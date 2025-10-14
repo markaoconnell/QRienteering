@@ -18,8 +18,11 @@ sub setup_member_files {
 102;Isla;Finlayson;558;
 103;Issi;Finlayson;559;
 109;Victoria;Campbell;1024;tori\@nowhere.com;
-314;Mark;OConnell;2108369;mark\@mkoconnell.com;5086148225;
-31;Karen;Yeowell;3959473;karen\@mkoconnell.com;5083959473);
+315;Student;Body;314159;;5086148225;;;Individual;StAndrewsScotland;
+150;Alumno;Nadie;225256;;5086148225;;;Individual;USD;
+180;Etudiant;Personne;141421;;5086148225;;;Individual;;DVOA
+314;Mark;OConnell;2108369;mark\@mkoconnell.com;5086148225;1967;m;Family;Dartmouth;NEOC
+31;Karen;Yeowell;3959473;karen\@mkoconnell.com;5083959473;1968;f;Family;Dartmouth;NEOC);
 
   print MEMBER_FILE $file_contents;
   close(MEMBER_FILE);

@@ -68,7 +68,7 @@ class url_caller(LongRunningClass):
       if (self.debug):
         print("Command output is: " + output.decode("utf-8"))
     
-      decoded_output = output.decode("utf-8")
+      decoded_output = output.decode("utf-8", errors="ignore")
       found_closing_tag = re.search(r"</html>", decoded_output)
       if found_closing_tag == None:
           # No output, the command must have timed out

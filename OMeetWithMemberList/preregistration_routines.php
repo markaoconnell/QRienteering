@@ -93,7 +93,7 @@ function decode_preregistered_file_entrant($file_entry) {
   $entrant_pieces = explode(";", $file_entry);
 
   $entrant_info = array();
-  array_map(function ($elt) use (&$entrant_info) { $kv_pieces = explode(":", $elt); $entrant_info[$kv_pieces[0]] = $kv_pieces[1]; },
+  array_map(function ($elt) use (&$entrant_info) { $kv_pieces = explode(":", $elt); $entrant_info[$kv_pieces[0]] = isset($kv_pieces[1]) ? $kv_pieces[1] : ""; },
             $entrant_pieces);
 
   return($entrant_info);
@@ -155,7 +155,7 @@ function read_preregistrations($event, $key) {
                                                    "last" => $entrant_info["last_name"],
                                                    "full_name" => "{$entrant_info["first_name"]} {$entrant_info["last_name"]}",
                                                    "si_stick"=> $entrant_info["stick"],
-						   "club_member_id" => $entrant_info["member_id"],
+						   "club_member_id" => isset($entrant_info["member_id"]) ? $entrant_info["member_id"] : "",
                                                    "entrant_info" => $entrant_info);
       $lower_case_full_name = strtolower("{$entrant_info["first_name"]} {$entrant_info["last_name"]}");
       $last_name_hash[strtolower($entrant_info["last_name"])][] = $entrant_id; 

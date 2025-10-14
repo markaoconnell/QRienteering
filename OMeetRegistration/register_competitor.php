@@ -168,6 +168,13 @@ if (!$error) {
       setcookie("key", $key, $timeout_value, $cookie_path);
     }
 
+    if ($registration_info_supplied && isset($registration_info["award_eligibility"])) {
+      $lowered_availability = strtolower($registration_info["award_eligibility"]);
+      if (($lowered_availability == "n") || ($lowered_availability == "no")) {
+        file_put_contents("{$competitor_path}/award_ineligible", "");
+      }
+    }
+
     // Handle the processing of the OUSA classes if necessary
     if (event_is_using_nre_classes($event, $key)) {
 	    // echo "Event is using nre classes\n";

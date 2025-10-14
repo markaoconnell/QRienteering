@@ -59,6 +59,10 @@ if ($output !~ /type=hidden name="club_name" value=""/) {
   error_and_exit("Hidden empty input club not found.\n$output");
 }
 
+if ($output !~ /type=hidden name="school_name" value=""/) {
+  error_and_exit("Hidden empty input school name not found.\n$output");
+}
+
 if ($output !~ /input type="text" size=50 name="email"  >/) {
   error_and_exit("Presupplied email address not found.\n$output");
 }
@@ -68,8 +72,8 @@ success();
 ###########
 # Test 2 - Success nonmember registration
 # 
-%TEST_INFO = qw(Testname TestNonMemberNoStickWithClub);
-%GET = qw(key UnitTestPlayground competitor_first_name Karen competitor_last_name Yeowell club_name CSU using_stick no);
+%TEST_INFO = qw(Testname TestNonMemberNoStickWithClubAndSchool);
+%GET = qw(key UnitTestPlayground competitor_first_name Karen competitor_last_name Yeowell club_name CSU school_name StAndrews using_stick no);
 $GET{"si_stick"} = "";
 $GET{"event"} = $event_id;
 %COOKIE = ();  # empty hash
@@ -100,6 +104,10 @@ if ($output !~ /type=hidden name="si_stick" value=""/) {
 
 if ($output !~ /type=hidden name="club_name" value="CSU"/) {
   error_and_exit("Hidden input club not found.\n$output");
+}
+
+if ($output !~ /type=hidden name="school_name" value="StAndrews"/) {
+  error_and_exit("Hidden input school name not found.\n$output");
 }
 
 if ($output !~ /input type="text" size=50 name="email"  >/) {
@@ -169,6 +177,102 @@ if ($output !~ /Invalid si unit id "14xx21", only numbers allowed.  Please go ba
 
 success();
 
+
+###########
+# Test 6 - Success nonmember registration, with school but no club
+# 
+%TEST_INFO = qw(Testname TestNonMemberNoStickWithNoClubButWithASchool);
+%GET = qw(key UnitTestPlayground competitor_first_name Karen competitor_last_name Yeowell school_name USD using_stick no);
+$GET{"si_stick"} = "";
+$GET{"event"} = $event_id;
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
+$output = qx($cmd);
+
+if ($output =~ /type=hidden name="waiver_signed" value="signed"/) {
+  error_and_exit("Waiver signed hidden input found.\n$output");
+}
+
+if ($output !~ /type=checkbox name="waiver_signed" value="signed"/) {
+  error_and_exit("Waiver checkbox input not found.\n$output");
+}
+
+if ($output !~ /I am participating of my own accord and hold the organizers harmless/) {
+  error_and_exit("Waiver language not found.\n$output");
+}
+
+if ($output !~ /type=hidden name="competitor_first_name" value="Karen"/) {
+  error_and_exit("Hidden input first_name not found.\n$output");
+}
+
+if ($output !~ /type=hidden name="si_stick" value=""/) {
+  error_and_exit("Hidden empty input si_stick not found.\n$output");
+}
+
+if ($output !~ /type=hidden name="club_name" value=""/) {
+  error_and_exit("Hidden empty input club not found.\n$output");
+}
+
+if ($output !~ /type=hidden name="school_name" value="USD"/) {
+  error_and_exit("Hidden input school name not found.\n$output");
+}
+
+if ($output !~ /input type="text" size=50 name="email"  >/) {
+  error_and_exit("Presupplied email address not found.\n$output");
+}
+
+success();
+
+
+
+###########
+# Test 7 - Success nonmember registration, with club but no school
+# 
+%TEST_INFO = qw(Testname TestNonMemberNoStickWithClubButNoSchool);
+%GET = qw(key UnitTestPlayground competitor_first_name Karen competitor_last_name Yeowell club_name HVOC using_stick no);
+$GET{"si_stick"} = "";
+$GET{"event"} = $event_id;
+%COOKIE = ();  # empty hash
+
+hashes_to_artificial_file();
+$cmd = "php ../OMeetWithMemberList/add_safety_info.php";
+$output = qx($cmd);
+
+if ($output =~ /type=hidden name="waiver_signed" value="signed"/) {
+  error_and_exit("Waiver signed hidden input found.\n$output");
+}
+
+if ($output !~ /type=checkbox name="waiver_signed" value="signed"/) {
+  error_and_exit("Waiver checkbox input not found.\n$output");
+}
+
+if ($output !~ /I am participating of my own accord and hold the organizers harmless/) {
+  error_and_exit("Waiver language not found.\n$output");
+}
+
+if ($output !~ /type=hidden name="competitor_first_name" value="Karen"/) {
+  error_and_exit("Hidden input first_name not found.\n$output");
+}
+
+if ($output !~ /type=hidden name="si_stick" value=""/) {
+  error_and_exit("Hidden empty input si_stick not found.\n$output");
+}
+
+if ($output !~ /type=hidden name="club_name" value="HVOC"/) {
+  error_and_exit("Hidden input club not found.\n$output");
+}
+
+if ($output !~ /type=hidden name="school_name" value=""/) {
+  error_and_exit("Hidden empty input school name not found.\n$output");
+}
+
+if ($output !~ /input type="text" size=50 name="email"  >/) {
+  error_and_exit("Presupplied email address not found.\n$output");
+}
+
+success();
 
 
 
