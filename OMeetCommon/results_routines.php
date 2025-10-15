@@ -384,9 +384,9 @@ function get_all_class_result_links($event, $key, $classification_info, $classes
   $links_string = "<p>Show results for ";
   foreach ($classes_to_display as $this_class) {
     if (in_array($this_class, $valid_classes_for_event)) {
-      $printable_course_name = array_values(array_filter($classification_info, function ($elt) use ($this_class) { return($this_class == $elt[5]); }))[0][0];
+//      $printable_course_name = array_values(array_filter($classification_info, function ($elt) use ($this_class) { return($this_class == $elt[5]); }))[0][0];
       $links_string .= "<a href=\"../OMeet/view_results_by_class.php?event={$event}&key={$key}&class=" .
-	      urlencode($this_class) . "\">{$printable_course_name}:{$this_class}</a> \n";
+	      urlencode($this_class) . "\">{$this_class}</a> \n";
     }
   }
   $links_string .= "<a href=\"../OMeet/view_results_by_class.php?event={$event}&key={$key}\">All Classes</a> \n";

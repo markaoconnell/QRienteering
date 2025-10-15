@@ -72,15 +72,7 @@ if (!file_exists($courses_path)) {
   error_and_exit("<p>ERROR: No such event found {$event} (or bad location key {$key}).\n");
 }
 
-$show_per_class = isset($_GET["per_class"]) && event_is_using_nre_classes($event, $key);
-if ($show_per_class) {
-  $results_path = get_results_per_class_path($event, $key);
-  $classification_info = get_nre_classes_info($event, $key);
-  $class_to_show = isset($_GET["class"]) ? $_GET["class"] : "";
-}
-else {
-  $results_path = get_results_path($event, $key);
-}
+$results_path = get_results_path($event, $key);
 
 set_timezone($key);
 $event_name = file_get_contents(get_event_path($event, $key) . "/description");
@@ -148,28 +140,11 @@ foreach ($course_list as $one_course) {
       $base_course_list = array();
     }
 
-    if ($show_per_class) {
-      $course_readable_name = ltrim($one_course, "0..9-");
-      if ($class_to_show != "") {
-	$classes_for_course = array($class_to_show);
-      }
-      else {
-        $classes_for_course = array_filter($classification_info, function ($elt) use ($course_readable_name) { return ($elt[0] == $course_readable_name); });
-        $classes_for_course = array_map(function ($elt) { return ($elt[5]); }, $classes_for_course);
-        $classes_for_course = array_unique($classes_for_course);
-      }
+    if ($download_csv) {
+      $results_string .= get_csv_results($event, $key, $one_course, "", $score_course, $max_score, $base_course_list);
     }
     else {
-      $classes_for_course = array("");
-    }
-
-    foreach ($classes_for_course as $this_class) {
-      if ($download_csv) {
-        $results_string .= get_csv_results($event, $key, $one_course, $this_class, $score_course, $max_score, $base_course_list);
-      }
-      else {
-        $results_string .= show_results($event, $key, $one_course, $this_class, $score_course, $max_score, $base_course_list, $show_school_and_club);
-      }
+      $results_string .= show_results($event, $key, $one_course, "", $score_course, $max_score, $base_course_list, $show_school_and_club);
     }
   }
 }
@@ -178,12 +153,7 @@ if ($download_csv) {
   $results_string .= "</pre>\n";
 }
 
-if ($show_per_class) {
-  $results_string .= get_all_class_result_links($event, $key, $classification_info);
-}
-else {
-  $results_string .= get_all_course_result_links($event, $key);
-}
+$results_string .= get_all_course_result_links($event, $key);
 
 echo get_web_page_header(true, true, false);
 echo "<p>Results for: <strong>{$event_name}</strong>\n";
