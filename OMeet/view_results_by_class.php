@@ -129,7 +129,7 @@ foreach ($classes_to_show as $one_class) {
     $results_string .= get_csv_results($event, $key, $one_course, $one_class, $score_course, $max_score, $base_course_list);
   }
   else {
-    $results_string .= show_results($event, $key, $one_course, $one_class, $score_course, $max_score, $base_course_list, $show_school_and_club);
+    $results_string .= get_results_as_string($event, $key, $one_course, $one_class, $score_course, $max_score, $base_course_list, $show_school_and_club);
   }
 }
 
@@ -137,12 +137,17 @@ if ($download_csv) {
   $results_string .= "</pre>\n";
 }
 
-$results_string .= get_all_class_result_links($event, $key, $classification_info, $classes_to_display, $readable_course_hash);
 
 echo get_web_page_header(true, true, false);
 echo "<p>Results for: <strong>{$event_name}</strong>\n";
 
+// Show the links at the top if the list is long, to make it easier to jump to just the results of interest
+if (substr_count($results_string, "\n") > 50) {
+  echo get_all_class_result_links($event, $key, $classification_info, $classes_to_display, $readable_course_hash);
+}
+
 echo $results_string;
+echo get_all_class_result_links($event, $key, $classification_info, $classes_to_display, $readable_course_hash);
 
 echo get_web_page_footer();
 ?>

@@ -1,6 +1,7 @@
 <?php
 require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/nre_routines.php';
+require '../OMeetRegistration/nre_class_handling.php';
 require '../OMeetCommon/time_routines.php';
 require '../OMeetCommon/course_properties.php';
 require '../OMeetCommon/generate_splits_output.php';
@@ -139,26 +140,11 @@ $output_string .= "<p>Finish at: {$finish_time}\n";
 
 // Make sure that the newly specified course, if any, is valid
 if ($new_course != "") {
-  $course_list = scandir($courses_path);
-  $course_list = array_diff($course_list, array(".", ".."));
-
-  $matching_courses_list = array_filter($course_list, function ($elt) use ($new_course) { return ((ltrim($elt, "0..9-") == $new_course) && !file_exists("{$courses_path}/{$elt}/removed")); });
-  if (count($matching_courses_list) == 1) {
-    // It feels like there should be a more efficient way to do this
-    // This should be rare enough that I don't care, but something to think about
-    $found_course = array_values($matching_courses_list)[0];
-    if (file_exists("{$courses_path}/{$found_course}/removed") || file_exists("{$courses_path}/{$found_course}/no_registrations")) {
-      $error_string .= "<p>{$new_course} is no longer accepting registrations.\n";
-    }
-    $new_course = $found_course;
+  if (!file_exists("{$courses_path}/{$new_course}")) {
+    $error_string .= "<p>{$new_course} does not exist.\n";
   }
-  else {
-    if (count($matching_courses_list) == 0) {
-      $error_string .= "<p>No matching course found for {$new_course}, check for exact match, remember is it case sensitive.\n";
-    }
-    else {
-      $error_string .= "<p>Too many matching courses for {$new_course}, name should be unique\n";
-    }
+  elseif (file_exists("{$courses_path}/{$new_course}/removed") || file_exists("{$courses_path}/{$new_course}/no_registrations")) {
+    $error_string .= "<p>{$new_course} is no longer accepting registrations.\n";
   }
 }
 else {
@@ -353,7 +339,27 @@ if ($error_string == "") {
     $result_filename = sprintf("%04d,%06d,%s", $max_score - $total_score, $time_taken, $new_competitor_id);
     file_put_contents("{$results_path}/{$new_course}/{$result_filename}", "");
 
-      // Update the NRE class result also, if there is one
+    // Given that the person may be on a new course, make sure that their competitive class is still correct
+    if (event_is_using_nre_classes($event, $key) && competitor_has_class($new_competitor_path) && ($new_course != $course)) {
+      $new_class = "";
+      if (file_exists("{$new_competitor_path}/registration_info")) {
+        $registration_info = parse_registration_info(file_get_contents("{$new_competitor_path}/registration_info"));
+	if (isset($registration_info["classification_info"])) {
+          $classification_hash = decode_entrant_classification_info($registration_info["classification_info"]);
+	  if (($classification_hash["BY"] != "") && ($classification_hash["G"] != "")) {
+            $new_class = get_nre_class($event, $key, $classification_hash["G"], $classification_hash["BY"], $new_course, file_exists("{$new_competitor_path}/si_stick"));
+	  }
+	}
+      }
+      if ($new_class != "") {
+        set_class_for_competitor($new_competitor_path, $new_class);
+      }
+      else {
+        remove_class_for_competitor($new_competitor_path);
+      }
+    }
+
+    // Update the NRE class result also, if there is one
     if (event_is_using_nre_classes($event, $key) && competitor_has_class($new_competitor_path)) {
       $results_per_class_path = get_results_per_class_path($event, $key);
       $result_class = get_class_for_competitor($new_competitor_path);

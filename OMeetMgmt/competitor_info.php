@@ -12,7 +12,7 @@ function non_empty($string_value) {
 }
 
 function get_competitor_info($competitor_base_path, $competitor_id, $status, $registration_info, $si_stick) {
-  global $include_competitor_id, $show_removed_competitors, $is_nre_event, $include_date, $key, $event; 
+  global $include_competitor_id, $show_removed_competitors, $is_nre_event, $include_date, $key, $event, $expand_all; 
 
   $nre_class_string = "";
 
@@ -22,7 +22,7 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
   $competitor_course = ltrim(file_get_contents("{$competitor_base_path}/{$competitor_id}/course"), "0..9-");
 
   $competitor_string .= "<td><input type=checkbox name=\"Remove-{$competitor_id}\" value=\"{$competitor_id}\"></td>";
-  $competitor_string .= "<td>{$competitor_course}</td>";
+  $competitor_string .= "<td><a href=\"./change_course.php?key={$key}&event={$event}&competitor={$competitor_id}\">{$competitor_course}</a></td>";
   $competitor_string .= "<td>{$competitor_name}";
   if ($include_competitor_id) {
     $competitor_string .= " ({$competitor_id})";
@@ -33,28 +33,37 @@ function get_competitor_info($competitor_base_path, $competitor_id, $status, $re
  
   $competitor_string .= "</td><td>{$status}</td><td><a href=\"./update_stick.php?key={$key}&event={$event}&competitor={$competitor_id}\">$si_stick</a></td>";
   if ($is_self_reported || $show_removed_competitors) {
-    $competitor_string .= "<td>No splits</td>";
+    $competitor_string .= "<td><a href=\"./clone_entry.php?key={$key}&event={$event}&competitor={$competitor_id}\">clone</a></td>";
   }
   else {
     $competitor_string .= "<td><a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}\">show</a> / ";
-    $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}&allow_editing=1\">edit</a></td>";
+    $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}&allow_editing=1\">edit</a> / ";
+    $competitor_string .=     "<a href=\"./clone_entry.php?key={$key}&event={$event}&competitor={$competitor_id}\">clone</a></td>";
   }
+  
 
   if ($is_nre_event) {
     $competitor_class = get_class_for_competitor("{$competitor_base_path}/{$competitor_id}");
     if ($competitor_class == "") {
       $competitor_class = "Rec (unranked)";
     }
-    $nre_class_string = "<a href=\"../OMeetMgmt/edit_competitor_class.php?event={$event}&key={$key}&competitor={$competitor_id}\">{$competitor_class}</a><br>\n";
+    $nre_class_string = "<a href=\"../OMeetMgmt/edit_competitor_class.php?event={$event}&key={$key}&competitor={$competitor_id}\">{$competitor_class}</a> - \n";
 
-    $nre_class_string .= "<a href=\"../OMeetMgmt/toggle_competitor_award_eligibility.php?event={$event}&key={$key}&competitor={$competitor_id}\">" . 
-	    (file_exists("{$competitor_base_path}/{$competitor_id}/award_ineligible") ? "ineligible for award" : "meets award criteria") . "</a><br>\n";
+    $nre_class_string .= "award: " . (file_exists("{$competitor_base_path}/{$competitor_id}/award_ineligible") ? "&#10060; - " : "&#9989; - ") .
+            "<a href=\"../OMeetMgmt/toggle_competitor_award_eligibility.php?event={$event}&key={$key}&competitor={$competitor_id}\">toggle</a><br>\n";
   }
 
   if (count($registration_info) > 0) {
-    $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = " . htmlentities($registration_info[$key], ENT_QUOTES, 'utf-8')); },
+    if ($expand_all) {
+      $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = " . htmlentities($registration_info[$key], ENT_QUOTES, 'utf-8')); },
                                                                                                                 array_diff(array_keys($registration_info),
-                                                                                                                           array("first_name", "last_name")));
+														array("first_name", "last_name")));
+    }
+    else {
+      $registration_info_strings = array_map(function ($key) use ($registration_info) { return("{$key} = " . htmlentities($registration_info[$key], ENT_QUOTES, 'utf-8')); },
+                                                                                                                array_intersect(array_keys($registration_info),
+														array("cell_phone", "email_address", "start_time")));
+    }
     $competitor_string .= "<td>{$nre_class_string}" . implode(", ", $registration_info_strings)  . "</td>";
   }
   else {
@@ -84,7 +93,8 @@ function recent_finisher_info($competitor_base_path, $competitor_id) {
   else {
     $competitor_string .= "<ul><li><a href=\"../OMeet/show_splits.php?event={$event}&key={$key}&entry=0,0,{$competitor_id}\">Formatted splits</a> / \n";
     $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}\">Raw splits</a> / \n";
-    $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}&allow_editing=1\">Edit splits</a>\n";
+    $competitor_string .=     "<a href=\"../OMeetMgmt/edit_punches.php?event={$event}&key={$key}&competitor={$competitor_id}&allow_editing=1\">Edit splits</a> / \n";
+    $competitor_string .=     "<a href=\"./clone_entry.php?key={$key}&event={$event}&competitor={$competitor_id}\">Clone</a>\n";
     $competitor_string .= "</ul>";
   }
 
@@ -113,6 +123,7 @@ $include_competitor_id = isset($_GET["include_competitor_id"]);
 $include_date = isset($_GET["include_date"]);
 $include_finishers = isset($_GET["include_finishers"]);
 $show_removed_competitors = isset($_GET["show_removed"]);
+$expand_all = isset($_GET["expand_all"]);
 
 if (($event == "") || (!key_is_valid($key))) {
   error_and_exit("Empty event \"{$event}\" or bad location key \"{$key}\", is this an unauthorized link?\n");
@@ -256,6 +267,9 @@ $time_limit_string .= "</tr>\n<tr>\n";
 $time_limit_string .= "<td>Include finished competitors? <input type=checkbox name=\"include_finishers\" value=\"1\"" . ($include_finishers ? " checked " : "")  . ">\n</td>";
 $time_limit_string .= "<td>Show removed competitors? <input type=checkbox name=\"show_removed\" value=\"1\"" . ($show_removed_competitors ? " checked " : "")  . ">\n</td>";
 $time_limit_string .= "<td>Show time of registration? <input type=checkbox name=\"include_date\" value=\"1\"" . ($include_date ? " checked " : "")  . ">\n</td>";
+$time_limit_string .= "</tr><tr>\n";
+$time_limit_string .= "<td>Expand all entries? <input type=checkbox name=\"expand_all\" value=\"1\"" . ($expand_all ? " checked " : "")  . ">\n</td>";
+$time_limit_string .= "</tr>\n";
 $time_limit_string .= "</table>\n";
 $time_limit_string .= "<p><input type=submit value=\"Update competitor list\"></form>\n";
 

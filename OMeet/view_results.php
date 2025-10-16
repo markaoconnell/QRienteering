@@ -144,7 +144,7 @@ foreach ($course_list as $one_course) {
       $results_string .= get_csv_results($event, $key, $one_course, "", $score_course, $max_score, $base_course_list);
     }
     else {
-      $results_string .= show_results($event, $key, $one_course, "", $score_course, $max_score, $base_course_list, $show_school_and_club);
+      $results_string .= get_results_as_string($event, $key, $one_course, "", $score_course, $max_score, $base_course_list, $show_school_and_club);
     }
   }
 }
@@ -153,12 +153,15 @@ if ($download_csv) {
   $results_string .= "</pre>\n";
 }
 
-$results_string .= get_all_course_result_links($event, $key);
-
 echo get_web_page_header(true, true, false);
 echo "<p>Results for: <strong>{$event_name}</strong>\n";
 
+// If the result list is long, then show the links at the top, to make it easier to jump to the course of interest
+if (substr_count($results_string, "\n") > 50) {
+  echo get_all_course_result_links($event, $key);
+}
 echo $results_string;
+echo get_all_course_result_links($event, $key);
 
 echo "<!--\n";
 echo "####,Event,{$event}," . base64_encode($event_name) . "\n";
