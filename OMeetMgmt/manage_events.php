@@ -226,7 +226,7 @@ echo "\n-->\n";
       </ul>
   </ul>
 
-<li> <a href=<?php echo "./combine_results.php?key={$key}" ?>>Multi-day event management</a>
+<li> <a href=<?php echo "./combine_results.php?key={$key}" ?>>Finish time predictions (useful for awards)</a>
 <li> <a href=<?php echo "./finish_event.php?key={$key}" ?>>Close / Reopen an event</a>
 </ol>
 

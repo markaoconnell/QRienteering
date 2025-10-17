@@ -7,7 +7,7 @@ require '../OMeetCommon/course_properties.php';
 
 ck_testing();
 
-set_page_title("Results Combiner");
+set_page_title("Results Predictor");
 
 $output_string = "";
 $error_string = "";
@@ -141,12 +141,16 @@ foreach ($event_list as $this_event) {
 
   // Look to see if this is an unfinished event where we need to account for outstanding runners
   //$error_string .= "<p>Event {$this_event} in tss GET is {$_GET["time_since_start-{$this_event}"]}\n";
-  if (isset($_GET["time_since_start-{$this_event}"]) && ($_GET["time_since_start-{$this_event}"] != "")) {
-    $default_elapsed_time = $_GET["time_since_start-{$this_event}"];
-    $default_elapsed_time_seconds = time_limit_to_seconds($default_elapsed_time);
-    if ($default_elapsed_time_seconds != -1) {
+  if (isset($_GET["${this_event}_in_progress"]) && ($_GET["${this_event}_in_progress"] == "1")) {
+    $award_time = isset($_GET["{$this_event}_award_time"]) ? $_GET["{$this_event}_award_time"] : "";
+    $last_start_time = isset($_GET["{$this_event}_last_start"]) ? $_GET["{$this_event}_last_start"] : "";
+
+    $award_time_seconds = simple_time_to_seconds($award_time);
+    $last_start_seconds = simple_time_to_seconds($last_start_time);
+    // $error_string .= "<p> Using {$award_time_seconds} for awards and {$last_start_seconds} as last start.\n";
+
+    if (($award_time_seconds != -1) && ($last_start_seconds != -1)) {
       //$error_string .= "<p>Event {$this_event} has default elapsed time seconds of {$default_elapsed_time_seconds}\n";
-      $reported_elapsed_time = csv_formatted_time($default_elapsed_time_seconds);
       $competitor_directory = get_competitor_directory($this_event, $key, "..");
       if (is_dir($competitor_directory)) {  // shouldn't really need to test for this...
         $competitor_list = scandir("{$competitor_directory}");
@@ -194,15 +198,35 @@ foreach ($event_list as $this_event) {
 						           "individual_times" => array(),
 							   "num_finishes" => 0);
 	  }
-          $results_by_class_and_stick[$hash_key]["total_time"] += $default_elapsed_time_seconds;
+
+	  // See if the person has a known start time - if so, use it, otherwise use the time
+	  // since the last start
+	  $unfinished_competitor_time = $award_time_seconds - $last_start_seconds;
+	  $start_time_output = $last_start_time;
+	  if (file_exists("{$unfinished_competitor_path}/registration_info")) {
+            $registration_info = parse_registration_info(file_get_contents("{$unfinished_competitor_path}/registration_info"));
+	    if (isset($registration_info["start_time"])) {
+              // There's a quirk that the start_time uses a . to separate hours vs minutes, as : is used as a separator in the registration info
+              $start_time_for_parsing = str_replace(".", ":", $registration_info["start_time"]);
+              $unfinished_competitor_start_seconds = simple_time_to_seconds($start_time_for_parsing);
+	      // $error_string .= "<p>{$unfinished_competitor_name} has start of {$unfinished_competitor_start_seconds}\n";
+	      if ($unfinished_competitor_start_seconds != -1) {
+                $unfinished_competitor_time = $award_time_seconds - $unfinished_competitor_start_seconds;
+		$start_time_output = $start_time_for_parsing;
+	      }
+	    }
+	  }
+
+          $results_by_class_and_stick[$hash_key]["total_time"] += $unfinished_competitor_time;
+          $reported_elapsed_time = csv_formatted_time($unfinished_competitor_time);
           $results_by_class_and_stick[$hash_key]["num_finishes"]++;
-	  $results_by_class_and_stick[$hash_key]["individual_times"][] = "<mark>$reported_elapsed_time</mark>";
+	  $results_by_class_and_stick[$hash_key]["individual_times"][] = "<mark>{$reported_elapsed_time}</mark> ({$start_time_output})";
 	  $results_by_class_and_stick[$hash_key]["provisional"] = 1;
 	}
       }
     }
     else {
-      $error_string .= "<p>Time limit \"{$default_elapsed_time}\" is incorrectly formatted, not adding unfinished competitors from that event.\n";
+      $error_string .= "<p>Time limit \"{$award_time}\" or \"{$last_start_time}\" is incorrectly formatted, should be hh:mm, not adding unfinished competitors from that event.\n";
     }
   }
 }

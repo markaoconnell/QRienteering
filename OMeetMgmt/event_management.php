@@ -170,7 +170,7 @@ if (isset($_POST["upload_preregistrants"])) {
 	  // I chose to use a colon as the separator in the preregistration file, which is a pain for any field that might use a colon...  Grrrrrr....
 	  // Just translate a colon to a different character which would work
 	  if (isset($field_validator["colon_xlate"])) {
-	    $xlate_colon_to = field_validator["colon_xlate"];
+	    $xlate_colon_to = $field_validator["colon_xlate"];
             $entry_string .= $field_validator["field_name"] . ":" . str_replace(":", $xlate_colon_to, $current_field) . ";";
 	  }
 	  else {

@@ -117,4 +117,20 @@ function format_time_as_minutes_since_midnight($unix_timestamp) {
   return sprintf("%4d:%02d", $mins, $secs);
 }
 
+// Return the seconds (since midnight) represented by the time (hh:mm)
+// This is useful for times entered by the user, especially start times in
+// an NRE, as these are easier to type.
+function simple_time_to_seconds($simple_time_string) {
+  $time_pieces = explode(":", $simple_time_string);
+  if (count($time_pieces) != 2) {
+    return -1;
+  }
+
+  if (($time_pieces[0] > 23) || ($time_pieces[0] < 0) || ($time_pieces[1] > 59) || ($time_pieces[1] < 0)) {
+    return -1;
+  }
+
+  return (($time_pieces[0] * 3600) + ($time_pieces[1] * 60));
+}
+
 ?>
