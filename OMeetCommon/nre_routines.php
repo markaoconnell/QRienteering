@@ -102,7 +102,7 @@ function get_default_nre_class_display_order($key) {
     return(file($display_order_filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
   }
   else {
-    return (array());
+    return(array());
   }
 }
 
@@ -112,7 +112,14 @@ function get_nre_class_display_order($event, $key) {
     return(file($display_order_filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
   }
   else {
-    return (get_default_nre_class_display_order($key));
+    $class_list = get_default_nre_class_display_order($key);
+    if (count($class_list) == 0) {
+      // If a sort order wasn't specified, then just get the list of classes and sort it (making sure that it is unique)
+      $classification_info = get_nre_classes_info($event, $key);
+      $class_list  = array_unique(array_map(function ($elt) { return ($elt[5]); }, $classification_info));
+      sort($class_list);
+    }
+    return($class_list);
   }
 }
 

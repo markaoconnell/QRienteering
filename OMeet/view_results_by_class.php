@@ -106,7 +106,7 @@ foreach ($classes_to_show as $one_class) {
   
   $class_entry_to_show = array_values(array_filter($classification_info, function ($elt) use ($one_class) { return ($one_class == $elt[5]); }))[0];
   $readable_course_name = $class_entry_to_show[0];
-  $one_course = $readable_course_hash[$readable_course_name];
+  $one_course = isset($readable_course_hash[$readable_course_name]) ? $readable_course_hash[$readable_course_name] : "";
 
   $course_properties = get_course_properties("{$courses_path}/{$one_course}");
   $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));

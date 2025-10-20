@@ -232,7 +232,7 @@ if ($force_new_competitor_id) {
   echo "<p><a href=\"../OMeetMgmt/remove_from_event.php?event={$event}&key={$key}&Remove-{$competitor}=1\">Remove original {$competitor_name} entry</a><p><p>\n";
 }
 
-echo show_results($event, $key, $course, "", $score_course, $max_score, array());
+echo get_results_as_string($event, $key, $course, "", $score_course, $max_score, array());
 echo get_all_course_result_links($event, $key);
 
 

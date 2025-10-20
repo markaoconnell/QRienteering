@@ -217,18 +217,37 @@ function get_csv_results($event, $key, $course, $result_class, $show_points, $ma
 }
 
 // Get the results for a course as an array
-function get_results_as_array($event, $key, $course, $show_points, $max_points, $path_to_top = "..") {
-  $result_array = array();
-  $readable_course_name = ltrim($course, "0..9-");
+function get_course_results_as_array($event, $key, $course, $show_points, $max_points, $path_to_top = "..") {
 
   // No results yet - .csv is empty
   $results_path = get_results_path($event, $key);
   if (!is_dir("{$results_path}/{$course}")) {
-    return($result_array);
+    return(array());
   }
   
   $results_list = scandir("{$results_path}/{$course}");
   $results_list = array_diff($results_list, array(".", ".."));
+
+  return (get_generic_results_as_array($event, $key, $results_list, $show_points, $max_points));
+}
+
+function get_class_results_as_array($event, $key, $class, $show_points, $max_points, $path_to_top = "..") {
+
+  // No results yet - .csv is empty
+  $results_path = get_results_per_class_path($event, $key);
+  if (!is_dir("{$results_path}/{$class}")) {
+    return(array());
+  }
+
+  $results_list = scandir("{$results_path}/{$class}");
+  $results_list = array_diff($results_list, array(".", ".."));
+
+  return (get_generic_results_as_array($event, $key, $results_list, $show_points, $max_points));
+}
+
+
+function get_generic_results_as_array($event, $key, $results_list, $show_points, $max_points, $path_to_top = "..") {
+  $result_array = array();
 
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);

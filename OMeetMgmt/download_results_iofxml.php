@@ -82,7 +82,7 @@ foreach ($course_list as $one_course) {
   add_text_element($xw, "Name", "{$readable_course_name}");
   xmlwriter_end_element($xw); // Class of ClassResult
   
-  $results_array = get_results_as_array($event, $key, $one_course, $score_course, $max_score, "..");
+  $results_array = get_course_results_as_array($event, $key, $one_course, $score_course, $max_score, "..");
   $place = 1;
   foreach ($results_array as $this_result) {
     // If the splits array is empty, there is an error - most likely a self reported result with

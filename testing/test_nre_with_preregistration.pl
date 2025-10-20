@@ -30,10 +30,10 @@ set_nre_classes("UnitTestPlayground");
 sub create_good_preregistration_file {
   my($fake_filename) = "fake_prereg_entries";
   open(FAKE_PREREG_FILE, ">./${fake_filename}");
-  print FAKE_PREREG_FILE "Mark,OConnell,Brown,2108369,5086148225,mark\@mkoconnell.com,NEOC,yes,1967,m,M Brown,y\n";
-  print FAKE_PREREG_FILE "Karen,Yeowell,Green,377865,508-395-9473,karen\@mkoconnell.com,NEOC,yes,1968,f,F50+,y\n";
-  print FAKE_PREREG_FILE "Lydia,OConnell,Yellow,141421,508-395-9473,lydia\@mkoconnell.com,NEOC,yes,2001,f,F Yellow,y\n";
-  print FAKE_PREREG_FILE "Foreign,Person,Red,314159,+33-32-34-45-99,ferriner\@somewhere.com,SWO,yes,1990,m,M30+,n\n";
+  print FAKE_PREREG_FILE "Mark,OConnell,Brown,10:24,2108369,5086148225,mark\@mkoconnell.com,NEOC,yes,1967,m,M Brown,y\n";
+  print FAKE_PREREG_FILE "Karen,Yeowell,Green,10:44,377865,508-395-9473,karen\@mkoconnell.com,NEOC,yes,1968,f,F50+,y\n";
+  print FAKE_PREREG_FILE "Lydia,OConnell,Yellow,11:14,141421,508-395-9473,lydia\@mkoconnell.com,NEOC,yes,2001,f,F Yellow,y\n";
+  print FAKE_PREREG_FILE "Foreign,Person,Red,11:38,314159,+33-32-34-45-99,ferriner\@somewhere.com,SWO,yes,1990,m,M30+,n\n";
   close(FAKE_PREREG_FILE);
 
   return($fake_filename);
@@ -91,11 +91,11 @@ if ($output !~ /View preregistrations/) {
   error_and_exit("Web page output wrong, no view pregistrations string.\n$output");
 }
 
-if ($output !~ /Mark,OConnell,Brown,2108369,/) {
+if ($output !~ /Mark,OConnell,Brown,\d{2}.\d{2},2108369,/) {
   error_and_exit("Web page output wrong, Mark OConnell registration not present.\n$output");
 }
 
-if ($output !~ /Foreign,Person,Red,314159,/) {
+if ($output !~ /Foreign,Person,Red,\d{2}.\d{2},314159,/) {
   error_and_exit("Web page output wrong, Foreign Person registration not present.\n$output");
 }
 
