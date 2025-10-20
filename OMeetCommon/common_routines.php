@@ -128,6 +128,9 @@ function get_bg_color_element($bg_color) {
 
 // get table style elements
 function get_table_style_header() {
+  // new results page styling
+  return `<link rel="stylesheet" href="../OMeetCommon/results_page.css"></link>`;
+  // old table styling, code will not be reached
   if (is_mobile()) {
     return "<style>\n td {\nfont-size: 200%;\n}\n th {\n font-size: 220%;\n}\ntable, th, td {\n border-collapse: collapse;\n border: 1px solid lightgray;\n }\n</style>\n";
   }
