@@ -197,7 +197,8 @@ function get_csv_results($event, $key, $course, $result_class, $show_points, $ma
 
       }
       if (isset($registration_info["club_name"])) {
-        $nre_info .= "{$registration_info["club_name"]};";
+        $club_school_pieces = explode("::", $registration_info["club_name"]);
+        $nre_info .= "{$club_school_pieces[0]};";
       }
       else {
         $nre_info .= ";";
@@ -260,6 +261,7 @@ function get_generic_results_as_array($event, $key, $results_list, $show_points,
       $points_value = 0;
     }
 
+    $competitor_result_array = array();
     if (file_exists("{$competitor_path}/registration_info")) {
       $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
       if (isset($registration_info["club_name"])) {
@@ -283,7 +285,6 @@ function get_generic_results_as_array($event, $key, $results_list, $show_points,
       $registration_info = array();
     }
 
-    $competitor_result_array = array();
     $competitor_result_array["competitor_id"] = $result_pieces[2];
     $competitor_result_array["competitor_name"] = $competitor_name;
     $competitor_result_array["time"] = csv_formatted_time($result_pieces[1]);
