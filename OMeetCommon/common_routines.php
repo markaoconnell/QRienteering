@@ -41,7 +41,7 @@ function get_web_page_header($paragraph_style, $table_style, $form_style) {
 
   // Choose stylesheet: results_page.css for results page, otherwise styles.css
   $current_script = basename(isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : "");
-  if ($current_script === 'view_results.php') {
+  if (($current_script === 'view_results.php') || ($current_script === 'view_results_by_class.php')) {
     $stylesheet_link = '<link rel="stylesheet" href="../OMeetCommon/results_page.css">';
   }
   else {
@@ -140,7 +140,7 @@ function get_table_style_header() {
   // If we're on the results page we already include a dedicated stylesheet
   // (results_page.css) from the page header; avoid duplicating it here.
   $current_script = basename(isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : "");
-  if ($current_script === 'view_results.php') {
+  if (($current_script === 'view_results.php') || ($current_script === 'view_results_by_class.php')) {
     return "";
   }
 
