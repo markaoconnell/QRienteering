@@ -100,7 +100,6 @@ $unpunched_qr_start = ((($start_time + $start_time_adjustment) == 0) && !$using_
 $competitor_name = file_get_contents("{$competitor_path}/name");
 
 $course = file_get_contents("{$competitor_path}/course");
-$courses_path = get_courses_path($event, $key);
 $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
 
 $course_properties = get_course_properties("{$courses_path}/{$course}");
@@ -283,9 +282,16 @@ else {
 }
 
 if ($allow_editing) {
+  $course_list = scandir($courses_path);
+  $course_list = array_diff($course_list, array(".", ".."));
+
+  $course_list = array_filter($course_list, function ($elt) use ($courses_path) { return (!file_exists("{$courses_path}/{$elt}/removed") &&
+	                                                                                  !file_exists("{$courses_path}/{$elt}/no_registrations")); });
+
+  $change_course_string = implode("\n", array_map(function ($elt) { return "<li><input type=radio name=new_course value=\"{$elt}\"> " . ltrim($elt, "0..9-"); }, $course_list));
   $output_string .= "<p>Add additional control - format is control_id, time (seconds since start): <input type=text name=\"additional\">\n";
   $output_string .= "<p><p><p>Change name (leave blank to keep original name): <input type=text name=\"new_name\">\n";
-  $output_string .= "<p>Change course (leave blank to keep original course): <input type=text name=\"new_course\">\n";
+  $output_string .= "<p>Change course (leave all unchecked to keep original course): <ul>{$change_course_string}</ul>\n";
   $output_string .= "<p><input type=submit value=\"Submit changes\">\n";
   $output_string .= "</form>\n";
 }

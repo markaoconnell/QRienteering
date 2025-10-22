@@ -1,7 +1,7 @@
 <?php
 
 // Show the results for a course
-function show_results($event, $key, $course, $result_class, $show_points, $max_points, $base_course_list, $show_school_and_club = false, $path_to_top = "..") {
+function get_results_as_string($event, $key, $course, $result_class, $show_points, $max_points, $base_course_list, $show_school_and_club = false, $path_to_top = "..") {
   $result_string = "";
   $result_string .= "<p>Results on " . ltrim($course, "0..9-") . (($result_class != "") ? ":{$result_class}" : "") . "\n";
 
@@ -197,7 +197,8 @@ function get_csv_results($event, $key, $course, $result_class, $show_points, $ma
 
       }
       if (isset($registration_info["club_name"])) {
-        $nre_info .= "{$registration_info["club_name"]};";
+        $club_school_pieces = explode("::", $registration_info["club_name"]);
+        $nre_info .= "{$club_school_pieces[0]};";
       }
       else {
         $nre_info .= ";";
@@ -217,18 +218,37 @@ function get_csv_results($event, $key, $course, $result_class, $show_points, $ma
 }
 
 // Get the results for a course as an array
-function get_results_as_array($event, $key, $course, $show_points, $max_points, $path_to_top = "..") {
-  $result_array = array();
-  $readable_course_name = ltrim($course, "0..9-");
+function get_course_results_as_array($event, $key, $course, $show_points, $max_points, $path_to_top = "..") {
 
   // No results yet - .csv is empty
   $results_path = get_results_path($event, $key);
   if (!is_dir("{$results_path}/{$course}")) {
-    return($result_array);
+    return(array());
   }
   
   $results_list = scandir("{$results_path}/{$course}");
   $results_list = array_diff($results_list, array(".", ".."));
+
+  return (get_generic_results_as_array($event, $key, $results_list, $show_points, $max_points));
+}
+
+function get_class_results_as_array($event, $key, $class, $show_points, $max_points, $path_to_top = "..") {
+
+  // No results yet - .csv is empty
+  $results_path = get_results_per_class_path($event, $key);
+  if (!is_dir("{$results_path}/{$class}")) {
+    return(array());
+  }
+
+  $results_list = scandir("{$results_path}/{$class}");
+  $results_list = array_diff($results_list, array(".", ".."));
+
+  return (get_generic_results_as_array($event, $key, $results_list, $show_points, $max_points));
+}
+
+
+function get_generic_results_as_array($event, $key, $results_list, $show_points, $max_points, $path_to_top = "..") {
+  $result_array = array();
 
   foreach ($results_list as $this_result) {
     $result_pieces = explode(",", $this_result);
@@ -241,6 +261,7 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
       $points_value = 0;
     }
 
+    $competitor_result_array = array();
     if (file_exists("{$competitor_path}/registration_info")) {
       $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
       if (isset($registration_info["club_name"])) {
@@ -264,7 +285,6 @@ function get_results_as_array($event, $key, $course, $show_points, $max_points, 
       $registration_info = array();
     }
 
-    $competitor_result_array = array();
     $competitor_result_array["competitor_id"] = $result_pieces[2];
     $competitor_result_array["competitor_name"] = $competitor_name;
     $competitor_result_array["time"] = csv_formatted_time($result_pieces[1]);
@@ -365,38 +385,31 @@ function get_all_course_result_links($event, $key, $path_to_top = "..") {
   }
   $links_string .= "<a href=\"../OMeet/view_results.php?event={$event}&key={$key}\">All</a> \n";
   if (event_is_using_nre_classes($event, $key)) {
-    $links_string .= "<a href=\"../OMeet/view_results.php?event={$event}&key={$key}&per_class=1\">Per-class results</a> \n";
+    $links_string .= "<a href=\"../OMeet/view_results_by_class.php?event={$event}&key={$key}&per_class=1\">Per-class results</a> \n";
   }
 
   return($links_string);
 }
 
-function get_all_class_result_links($event, $key, $classification_info) {
+function get_all_class_result_links($event, $key, $classification_info, $classes_to_display, $readable_course_hash) {
   if (!event_is_using_nre_classes($event, $key)) {
     return("");
   }
 
-  $courses_path = get_courses_path($event, $key);
-  $course_list = scandir($courses_path);
-  $course_list = array_diff($course_list, array(".", ".."));
+  $readable_course_list = array_keys($readable_course_hash);
+  $valid_class_entries_for_event = array_filter($classification_info, function ($elt) use ($readable_course_list) { return(in_array($elt[0], $readable_course_list)); });
+  $valid_classes_for_event = array_map(function ($elt) { return($elt[5]); }, $valid_class_entries_for_event);
 
-  // Set a mapping from the readable course name (used in the classes table) to the actual course name, e.g. Green -> 04-Green
-  $course_hash = array();
-  array_map(function ($elt) use (&$course_hash) { $course_hash[ltrim($elt, "0..9-")] = $elt; }, $course_list);
-  $readable_course_list = array_keys($course_hash);
-  $valid_classes_for_event = array_filter($classification_info, function ($elt) use ($readable_course_list) { return(in_array($elt[0], $readable_course_list)); });
 
-  $processed_classes = array();
   $links_string = "<p>Show results for ";
-  foreach ($valid_classes_for_event as $this_class) {
-    if (!isset($processed_classes[$this_class[5]])) {
-      $course_for_class = $course_hash[$this_class[0]];
-      $links_string .= "<a href=\"../OMeet/view_results.php?event={$event}&key={$key}&course={$course_for_class}&class=" .
-	      urlencode($this_class[5]) . "&per_class=1\">" . "{$this_class[0]}:{$this_class[5]}</a> \n";
-      $processed_classes[$this_class[5]] = 1;
+  foreach ($classes_to_display as $this_class) {
+    if (in_array($this_class, $valid_classes_for_event)) {
+//      $printable_course_name = array_values(array_filter($classification_info, function ($elt) use ($this_class) { return($this_class == $elt[5]); }))[0][0];
+      $links_string .= "<a href=\"../OMeet/view_results_by_class.php?event={$event}&key={$key}&class=" .
+	      urlencode($this_class) . "\">{$this_class}</a> \n";
     }
   }
-  $links_string .= "<a href=\"../OMeet/view_results.php?event={$event}&key={$key}&per_class=1\">All Classes</a> \n";
+  $links_string .= "<a href=\"../OMeet/view_results_by_class.php?event={$event}&key={$key}\">All Classes</a> \n";
   $links_string .= "<a href=\"../OMeet/view_results.php?event={$event}&key={$key}\">Results by course</a> \n";
 
   return($links_string);
@@ -423,7 +436,7 @@ function get_email_course_result_links($event, $key, $path_to_top = "..") {
   }
   $links_string .= "<a href=\"{$base_path_for_links}/OMeet/view_results.php?event={$event}&key={$key}\">All</a> \n";
   if (event_is_using_nre_classes($event, $key)) {
-    $links_string .= "<a href=\"{$base_path_for_links}/OMeet/view_results.php?event={$event}&key={$key}&per_class=1\">Per-class results</a> \n";
+    $links_string .= "<a href=\"{$base_path_for_links}/OMeet/view_results_by_class.php?event={$event}&key={$key}&per_class=1\">Per-class results</a> \n";
   }
 
 

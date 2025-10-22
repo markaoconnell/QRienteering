@@ -583,12 +583,11 @@ success();
 %TEST_INFO = qw(Testname NreViewResultsByClass);
 %GET = qw(key UnitTestPlayground);
 $GET{"event"} = $event_id;
-$GET{"per_class"} = $event_id;
 
 %COOKIE = ();
 hashes_to_artificial_file();
 
-my($cmd) = "php ../OMeet/view_results.php";
+my($cmd) = "php ../OMeet/view_results_by_class.php";
 my($output);
 $output = qx($cmd);
 
@@ -600,8 +599,8 @@ if ($actual_table_rows != 4) {
   error_and_exit("Found $actual_table_rows instead of 4 in results output.\n$output");
 }
 
-if ($output !~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04-GetEmAll,05-Green,06-Red,07-Brown\n/) {
-  error_and_exit("Did not find expected course list in results output.\n$output");
+if ($output =~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04-GetEmAll,05-Green,06-Red,07-Brown\n/) {
+  error_and_exit("Should not find expected course list in results by class output.\n$output");
 }
 
 success();

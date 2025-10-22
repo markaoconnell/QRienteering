@@ -1,6 +1,7 @@
 <?php
 require '../OMeetCommon/common_routines.php';
 require '../OMeetCommon/nre_routines.php';
+require '../OMeetRegistration/nre_class_handling.php';
 require '../OMeetCommon/time_routines.php';
 require '../OMeetCommon/results_routines.php';
 require '../OMeetCommon/course_properties.php';
@@ -34,7 +35,26 @@ $lines_to_show = isset($_GET["lines_to_show"]) ? $_GET["lines_to_show"] : 15;
 $columns = isset($_GET["columns"]) ? $_GET["columns"] : 2;
 $time_delay = isset($_GET["time_delay"]) ? $_GET["time_delay"] : 30;  # Delay in seconds before moving to next results
 $initial_run = isset($_GET["initial_run"]);
-$initialize_course_values = isset($_GET["initialize_course_values"]);
+$initialize_list_to_show = isset($_GET["initialize_list_to_show"]);
+$show_by = isset($_GET["show_by"]) ? $_GET["show_by"] : "course"; // Assuming showing by course if not set
+$show_by_course = ($show_by == "course");
+$show_by_class = ($show_by == "class");
+if (!$show_by_course && !$show_by_class) {
+  $show_by_course = True;
+}
+if (!event_is_using_nre_classes($event, $key)) {
+  $show_by_course = True;
+}
+if ($show_by_class) {
+  $classification_info = get_nre_classes_info($event, $key);
+  if (count($classification_info) == 0) {   // If there are no classes, then go back to showing by course
+    $show_by_course = True;
+    $show_by_class = False;
+  }
+}
+else {
+  $classification_info = array();
+}
 $prior_page_end = isset($_GET["prior_page_cookie"]) ? $_GET["prior_page_cookie"] : "";
 
 $output = "<p>Results for " . file_get_contents(get_event_path($event, $key) . "/description") . "\n";
@@ -48,43 +68,84 @@ if ($initial_run) {
   $output .= "<form action=\"./result_cycler.php\">\n";
   $output .= "<input type=hidden name=key value=\"{$key}\">\n";
   $output .= "<input type=hidden name=event value=\"{$event}\">\n";
-  $output .= "<input type=hidden name=initialize_course_values value=\"yes\">\n";
+  $output .= "<input type=hidden name=initialize_list_to_show value=\"yes\">\n";
   $output .= "<p>Number of columns of output: <input type=text name=columns value=2>\n";
   $output .= "<p>Number of lines of output: <input type=text name=lines_to_show value=15>\n";
   $output .= "<p>Seconds of delay between refreshes: <input type=text name=time_delay value=30>\n";
-  $output .= "<p><p>Show all courses: <input type=checkbox name=show_all_courses value=\"yes\" checked>\n"; 
+  if (event_is_using_nre_classes($event, $key)) {
+    $output .= "<p>Show by <input type=radio name=show_by value=course " . ($show_by_course ? "checked" : "") . ">" .
+		  " course or <input type=radio name=show_by value=class " . ($show_by_class ? "checked" : "") . "> class\n";
+  }
+  else {
+    $output .= "<input type=hidden name=show_by value=course>\n";
+  }
+  $output .= "<p><p>Show all courses/classes: <input type=checkbox name=show_all value=\"yes\" checked>\n"; 
   $output .= "<p><input type=submit value=\"Show results\">\n";
-  $output .= "<p><p>Show specific courses (only used if Show all courses deselected):\n";
+  if (event_is_using_nre_classes($event, $key)) {
+    $output .= "<p><p>Show specific courses (only used if Show all deselected and courses display chosen):\n";
+  }
+  else {
+    $output .= "<p><p>Show specific courses (only used if Show all deselected):\n";
+  }
   foreach ($course_list as $this_course) {
     $readable_course_name = ltrim($this_course, "0..9-");
     $output .= "<p><input type=checkbox name=\"show_{$this_course}\" value=\"yes\"> {$readable_course_name}\n";
   }
+  if (event_is_using_nre_classes($event, $key)) {
+    $output .= "<p><p>Show specific classes (only used if Show all deselected and classes display chosen):\n";
+    $class_list = get_nre_class_display_order($event, $key);
+    foreach ($class_list as $this_class) {
+      $output .= "<p><input type=checkbox name=\"" . "show_{$this_class}" . "\" value=\"yes\"> {$this_class}\n";
+    }
+  }
   $output .= "<p></form>\n";
 }
 else {
-  if ($initialize_course_values) {
-    if (isset($_GET["show_all_courses"]) && ($_GET["show_all_courses"] == "yes")) {
-      $courses_to_show = $course_list;
-    }
-    else {
-      $courses_to_show = array();
-      foreach ($course_list as $this_course) {
-        if (isset($_GET["show_{$this_course}"]) && ($_GET["show_{$this_course}"] == "yes")) {
-          $courses_to_show[] = $this_course;
-	}
+  $things_to_show = array();
+  if ($show_by_course) {
+    if ($initialize_list_to_show) {
+      if (isset($_GET["show_all"]) && ($_GET["show_all"] == "yes")) {
+        $things_to_show = $course_list;
+      }
+      else {
+        $courses_to_show = array();
+        foreach ($course_list as $this_course) {
+          if (isset($_GET["show_{$this_course}"]) && ($_GET["show_{$this_course}"] == "yes")) {
+            $things_to_show[] = $this_course;
+          }
+        }
       }
     }
+    else {
+      $things_to_show = explode(",", $_GET["courses_to_show"]);
+    }
   }
-  else {
-    $courses_to_show = explode(",", $_GET["courses_to_show"]);
+  elseif ($show_by_class) {
+    if ($initialize_list_to_show) {
+      $class_list = get_nre_class_display_order($event, $key);
+      if (isset($_GET["show_all"]) && ($_GET["show_all"] == "yes")) {
+        $things_to_show = $class_list;
+      }
+      else {
+        foreach ($class_list as $this_class) {
+	  $encoded_class = urlencode($this_class);
+          if (isset($_GET["show_{$encoded_class}"]) && ($_GET["show_{$encoded_class}"] == "yes")) {
+            $things_to_show[] = $this_class;
+          }
+        }
+      }
+    }
+    else {
+      $things_to_show = explode(",", $_GET["classes_to_show"]);
+    }
   }
 
-  if (count($courses_to_show) == 0) {
-    error_and_exit("<p>No courses to show");
+  if (count($things_to_show) == 0) {
+    error_and_exit("<p>No courses or classes to show");
   }
 
   if ($prior_page_end == "") {
-    $prior_page_end = "{$courses_to_show[0]},0";
+    $prior_page_end = "{$things_to_show[0]},0";
   }
   
   $results = get_column_data($prior_page_end);
@@ -106,17 +167,23 @@ else {
   
   $displayable_data = array_map(function ($elt) { return ("<tr height=20>{$elt}</tr>"); }, $column_data);
   $output .= "\n<table>\n" . implode("\n", $displayable_data) . "\n</table>\n";
-  $string_courses_to_show = implode(",", $courses_to_show);
+  if ($show_by_course) {
+    $options_string = "show_by=course&courses_to_show=" . urlencode(implode(",", $things_to_show));
+  }
+  elseif ($show_by_class) {
+    $options_string = "show_by=class&classes_to_show=" . urlencode(implode(",", $things_to_show));
+  }
   set_redirect("\n<meta http-equiv=\"refresh\" content=\"{$time_delay}; url=./result_cycler.php?key={$key}&event={$event}&" .
                                                                                    "lines_to_show={$lines_to_show}&columns={$columns}&time_delay={$time_delay}&" .
-										   "prior_page_cookie={$prior_page_end}&courses_to_show={$string_courses_to_show}\"/>");
+										   "prior_page_cookie=" . urlencode($prior_page_end) . "&{$options_string}\"/>");
 
   $output .= "\n<p>Refreshing every {$time_delay} seconds or <a href=\"./result_cycler.php?key={$key}&event={$event}&" .
                        "lines_to_show={$lines_to_show}&columns={$columns}&time_delay={$time_delay}&" .
-                       "prior_page_cookie={$prior_page_end}&courses_to_show={$string_courses_to_show}\">show next now</a>\n";
+                       "prior_page_cookie=" . urlencode($prior_page_end) . "&{$options_string}\">show next now</a>\n";
 }
 
 echo get_web_page_header(true, true, false);
+
 
 echo $output;
 
@@ -124,89 +191,73 @@ echo $output;
 echo get_web_page_footer();
 
 function get_column_data($prior_page_end) {
-  global $course_list, $lines_to_show, $event, $key, $courses_path, $courses_to_show;
+  global $course_list, $lines_to_show, $courses_path, $event, $key, $things_to_show, $show_by_course, $show_by_class, $classification_info;
   global $TYPE_FIELD, $SCORE_O_COURSE, $MAX_SCORE_FIELD;
   global $color_mapping_hash;
 
   $last_marker_pieces = explode(",", $prior_page_end);
-  $course_to_show = $last_marker_pieces[0];
+  $thing_to_show = $last_marker_pieces[0];
   $next_place_to_show = $last_marker_pieces[1];
   $current_lines = 0;
   $current_output;
 
-  $readable_course_name = ltrim($course_to_show, "0..9-");
-  $course_properties = get_course_properties("{$courses_path}/{$course_to_show}");
-  $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
-  $max_score = 0;
-  $label_points_column = "";
-  if ($score_course) {
-    $max_score = $course_properties[$MAX_SCORE_FIELD];
-    $label_points_column = "Pts";
-  }
-
-  # Include the header
-  if (isset($color_mapping_hash[strtolower($readable_course_name)])) {
-    $bgcolor = "bgcolor = " . $color_mapping_hash[strtolower($readable_course_name)];
-  }
-  else {
-    $bgcolor = "";
-  }
+  $header_info = get_column_headers($thing_to_show);
+  $score_course = $header_info[1];
+  $max_score = $header_info[2];
   $current_output = array();
-  $current_output[] = "<td></td><td {$bgcolor}><strong><u>{$readable_course_name}</u></strong></td><td></td><td width=20></td>\n";
-  $current_output[] = "<td><strong>Pl</strong></td><td><strong>Name</strong></td><td><strong>Time</strong></td><td><strong>{$label_points_column}</strong></td>\n";
-  $current_lines = 2;
+  $current_output = array_merge($current_output, $header_info[0]);
+  $current_lines += count($header_info[0]);
 
-  $results_array = get_results_as_array($event, $key, $course_to_show, $score_course, $max_score);
+  if ($show_by_course) {
+    $results_array = get_course_results_as_array($event, $key, $thing_to_show, $score_course, $max_score);
+  }
+  elseif ($show_by_class) {
+    $results_array = get_class_results_as_array($event, $key, $thing_to_show, $score_course, $max_score);
+  }
 
   while ($current_lines < $lines_to_show) {
 
     if ($next_place_to_show >= count($results_array)) {
-      $pick_next_course = false;
-      $found_course = false;
-      foreach ($courses_to_show as $one_course) {
-        if ($pick_next_course) {   # Need to decide what to do about removed courses here
-          $found_course = true;
-	  $course_to_show = $one_course;
+      $pick_next_item = false;
+      $found_item = false;
+      foreach ($things_to_show as $one_thing) {
+        if ($pick_next_item) {   # Need to decide what to do about removed courses here
+          $found_item = true;
+	  $thing_to_show = $one_thing;
 	  break;
 	}
 
-        if ($one_course == $course_to_show) {
-          $pick_next_course = true;
+        if ($one_thing == $thing_to_show) {
+          $pick_next_item = true;
 	}
       }
 
-      if ($found_course) {
+      if ($found_item) {
 	if (($current_lines + 4) >= $lines_to_show) {   # Only start showing the next course if we can show at least one entry
           $current_output = array_pad($current_output, $lines_to_show, "<td></td><td></td><td></td><td></td>\n");
-          return(array("{$course_to_show},0", $current_output, false));  # Start with the next course
+          return(array("{$thing_to_show},0", $current_output, false));  # Start with the next course
 	}
 
-        $readable_course_name = ltrim($course_to_show, "0..9-");
-        $course_properties = get_course_properties("{$courses_path}/{$course_to_show}");
-        $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
-        $max_score = 0;
-        $label_points_column = "";
-        if ($score_course) {
-          $max_score = $course_properties[$MAX_SCORE_FIELD];
-          $label_points_column = "Pts";
-        }
-        if (isset($color_mapping_hash[strtolower($readable_course_name)])) {
-          $bgcolor = "bgcolor = " . $color_mapping_hash[strtolower($readable_course_name)];
-        }
-        else {
-          $bgcolor = "";
-        }
+        $header_info = get_column_headers($thing_to_show);
+	$score_course = $header_info[1];
+	$max_score = $header_info[2];
+
         $current_output[] = "<td></td><td></td><td></td><td></td>\n";
-        $current_output[] = "<td></td><td {$bgcolor}><strong><u>{$readable_course_name}</u></strong></td><td></td><td width=20></td>\n";
-        $current_output[] = "<td><strong>Pl</strong></td><td><strong>Name</strong></td><td><strong>Time</strong></td><td><strong>{$label_points_column}</strong></td>\n";
-        $current_lines += 3;
-	$results_array = get_results_as_array($event, $key, $course_to_show, $score_course, $max_score);
+        $current_output = array_merge($current_output, $header_info[0]);
+	$current_lines += count($header_info[0]) + 1;
+
+        if ($show_by_course) {
+          $results_array = get_course_results_as_array($event, $key, $thing_to_show, $score_course, $max_score);
+        }
+        elseif ($show_by_class) {
+          $results_array = get_class_results_as_array($event, $key, $thing_to_show, $score_course, $max_score);
+        }
 	$next_place_to_show = 0;
 	continue;
       }
       else {
         $current_output = array_pad($current_output, $lines_to_show, "<td></td><td></td><td></td><td></td>\n");
-        return(array("{$courses_to_show[0]},0", $current_output, true));  # Start over next time
+        return(array("{$things_to_show[0]},0", $current_output, true));  # Start over next time
       }
     }
 
@@ -241,28 +292,75 @@ function get_column_data($prior_page_end) {
   // If we have just finished a course at the end of the column,
   // move on to the next one
   if ($next_place_to_show >= count($results_array)) {
-    $pick_next_course = false;
-    $found_course = false;
-    foreach ($courses_to_show as $one_course) {
-      if ($pick_next_course) {   # Need to decide what to do about removed courses here
-        $found_course = true;
-	  $course_to_show = $one_course;
+    $pick_next_item = false;
+    $found_item = false;
+    foreach ($things_to_show as $one_thing) {
+      if ($pick_next_item) {   # Need to decide what to do about removed courses here
+          $found_item = true;
+	  $thing_to_show = $one_thing;
 	  break;
 	}
 
-      if ($one_course == $course_to_show) {
+      if ($one_thing == $thing_to_show) {
         $pick_next_course = true;
       }
     }
 
-    if ($found_course) {
-      return(array("{$course_to_show},0", $current_output, false));  # Start with the next course
+    if ($found_item) {
+      return(array("{$thing_to_show},0", $current_output, false));  # Start with the next course
     }
     else {
-      return(array("{$courses_to_show[0]},0", $current_output, true));  # Start over next time
+      return(array("{$things_to_show[0]},0", $current_output, true));  # Start over next time
     }
   }
-  return(array("{$course_to_show},{$next_place_to_show}", $current_output, false));  # Marker of where to start next
+  return(array("{$thing_to_show},{$next_place_to_show}", $current_output, false));  # Marker of where to start next
+}
+
+function get_column_headers($thing_to_show) {
+  global $course_list, $courses_path, $things_to_show, $show_by_course, $show_by_class, $classification_info;
+  global $TYPE_FIELD, $SCORE_O_COURSE, $MAX_SCORE_FIELD;
+  global $color_mapping_hash;
+
+  if ($show_by_course) {
+    $readable_course_name = ltrim($thing_to_show, "0..9-");
+    $course_to_show = $thing_to_show;
+  }
+  elseif ($show_by_class) {
+    $course_to_show = $course_list[0];   // Have some default, event if it makes no sense
+    $readable_course_name = get_course_for_class($classification_info, $thing_to_show);
+    foreach ($course_list as $this_course) {
+      if (strtolower($readable_course_name) == strtolower(ltrim($this_course, "0..9-"))) {
+        $course_to_show = $this_course;
+      }
+    }
+  }
+  $course_properties = get_course_properties("{$courses_path}/{$course_to_show}");
+  $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+  $max_score = 0;
+  $label_points_column = "";
+  if ($score_course) {
+    $max_score = $course_properties[$MAX_SCORE_FIELD];
+    $label_points_column = "Pts";
+  }
+
+  # Include the header
+  if (isset($color_mapping_hash[strtolower($readable_course_name)])) {
+    $bgcolor = "bgcolor = " . $color_mapping_hash[strtolower($readable_course_name)];
+  }
+  else {
+    $bgcolor = "";
+  }
+  if ($show_by_course) {
+    $column_header = $readable_course_name;
+  }
+  else {
+    $column_header = "{$thing_to_show}:{$readable_course_name}";
+  }
+  $column_header_output = array();
+  $column_header_output[] = "<td></td><td {$bgcolor}><strong><u>{$column_header}</u></strong></td><td></td><td width=20></td>\n";
+  $column_header_output[] = "<td><strong>Pl</strong></td><td><strong>Name</strong></td><td><strong>Time</strong></td><td><strong>{$label_points_column}</strong></td>\n";
+
+  return(array($column_header_output, $score_course, $max_score));
 }
 
 ?>

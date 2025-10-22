@@ -67,6 +67,7 @@ function register_competitor($entrant_info) {
   // Add the registration information
   $first_name = isset($entrant_info["first_name"]) ? $entrant_info["first_name"] : "";
   $last_name = isset($entrant_info["last_name"]) ? $entrant_info["last_name"] : "";
+  $start_time = isset($entrant_info["start_time"]) ? $entrant_info["start_time"] : "";
   $stick = isset($entrant_info["stick"]) ? $entrant_info["stick"] : "";
   $email_address = isset($entrant_info["email_address"]) ? $entrant_info["email_address"] : "";
   $cell_phone = isset($entrant_info["cell_phone"]) ? $entrant_info["cell_phone"] : "";
@@ -85,6 +86,7 @@ function register_competitor($entrant_info) {
 	                                  "AutoStarted", base64_encode("yes"),
                                           "first_name", base64_encode($first_name),
                                           "last_name", base64_encode($last_name),
+                                          "start_time", base64_encode($start_time),
                                           "si_stick", base64_encode($stick),
                                           "cell_phone", base64_encode($cell_phone),
                                           "club_name", base64_encode($club_name),
@@ -180,6 +182,7 @@ if ($preregistration_currently_allowed) {
       $fields[] = $entrant_info["first_name"];
       $fields[] = $entrant_info["last_name"];
       $fields[] = $entrant_info["course"];
+      $fields[] = $entrant_info["start_time"];
       $fields[] = $entrant_info["stick"];
       $fields[] = $entrant_info["cell_phone"];
       $fields[] = $entrant_info["email_address"];

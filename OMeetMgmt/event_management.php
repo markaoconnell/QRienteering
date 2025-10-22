@@ -19,6 +19,13 @@ function validate_course($string) {
   return("");
 }
 
+function validate_start_time($string) {
+  if (!preg_match("/^\d{1,2}[:.]\d{2}$/", $string)) {
+     return ("Incorrectly formatted start time, must be hh:mm (or hh.mm), hours (hh) from 0 to 24 and minutes (mm) 0 to 59 (minutes must be two digits).");
+  }
+  return("");
+}
+
 function validate_stick($string) {
   if (!preg_match("/^[0-9]+$/", $string)) {
     return ("SI unit field may only contain numbers");
@@ -135,15 +142,16 @@ if (isset($_POST["upload_preregistrants"])) {
     $validators = array(array("offset" => 0, "field_name" => "first_name", "validator" => "validate_name", "optional" => false),
                         array("offset" => 1, "field_name" => "last_name", "validator" => "validate_name", "optional" => false),
                         array("offset" => 2, "field_name" => "course", "validator" => "validate_course", "optional" => true),
-                        array("offset" => 3, "field_name" => "stick", "validator" => "validate_stick", "optional" => true),
-                        array("offset" => 4, "field_name" => "cell_phone", "validator" => "validate_cell_phone", "optional" => true),
-                        array("offset" => 5, "field_name" => "email_address", "validator" => "validate_email", "optional" => true),
-                        array("offset" => 6, "field_name" => "club_name", "validator" => "validate_name", "optional" => true),
-                        array("offset" => 7, "field_name" => "waiver_signed", "validator" => "validate_waiver", "optional" => true),
-                        array("offset" => 8, "field_name" => "birth_year", "validator" => "validate_birth_year", "optional" => true),
-                        array("offset" => 9, "field_name" => "gender", "validator" => "validate_gender", "optional" => true),
-			array("offset" => 10, "field_name" => "class", "validator" => "validate_class", "optional" => true),
-			array("offset" => 11, "field_name" => "award_eligibility", "validator" => "validate_award_eligibility", "optional" => true));
+                        array("offset" => 3, "field_name" => "start_time", "validator" => "validate_start_time", "optional" => true, "colon_xlate" => "."),
+                        array("offset" => 4, "field_name" => "stick", "validator" => "validate_stick", "optional" => true),
+                        array("offset" => 5, "field_name" => "cell_phone", "validator" => "validate_cell_phone", "optional" => true),
+                        array("offset" => 6, "field_name" => "email_address", "validator" => "validate_email", "optional" => true),
+                        array("offset" => 7, "field_name" => "club_name", "validator" => "validate_name", "optional" => true),
+                        array("offset" => 8, "field_name" => "waiver_signed", "validator" => "validate_waiver", "optional" => true),
+                        array("offset" => 9, "field_name" => "birth_year", "validator" => "validate_birth_year", "optional" => true),
+                        array("offset" => 10, "field_name" => "gender", "validator" => "validate_gender", "optional" => true),
+			array("offset" => 11, "field_name" => "class", "validator" => "validate_class", "optional" => true),
+			array("offset" => 12, "field_name" => "award_eligibility", "validator" => "validate_award_eligibility", "optional" => true));
 
     foreach ($prereg_entries as $this_entry) {
       $entry_is_ok = true;
@@ -158,7 +166,16 @@ if (isset($_POST["upload_preregistrants"])) {
 	    $entry_is_ok = false;
 	    break;
 	  }
-          $entry_string .= $field_validator["field_name"] . ":{$current_field};";
+
+	  // I chose to use a colon as the separator in the preregistration file, which is a pain for any field that might use a colon...  Grrrrrr....
+	  // Just translate a colon to a different character which would work
+	  if (isset($field_validator["colon_xlate"])) {
+	    $xlate_colon_to = $field_validator["colon_xlate"];
+            $entry_string .= $field_validator["field_name"] . ":" . str_replace(":", $xlate_colon_to, $current_field) . ";";
+	  }
+	  else {
+            $entry_string .= $field_validator["field_name"] . ":{$current_field};";
+	  }
 	}
 	else {
           if (!$field_validator["optional"]) {
@@ -251,7 +268,7 @@ $output_string .= "<input type=hidden name=\"key\" value=\"{$key}\">\n";
 $output_string .= "<input type=hidden name=\"event\" value=\"{$event}\">\n";
 $output_string .= "<p>File format is .csv (comma separated fields), first name and last name are required, all other fields may be blank.\n";
 $output_string .= "<p>Field order is:\n";
-$output_string .= "<ul><li>First name<li>Last name<li>Course<li>E punch id (si unit)<li>cell phone<li>email address\n";
+$output_string .= "<ul><li>First name<li>Last name<li>Course<li>Start Time (HH:MM)<li>E punch id (si unit)<li>cell phone<li>email address\n";
 $output_string .= "<li>orienteering club name<li>presigned waiver (yes or leave blank)<li>year of birth (4 digits)\n";
 $output_string .= "<li>gender (m or f)<li>class (e.g. M55+, F-18, etc)<li>Eligible For Award (y/n)</ul>\n";
 $output_string .= "<p>File to upload: \n";

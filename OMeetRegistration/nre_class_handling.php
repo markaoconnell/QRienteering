@@ -58,4 +58,13 @@ function find_best_class($classification_info, $gender, $age_for_classification,
   return("");  // No match, should rarely happen, should be weeded out earlier
 }
 
+function get_course_for_class($classification_info, $class) {
+  foreach ($classification_info as $class_info) {
+    if ($class_info[5] == $class) {
+      return($class_info[0]);
+    }
+  }
+  return("");
+}
+
 ?>

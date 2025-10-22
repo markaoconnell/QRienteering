@@ -52,7 +52,7 @@ foreach ($course_list as $one_course) {
     $max_score = $course_properties[$MAX_SCORE_FIELD];
   }
   
-  $results_array = get_results_as_array($event, $key, $one_course, $score_course, $max_score, "..");
+  $results_array = get_course_results_as_array($event, $key, $one_course, $score_course, $max_score, "..");
   $place = 1;
   foreach ($results_array as $this_result) {
     // If the splits array is empty, there is an error - most likely a self reported result with
@@ -99,7 +99,7 @@ foreach ($course_list as $one_course) {
     $csv_array[] = $this_result["dnf"] ? "2" : "0"; // 2 = DNF, 0 = good - Classifier
     $csv_array[] = "1"; // Club number
     $csv_array[] = "\"\""; // Club name
-    $csv_array[] = $this_result["club_name"];  // City
+    $csv_array[] = isset($this_result["club_name"]) ? $this_result["club_name"] : "";  // City
     $csv_array[] = "\"\""; // Nationality
     $csv_array[] = "\"\""; // Class number
     $csv_array[] = $readable_course_name; // Short course name

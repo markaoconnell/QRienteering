@@ -47,7 +47,7 @@ foreach ($course_list as $one_course) {
     $max_score = $course_properties[$MAX_SCORE_FIELD];
   }
   
-  $results_array = get_results_as_array($event, $key, $one_course, $score_course, $max_score, "..");
+  $results_array = get_course_results_as_array($event, $key, $one_course, $score_course, $max_score, "..");
   $place = 1;
   foreach ($results_array as $this_result) {
     // If the splits array is empty, there is an error - most likely a self reported result with
@@ -81,7 +81,7 @@ foreach ($course_list as $one_course) {
     $csv_array[] = ($this_result["competitive_class"] != "") ? "0" : "1"; // NC
     $csv_array[] = formatted_time_compact($this_result["raw_time"]);
     $csv_array[] = $this_result["dnf"] ? "2" : "1"; // 2 = DNF, 1 = good, 3 = MP - Classifier
-    $csv_array[] = $this_result["club_name"];  // Club Name
+    $csv_array[] = isset($this_result["club_name"]) ? $this_result["club_name"] : "";  // Club Name
     $csv_array[] = $this_result["competitive_class"];  // OUSA class
     $csv_array[] = $readable_course_name; // Short course name
     $csv_array[] = "";  // km - length

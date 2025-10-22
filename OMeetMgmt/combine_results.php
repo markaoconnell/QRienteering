@@ -6,7 +6,7 @@ require '../OMeetCommon/course_properties.php';
 
 ck_testing();
 
-set_page_title("Results Combiner");
+set_page_title("Results Predictor setup");
 
 function is_event_open($filename) {
   global $base_path, $key;
@@ -54,13 +54,13 @@ echo get_web_page_header(true, false, false);
 
 ?>
 <br>
-<p>Orienteering Event Results combiner
+<p>Orienteering Event Results predictor
 <p>
 <p> Choose the events whose results should be combined
-<p> Fill in the box for events still in progress to give unfinished competitors a default
-time for the course - normally the time elapsed since the last start - this can be useful
-to see if any outstanding runners <strong>could</strong> be eligible for an award.  Format
-as 60m (60 minutes), 90m (90 minutes), 1h45m (105 minutes), etc...
+<p> Fill in the boxes for events still in progress to give unfinished competitors a possible
+time for the course - the award time minus their start time (if known), minus the last start
+otherwise.  This allows seeing if any outstanding runners <strong>could</strong> be eligible for an award.
+Format times as hh:mm, make sure to use 24 hour time (e.g. 13:45, not 1:45, which is 1:45 AM!)
 <form action="./combine_results_2.php">
 <?php
 echo "<input type=hidden name=\"key\" value=\"{$key}\">\n";
@@ -68,12 +68,14 @@ echo "<ul>\n";
 echo implode("\n", array_map(function ($elt) use ($base_path, $key)
                              { return (
 	                       "<li> <input type=checkbox name=\"{$elt}\" value=1> " . (file_get_contents("{$base_path}/{$elt}/description")) .
-                               " - <input type=text name=\"time_since_start-{$elt}\" >" );  }, 
+			       " - <input type=checkbox name=\"{$elt}_in_progress\" value=1> Still in progress, " .
+                               " - Time of awards: <input type=text size=6 name=\"{$elt}_award_time\">, Last start <input type=text size=6 name=\"{$elt}_last_start\">" );  }, 
                              $open_event_list));
 echo implode("\n", array_map(function ($elt) use ($base_path, $key)
                              { return (
 	                       "<li> <input type=checkbox name=\"{$elt}\" value=1> " . (file_get_contents("{$base_path}/{$elt}/description")) .
-                               " - <input type=text name=\"time_since_start-{$elt}\" >" );  }, 
+			       " - <input type=checkbox name=\"{$elt}_in_progress\" value=1> Still in progress, " .
+                               " - Time of awards: <input type=text size=6 name=\"{$elt}_award_time\">, Last start <input type=text size=6 name=\"{$elt}_last_start\">" );  }, 
                              $closed_event_list));
 
 echo "</ul>\n";
