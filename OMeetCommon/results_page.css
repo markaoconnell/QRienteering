@@ -1,0 +1,179 @@
+/* Root variables for theming */
+:root {
+    --primary-color: #22466e;
+    --accent-red: #bc202e;
+    --bg-color: #ffffff;
+    --text-color: #333333;
+    --border-color: #00000022;
+    --border-radius: 0.5rem;
+}
+
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    padding: 1rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.5;
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+}
+
+/* Logo positioning */
+body::before {
+    content: '';
+    display: block;
+    width: 12rem;
+    height: 4rem;
+    background-image: url("https://newenglandorienteering.org/images/stories/logo_m2.gif");
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    position: absolute;
+    top: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+}
+
+@media (min-width: 769px) {
+    body::before {
+        position: absolute;
+        top: 2.5rem;
+        right: 1rem;
+        left: auto;
+        transform: none;
+    }
+}
+
+/* Typography enhancements */
+p {
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+}
+
+strong {
+    font-weight: 600;
+    color: var(--accent-red);
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    border-collapse: separate !important;
+    border-spacing: 0;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    border: 0.5px solid var(--border-color) !important;
+}
+
+th {
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem;
+    text-align: left;
+    border: 0.5px solid var(--border-color) !important;
+}
+
+th:first-child {
+    text-align: center;
+    border-top-left-radius: var(--border-radius);
+}
+
+th:last-child {
+    border-top-right-radius: var(--border-radius);
+}
+
+tr:last-child td:first-child {
+    border-bottom-left-radius: var(--border-radius);
+}
+
+tr:last-child td:last-child {
+    border-bottom-right-radius: var(--border-radius);
+}
+
+td {
+    padding: 0.5rem;
+    border: 0.5px solid var(--border-color) !important;
+}
+
+tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+/* Column widths */
+th:first-child,
+td:first-child {
+    width: 4rem;
+    text-align: center;
+}
+
+th:nth-child(2),
+td:nth-child(2) {
+    width: auto;
+}
+
+th:nth-child(3),
+td:nth-child(3) {
+    width: 6rem;
+    text-align: center;
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    body {
+        padding: 0.75rem;
+        padding-top: 3.25rem;
+    }
+
+    table {
+        font-size: 0.85rem;
+    }
+
+    th,
+    td {
+        padding: 0.35rem 0.4rem;
+    }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary-color: #5a8fc4;
+        --accent-red: #e63946;
+        --bg-color: #1a1a1a;
+        --text-color: #e0e0e0;
+        --border-color: #ffffff22;
+    }
+
+    body::before {
+        filter: invert(1) hue-rotate(180deg) brightness(0.55);
+        mix-blend-mode: screen;
+    }
+
+    tr:nth-child(even) {
+        background: #252525;
+    }
+}

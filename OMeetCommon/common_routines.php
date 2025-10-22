@@ -39,6 +39,15 @@ function set_redirect($redirection_string) {
 function get_web_page_header($paragraph_style, $table_style, $form_style) {
   global $bg_color, $page_title, $font_color_override, $redirect;
 
+  // Choose stylesheet: results_page.css for results page, otherwise styles.css
+  $current_script = basename(isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : "");
+  if ($current_script === 'view_results.php') {
+    $stylesheet_link = '<link rel="stylesheet" href="../OMeetCommon/results_page.css">';
+  }
+  else {
+    $stylesheet_link = '<link rel="stylesheet" href="../OMeetCommon/styles.css">';
+  }
+
   $headers_to_show = <<<END_OF_HEADERS
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
@@ -49,7 +58,7 @@ function get_web_page_header($paragraph_style, $table_style, $form_style) {
   <meta content="Mark O'Connell" name="author">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta charset="utf-8">
-  <link rel="stylesheet" href="../OMeetCommon/styles.css"></link>
+  {$stylesheet_link}
 
 END_OF_HEADERS;
 
@@ -128,6 +137,14 @@ function get_bg_color_element($bg_color) {
 
 // get table style elements
 function get_table_style_header() {
+  // If we're on the results page we already include a dedicated stylesheet
+  // (results_page.css) from the page header; avoid duplicating it here.
+  $current_script = basename(isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : "");
+  if ($current_script === 'view_results.php') {
+    return "";
+  }
+
+  // Old inline table styling for non-results pages.
   if (is_mobile()) {
     return "<style>\n td {\nfont-size: 200%;\n}\n th {\n font-size: 220%;\n}\ntable, th, td {\n border-collapse: collapse;\n border: 1px solid lightgray;\n }\n</style>\n";
   }
