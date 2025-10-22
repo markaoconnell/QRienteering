@@ -87,20 +87,20 @@ else {
 
         // Given that the person may be on a new course, make sure that their competitive class is still correct
         if (event_is_using_nre_classes($event, $key) && competitor_has_class($competitor_path) && ($new_course != $course)) {
-          if (file_exists("{$new_competitor_path}/registration_info")) {
-            $registration_info = parse_registration_info(file_get_contents("{$new_competitor_path}/registration_info"));
+          if (file_exists("{$competitor_path}/registration_info")) {
+            $registration_info = parse_registration_info(file_get_contents("{$competitor_path}/registration_info"));
             if (isset($registration_info["classification_info"])) {
               $classification_hash = decode_entrant_classification_info($registration_info["classification_info"]);
               if (($classification_hash["BY"] != "") && ($classification_hash["G"] != "")) {
-                $updated_class = get_nre_class($event, $key, $classification_hash["G"], $classification_hash["BY"], $new_course, file_exists("{$new_competitor_path}/si_stick"));
+                $updated_class = get_nre_class($event, $key, $classification_hash["G"], $classification_hash["BY"], $new_course, file_exists("{$competitor_path}/si_stick"));
               }
             }
           }
           if ($updated_class != "") {
-            set_class_for_competitor($new_competitor_path, $updated_class);
+            set_class_for_competitor($competitor_path, $updated_class);
           }
           else {
-            remove_class_for_competitor($new_competitor_path);
+            remove_class_for_competitor($competitor_path);
           }
         }
       }

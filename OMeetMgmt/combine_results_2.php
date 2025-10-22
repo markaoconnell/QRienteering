@@ -80,7 +80,7 @@ foreach ($event_list as $this_event) {
       $max_score = $course_properties[$MAX_SCORE_FIELD];
     }
     
-    $results_array = get_results_as_array($this_event, $key, $one_course, $score_course, $max_score);
+    $results_array = get_course_results_as_array($this_event, $key, $one_course, $score_course, $max_score);
     #$output_string .= "<p>Processing {$readable_course_name} with " . count($results_array) . " finishers\n";
     foreach ($results_array as $this_result) {
       // For now, only look at people orienteering with a SI unit, no QRienteering

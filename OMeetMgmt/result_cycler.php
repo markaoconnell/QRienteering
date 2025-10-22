@@ -129,7 +129,8 @@ else {
       else {
         foreach ($class_list as $this_class) {
 	  $encoded_class = urlencode($this_class);
-          if (isset($_GET["show_{$encoded_class}"]) && ($_GET["show_{$encoded_class}"] == "yes")) {
+	  if ((isset($_GET["show_{$encoded_class}"]) && ($_GET["show_{$encoded_class}"] == "yes")) ||
+	      (isset($_GET["show_{$this_class}"]) && ($_GET["show_${this_class}"] == "yes"))) {
             $things_to_show[] = $this_class;
           }
         }
@@ -138,6 +139,7 @@ else {
     else {
       $things_to_show = explode(",", $_GET["classes_to_show"]);
     }
+
   }
 
   if (count($things_to_show) == 0) {
@@ -302,7 +304,7 @@ function get_column_data($prior_page_end) {
 	}
 
       if ($one_thing == $thing_to_show) {
-        $pick_next_course = true;
+        $pick_next_item = true;
       }
     }
 
