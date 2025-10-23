@@ -337,7 +337,7 @@ if (!$suppress_errors && (count($incomplete_entry_hash) > 0)) {
   $incomplete_entry_string .= "</table><p><p>\n";
 }
 
-echo get_web_page_header(true, false, false);
+echo get_web_page_header(true, false, false, true);
 
 if (($error_string != "") && !$suppress_errors) {
   echo $error_string;

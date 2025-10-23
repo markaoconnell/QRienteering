@@ -36,12 +36,11 @@ function set_redirect($redirection_string) {
 }
 
 // Print out the default headers
-function get_web_page_header($paragraph_style, $table_style, $form_style) {
+function get_web_page_header($paragraph_style, $table_style, $form_style, $use_fancy_tables = false) {
   global $bg_color, $page_title, $font_color_override, $redirect;
 
   // Choose stylesheet: results_page.css for results page, otherwise styles.css
-  $current_script = basename(isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : "");
-  if (($current_script === 'view_results.php') || ($current_script === 'view_results_by_class.php')) {
+  if ($use_fancy_tables) {
     $stylesheet_link = '<link rel="stylesheet" href="../OMeetCommon/results_page.css">';
   }
   else {
@@ -78,7 +77,7 @@ END_OF_HEADERS;
     $headers_to_show .= get_paragraph_style_header();
   }
 
-  if ($table_style) {
+  if ($table_style && !$use_fancy_tables) {
     $headers_to_show .= get_table_style_header();
   }
 
@@ -137,13 +136,6 @@ function get_bg_color_element($bg_color) {
 
 // get table style elements
 function get_table_style_header() {
-  // If we're on the results page we already include a dedicated stylesheet
-  // (results_page.css) from the page header; avoid duplicating it here.
-  $current_script = basename(isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : "");
-  if (($current_script === 'view_results.php') || ($current_script === 'view_results_by_class.php')) {
-    return "";
-  }
-
   // Old inline table styling for non-results pages.
   if (is_mobile()) {
     return "<style>\n td {\nfont-size: 200%;\n}\n th {\n font-size: 220%;\n}\ntable, th, td {\n border-collapse: collapse;\n border: 1px solid lightgray;\n }\n</style>\n";

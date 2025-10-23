@@ -138,7 +138,7 @@ if ($download_csv) {
 }
 
 
-echo get_web_page_header(true, true, false);
+echo get_web_page_header(true, true, false, true);
 echo "<p>Results for: <strong>{$event_name}</strong>\n";
 
 // Show the links at the top if the list is long, to make it easier to jump to just the results of interest

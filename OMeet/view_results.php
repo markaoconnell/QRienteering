@@ -153,7 +153,7 @@ if ($download_csv) {
   $results_string .= "</pre>\n";
 }
 
-echo get_web_page_header(true, true, false);
+echo get_web_page_header(true, true, false, true);
 echo "<p>Results for: <strong>{$event_name}</strong>\n";
 
 // If the result list is long, then show the links at the top, to make it easier to jump to the course of interest
