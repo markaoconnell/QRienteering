@@ -661,8 +661,8 @@ success();
 # Test 9 - Can we get the OUSA results?
 
 %TEST_INFO = qw(Testname GetNreOUSAResults);
-%GET = qw(key UnitTestPlayground);
-$GET{"event"} = $event_id;
+%POST = qw(key UnitTestPlayground);
+$POST{"event"} = $event_id;
 
 %COOKIE = ();
 hashes_to_artificial_file();

@@ -10,9 +10,9 @@ ck_testing();
 
 // Get the submitted info
 // echo "<p>\n";
-$event = isset($_GET["event"]) ? $_GET["event"] : "";
-$key = isset($_GET["key"]) ? $_GET["key"] : "";
-$download_csv = !isset($_GET["show_as_html"]);
+$event = isset($_POST["event"]) ? $_POST["event"] : "";
+$key = isset($_POST["key"]) ? $_POST["key"] : "";
+$download_csv = !isset($_POST["show_as_html"]);
 
 if ($event == "") {
   error_and_exit("<p>ERROR: Event not specified, no results can be shown.\n");
@@ -21,6 +21,12 @@ if ($event == "") {
 $courses_path = get_courses_path($event, $key, "..");
 if (!file_exists($courses_path)) {
   error_and_exit("<p>ERROR: No such event found {$event} (or bad location key {$key}).\n");
+}
+
+$course_info = array();
+if (isset($_POST["course_info"])) {
+  $raw_info = array_map(function ($elt) { return (explode(",", $elt)); }, explode("\n", $_POST["course_info"]));
+  array_map(function($elt) use (&$course_info) { $course_info[trim($elt[0])] = $elt; }, $raw_info);
 }
 
 set_timezone($key);
@@ -48,6 +54,9 @@ foreach ($course_list as $one_course) {
   }
   
   $results_array = get_course_results_as_array($event, $key, $one_course, $score_course, $max_score, "..");
+  $one_course_info = isset($course_info[ltrim($one_course, "0..9-")]) ? $course_info[ltrim($one_course, "0..9-")] : array();
+  $one_course_length = isset($one_course_info[1]) ? trim($one_course_info[1]) : "";
+  $one_course_climb = isset($one_course_info[2]) ? trim($one_course_info[2]): "";
   $place = 1;
   foreach ($results_array as $this_result) {
     // If the splits array is empty, there is an error - most likely a self reported result with
@@ -84,8 +93,8 @@ foreach ($course_list as $one_course) {
     $csv_array[] = isset($this_result["club_name"]) ? $this_result["club_name"] : "";  // Club Name
     $csv_array[] = $this_result["competitive_class"];  // OUSA class
     $csv_array[] = $readable_course_name; // Short course name
-    $csv_array[] = "";  // km - length
-    $csv_array[] = "";  // m - climb
+    $csv_array[] = $one_course_length;  // km - length
+    $csv_array[] = $one_course_climb;  // m - climb
     $csv_array[] = $number_controls;
     $winsplits_csv_line = implode(",", $csv_array);
     $output .= "{$winsplits_csv_line}\n";

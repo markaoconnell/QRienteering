@@ -69,7 +69,7 @@ function name_to_download_links($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
   if (event_is_using_nre_classes($event_id, $key)) {
-    $ousa_results_download_link = "<a href=\"{$base_path_for_links}/OMeetMgmt/download_results_ousacsv.php?event={$event_id}&key={$key}\"> OUSA NRE results </a> / ";
+    $ousa_results_download_link = "<a href=\"{$base_path_for_links}/OMeetMgmt/download_ousa_collect_length_and_climb.php?event={$event_id}&key={$key}\"> OUSA NRE results </a> / ";
   }
   else {
     $ousa_results_download_link = "";

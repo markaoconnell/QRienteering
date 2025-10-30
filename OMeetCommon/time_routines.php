@@ -54,6 +54,15 @@ function time_limit_to_seconds($time_limit_entry) {
   }
 
   $remaining_time = trim($time_limit_entry);
+  // Allow times like mm:ss or hh:mm:ss too
+  $regex_matches = array();
+  if (preg_match('/^(\d+):(\d+)$/', $remaining_time, $matches)) {
+    return (($matches[1] * 60 ) + $matches[2]);
+  }
+  elseif (preg_match('/^(\d+):(\d+):(\d+)$/', $remaining_time, $matches)) {
+    return (($matches[1] * 3600) + ($matches[2] * 60 ) + $matches[3]);
+  }
+
   if (preg_match('/^[0-9]+M/', $remaining_time)) {
     $month_location = strpos($remaining_time, "M");
     $limit_in_seconds += substr($remaining_time, 0, $month_location) * 86400 * 30;
