@@ -45,7 +45,7 @@ if (isset($_GET["update_values"])) {
       }
       else {
         $new_entries = implode(",", array_map(function ($elt) { $bits=explode(":", $elt); return(trim($bits[0]) . ":" . trim($bits[1])); }, explode(",", $decoded_entry)));
-        $all_valid_entries = array_reduce(array_map(function($elt) { return (preg_match("/^[a-zA-Z0-9]+:[0-9]+$/", $elt)); }, explode(",", $new_entries)),
+        $all_valid_entries = array_reduce(array_map(function($elt) { return (preg_match("/^[a-zA-Z0-9]+-[a-zA-Z0-9]+:[0-9]+$/", $elt)); }, explode(",", $new_entries)),
 	        function ($carry, $elt) { return ($carry && $elt); }, true);
         if ($all_valid_entries) {
           $new_untimed_entries[$this_field] = $new_entries;
@@ -69,9 +69,9 @@ if (isset($_GET["update_values"])) {
 $untimed_controls_by_course = get_untimed_controls($event, $key);
 
 echo "<p>Manage untimed controls for {$current_event_name}\n";
-echo "<p><p>Enter comma separated list of controls, per course, for which the split time should not count.  Format is just control:max_wait_in_seconds\n";
+echo "<p><p>Enter comma separated list of legs (control-control), per course, for which the split time should not count.  Format is just control-control:max_wait_in_seconds\n";
 echo "<p>E.g. if control 105 is on one side of a busy road and control 106 is on the other side, and competitors have 1 minute to cross the road, so ";
-echo "enter 106:60 in the box for the appropriate course.\n";
+echo "enter 105-106:60 in the box for the appropriate course.\n";
 echo "<p>Leave the entry blank (or make it blank) if there are no untimed controls on a course.\n";
 
 echo "<p><p>";

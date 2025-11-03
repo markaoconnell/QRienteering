@@ -314,13 +314,14 @@ if ($error_string == "") {
       if (isset($untimed_controls[$new_course])) {
         $untimed_controls_for_course = untimed_control_entry_to_hash($untimed_controls[$new_course]);
         // This course has one or more untimed controls, see how long was spent at each
-        $prior_control_time = $start_time;
+	$prior_control_time = $start_time;
+	$prior_control = "start";
         $forgiven_time = 0;
         foreach ($controls_done as $this_control) {
           $control_info = explode(",", $this_control);  // format is timestamp,control
-          if (isset($untimed_controls_for_course[$control_info[1]])) {
+          if (isset($untimed_controls_for_course["{$prior_control}-{$control_info[1]}"])) {
             $this_leg_split = $control_info[0] - $prior_control_time;
-	    $max_forgiven_time = $untimed_controls_for_course[$control_info[1]];
+	    $max_forgiven_time = $untimed_controls_for_course["{$prior_control}-{$control_info[1]}"];
 
             if ($this_leg_split <= $max_forgiven_time) {
               $forgiven_time += $this_leg_split;
@@ -328,8 +329,10 @@ if ($error_string == "") {
             else {
               $forgiven_time += $max_forgiven_time;
             }
-         }
-         $prior_control_time = $control_info[0];
+	  }
+
+          $prior_control_time = $control_info[0];
+          $prior_control = $control_info[1];
         }
   
         $time_taken -= $forgiven_time;

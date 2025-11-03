@@ -4,6 +4,7 @@
     --accent-red: #bc202e;
     --bg-color: #ffffff;
     --text-color: #333333;
+    --link-color: #800080;
     --border-color: #00000022;
     --border-radius: 0.5rem;
 }
@@ -63,6 +64,20 @@ p {
 strong {
     font-weight: 600;
     color: var(--accent-red);
+}
+
+input[type=submit] {
+    background-color: deepskyblue;
+    color: white;
+    border: none;
+    border-radius: 18px;
+    padding: 10px;
+    box-sizing: border-box;
+    width: 100%;
+    font-size: 12pt;
+    margin-top: 10px;
+    max-width: 325px;
+    cursor: pointer;
 }
 
 /* Table styling */
@@ -133,7 +148,7 @@ td:nth-child(3) {
 
 /* Links */
 a {
-    color: var(--primary-color);
+    color: var(--link-color);
     text-decoration: none;
 }
 
@@ -165,6 +180,7 @@ a:hover {
         --accent-red: #e63946;
         --bg-color: #1a1a1a;
         --text-color: #e0e0e0;
+        --link-color: #800080;
         --border-color: #ffffff22;
     }
 

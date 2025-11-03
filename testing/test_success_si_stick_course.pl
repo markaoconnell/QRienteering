@@ -197,7 +197,7 @@ $REGISTRATION_INFO{"last_name"} = "LeMonde";
 $GET{"competitor_name"} = "Tout--space--LeMonde";
 %COOKIE = ();  # empty hash
 
-my(%untimed_entries_hash) = qw(01-Yellow 206:60);
+my(%untimed_entries_hash) = qw(01-Yellow 204-206:60);
 set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
 
 register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
@@ -234,7 +234,7 @@ $REGISTRATION_INFO{"last_name"} = "LeMonde";
 $GET{"competitor_name"} = "Tout--space--LeMonde";
 %COOKIE = ();  # empty hash
 
-my(%untimed_entries_hash) = qw(01-Yellow 204:180);
+my(%untimed_entries_hash) = qw(01-Yellow 202-204:180);
 set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
 
 register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
@@ -270,7 +270,7 @@ $REGISTRATION_INFO{"last_name"} = "LeMonde";
 $GET{"competitor_name"} = "Tout--space--LeMonde";
 %COOKIE = ();  # empty hash
 
-my(%untimed_entries_hash) = qw(01-Yellow 204:90,208:120);
+my(%untimed_entries_hash) = qw(01-Yellow 202-204:90,206-208:120);
 set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
 
 register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
@@ -307,7 +307,7 @@ $REGISTRATION_INFO{"last_name"} = "LeMonde";
 $GET{"competitor_name"} = "Tout--space--LeMonde";
 %COOKIE = ();  # empty hash
 
-my(%untimed_entries_hash) = qw(01-Yellow 304:90,308:120);
+my(%untimed_entries_hash) = qw(01-Yellow 202-304:90,202-208:120);
 set_untimed_controls("UnitTestPlayground", $event_id, %untimed_entries_hash);
 
 register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);

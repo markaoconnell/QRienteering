@@ -314,8 +314,8 @@ function clear_stick_xlation($event, $key, $stick) {
   }
 }
 
-// Format returned is a hash of course (e.g. 01-White) to list of controls (e.g. 101:60,105:60) meaning control 101 is untimed (max 60s),
-// control 105 is also untimed (max 60s), etc.
+// Format returned is a hash of course (e.g. 01-White) to list of controls (e.g. 101-102:60,105-154:60) meaning leg 101 -> 102 is untimed (max 60s),
+// leg 105 -> 154 is also untimed (max 60s), etc.
 function get_untimed_controls($event, $key) {
   $untimed_controls = array();
   $event_path = get_event_path($event, $key);

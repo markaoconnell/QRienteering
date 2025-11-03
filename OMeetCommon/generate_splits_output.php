@@ -72,6 +72,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
   $cumulative_time = array();
   $controls_found = array();
   $prior_control_time = $start_time;
+  $prior_control = "start";
   $forgiven_time = 0;
   $total_score = 0;
   $i = 0;
@@ -80,9 +81,9 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
     $controls_found[$i] = $control_info_array[1];
     $time_at_control[$i] = $control_info_array[0];
     $split_times[$i] = $time_at_control[$i] - $prior_control_time;
-    if (isset($untimed_controls_for_course[$control_info_array[1]])) {
+    if (isset($untimed_controls_for_course["{$prior_control}-{$control_info_array[1]}"])) {
       // This is an untimed control - eliminate this split unless it is more than the maximum allowed
-      $maximum_forgiven_time = $untimed_controls_for_course[$control_info_array[1]];
+      $maximum_forgiven_time = $untimed_controls_for_course["{$prior_control}-{$control_info_array[1]}"];
       if ($split_times[$i] <= $maximum_forgiven_time) {
 	$forgiven_time += $split_times[$i];
         $split_times[$i] = 0;
@@ -94,6 +95,7 @@ function get_splits_output($competitor_id, $event, $key, $final_results_line) {
     }
     $cumulative_time[$i] = $time_at_control[$i] - $start_time - $forgiven_time;
     $prior_control_time = $time_at_control[$i];
+    $prior_control = $controls_found[$i];
     $i++;
   }
   $finish_time = file_get_contents("{$controls_found_path}/finish");
@@ -372,6 +374,7 @@ function get_splits_as_array($competitor_id, $event, $key, $include_all = 'false
   $controls_found = array();
   $control_times_array = array();
   $prior_control_time = $start_time;
+  $prior_control = "start";
   $forgiven_time = 0;
   $total_score = 0;
   $i = 0;
@@ -380,9 +383,9 @@ function get_splits_as_array($competitor_id, $event, $key, $include_all = 'false
     $controls_found[$i] = $control_info_array[1];
     $time_at_control[$i] = $control_info_array[0];
     $split_times[$i] = $time_at_control[$i] - $prior_control_time;
-    if (isset($untimed_controls_for_course[$control_info_array[1]])) {
+    if (isset($untimed_controls_for_course["{$prior_control}-{$control_info_array[1]}"])) {
       // This is an untimed control - eliminate this split unless it is more than the maximum allowed
-      $maximum_forgiven_time = $untimed_controls_for_course[$control_info_array[1]];
+      $maximum_forgiven_time = $untimed_controls_for_course["{$prior_control}-{$control_info_array[1]}"];
       if ($split_times[$i] <= $maximum_forgiven_time) {
 	$forgiven_time += $split_times[$i];
         $split_times[$i] = 0;
@@ -402,6 +405,7 @@ function get_splits_as_array($competitor_id, $event, $key, $include_all = 'false
     $control_times_array[] = $control_entry;
 
     $prior_control_time = $time_at_control[$i];
+    $prior_control = $control_info_array[1];
     $i++;
   }
   if (file_exists("{$controls_found_path}/finish")) {
@@ -486,6 +490,7 @@ function get_splits_for_download($competitor_id, $event, $key) {
 
   $control_times_array = array();
   $prior_control_time = $start_time;
+  $prior_control = "start";
   $total_score = 0;
   $forgiven_time = 0;
   $i = 0;
@@ -501,9 +506,9 @@ function get_splits_for_download($competitor_id, $event, $key) {
     if ($control_info_array[1] == $control_list[$next_control][0]) {
 //      echo "Good: {$control_info_array[1]} equals {$control_list[$next_control][0]}, i is {$i}, next_control is {$next_control}\n";  // Remove
       $this_split = $control_info_array[0] - $prior_control_time;
-      if (isset($untimed_controls_for_course[$control_info_array[1]])) {
+      if (isset($untimed_controls_for_course["{$prior_control}-{$control_info_array[1]}"])) {
         // This is an untimed control - eliminate this split unless it is more than the maximum allowed
-        $maximum_forgiven_time = $untimed_controls_for_course[$control_info_array[1]];
+        $maximum_forgiven_time = $untimed_controls_for_course["{$prior_control}-{$control_info_array[1]}"];
         if ($this_split <= $maximum_forgiven_time) {
 	  $forgiven_time += $this_split;
           $this_split = 0;
@@ -526,6 +531,7 @@ function get_splits_for_download($competitor_id, $event, $key) {
       $control_times_array[] = $control_entry;
 
       $prior_control_time = $control_info_array[0];
+      $prior_control = $control_info_array[1];
       $i++;
     }
     else {
@@ -538,9 +544,9 @@ function get_splits_for_download($competitor_id, $event, $key) {
           $control_was_punched = true;
 
           $this_split = $later_control_info[0] - $prior_control_time;
-          if (isset($untimed_controls_for_course[$later_control_info[1]])) {
+          if (isset($untimed_controls_for_course["{$prior_control}-{$later_control_info[1]}"])) {
             // This is an untimed control - eliminate this split unless it is more than the maximum allowed
-            $maximum_forgiven_time = $untimed_controls_for_course[$later_control_info[1]];
+            $maximum_forgiven_time = $untimed_controls_for_course["{$prior_control}-{$later_control_info[1]}"];
             if ($this_split <= $maximum_forgiven_time) {
               $forgiven_time += $this_split;
               $this_split = 0;
@@ -563,6 +569,7 @@ function get_splits_for_download($competitor_id, $event, $key) {
           $control_times_array[] = $control_entry;
 
 	  $prior_control_time = $later_control_info[0];
+	  $prior_control = $later_control_info[1];
 
 	  // Move on to the next control which was punched after this one
 	  $i = $j + 1;
