@@ -47,6 +47,7 @@ else {
   $splits_output = get_splits_output($competitor_id, $event, $key, $time_and_competitor);
 }
 
+set_style_page("splits_page");
 echo get_web_page_header(true, true, false, true);
 
 echo $splits_output;

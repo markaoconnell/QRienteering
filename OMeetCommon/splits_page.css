@@ -137,18 +137,19 @@ td:first-child {
 
 th:nth-child(2),
 td:nth-child(2) {
-    width: auto;
-}
-
-th:nth-child(3),
-td:nth-child(3) {
     width: 6rem;
     text-align: center;
 }
 
-th:nth-child(4),
-td:nth-child(4) {
-    width: 6rem;
+th:nth-child(1n+3),
+td:nth-child(1n+3) {
+    width: 12rem;
+    text-align: center;
+}
+
+th:last-child,
+td:last-child {
+    width: 16rem;
     text-align: center;
 }
 

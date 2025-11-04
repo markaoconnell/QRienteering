@@ -302,7 +302,7 @@ if (!$show_removed_competitors && (count($obsolete_registrations) > 0)) {
 $results_string .= "\n</table>\n</form>\n";
 
 
-echo get_web_page_header(true, true, true, true);
+echo get_web_page_header(true, true, true);
 
 echo $time_limit_string;
 

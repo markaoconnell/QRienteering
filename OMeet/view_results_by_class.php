@@ -138,6 +138,7 @@ if ($download_csv) {
 }
 
 
+set_style_page("results_page");
 echo get_web_page_header(true, true, false, true);
 echo "<p>Results for: <strong>{$event_name}</strong>\n";
 
