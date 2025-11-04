@@ -154,7 +154,7 @@ if ($download_csv) {
 }
 
 set_style_page("results_page");
-echo get_web_page_header(true, true, false, true);
+echo get_web_page_header(true, true, false);
 echo "<p>Results for: <strong>{$event_name}</strong>\n";
 
 // If the result list is long, then show the links at the top, to make it easier to jump to the course of interest

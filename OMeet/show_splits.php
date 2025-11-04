@@ -48,7 +48,7 @@ else {
 }
 
 set_style_page("splits_page");
-echo get_web_page_header(true, true, false, true);
+echo get_web_page_header(true, true, false);
 
 echo $splits_output;
 
