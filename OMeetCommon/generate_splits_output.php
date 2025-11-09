@@ -247,10 +247,11 @@ function get_splits_dnf($competitor, $event, $key) {
   
   $control_num_on_course = 0;
   $control_unique_counter = 0;
+  $last_punched_control_on_course = -1;
   foreach ($controls_found as $this_control) {
     $control_unique_counter++;
     $control_id = $this_control["control_id"];
-  
+
     // The runner may have missed this control - let it be edited
     while (isset($missed_controls_positions_hash[$control_num_on_course]) && ($control_num_on_course < count($control_list))) {
       $output_string .= "<tr><td>" . ($control_num_on_course + 1) . "</td><td>" . $control_list[$control_num_on_course][0] . "</td>";
@@ -264,10 +265,31 @@ function get_splits_dnf($competitor, $event, $key) {
     }
   
     // is the punched control on the course at all?
+    $punch_start_color = "";
+    $punch_end_color = "";
     if (isset($controls_hash[$control_id])) {
+      // See how many places the control could be at - for a butterfly course this could be multiple
+      // For a normal course it will be only one, then it is easy to see if it was punched out of order.
+      if (count($controls_hash[$control_id]) == 1) {
+        if ($controls_hash[$control_id][0] == ($last_punched_control_on_course + 1)) {
+	  // All good, just show the punch as normal
+        } 
+        else {
+          if ($last_punched_control_on_course != -1) {
+	    $punch_start_color = "<font color=\"red\">";
+	    $punch_end_color = "</font>";
+          }
+	}
+	$last_punched_control_on_course = $controls_hash[$control_id][0];
+      }
+      else {
+        // Nothing to do - this is a butterfly and it is too much of a pain to figure out if the butterfly punches are correct
+	$last_punched_control_on_course = -1;
+      }
+
       // For a butterfly course, the control may appear at multiple places - show them all
-      $output_string .= "<tr><td>" . implode(",", array_map(function ($elt) { return ($elt + 1); }, $controls_hash[$control_id])) .
-                                                                                      "</td><td>" . $control_id . "</td>";
+      $output_string .= "<tr><td>{$punch_start_color}" . implode(",", array_map(function ($elt) { return ($elt + 1); }, $controls_hash[$control_id])) .
+                                                                                      "{$punch_end_color}</td><td>" . $control_id . "</td>";
       $output_string .= "<td>" . formatted_time($this_control["split_time"]) . "</td>\n";
       $output_string .= "<td>" . formatted_time($this_control["cumulative_time"]) . "</td>\n";
       $output_string .="<td>" . format_split_time($this_control["raw_time"], $using_si_timing, false) . "</td></tr>\n";
