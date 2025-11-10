@@ -268,23 +268,13 @@ function get_splits_dnf($competitor, $event, $key) {
     $punch_start_color = "";
     $punch_end_color = "";
     if (isset($controls_hash[$control_id])) {
-      // See how many places the control could be at - for a butterfly course this could be multiple
-      // For a normal course it will be only one, then it is easy to see if it was punched out of order.
-      if (count($controls_hash[$control_id]) == 1) {
-        if ($controls_hash[$control_id][0] == ($last_punched_control_on_course + 1)) {
-	  // All good, just show the punch as normal
-        } 
-        else {
-          if ($last_punched_control_on_course != -1) {
-	    $punch_start_color = "<font color=\"red\">";
-	    $punch_end_color = "</font>";
-          }
-	}
-	$last_punched_control_on_course = $controls_hash[$control_id][0];
+      // See if we are at the next control on the course - if not, it is an out of order punch, so color code it red
+      if ($control_id != $control_list[$control_num_on_course][0]) {
+        $punch_start_color = "<font color=\"red\">";
+        $punch_end_color = "</font>";
       }
       else {
-        // Nothing to do - this is a butterfly and it is too much of a pain to figure out if the butterfly punches are correct
-	$last_punched_control_on_course = -1;
+        $control_num_on_course++;
       }
 
       // For a butterfly course, the control may appear at multiple places - show them all
@@ -294,7 +284,6 @@ function get_splits_dnf($competitor, $event, $key) {
       $output_string .= "<td>" . formatted_time($this_control["cumulative_time"]) . "</td>\n";
       $output_string .="<td>" . format_split_time($this_control["raw_time"], $using_si_timing, false) . "</td></tr>\n";
   
-      $control_num_on_course++;
    }
    else {
       $output_string .= "<tr><td>-</td><td>" . $control_id . "</td>";

@@ -230,7 +230,9 @@ foreach ($controls_found as $this_control) {
       $output_string .= "<td>" . ($this_control["raw_time"] - $start_time - $start_time_adjustment) . "</td></tr>\n";
     }
 
-    $control_num_on_course++;
+    if ($control_list[$control_num_on_course][0] == $control_id) {
+      $control_num_on_course++;
+    }
  }
  else {
     $output_string .= "<tr><td>-</td><td>" . $control_id . "</td>";
