@@ -38,6 +38,8 @@ $show_school_and_club_flag = isset($_GET["show_school_and_club"]) ? $_GET["show_
 $show_school_and_club = ($show_school_and_club_flag != "");
 $show_age_flag = isset($_GET["show_age"]) ? $_GET["show_age"] : "";
 $show_age = ($show_age_flag != "");
+$show_delta_flag = isset($_GET["show_delta"]) ? $_GET["show_delta"] : "";
+$show_delta = ($show_delta_flag != "");
 
 if (!key_is_valid($key)) {
   error_and_exit("Unknown key \"$key\", are you using an authorized link?\n");
@@ -146,7 +148,7 @@ foreach ($course_list as $one_course) {
       $results_string .= get_csv_results($event, $key, $one_course, "", $score_course, $max_score, $base_course_list);
     }
     else {
-      $results_string .= get_results_as_string($event, $key, $one_course, "", $score_course, $max_score, $base_course_list, $show_school_and_club, $show_age);
+      $results_string .= get_results_as_string($event, $key, $one_course, "", $score_course, $max_score, $base_course_list, $show_school_and_club, $show_age, $show_delta);
     }
   }
 }

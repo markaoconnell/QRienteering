@@ -1,7 +1,7 @@
 <?php
 
 // Show the results for a course
-function get_results_as_string($event, $key, $course, $result_class, $show_points, $max_points, $base_course_list, $show_school_and_club = false, $show_age = false, $path_to_top = "..") {
+function get_results_as_string($event, $key, $course, $result_class, $show_points, $max_points, $base_course_list, $show_school_and_club = false, $show_age = false, $show_delta = false, $path_to_top = "..") {
   $result_string = "";
   $result_string .= "<p>Results on " . ltrim($course, "0..9-") . (($result_class != "") ? ":{$result_class}" : "") . "\n";
 
@@ -66,6 +66,7 @@ function get_results_as_string($event, $key, $course, $result_class, $show_point
 
   if ($show_age) {
     $show_age_header = "<th>Age</th>";
+    $current_year = date("Y");
   }
   else {
     $show_age_header = "";
@@ -78,10 +79,18 @@ function get_results_as_string($event, $key, $course, $result_class, $show_point
     $course_name_header = "";
   }
 
+  if ($show_delta) {
+    $show_delta_header = "<th>Delta</th>";
+  }
+  else {
+    $show_delta_header = "";
+  }
+
   $finish_place = 0;
 
-  $result_string .= "<table border=1><tr><th>Place</th><th>Name</th>{$show_age_header}{$school_and_club_header}<th>Time</th>{$points_header}{$course_name_header}</tr>\n";
+  $result_string .= "<table border=1><tr><th>Place</th><th>Name</th>{$show_age_header}{$school_and_club_header}<th>Time</th>{$show_delta_header}{$points_header}{$course_name_header}</tr>\n";
   $dnfs = "";
+  $first_place_time = -1;
   foreach ($results_list as $this_result) {
     $finish_place++;
     $result_pieces = explode(",", $this_result);
@@ -128,7 +137,6 @@ function get_results_as_string($event, $key, $course, $result_class, $show_point
 	  $nre_info_hash = decode_entrant_classification_info($nre_info);
 	  if (isset($nre_info_hash["BY"]) && ($nre_info_hash["BY"] != "")) {
 	    $nre_birth_year = $nre_info_hash["BY"];
-	    $current_year = date("Y");
 	    $nre_age = $current_year - $nre_birth_year;
 	    $age_value = "<td>{$nre_age}</td>";
           }
@@ -158,6 +166,20 @@ function get_results_as_string($event, $key, $course, $result_class, $show_point
       $course_name_value = "";
     }
 
+    if ($show_delta) {
+      if ($first_place_time == -1) {
+        $delta_value = "<td>-</td>";
+        $first_place_time = $result_pieces[1];
+      }
+      else {
+        $time_after = $result_pieces[1] - $first_place_time;
+        $delta_value = "<td>" . formatted_time($time_after) . "</td>";
+      }
+    }
+    else {
+      $delta_value = "";
+    }
+
 
     // If this is an award event and the competitor is not eligible for an award, then preceded the name with an (x) to indicate this
     if (file_exists("./{$competitor_path}/award_ineligible")) {
@@ -166,21 +188,24 @@ function get_results_as_string($event, $key, $course, $result_class, $show_point
 
     if (file_exists("./{$competitor_path}/self_reported")) {
       if (file_exists("./{$competitor_path}/dnf")) {
-        $dnfs .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td>{$age_value}{$club_school_value}<td>DNF</td>{$points_value}{$course_name_value}</tr>\n";
+        $delta_value = ($show_delta) ? "<td>-</td>" : "";
+        $dnfs .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td>{$age_value}{$club_school_value}<td>DNF</td>{$delta_value}{$points_value}{$course_name_value}</tr>\n";
       }
       else if (file_exists("./{$competitor_path}/no_time")) {
-        $result_string .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td>{$age_value}{$club_school_value}<td>No time</td>{$points_value}{$course_name_value}</tr>\n";
+        $delta_value = ($show_delta) ? "<td>-</td>" : "";
+        $result_string .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td>{$age_value}{$club_school_value}<td>No time</td>{$delta_value}{$points_value}{$course_name_value}</tr>\n";
       }
       else {
-        $result_string .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td>{$age_value}{$club_school_value}<td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}{$course_name_value}</tr>\n";
+        $result_string .= "<tr><td>{$finish_place}</td><td>{$competitor_name}</td>{$age_value}{$club_school_value}<td>" . formatted_time($result_pieces[1]) . "</td>{$delta_value}{$points_value}{$course_name_value}</tr>\n";
       }
     }
     else if (!file_exists("./{$competitor_path}/dnf")) {
-      $result_string .= "<tr><td>{$finish_place}</td><td><a href=\"../OMeet/show_splits.php?event={$event}&key={$key}&entry={$this_result}\">{$competitor_name}</a></td>{$age_value}{$club_school_value}<td>" . formatted_time($result_pieces[1]) . "</td>{$points_value}{$course_name_value}</tr>\n";
+      $result_string .= "<tr><td>{$finish_place}</td><td><a href=\"../OMeet/show_splits.php?event={$event}&key={$key}&entry={$this_result}\">{$competitor_name}</a></td>{$age_value}{$club_school_value}<td>" . formatted_time($result_pieces[1]) . "</td>{$delta_value}{$points_value}{$course_name_value}</tr>\n";
     }
     else {
       // For a scoreO course, there are no DNFs, so $points_value should always be "", but show it just in case
-      $dnfs .= "<tr><td>{$finish_place}</td><td><a href=\"../OMeet/show_splits.php?event={$event}&key={$key}&entry={$this_result}\">{$competitor_name}</a></td>{$age_value}{$club_school_value}<td>DNF</td>{$points_value}{$course_name_value}</tr>\n";
+      $delta_value = ($show_delta) ? "<td>-</td>" : "";
+      $dnfs .= "<tr><td>{$finish_place}</td><td><a href=\"../OMeet/show_splits.php?event={$event}&key={$key}&entry={$this_result}\">{$competitor_name}</a></td>{$age_value}{$club_school_value}<td>DNF</td>{$delta_value}{$points_value}{$course_name_value}</tr>\n";
     }
   }
   $result_string .= "{$dnfs}</table>\n<p><p><p>";
