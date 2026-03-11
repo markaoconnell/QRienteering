@@ -127,18 +127,7 @@ foreach ($course_list as $one_course) {
 
     $is_combo_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $COMBO_COURSE));
     if ($is_combo_course) {
-      $all_courses = scandir($courses_path);
-      $all_courses = array_diff($all_courses, array(".", ".."));
-      $specified_courses = explode(",", $course_properties[$COMBO_COURSE_LIST]);
-      // Convert the specified courses list, which is just the human readable name, into the full name which is used as the unique identifier
-      $base_course_list = array();
-      foreach ($all_courses as $course_unique_name) {
-	foreach ($specified_courses as $base_course) {
-          if (ltrim($course_unique_name, "0..9-") == $base_course) {
-            $base_course_list[] = $course_unique_name;
-	  }
-	}
-      }
+      $base_course_list = get_combo_courses($courses_path, $course_properties[$COMBO_COURSE_LIST]);
     }
     else {
       $base_course_list = array();

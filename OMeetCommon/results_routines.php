@@ -302,17 +302,48 @@ function get_csv_results($event, $key, $course, $result_class, $show_points, $ma
   return($result_string);
 }
 
+
+function get_combo_courses($courses_path, $combo_courses_as_string) {
+  $all_courses = scandir($courses_path);
+  $all_courses = array_diff($all_courses, array(".", ".."));
+  $specified_courses = explode(",", $combo_courses_as_string);
+  // Convert the specified courses list, which is just the human readable name, into the full name which is used as the unique identifier
+  $base_course_list = array();
+  foreach ($all_courses as $course_unique_name) {
+    $readable_course_name = ltrim($course_unique_name, "0..9-");
+    foreach ($specified_courses as $base_course) {
+      if ($readable_course_name == $base_course) {
+        $base_course_list[] = $course_unique_name;
+      }
+    }
+  }
+  return($base_course_list);
+}
+
 // Get the results for a course as an array
-function get_course_results_as_array($event, $key, $course, $show_points, $max_points, $path_to_top = "..") {
+function get_course_results_as_array($event, $key, $course, $show_points, $max_points, $combo_course_list, $path_to_top = "..") {
 
   // No results yet - .csv is empty
   $results_path = get_results_path($event, $key);
-  if (!is_dir("{$results_path}/{$course}")) {
+  if (!is_dir("{$results_path}/{$course}") && (count($combo_course_list) == 0)) {
     return(array());
   }
-  
-  $results_list = scandir("{$results_path}/{$course}");
-  $results_list = array_diff($results_list, array(".", ".."));
+
+  if (count($combo_course_list) == 0) {
+    $results_list = scandir("{$results_path}/{$course}");
+    $results_list = array_diff($results_list, array(".", ".."));
+  }
+  else {
+    $results_list = array();
+    foreach ($combo_course_list as $one_combo_course) {
+      if (is_dir("{$results_path}/{$one_combo_course}")) {
+        $one_course_results = scandir("{$results_path}/{$one_combo_course}");
+        $one_course_results = array_diff($one_course_results, array(".", ".."));
+	$results_list = array_merge($results_list, $one_course_results);
+      }
+    }
+    sort($results_list);
+  }
 
   return (get_generic_results_as_array($event, $key, $results_list, $show_points, $max_points));
 }

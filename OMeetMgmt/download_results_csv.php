@@ -52,7 +52,7 @@ foreach ($course_list as $one_course) {
     $max_score = $course_properties[$MAX_SCORE_FIELD];
   }
   
-  $results_array = get_course_results_as_array($event, $key, $one_course, $score_course, $max_score, "..");
+  $results_array = get_course_results_as_array($event, $key, $one_course, $score_course, $max_score, array(), "..");
   $place = 1;
   foreach ($results_array as $this_result) {
     // If the splits array is empty, there is an error - most likely a self reported result with

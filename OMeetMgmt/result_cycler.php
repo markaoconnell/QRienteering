@@ -206,12 +206,20 @@ function get_column_data($prior_page_end) {
   $header_info = get_column_headers($thing_to_show);
   $score_course = $header_info[1];
   $max_score = $header_info[2];
+  $combo_course = $header_info[3];
+  if ($combo_course) {
+    $combo_course_list = $header_info[4];
+  }
+  else {
+    $combo_course_list = array();
+  }
+
   $current_output = array();
   $current_output = array_merge($current_output, $header_info[0]);
   $current_lines += count($header_info[0]);
 
   if ($show_by_course) {
-    $results_array = get_course_results_as_array($event, $key, $thing_to_show, $score_course, $max_score);
+    $results_array = get_course_results_as_array($event, $key, $thing_to_show, $score_course, $max_score, $combo_course_list);
   }
   elseif ($show_by_class) {
     $results_array = get_class_results_as_array($event, $key, $thing_to_show, $score_course, $max_score);
@@ -243,13 +251,20 @@ function get_column_data($prior_page_end) {
         $header_info = get_column_headers($thing_to_show);
 	$score_course = $header_info[1];
 	$max_score = $header_info[2];
+	$combo_course = $header_info[3];
+	if ($combo_course) {
+          $combo_course_list = $header_info[4];
+        }
+	else {
+          $combo_course_list = array();
+        }
 
         $current_output[] = "<td></td><td></td><td></td><td></td>\n";
         $current_output = array_merge($current_output, $header_info[0]);
 	$current_lines += count($header_info[0]) + 1;
 
         if ($show_by_course) {
-          $results_array = get_course_results_as_array($event, $key, $thing_to_show, $score_course, $max_score);
+          $results_array = get_course_results_as_array($event, $key, $thing_to_show, $score_course, $max_score, $combo_course_list);
         }
         elseif ($show_by_class) {
           $results_array = get_class_results_as_array($event, $key, $thing_to_show, $score_course, $max_score);
@@ -320,7 +335,7 @@ function get_column_data($prior_page_end) {
 
 function get_column_headers($thing_to_show) {
   global $course_list, $courses_path, $things_to_show, $show_by_course, $show_by_class, $classification_info;
-  global $TYPE_FIELD, $SCORE_O_COURSE, $MAX_SCORE_FIELD;
+  global $TYPE_FIELD, $COMBO_COURSE, $SCORE_O_COURSE, $MAX_SCORE_FIELD, $COMBO_COURSE_LIST;
   global $color_mapping_hash;
 
   if ($show_by_course) {
@@ -338,11 +353,18 @@ function get_column_headers($thing_to_show) {
   }
   $course_properties = get_course_properties("{$courses_path}/{$course_to_show}");
   $score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+  $combo_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $COMBO_COURSE));
   $max_score = 0;
   $label_points_column = "";
   if ($score_course) {
     $max_score = $course_properties[$MAX_SCORE_FIELD];
     $label_points_column = "Pts";
+  }
+  if ($combo_course) {
+    $base_course_list = get_combo_courses($courses_path, $course_properties[$COMBO_COURSE_LIST]);
+  }
+  else {
+    $base_course_list = array();
   }
 
   # Include the header
@@ -362,7 +384,7 @@ function get_column_headers($thing_to_show) {
   $column_header_output[] = "<td></td><td {$bgcolor}><strong><u>{$column_header}</u></strong></td><td></td><td width=20></td>\n";
   $column_header_output[] = "<td><strong>Pl</strong></td><td><strong>Name</strong></td><td><strong>Time</strong></td><td><strong>{$label_points_column}</strong></td>\n";
 
-  return(array($column_header_output, $score_course, $max_score));
+  return(array($column_header_output, $score_course, $max_score, $combo_course, $base_course_list));
 }
 
 ?>

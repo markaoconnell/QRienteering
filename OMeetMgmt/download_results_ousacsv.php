@@ -53,7 +53,7 @@ foreach ($course_list as $one_course) {
     $max_score = $course_properties[$MAX_SCORE_FIELD];
   }
   
-  $results_array = get_course_results_as_array($event, $key, $one_course, $score_course, $max_score, "..");
+  $results_array = get_course_results_as_array($event, $key, $one_course, $score_course, $max_score, array(), "..");
   $one_course_info = isset($course_info[ltrim($one_course, "0..9-")]) ? $course_info[ltrim($one_course, "0..9-")] : array();
   $one_course_length = isset($one_course_info[1]) ? trim($one_course_info[1]) : "";
   $one_course_climb = isset($one_course_info[2]) ? trim($one_course_info[2]): "";
