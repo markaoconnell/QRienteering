@@ -287,8 +287,7 @@ if ($allow_editing) {
   $course_list = scandir($courses_path);
   $course_list = array_diff($course_list, array(".", ".."));
 
-  $course_list = array_filter($course_list, function ($elt) use ($courses_path) { return (!file_exists("{$courses_path}/{$elt}/removed") &&
-	                                                                                  !file_exists("{$courses_path}/{$elt}/no_registrations")); });
+  $course_list = array_filter($course_list, function ($elt) use ($courses_path) { return (!file_exists("{$courses_path}/{$elt}/removed")); });
 
   $change_course_string = implode("\n", array_map(function ($elt) { return "<li><input type=radio name=new_course value=\"{$elt}\"> " . ltrim($elt, "0..9-"); }, $course_list));
   $output_string .= "<p>Add additional control - format is control_id, time (seconds since start): <input type=text name=\"additional\">\n";

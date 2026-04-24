@@ -156,8 +156,8 @@ $course_stats = array();
 $unique_names = array();
 
 foreach ($course_list as $one_course) {
-  // Don't show statistics for "artificial" courses which don't allow registation (e.g. Motala)
-  if (file_exists("{$courses_path}/{$one_course}/no_registrations")) {
+  // Don't show statistics for "artificial" courses which don't directly have controls (e.g. Motala)
+  if (!file_exists("{$courses_path}/{$one_course}/controls.txt")) {
     continue;
   }
 

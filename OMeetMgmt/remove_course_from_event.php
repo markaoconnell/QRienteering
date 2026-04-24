@@ -10,7 +10,6 @@ $verbose = isset($_GET["verbose"]);
 require '../OMeetCommon/course_properties.php';
 require '../OMeetMgmt/event_mgmt_common.php';
 
-$event_created = false;
 $found_error = false;
 
 $key = $_GET["key"];
@@ -33,8 +32,8 @@ $results_string = "";
 if (isset($_GET["submit"])) {
   foreach (array_keys($_GET) as $get_key) {
     $pieces = explode(":", $get_key);
+    $readable_name = ltrim($pieces[1], "0..9-");
     if ($pieces[0] == "remove") {
-      $readable_name = ltrim($pieces[1], "0..9-");
       if (!file_exists("{$courses_path}/{$pieces[1]}/removed")) {
         touch("{$courses_path}/{$pieces[1]}/removed");
         $results_string .= "<p>Course {$readable_name} is no longer valid.\n";

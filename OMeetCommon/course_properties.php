@@ -17,6 +17,7 @@ $CONTROLS = "controls";
 $ERROR_FIELD = "error";
 
 $COMBO_COURSE_LIST = "course_list";
+$COMBO_COURSE_CONTROL_OPTIONS = "course_control_options";
 
 $LINEAR_COURSE_ID = "l";
 $SCORE_COURSE_ID = "s";
@@ -102,5 +103,9 @@ function get_properties($properties_path, $filter_for_comments) {
               $properties_contents);
 
   return($props_as_hash);
+}
+
+function create_properties($props) {
+  return (implode("\n", array_map(function ($elt) use ($props) { return ("{$elt}:{$props[$elt]}"); }, array_keys($props))));
 }
 ?>

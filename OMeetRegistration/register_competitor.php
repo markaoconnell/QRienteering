@@ -246,7 +246,7 @@ if (!$error) {
       echo "<p style=\"color:red;\">YOU MUST EITHER<ul><li>Report to the download table when you finish<li>Use your phone to scan the finish code QR<ul><li>If registering via your phone and your browser IS NOT in private mode.</ul></ul>\n";
     }
     else {
-      echo "<p>Go the start and scan the QR code to begin your course.\n";
+      echo "<p>Go to the start and scan the QR code to begin your course.\n";
       echo "<p style=\"color:red;\">NOTE: your browser must NOT be in private mode!\n";
     }
 

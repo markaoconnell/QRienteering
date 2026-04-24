@@ -143,7 +143,7 @@ if ($new_course != "") {
   if (!file_exists("{$courses_path}/{$new_course}")) {
     $error_string .= "<p>{$new_course} does not exist.\n";
   }
-  elseif (file_exists("{$courses_path}/{$new_course}/removed") || file_exists("{$courses_path}/{$new_course}/no_registrations")) {
+  elseif (file_exists("{$courses_path}/{$new_course}/removed")) {
     $error_string .= "<p>{$new_course} is no longer accepting registrations.\n";
   }
 }

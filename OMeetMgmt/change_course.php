@@ -43,7 +43,7 @@ $is_self_reported = file_exists("{$competitor_path}/self_reported");
 $course_list = scandir($courses_path);
 $course_list = array_diff($course_list, array(".", ".."));
 $course_list = array_filter($course_list,
-	             function ($elt) use ($courses_path) { return (!file_exists("{$courses_path}/{$elt}/removed") && !file_exists("{$courses_path}/{$elt}/no_registrations")); });
+	             function ($elt) use ($courses_path) { return (!file_exists("{$courses_path}/{$elt}/removed")); });
 $output_string = "";
 $error_string = "";
 
@@ -76,7 +76,7 @@ else {
       if (!file_exists("{$courses_path}/{$new_course}")) {
         $error_string .= "<p>{$new_course} does not exist.\n";
       }
-      elseif (file_exists("{$courses_path}/{$new_course}/removed") || file_exists("{$courses_path}/{$new_course}/no_registrations")) {
+      elseif (file_exists("{$courses_path}/{$new_course}/removed")) {
         $error_string .= "<p>{$new_course} is no longer accepting registrations.\n";
       }
       else {
