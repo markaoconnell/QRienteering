@@ -89,7 +89,7 @@ function record_finish_by_si_stick($event, $key, $si_results_string) {
 }
 
 function validate_and_save_results($event, $key, $competitor, $si_stick, $start_pieces, $finish_pieces, $result_pieces) {
-  global $TYPE_FIELD, $SCORE_O_COURSE;
+  global $TYPE_FIELD, $SCORE_O_COURSE, $COMBO_COURSE, $COMBO_COURSE_CONTROL_OPTIONS;
 
   $competitor_path = get_competitor_path($competitor, $event, $key, "..");
   if (!file_exists($competitor_path) || file_exists("{$competitor_path}/controls_found/start") || ($si_stick != file_get_contents("{$competitor_path}/si_stick"))) {
@@ -99,10 +99,39 @@ function validate_and_save_results($event, $key, $competitor, $si_stick, $start_
 
   $course = file_get_contents("{$competitor_path}/course");
   $courses_path = get_courses_path($event, $key, "..");
-  $controls_info = read_controls("{$courses_path}/{$course}/controls.txt");
-  $controls_on_course = array_map(function ($elt) { return($elt[0]); }, $controls_info);
   $course_properties = get_course_properties("{$courses_path}/{$course}");
   $is_score_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $SCORE_O_COURSE));
+  $is_combo_course = (isset($course_properties[$TYPE_FIELD]) && ($course_properties[$TYPE_FIELD] == $COMBO_COURSE));
+  if ($is_combo_course) {
+    // If the person is registered on a combo course, then it must be enabled for auto-placement.  Try and see
+    // which course (of the possibilities) was actually run
+    $course_options = explode("#", $course_properties[$COMBO_COURSE_CONTROL_OPTIONS]);
+    // Format the controls found by the competitor as just a comma separated list of controls, in order, with no timestamps
+    $controls_found_by_competitor_string = implode(",", array_map(function ($elt) { return (explode(":", $elt) [0]); }, array_slice($result_pieces, 3)));
+
+    // See if the controls found match any of the options
+    // Format of each entry is <course_full_name>;<control>,<control>,<control>...
+    $course_run_list = array_filter($course_options, function ($elt) use ($controls_found_by_competitor_string) { return ($controls_found_by_competitor_string == explode(";", $elt)[1]); } );
+    $num_courses_found = count($course_run_list);
+    if ($num_courses_found == 0) {
+      // Hmmm, the controls didn't match any of the courses, just pick an arbitrary one and the result will be a DNF
+      // It can be patched up manually later
+      $course_run = explode(";", $course_options[0])[0];
+    }
+    else {
+      // Ideally in this case there is exactly one course which matched the controls punched, so get the name of that course.
+      // It is possible that multiple courses matched, in which case just choose the first - this should really never happen but
+      // better to have thought about it and handle it somehow
+      $course_run = explode(";", array_values($course_run_list)[0] ) [0];
+    }
+
+    // Update the information with the course found
+    $course = $course_run;
+    file_put_contents("{$competitor_path}/course", $course_run);
+  }
+
+  $controls_info = read_controls("{$courses_path}/{$course}/controls.txt");
+  $controls_on_course = array_map(function ($elt) { return($elt[0]); }, $controls_info);
 
 
   // Skip the si_stick entry, the start entry, and the finish entry

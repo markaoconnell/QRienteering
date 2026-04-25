@@ -92,7 +92,7 @@ $results_string = "";
 if (isset($_GET["submit"])) {
   foreach (array_keys($_GET) as $get_key) {
     $pieces = explode(":", $get_key);
-    $readable_name = ltrim($pieces[1], "0..9-");
+    $readable_name = isset($pieces[1]) ? ltrim($pieces[1], "0..9-") : "";
     if ($pieces[0] == "disable") {
       if (!file_exists("{$courses_path}/{$pieces[1]}/no_registrations")) {
         touch("{$courses_path}/{$pieces[1]}/no_registrations");
