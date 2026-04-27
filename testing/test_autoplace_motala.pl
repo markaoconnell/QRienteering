@@ -18,7 +18,7 @@ my($COMPETITOR_3_RE) = "LydBid \\(2\\)";       # (2) HTML encoded
 my($COMPETITOR_4_RE) = "JohnnyJohnCon 3";
 my($COMPETITOR_5_RE) = "LinaNowak";
 my($COMPETITOR_6_RE) = "RoxyAndTheGemstoneKitties";
-my($competitor_1_id, $competitor_2_id, $competitor_3_id, $competitor_4_id, $competitor_5_id, $competitor_6_id);
+my($competitor_1_id, $competitor_2_id, $competitor_3_id, $competitor_4_id, $competitor_5_id, $competitor_6_id, $competitor_7_id, $competitor_8_id);
 
 set_test_info(\%GET, \%COOKIE, \%POST, \%TEST_INFO, $0);
 create_key_file();
@@ -72,7 +72,8 @@ sub check_results_inner {
     error_and_exit("Found $actual_table_rows instead of $expected_table_rows in results output.\n$output");
   }
 
-  if ($output !~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04-GetEmAll/) {
+  if ($output !~ /\#\#\#\#,CourseList,00-White,01-Yellow,02-ScoreO,03-Butterfly,04-GetEmAll,05-Green,06-Red,07-Brown,17-AutoMotala/) {
+
     error_and_exit("Did not find expected course list in results output.\n$output");
   }
 
@@ -372,6 +373,115 @@ $GET{"si_stick_finish"} = $base_64_results;
 
 finish_with_stick_dnf($competitor_5_id, "314159", "09-F1S1", \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+
+success();
+
+
+
+###########
+# Test 6 - Test an autoplace course with a mass start
+%TEST_INFO = qw(Testname MassStartAutoPlaceCourse);
+%GET = qw(key UnitTestPlayground course 17-AutoMotala);
+$GET{"event"} = $event_id;
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 144144 email_address z:@mkoconnell.com cell_phone 5086148225 car_info Rav4 is_member no);
+$REGISTRATION_INFO{"first_name"} = "Twelve";
+$REGISTRATION_INFO{"last_name"} = "Toes";
+$GET{"competitor_name"} = "Twelve Toes";
+%COOKIE = ();  # empty hash
+
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_5_id = $TEST_INFO{"competitor_id"};
+
+check_competitor_on_course("Twelve Toes", $competitor_5_id);
+
+%GET = qw(key UnitTestPlayground course 17-AutoMotala);
+$GET{"event"} = $event_id;
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 169169 email_address a:@mkoconnell.com cell_phone 5086148225 car_info Rav4 is_member no);
+$REGISTRATION_INFO{"first_name"} = "Thirteen";
+$REGISTRATION_INFO{"last_name"} = "InASuit";
+$GET{"competitor_name"} = "Thirteen InASuit";
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_6_id = $TEST_INFO{"competitor_id"};
+check_competitor_on_course("Thirteen InASuit", $competitor_6_id);
+
+
+%GET = qw(key UnitTestPlayground course 17-AutoMotala);
+$GET{"event"} = $event_id;
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 196196 email_address z:@mkoconnell.com cell_phone 5086148225 car_info Rav4 is_member no);
+$REGISTRATION_INFO{"first_name"} = "Fourteen";
+$REGISTRATION_INFO{"last_name"} = "Forty";
+$GET{"competitor_name"} = "Fourteen Forty";
+%COOKIE = ();  # empty hash
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_7_id = $TEST_INFO{"competitor_id"};
+
+check_competitor_on_course("Fourteen Forty", $competitor_7_id);
+
+%GET = qw(key UnitTestPlayground course 17-AutoMotala);
+$GET{"event"} = $event_id;
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 225225 email_address a:@mkoconnell.com cell_phone 5086148225 car_info Rav4 is_member no);
+$REGISTRATION_INFO{"first_name"} = "Fifteen";
+$REGISTRATION_INFO{"last_name"} = "FiftyFive";
+$GET{"competitor_name"} = "Fifteen FiftyFive";
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_8_id = $TEST_INFO{"competitor_id"};
+check_competitor_on_course("Fifteen FiftyFive", $competitor_8_id);
+
+%GET = qw(key UnitTestPlayground courses_to_start 17-AutoMotala universal_start no si_stick_time 750);
+$GET{"event"} = ${event_id};
+my($cmd) = "php ../OMeetMgmt/mass_start_courses.php";
+hashes_to_artificial_file();
+my($output);
+$output = qx($cmd);
+
+if (($output !~ /STARTED,Twelve Toes,17-AutoMotala/) || ($output !~ /STARTED,Thirteen InASuit,17-AutoMotala/) ||
+	($output !~ /STARTED,Fourteen Forty,17-AutoMotala/) || ($output !~ /STARTED,Fifteen FiftyFive,17-AutoMotala/)) {
+  error_and_exit("Did not see expected mass start results.\n$output");
+}
+
+
+
+
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+my(@si_results) = qw(169169;0 start:0 finish:1800 401:910 102:1050 104:1400);
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_with_stick_successfully($competitor_6_id, "169169", "10-F1S2", \%GET, \%COOKIE, \%TEST_INFO);
+my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+
+
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+my(@si_results) = qw(196196;0 start:0 finish:2100 501:1050 102:1400 104:1800);
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_with_stick_successfully($competitor_7_id, "196196", "13-F2S2", \%GET, \%COOKIE, \%TEST_INFO);
+my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+
+
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+my(@si_results) = qw(225225;0 start:0 finish:2500 501:1050 102:1400 103:2300);
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_with_stick_successfully($competitor_8_id, "225225", "14-F2S3", \%GET, \%COOKIE, \%TEST_INFO);
+my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+
+check_results(8);
 
 success();
 

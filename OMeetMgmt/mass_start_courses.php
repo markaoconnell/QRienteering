@@ -43,7 +43,9 @@ $parseable_status = "\n<!--\n";
 if (($event != "") && file_exists($event_path) && is_dir($courses_path)) {
 
   // Make sure the courses are valid
-  $validated_courses = array_filter($courses_to_start, function ($course) use ($courses_path) { return(file_exists("{$courses_path}/{$course}/controls.txt")); } );
+  $validated_courses = array_filter($courses_to_start, function ($course) use ($courses_path) { return(is_dir("{$courses_path}/{$course}") &&
+                                                                                                       !(file_exists("{$courses_path}/{$course}/no_registrations") ||
+                                                                                                         file_exists("{$courses_path}/{$course}/removed"))); } );
   $invalid_courses = array_diff($courses_to_start, $validated_courses);
 
   // Get the list of competitors who haven't started and are on one of the courses to mass_start
