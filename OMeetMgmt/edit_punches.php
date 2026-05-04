@@ -40,6 +40,11 @@ if (file_exists("{$competitor_path}/self_reported")) {
 $using_si_timing = file_exists("{$competitor_path}/si_stick");
 set_timezone($key);
 
+$course = file_get_contents("{$competitor_path}/course");
+if (!file_exists("{$courses_path}/{$course}/controls.txt")) {
+  error_and_exit("<p>ERROR: Cannot show punches for course \"" . ltrim($course, "0..9-") . "\", switch competitor to different course to show / edit punches.\n");
+}
+
 $splits_array = get_splits_as_array($competitor, $event, $key, true);
 
 $start_time = $splits_array["start"];
@@ -98,8 +103,6 @@ else {
 $unpunched_qr_start = ((($start_time + $start_time_adjustment) == 0) && !$using_si_timing);
 
 $competitor_name = file_get_contents("{$competitor_path}/name");
-
-$course = file_get_contents("{$competitor_path}/course");
 $control_list = read_controls("{$courses_path}/{$course}/controls.txt");
 
 $course_properties = get_course_properties("{$courses_path}/{$course}");
