@@ -115,7 +115,7 @@ if ($is_preregistered_checkin) {
   $pass_preregistration_marker = "<input type=\"hidden\" name=\"checkin\" value=\"true\">\n";
   $pass_preregistration_marker .= "<input type=\"hidden\" name=\"event\" value=\"{$event}\">\n";
 
-  $preregistered_course = isset($entrant_info["course"]) ? "," . $entrant_info["course"] : "";
+  $preregistered_course = isset($entrant_info["course"]) ? $entrant_info["course"] : "";
   if ($using_nre_classes) {
     $birth_year = $entrant_info["birth_year"];
     $gender = strtolower($entrant_info["gender"]);
