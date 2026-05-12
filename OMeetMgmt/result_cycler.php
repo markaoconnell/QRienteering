@@ -31,11 +31,12 @@ if (!file_exists($courses_path)) {
 
 set_timezone($key);
 
-$lines_to_show = isset($_GET["lines_to_show"]) ? $_GET["lines_to_show"] : 15;
-$columns = isset($_GET["columns"]) ? $_GET["columns"] : 2;
-$time_delay = isset($_GET["time_delay"]) ? $_GET["time_delay"] : 30;  # Delay in seconds before moving to next results
+$lines_to_show = isset($_GET["lines_to_show"]) ? $_GET["lines_to_show"] : (isset($_COOKIE["lines_to_show"]) ? $_COOKIE["lines_to_show"] : 15);
+$columns = isset($_GET["columns"]) ? $_GET["columns"] : (isset($_COOKIE["columns"]) ? $_COOKIE["columns"] : 2);
+$time_delay = isset($_GET["time_delay"]) ? $_GET["time_delay"] : (isset($_COOKIE["time_delay"]) ? $_COOKIE["time_delay"] : 30);  # Delay in seconds before moving to next results
 $initial_run = isset($_GET["initial_run"]);
 $initialize_list_to_show = isset($_GET["initialize_list_to_show"]);
+$save_value_cookies = isset($_GET["save_value_cookies"]);
 $show_by = isset($_GET["show_by"]) ? $_GET["show_by"] : "course"; // Assuming showing by course if not set
 $show_by_course = ($show_by == "course");
 $show_by_class = ($show_by == "class");
@@ -69,9 +70,10 @@ if ($initial_run) {
   $output .= "<input type=hidden name=key value=\"{$key}\">\n";
   $output .= "<input type=hidden name=event value=\"{$event}\">\n";
   $output .= "<input type=hidden name=initialize_list_to_show value=\"yes\">\n";
-  $output .= "<p>Number of columns of output: <input type=text name=columns value=2>\n";
-  $output .= "<p>Number of lines of output: <input type=text name=lines_to_show value=15>\n";
-  $output .= "<p>Seconds of delay between refreshes: <input type=text name=time_delay value=30>\n";
+  $output .= "<input type=hidden name=save_value_cookies value=\"yes\">\n";
+  $output .= "<p>Number of columns of output: <input type=text name=columns value={$columns}>\n";
+  $output .= "<p>Number of lines of output: <input type=text name=lines_to_show value={$lines_to_show}>\n";
+  $output .= "<p>Seconds of delay between refreshes: <input type=text name=time_delay value={$time_delay}>\n";
   if (event_is_using_nre_classes($event, $key)) {
     $output .= "<p>Show by <input type=radio name=show_by value=course " . ($show_by_course ? "checked" : "") . ">" .
 		  " course or <input type=radio name=show_by value=class " . ($show_by_class ? "checked" : "") . "> class\n";
@@ -101,6 +103,15 @@ if ($initial_run) {
   $output .= "<p></form>\n";
 }
 else {
+  if ($save_value_cookies) {
+    $current_time = time();
+    $cookie_path = isset($_SERVER["REQUEST_URI"]) ? dirname(dirname($_SERVER["REQUEST_URI"])) : "";
+
+    setcookie("columns", $columns, $current_time + 86400 * 365, $cookie_path);
+    setcookie("lines_to_show", $lines_to_show, $current_time + 86400 * 365, $cookie_path);
+    setcookie("time_delay", $time_delay, $current_time + 86400 * 365, $cookie_path);
+  }
+
   $things_to_show = array();
   if ($show_by_course) {
     if ($initialize_list_to_show) {

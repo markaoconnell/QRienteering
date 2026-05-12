@@ -37,7 +37,9 @@ $only_return_course_list = ($only_course_list != "");
 $show_school_and_club_flag = isset($_GET["show_school_and_club"]) ? $_GET["show_school_and_club"] : "";
 $show_school_and_club = ($show_school_and_club_flag != "");
 $show_age_flag = isset($_GET["show_age"]) ? $_GET["show_age"] : "";
+$show_stick_flag = isset($_GET["show_stick"]) ? $_GET["show_stick"] : "";
 $show_age = ($show_age_flag != "");
+$show_stick = ($show_stick_flag != "");
 $show_delta_flag = isset($_GET["show_delta"]) ? $_GET["show_delta"] : "";
 $show_delta = ($show_delta_flag != "");
 
@@ -137,7 +139,7 @@ foreach ($course_list as $one_course) {
       $results_string .= get_csv_results($event, $key, $one_course, "", $score_course, $max_score, $base_course_list);
     }
     else {
-      $results_string .= get_results_as_string($event, $key, $one_course, "", $score_course, $max_score, $base_course_list, $show_school_and_club, $show_age, $show_delta);
+      $results_string .= get_results_as_string($event, $key, $one_course, "", $score_course, $max_score, $base_course_list, $show_school_and_club, $show_age, $show_delta, $show_stick);
     }
   }
 }
