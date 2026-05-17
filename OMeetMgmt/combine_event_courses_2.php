@@ -25,6 +25,17 @@ if ($event == "") {
   error_and_exit("No such access key \"$key\" and event \"{$event}\", are you using an authorized link?\n");
 }
 
+$chase_start_time = isset($_GET["chase_start_time"]) ? $_GET["chase_start_time"] : "";
+if ($chase_start_time == "") {
+  $chase_start_offset = 0;
+}
+else {
+  $chase_start_offset = time_limit_to_seconds($chase_start_time);
+  if ($chase_start_offset < 0) {
+    $chase_start_offset = 0;
+  }
+}
+
 
 $base_path = get_base_path($key);
 $event_path = get_event_path($event, $key);
@@ -115,6 +126,9 @@ foreach ($results_by_class_and_stick as $one_result) {
 
 #$output_string .= "<p>Total of " . count($results_by_class) . " unique classes\n";
 
+// Print the info, grouped by how many courses were completed
+// Also print out a single summary table, time ordered, if desired
+$single_table_view = array();
 $finish_options = array_keys($results_by_finishes);
 rsort($finish_options, SORT_NUMERIC);
 foreach ($finish_options as $this_finish_count) {
@@ -133,16 +147,42 @@ foreach ($finish_options as $this_finish_count) {
   foreach ($results_to_show as $this_entrant) {
     $this_result = $results_by_finishes[$this_finish_count][$this_entrant];
     $printable_time = csv_formatted_time($this_result["total_time"]);
-    $delta_time = csv_formatted_time($this_result["total_time"] - $best_time);
+    $delta_in_seconds = $this_result["total_time"] - $best_time;
+    $this_result["time_behind"] = $delta_in_seconds;
+    $delta_time_for_sorting = sprintf("%010d", $delta_in_seconds);
+    if (!isset($single_table_view[$delta_time_for_sorting])) {
+      $single_table_view[$delta_time_for_sorting] = array();
+    }
+    $single_table_view[$delta_time_for_sorting][] = $this_result;
+    $delta_time = csv_formatted_time($delta_in_seconds);
     $individual_times = implode("", array_map(function ($elt) { return ("<td>{$elt}</td>"); }, $this_result["individual_times"]));
 
-    $output_string .= "<tr><td>{$this_result["name"]}</td><td>{$printable_time}</td><td>{$delta_time}</td><td>{$this_result["stick"]}</td> ";
+    $output_string .= "<tr><td>{$this_result["name"]}</td><td align=\"center\">{$printable_time}</td><td align=\"center\">{$delta_time}</td><td>{$this_result["stick"]}</td> ";
     $output_string .= $individual_times;
     $output_string .= "</tr>\n";
   }
 
   $output_string .= "</table><p><p>\n";
 }
+
+
+$output_string .= "<p>Single table view for combined mass start (if desired)\n";
+$columns = array("Name", "Chase Start Time", "Total time", "SI unit", "Num courses");
+$header_elements = array_map(function ($elt) { return ("<th>{$elt}</th>"); }, $columns);
+$header_row = implode("", $header_elements);
+$output_string .= "<table border=1 style=\"border-collapse:collapse\">\n<tr>{$header_row}</tr>\n";
+
+ksort($single_table_view);
+foreach ($single_table_view as $this_time_delta_entries) {
+  foreach ($this_time_delta_entries as $this_result) {
+    $printable_time_behind = formatted_time_compact($this_result["time_behind"] + $chase_start_offset);
+    $printable_time = csv_formatted_time($this_result["total_time"]);
+    $output_string .= "<tr><td>{$this_result["name"]}</td><td align=\"center\">{$printable_time_behind}</td><td align=\"center\">{$printable_time}</td><td>{$this_result["stick"]}</td> ";
+    $output_string .= "<td align=\"center\">{$this_result["num_finishes"]}</td>\n";
+    $output_string .= "</tr>\n";
+  }
+}
+$output_string .= "</table><p><p>\n";
 
 
 echo get_web_page_header(true, false, false, true);
@@ -161,6 +201,7 @@ echo $output_string;
 #print_r($results_by_class_and_stick);
 #echo "<p><p><p>\n";
 #print_r($results_by_finishes);
+#print_r($single_table_view);
 
 echo get_web_page_footer();
 ?>

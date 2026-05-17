@@ -22,9 +22,15 @@ function is_event_recently_closed($filename) {
 function name_to_registration_link($event_id) {
   global $base_path, $key, $base_path_for_links;
   $event_fullname = file_get_contents("{$base_path}/{$event_id}/description");
+  if (preregistrations_allowed($event_id, $key)) {
+    $preregistration_checkin_link = "<li><a href=\"{$base_path_for_links}/OMeetWithMemberList/checkin_preregistered.php?key={$key}&event={$event_id}\">Preregistered competitor checkin</a>";
+  }
+  else {
+    $preregistration_checkin_link = "";
+  }
   return ("<li>{$event_fullname}<ul><li><a href={$base_path_for_links}/OMeetRegistration/register.php?event={$event_id}&key={$key}>BYOM Registration</a>" .
                                    "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}&event={$event_id}&member=1>Member meet Registration</a>" .
-                                   "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}&event={$event_id}>Non-member meet Registration</a></ul>\n");
+				   "<li><a href={$base_path_for_links}/OMeetWithMemberList/competition_register.php?key={$key}&event={$event_id}>Non-member meet Registration</a>{$preregistration_checkin_link}</ul>\n");
 }
 
 function name_to_results_link($event_id) {
@@ -237,6 +243,7 @@ echo "\n-->\n";
   </ul>
 
 <li> <a href=<?php echo "./combine_results.php?key={$key}" ?>>Finish time predictions (useful for awards)</a>
+<li> <a href=<?php echo "./combine_event_courses.php?key={$key}" ?>>Chase start times (especially for multi-course events)</a>
 <li> <a href=<?php echo "./finish_event.php?key={$key}" ?>>Close / Reopen an event</a>
 </ol>
 

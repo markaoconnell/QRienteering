@@ -51,6 +51,7 @@ if ($event_path != "") {
                              $course_list));
 
   $output .= "</ul>\n";
+  $output .= "<p><p>Time for chase start (hh:mm:ss): <input type=text name=chase_start_time value=\"00:00:00\">\n";
   $output .= "<p><input type=submit>\n</form>\n";
 }
 else {
