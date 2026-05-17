@@ -114,9 +114,36 @@ function validate_and_save_results($event, $key, $competitor, $si_stick, $start_
     $course_run_list = array_filter($course_options, function ($elt) use ($controls_found_by_competitor_string) { return ($controls_found_by_competitor_string == explode(";", $elt)[1]); } );
     $num_courses_found = count($course_run_list);
     if ($num_courses_found == 0) {
-      // Hmmm, the controls didn't match any of the courses, just pick an arbitrary one and the result will be a DNF
-      // It can be patched up manually later
+      // No exact match - look for a match by checking manually
+      // Set a default so we have something if no better match is found
       $course_run = explode(";", $course_options[0])[0];
+      $found_matching_course = false;
+      $controls_found_by_competitor = array_map(function ($elt) { return (explode(":", $elt) [0]); }, array_slice($result_pieces, 3));
+      $num_controls_found_by_competitor = count($controls_found_by_competitor);
+      foreach ($course_options as $this_course_option) {
+        $this_course_info = explode(";", $this_course_option);
+	$controls_on_this_course_option = explode(",", $this_course_info[1]);
+	$num_controls_on_this_course_option = count($controls_on_this_course_option);
+	// If the competitor found fewer controls than are on this course, no point in checking further
+        if ($num_controls_found_by_competitor >= $num_controls_on_this_course_option) {
+	  $course_control_index = 0;
+	  foreach ($controls_found_by_competitor as $this_found_control) {
+            if ($this_found_control == $controls_on_this_course_option[$course_control_index]) {
+              // Found the right control, in the right order, move on to the next
+	      $course_control_index++;
+	      // If we've found all the controls, we're good!  Doesn't matter if we have extra controls we found, and no need to check further
+	      if ($course_control_index >= $num_controls_on_this_course_option) {
+                $course_run = $this_course_info[0];
+                $found_matching_course = true;
+		break;
+	      }
+	    }
+	  }
+	  if ($found_matching_course) {
+            break;
+	  }
+        }
+      }
     }
     else {
       // Ideally in this case there is exactly one course which matched the controls punched, so get the name of that course.
@@ -128,6 +155,7 @@ function validate_and_save_results($event, $key, $competitor, $si_stick, $start_
     // Update the information with the course found
     $course = $course_run;
     file_put_contents("{$competitor_path}/course", $course_run);
+
   }
 
   $controls_info = read_controls("{$courses_path}/{$course}/controls.txt");

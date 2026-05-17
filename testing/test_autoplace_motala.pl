@@ -448,6 +448,16 @@ if (($output !~ /STARTED,Twelve Toes,17-AutoMotala/) || ($output !~ /STARTED,Thi
 
 %GET = qw(key UnitTestPlayground);  # empty hash
 $GET{"event"} = $event_id;
+my(@si_results) = qw(144144;0 start:0 finish:1800 401:910 103:1050 104:1400);
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+finish_with_stick_successfully($competitor_5_id, "144144", "09-F1S1", \%GET, \%COOKIE, \%TEST_INFO);
+
+
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
 my(@si_results) = qw(169169;0 start:0 finish:1800 401:910 102:1050 104:1400);
 my($base_64_results) = encode_base64(join(",", @si_results));
 $base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
@@ -481,7 +491,129 @@ $GET{"si_stick_finish"} = $base_64_results;
 finish_with_stick_successfully($competitor_8_id, "225225", "14-F2S3", \%GET, \%COOKIE, \%TEST_INFO);
 my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
 
-check_results(8);
+check_results(9);
+
+success();
+
+###########
+# Test 7 - Test an autoplace course with a mass start where competitors punch extra controls, but do complete the course
+%TEST_INFO = qw(Testname MassStartAutoPlaceCourseWithExtraPunches);
+%GET = qw(key UnitTestPlayground course 17-AutoMotala);
+$GET{"event"} = $event_id;
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 400400 email_address z:@mkoconnell.com cell_phone 5086148225 car_info Rav4 is_member no);
+$REGISTRATION_INFO{"first_name"} = "Twenty";
+$REGISTRATION_INFO{"last_name"} = "PlusNone";
+$GET{"competitor_name"} = "Twenty PlusNone";
+%COOKIE = ();  # empty hash
+
+my($competitor_9_id, $competitor_10_id, $competitor_11_id, $competitor_12_id);
+
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_9_id = $TEST_INFO{"competitor_id"};
+
+check_competitor_on_course("Twenty PlusNone", $competitor_9_id);
+
+%GET = qw(key UnitTestPlayground course 17-AutoMotala);
+$GET{"event"} = $event_id;
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 441441 email_address a:@mkoconnell.com cell_phone 5086148225 car_info Rav4 is_member no);
+$REGISTRATION_INFO{"first_name"} = "Twenty";
+$REGISTRATION_INFO{"last_name"} = "PlusOne";
+$GET{"competitor_name"} = "Twenty PlusOne";
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_10_id = $TEST_INFO{"competitor_id"};
+check_competitor_on_course("Twenty PlusOne", $competitor_10_id);
+
+
+%GET = qw(key UnitTestPlayground course 17-AutoMotala);
+$GET{"event"} = $event_id;
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 900900 email_address z:@mkoconnell.com cell_phone 5086148225 car_info Rav4 is_member no);
+$REGISTRATION_INFO{"first_name"} = "Thirty";
+$REGISTRATION_INFO{"last_name"} = "AndNoMore";
+$GET{"competitor_name"} = "Thirty AndNoMore";
+%COOKIE = ();  # empty hash
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_11_id = $TEST_INFO{"competitor_id"};
+
+check_competitor_on_course("Thirty AndNoMore", $competitor_11_id);
+
+%GET = qw(key UnitTestPlayground course 17-AutoMotala);
+$GET{"event"} = $event_id;
+%REGISTRATION_INFO = qw(club_name NEOC si_stick 961961 email_address a:@mkoconnell.com cell_phone 5086148225 car_info Rav4 is_member no);
+$REGISTRATION_INFO{"first_name"} = "Thirty";
+$REGISTRATION_INFO{"last_name"} = "AndAFriend";
+$GET{"competitor_name"} = "Thirty AndAFriend";
+
+register_member_successfully(\%GET, \%COOKIE, \%REGISTRATION_INFO, \%TEST_INFO);
+$competitor_12_id = $TEST_INFO{"competitor_id"};
+check_competitor_on_course("Thirty AndAFriend", $competitor_12_id);
+
+%GET = qw(key UnitTestPlayground courses_to_start 17-AutoMotala universal_start no si_stick_time 750);
+$GET{"event"} = ${event_id};
+my($cmd) = "php ../OMeetMgmt/mass_start_courses.php";
+hashes_to_artificial_file();
+my($output);
+$output = qx($cmd);
+
+if (($output !~ /STARTED,Twenty PlusNone,17-AutoMotala/) || ($output !~ /STARTED,Twenty PlusOne,17-AutoMotala/) ||
+	($output !~ /STARTED,Thirty AndNoMore,17-AutoMotala/) || ($output !~ /STARTED,Thirty AndAFriend,17-AutoMotala/)) {
+  error_and_exit("Did not see expected mass start results.\n$output");
+}
+
+
+
+
+
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+my(@si_results) = qw(400400;0 start:0 finish:1800 401:910 333:950 102:1050 102:1075 104:1400);  # Double punch control 102, add an extra
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_with_stick_successfully($competitor_9_id, "400400", "10-F1S2", \%GET, \%COOKIE, \%TEST_INFO);
+my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+
+
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+my(@si_results) = qw(441441;0 start:0 finish:1800 401:910 102:1050 102:1075 104:1400);  # Double punch control 102
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_with_stick_successfully($competitor_10_id, "441441", "10-F1S2", \%GET, \%COOKIE, \%TEST_INFO);
+my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+
+
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+my(@si_results) = qw(900900;0 start:0 finish:2100 501:1050 102:1400 401:1450 104:1800);  # Do both forks
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_with_stick_successfully($competitor_11_id, "900900", "13-F2S2", \%GET, \%COOKIE, \%TEST_INFO);
+my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+
+
+%GET = qw(key UnitTestPlayground);  # empty hash
+$GET{"event"} = $event_id;
+my(@si_results) = qw(961961;0 start:0 finish:2500 501:1050 103:1100 102:1400 103:2300);  # Punch control 3 out of order
+my($base_64_results) = encode_base64(join(",", @si_results));
+$base_64_results =~ s/\n//g;  # it seems to add newlines sometimes
+$GET{"si_stick_finish"} = $base_64_results;
+
+
+finish_with_stick_successfully($competitor_12_id, "961961", "14-F2S3", \%GET, \%COOKIE, \%TEST_INFO);
+my($path) = get_base_path($GET{"key"}) . "/" . $GET{"event"};
+
+check_results(13);
 
 success();
 
