@@ -11,7 +11,7 @@ ck_testing();
 // echo "<p>\n";
 
 // Make sure any funky HTML sequeneces in the name are escaped
-$competitor_name = htmlentities($_GET["competitor_name"], ENT_QUOTES, 'iso8859-1');
+$competitor_name = htmlentities($_GET["competitor_name"], ENT_QUOTES, 'utf-8');
 $course = $_GET["course"];
 if (isset($_GET["competitor"])) {
   $competitor = $_GET["competitor"];
@@ -44,7 +44,7 @@ if ($competitor_name == "") {
   error_and_exit("<p>ERROR: Competitor name must be specified.\n");
 }
 
-$reported_time = trim($_GET["reported_time"]);
+$reported_time = strtolower(trim($_GET["reported_time"]));
 $is_a_dnf = !isset($_GET["found_all"]);
 $scoreo_score = $_GET["scoreo_score"];
 
@@ -73,7 +73,15 @@ if ($score_course) {
   $scoreo_score = trim($scoreo_score);
   // Penalties are calculated later, so the reported score must be >= 0
   if (!preg_match("/^[0-9]+$/", $scoreo_score)) {
-    error_and_exit("<p>ERROR: Score value \"{$scoreo_score}\" appears to contain non-numeric characters, please try again.\n");
+    if ($reported_time == "none") {
+      $scoreo_score = 0;
+    }
+    else if ($scoreo_score == "") {
+      error_and_exit("<p>ERROR: Score value is empty for a ScoreO course, please enter your point total and try again.\n");
+    }
+    else {
+      error_and_exit("<p>ERROR: Score value \"{$scoreo_score}\" appears to contain non-numeric characters, please try again.\n");
+    }
   }
 
   if ($scoreo_score > $max_score) {

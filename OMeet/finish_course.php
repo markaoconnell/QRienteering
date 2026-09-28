@@ -326,7 +326,7 @@ if ($has_registration_info) {
   if (($registration_info["email_address"] != "") && $email_enabled) {
     // See if this looks like a valid email
     // Make sure to escape anything that could be a funky html character
-    $email_addr = htmlentities($registration_info["email_address"], ENT_QUOTES, 'iso8859-1');
+    $email_addr = htmlentities($registration_info["email_address"], ENT_QUOTES, 'utf-8');
     if (preg_match("/^[a-zA-z0-9_.\-]+@[a-zA-Z0-9_.\-]+/", $email_addr)) {
 
       $course_description = file_get_contents(get_event_path($event, $key, "..") . "/description");
