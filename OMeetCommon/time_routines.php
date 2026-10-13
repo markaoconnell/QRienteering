@@ -131,7 +131,7 @@ function format_time_as_minutes_since_midnight($unix_timestamp) {
 // an NRE, as these are easier to type.
 function simple_time_to_seconds($simple_time_string) {
   $time_pieces = explode(":", $simple_time_string);
-  if (count($time_pieces) != 2) {
+  if ((count($time_pieces) < 2) || (count($time_pieces) > 3)) {
     return -1;
   }
 
@@ -139,7 +139,17 @@ function simple_time_to_seconds($simple_time_string) {
     return -1;
   }
 
-  return (($time_pieces[0] * 3600) + ($time_pieces[1] * 60));
+  if (isset($time_pieces[2])) {
+    $seconds_in_string = $time_pieces[2];
+    if (($seconds_in_string < 0) || ($seconds_in_string > 59)) {
+      return -1;
+    }
+  }
+  else {
+    $seconds_in_string = 0;
+  }
+
+  return (($time_pieces[0] * 3600) + ($time_pieces[1] * 60)) + $seconds_in_string;
 }
 
 ?>

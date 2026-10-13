@@ -41,6 +41,39 @@ if (!file_exists($courses_path)) {
 }
 
 set_timezone($key);
+$day_of_event = isset($_GET["day_of_event"]) ? $_GET["day_of_event"] : "";
+if ($day_of_event == "") {
+  echo get_web_page_header(true, true, false);
+  echo "<p>Please enter the day of the event, formatted as yyyy-mm-dd.  Note that the year MUST be four digits and\n";
+  echo "the month and day must each be two digits.\n";
+  echo "<p><form action=./download_results_iofxml.php>\n";
+  echo "<input type=hidden name=key value={$key}>\n";
+  echo "<input type=hidden name=event value={$event}>\n";
+  if (!$download_csv) {
+    echo "<input type=hidden name=show_as_html value=1>\n";
+  }
+  $current_day_and_time = time();
+  echo "<input type=text name=day_of_event value=\"" . date("Y-m-d", $current_day_and_time) . "\">\n";
+  echo "<input type=submit value=\"Generate IOFXML\">\n";
+  echo "</form>\n";
+  echo get_web_page_footer();
+  exit (0);
+}
+
+$yyyy_mm_dd = array();
+if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $day_of_event, $yyyy_mm_dd)) {
+  error_and_exit("Incorrectly formatted date: \"{$day_of_event}\", must be formatted as yyyy-mm-dd.\n");
+}
+
+$year = $yyyy_mm_dd[1];
+$month = $yyyy_mm_dd[2];
+$day = $yyyy_mm_dd[3];
+if (($month < 1) || ($month > 12) || ($day < 1) || ($day > 31) || ($year < 1970)) {
+  error_and_exit("Incorrectly formatted date: \"{$day_of_event}\", month must be 1-12, day must be 1-31, year must be after 1970.\n");
+}
+
+$event_date_timestamp = strtotime($day_of_event);
+
 
 $xw = xmlwriter_open_memory();
 xmlwriter_set_indent($xw, 1);
@@ -55,6 +88,10 @@ add_xml_attribute($xw, "iofVersion", "3.0");
 add_xml_attribute($xw, "creator", "QRienteering from Mark OConnell");
 add_xml_attribute($xw, "status", "Complete");
 add_xml_attribute($xw, "createTime", iso8601(time()));
+
+// Trying something new - use today's date as the date of the event
+// Start times etc will be based off of this time.
+$midnight_of_today = strtotime('today');
 
 xmlwriter_start_element($xw, "Event");
 $event_name = file_get_contents(get_event_path($event, $key) . "/description");
@@ -116,8 +153,8 @@ foreach ($course_list as $one_course) {
     xmlwriter_end_element($xw); // Person of PersonResult
 
     xmlwriter_start_element($xw, "Result");
-    add_text_element($xw, "StartTime",  iso8601($splits_array["start"]));
-    add_text_element($xw, "FinishTime",  iso8601($splits_array["finish"] - $splits_array["forgiven_time"]));
+    add_text_element($xw, "StartTime",  iso8601($splits_array["start"] + $event_date_timestamp));
+    add_text_element($xw, "FinishTime",  iso8601(($splits_array["finish"] - $splits_array["forgiven_time"]) + $event_date_timestamp));
     add_text_element($xw, "Time", ltrim($this_result["raw_time"], "0"));
     add_text_element($xw, "Position", "{$place}");
     add_text_element($xw, "Status", $this_result["dnf"] ? "MissingPunch" : "OK");

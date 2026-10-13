@@ -210,7 +210,9 @@ foreach ($event_list as $this_event) {
               $start_time_for_parsing = str_replace(".", ":", $registration_info["start_time"]);
               $unfinished_competitor_start_seconds = simple_time_to_seconds($start_time_for_parsing);
 	      // $error_string .= "<p>{$unfinished_competitor_name} has start of {$unfinished_competitor_start_seconds}\n";
-	      if ($unfinished_competitor_start_seconds != -1) {
+	      // Treat a start time of 0 as a sentinel to use the last_start instead - sometimes it is easier to put in a zero as the start rather than
+	      // leaving the field blank.
+	      if (($unfinished_competitor_start_seconds != -1) && ($unfinished_competitor_start_seconds != 0)) {
                 $unfinished_competitor_time = $award_time_seconds - $unfinished_competitor_start_seconds;
 		$start_time_output = $start_time_for_parsing;
 	      }

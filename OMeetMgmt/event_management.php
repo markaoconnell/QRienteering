@@ -20,7 +20,7 @@ function validate_course($string) {
 }
 
 function validate_start_time($string) {
-  if (!preg_match("/^\d{1,2}[:.]\d{2}$/", $string)) {
+  if (!preg_match("/^\d{1,2}[:.]\d{2}([:.]\d{2})?$/", $string)) {
      return ("Incorrectly formatted start time, must be hh:mm (or hh.mm), hours (hh) from 0 to 24 and minutes (mm) 0 to 59 (minutes must be two digits).");
   }
   return("");
@@ -34,7 +34,7 @@ function validate_stick($string) {
 }
 
 function validate_cell_phone($string) {
-  if (!preg_match("/^\+?[0-9-]+$/", $string)) {
+  if (!preg_match("/^\+?[0-9 -]+$/", $string)) {
     return ("Cell phone field looks malformatted, should be like +1-508-123-4567 (no parens)");
   }
   return("");
@@ -48,7 +48,8 @@ function validate_email($string) {
 }
 
 function validate_waiver($string) {
-  if (!(($string == "yes") || ($string == "y") || ($string == "Y"))) {
+  $lowered_string = strtolower($string);
+  if (!(($lowered_string == "yes") || ($lowered_string == "y") || ($lowered_string == "ok"))) {
     return ("Waiver field should be \"yes\" or blank");
   }
   return("");
