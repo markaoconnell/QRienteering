@@ -135,6 +135,7 @@ else {
 // print_r($control_list);
 $error_string = "";
 $parseable_result_string = "\n<!--\n";
+$parseable_dnf_string = "";
 $result_filename = "";
 $suppress_email = false;
 
@@ -164,6 +165,7 @@ if (!file_exists("{$controls_found_path}/finish")) {
     $number_controls_on_course = count($control_list);
     // echo "<br>At control ${control_id}, expecting to be at " . $control_list[$number_controls_found][0] . "--\n";
     if ($number_controls_found != $number_controls_on_course) {
+	$parseable_dnf_string = "Missed control " . ($number_controls_found + 1) . ", possibly more.";
         if ($has_skipped_controls) {
           $found_controls = $number_controls_found + count($controls_ok_array);
           $skipped_controls_string = implode(", ", array_map(function ($elt) { return (explode("-", $elt)[1]); }, $controls_skipped_array));
@@ -300,7 +302,7 @@ if ($error_string != "") {
 $dnf_string = "";
 if (file_exists("{$competitor_path}/dnf")) {
   echo "<p>ERROR: DNF status.\n";
-  $parseable_result_string .= "\n####,ERROR,DNF\n"; 
+  $parseable_result_string .= "\n####,ERROR,DNF: {$parseable_dnf_string}\n"; 
   $dnf_string = " - DNF";
 }
 

@@ -365,7 +365,7 @@ success();
 # Test 11 - Can we get the IOFXML results?
 
 %TEST_INFO = qw(Testname GetNreIofXMLResults);
-%GET = qw(key UnitTestPlayground);
+%GET = qw(key UnitTestPlayground day_of_event 2025-04-01);
 $GET{"event"} = $event_id;
 
 %COOKIE = ();
